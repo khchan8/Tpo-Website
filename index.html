@@ -532,63 +532,67 @@
   <script src="assets/js/main.js"></script>
 
 	<!-- Added JavaScript for Form Submission -->
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-	<script>
-	  $(document).ready(function() {
-		$('#contactForm').submit(function(e) {
-		  e.preventDefault();
-		  
-		  var formData = {
-			action: 'contact',
-			name: $('#name').val(),
-			email: $('#email').val(),
-			subject: $('#subject').val(),
-			message: $('textarea[name="message"]').val()
-		  };
-		  submitForm(formData, '#contactForm');
-		});
+		<script>
+		  $(document).ready(function() {
+			$('#contactForm, #newsletterForm').submit(function(e) {
+			  e.preventDefault();
+			  
+			  var $form = $(this);
+			  var formData = {
+				action: $form.attr('id') === 'contactForm' ? 'contact' : 'newsletter'
+			  };
 
-		$('#newsletterForm').submit(function(e) {
-		  e.preventDefault();
-		  
-		  var formData = {
-			action: 'newsletter',
-			email: $('#newsletterForm input[name="email"]').val()
-		  };
-		  submitForm(formData, '#newsletterForm');
-		});
+			  $form.serializeArray().forEach(function(item) {
+				formData[item.name] = item.value;
+			  });
 
-		function submitForm(formData, formSelector) {
-		  $.ajax({
-			url: 'https://script.google.com/macros/s/AKfycbyz5T0v8rSx-iGQ8-XqJK1Xhozu1Oh-9aZK6B9EDUkYMumMaDa10WysUnJonktKTho0/exec',
-			type: 'POST',
-			contentType: 'application/json',
-			data: JSON.stringify(formData),
-			dataType: 'json',
-			beforeSend: function() {
-			  $(formSelector + ' .loading').show();
-			  $(formSelector + ' .error-message').hide();
-			  $(formSelector + ' .sent-message').hide();
-			},
-			success: function(response) {
-			  $(formSelector + ' .loading').hide();
-			  console.log('Success response:', response);
-			  if (response && response.result === 'success') {
-				$(formSelector + ' .sent-message').text(response.message).show();
-				$(formSelector)[0].reset();
-			  } else {
-				$(formSelector + ' .error-message').text(response.message || 'An unexpected error occurred. Please try again later.').show();
-			  }
-			},
-			error: function(xhr, status, error) {
-			  $(formSelector + ' .loading').hide();
-			  console.error('AJAX Error:', xhr.responseText, status, error);
-			  $(formSelector + ' .error-message').text('An error occurred while submitting the form. Please try again later.').show();
+			  submitForm(formData, $form);
+			});
+
+			function submitForm(formData, $form) {
+			  $.ajax({
+				url: 'https://script.google.com/macros/s/AKfycbyz5T0v8rSx-iGQ8-XqJK1Xhozu1Oh-9aZK6B9EDUkYMumMaDa10WysUnJonktKTho0/exec',
+				type: 'POST',
+				contentType: 'application/json',
+				data: JSON.stringify(formData),
+				dataType: 'json',
+				beforeSend: function() {
+				  $form.find('.loading').show();
+				  $form.find('.error-message, .sent-message').hide();
+				},
+				success: function(response) {
+				  $form.find('.loading').hide();
+				  console.log('Success response:', response);
+				  if (response && response.result === 'success') {
+					$form.find('.sent-message').text(response.message).show();
+					$form[0].reset();
+				  } else {
+					$form.find('.error-message').text(response.message || 'An unexpected error occurred. Please try again later.').show();
+				  }
+				},
+				error: function(jqXHR, textStatus, errorThrown) {
+				  $form.find('.loading').hide();
+				  console.error('AJAX Error:', textStatus, errorThrown);
+				  if (jqXHR.status === 0) {
+					$form.find('.error-message').text('Not connected. Please verify your network connection.').show();
+				  } else if (jqXHR.status == 404) {
+					$form.find('.error-message').text('Requested page not found. [404]').show();
+				  } else if (jqXHR.status == 500) {
+					$form.find('.error-message').text('Internal Server Error [500].').show();
+				  } else if (textStatus === 'parsererror') {
+					$form.find('.error-message').text('Requested JSON parse failed.').show();
+				  } else if (textStatus === 'timeout') {
+					$form.find('.error-message').text('Time out error.').show();
+				  } else if (textStatus === 'abort') {
+					$form.find('.error-message').text('Ajax request aborted.').show();
+				  } else {
+					$form.find('.error-message').text('Uncaught Error: ' + jqXHR.responseText).show();
+				  }
+				}
+			  });
 			}
 		  });
-		}
-	  });
-	</script>
+		</script>
 
 </body>
 
