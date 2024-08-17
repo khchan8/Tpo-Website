@@ -552,39 +552,33 @@
 		});
 
 		function submitForm(formData, $form) { 
-		  const scriptURL = 'https://script.google.com/macros/s/AKfycbx152y2dY6UnUhapT6DQi-1upCjC224sTrYQdvc7niZia9AtlxMAobpjV_MAue_SBk_/exec'; // Replace with your actual script URL
+		  const scriptURL = 'https://script.google.com/macros/s/AKfycbwJDAeDBi1-_iodvcl_4bFZ6HlFXouWRkZ0kiCOlj7g4lXbI6yXQsi33QjAVYMYKb09/exec'; // Replace with your actual script URL
 
 		  fetch(scriptURL, {
 			method: 'POST',
-			mode: 'cors', // Using standard 'cors' mode
+			mode: 'no-cors', // Strictly following your friend's recommendation
 			headers: {
 			  'Content-Type': 'application/json'
 			},
 			body: JSON.stringify(formData)
 		  })
 		  .then(response => {
-			if (!response.ok) {
-			  throw new Error('Network response was not ok');
-			}
-			return response.json(); 
-		  })
-		  .then(data => {
-			console.log('Success:', data);
+			// Note: With 'no-cors', response.ok and response.json() might not be reliable
+			console.log('Response (no-cors):', response); 
+
+			// Handle success, but you might not have access to detailed response data
 			$form.find('.loading').hide();
-			if (data && data.result === 'success') {
-			  if (formData.action === 'newsletter') {
-				$('#newsletterForm .sent-message').text(data.message).show();
-				$('#newsletterForm')[0].reset();
-			  } else {
-				$form.find('.sent-message').text(data.message).show();
-				$form[0].reset(); 
-			  }
+			if (formData.action === 'newsletter') {
+			  $('#newsletterForm .sent-message').text('Thank you for subscribing!').show(); // Generic message
+			  $('#newsletterForm')[0].reset();
 			} else {
-			  $form.find('.error-message').text(data.message || 'An unexpected error occurred. Please try again later.').show();
+			  $form.find('.sent-message').text('Message sent successfully!').show(); // Generic message
+			  $form[0].reset(); 
 			}
 		  })
 		  .catch(error => {
 			console.error('Error:', error);
+			// Handle errors
 			$form.find('.loading').hide();
 			$form.find('.error-message').text('An error occurred during form submission.').show();
 		  });
