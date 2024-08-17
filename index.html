@@ -532,67 +532,77 @@
   <script src="assets/js/main.js"></script>
 
 	<!-- Added JavaScript for Form Submission -->
-		<script>
-		  $(document).ready(function() {
-			$('#contactForm, #newsletterForm').submit(function(e) {
-			  e.preventDefault();
-			  
-			  var $form = $(this);
-			  var formData = {
-				action: $form.attr('id') === 'contactForm' ? 'contact' : 'newsletter'
-			  };
+<!-- Added JavaScript for Form Submission -->
+	<script>
+	  $(document).ready(function() {
+		// Form submission handler for both contact and newsletter forms
+		$('#contactForm, #newsletterForm').submit(function(e) {
+		  e.preventDefault();
+		  
+		  var $form = $(this);
+		  var formData = {
+			action: $form.attr('id') === 'contactForm' ? 'contact' : 'newsletter'
+		  };
 
-			  $form.serializeArray().forEach(function(item) {
-				formData[item.name] = item.value;
-			  });
+		  $form.serializeArray().forEach(function(item) {
+			formData[item.name] = item.value;
+		  });
 
-			  submitForm(formData, $form);
-			});
+		  submitForm(formData, $form);
+		});
 
-			function submitForm(formData, $form) {
-			  $.ajax({
-				url: 'https://script.google.com/macros/s/AKfycbyX0mcUomdq8xWAo9v1pU3PRCXlviWRItOxhpfSvTDcIWp29mDZL7PTEmYHywy9QtpH/exec',
-				type: 'POST',
-				contentType: 'application/json',
-				data: JSON.stringify(formData),
-				dataType: 'json',
-				beforeSend: function() {
-				  $form.find('.loading').show();
-				  $form.find('.error-message, .sent-message').hide();
-				},
-				success: function(response) {
-				  $form.find('.loading').hide();
-				  console.log('Success response:', response);
-				  if (response && response.result === 'success') {
-					$form.find('.sent-message').text(response.message).show();
-					$form[0].reset();
-				  } else {
-					$form.find('.error-message').text(response.message || 'An unexpected error occurred. Please try again later.').show();
-				  }
-				},
-				error: function(jqXHR, textStatus, errorThrown) {
-				  $form.find('.loading').hide();
-				  console.error('AJAX Error:', textStatus, errorThrown);
-				  var errorMessage = 'An unexpected error occurred. Please try again later.';
-				  if (jqXHR.responseJSON && jqXHR.responseJSON.message) {
-					errorMessage = jqXHR.responseJSON.message;
-				  } else if (jqXHR.responseText) {
-					try {
-					  var errorResponse = JSON.parse(jqXHR.responseText);
-					  if (errorResponse.message) {
-						errorMessage = errorResponse.message;
-					  }
-					} catch (e) {
-					  console.error('Error parsing error response:', e);
-					}
-				  }
-				  $form.find('.error-message').text(errorMessage).show();
+		function submitForm(formData, $form) {
+		  $.ajax({
+			url: 'https://script.google.com/macros/s/AKfycbxmb6Wg6s1j1tfHDJwDLuyQL3IPdSOXOkPTK2d-8zHQCZ8ddssAhZxrO292k64x_Va2/exec',
+			type: 'POST',
+			contentType: 'application/json',
+			data: JSON.stringify(formData),
+			dataType: 'json',
+			beforeSend: function() {
+			  $form.find('.loading').show();
+			  $form.find('.error-message, .sent-message').hide();
+			},
+			success: function(response) {
+			  $form.find('.loading').hide();
+			  console.log('Success response:', response);
+			  if (response && response.result === 'success') {
+				// Check if it's a newsletter subscription or contact form
+				if (formData.action === 'newsletter') {
+				  // For newsletter subscription
+				  $('#newsletterForm .sent-message').text(response.message).show();
+				  $('#newsletterForm')[0].reset();
+				} else {
+				  // For contact form (existing behavior)
+				  $form.find('.sent-message').text(response.message).show();
+				  $form[0].reset();
 				}
-			  });
+			  } else {
+				$form.find('.error-message').text(response.message || 'An unexpected error occurred. Please try again later.').show();
+			  }
+			},
+			error: function(jqXHR, textStatus, errorThrown) {
+			  $form.find('.loading').hide();
+			  console.error('AJAX Error:', textStatus, errorThrown);
+			  var errorMessage = 'An unexpected error occurred. Please try again later.';
+			  if (jqXHR.responseJSON && jqXHR.responseJSON.message) {
+				errorMessage = jqXHR.responseJSON.message;
+			  } else if (jqXHR.responseText) {
+				try {
+				  var errorResponse = JSON.parse(jqXHR.responseText);
+				  if (errorResponse.message) {
+					errorMessage = errorResponse.message;
+				  }
+				} catch (e) {
+				  console.error('Error parsing error response:', e);
+				}
+			  }
+			  $form.find('.error-message').text(errorMessage).show();
 			}
 		  });
-		</script>
-
+		}
+	  });
+	</script>
+	
 </body>
 
 </html>
