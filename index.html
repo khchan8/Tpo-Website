@@ -551,7 +551,7 @@
 
 			function submitForm(formData, $form) {
 			  $.ajax({
-				url: 'https://script.google.com/macros/s/AKfycbxkC2eGs6siXbM-tO4YANkrjCH9g-OUZE_QUDAKZuxCQzOtYWGAdTYegyd4-8e2wZ7d/exec',
+				url: 'https://script.google.com/macros/s/AKfycbzWauAvSMym3qgDP1nkT0pKx126mJyQFz8PAJmIMrFrSWnfPWNsPx3p8owqExciKFdV/exec',
 				type: 'POST',
 				contentType: 'application/json',
 				data: JSON.stringify(formData),
@@ -573,21 +573,20 @@
 				error: function(jqXHR, textStatus, errorThrown) {
 				  $form.find('.loading').hide();
 				  console.error('AJAX Error:', textStatus, errorThrown);
-				  if (jqXHR.status === 0) {
-					$form.find('.error-message').text('Not connected. Please verify your network connection.').show();
-				  } else if (jqXHR.status == 404) {
-					$form.find('.error-message').text('Requested page not found. [404]').show();
-				  } else if (jqXHR.status == 500) {
-					$form.find('.error-message').text('Internal Server Error [500].').show();
-				  } else if (textStatus === 'parsererror') {
-					$form.find('.error-message').text('Requested JSON parse failed.').show();
-				  } else if (textStatus === 'timeout') {
-					$form.find('.error-message').text('Time out error.').show();
-				  } else if (textStatus === 'abort') {
-					$form.find('.error-message').text('Ajax request aborted.').show();
-				  } else {
-					$form.find('.error-message').text('Uncaught Error: ' + jqXHR.responseText).show();
+				  var errorMessage = 'An unexpected error occurred. Please try again later.';
+				  if (jqXHR.responseJSON && jqXHR.responseJSON.message) {
+					errorMessage = jqXHR.responseJSON.message;
+				  } else if (jqXHR.responseText) {
+					try {
+					  var errorResponse = JSON.parse(jqXHR.responseText);
+					  if (errorResponse.message) {
+						errorMessage = errorResponse.message;
+					  }
+					} catch (e) {
+					  console.error('Error parsing error response:', e);
+					}
 				  }
+				  $form.find('.error-message').text(errorMessage).show();
 				}
 			  });
 			}
