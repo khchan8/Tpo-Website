@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TPO Wellness Store - Dispensary Management System</title>
-    <!-- Add any additional CSS for new form elements -->
     <style>
-        /* Add styles for new form elements */
         .form-group {
             margin-bottom: 1rem;
         }
@@ -18,8 +16,6 @@
     </style>
 </head>
 <body>
-    <!-- Existing header content -->
-
     <main class="content">
         <div class="container">
             <div class="upload-form">
@@ -29,7 +25,6 @@
                         <label for="dispensaryName" class="form-label">Dispensary Name</label>
                         <select class="form-control" id="dispensaryName" required>
                             <option value="">Select a Dispensary</option>
-                            <!-- Options will be populated dynamically -->
                         </select>
                     </div>
 
@@ -110,17 +105,20 @@
         </div>
     </main>
 
-    <!-- Existing footer content -->
-
-    <!-- Existing scripts -->
-    <script>
+<script>
         document.addEventListener('DOMContentLoaded', function() {
             const dispensaryNameSelect = document.getElementById('dispensaryName');
             const form = document.getElementById('dispensaryForm');
             const qrCodeInput = document.getElementById('qrCode');
             const qrCodePreview = document.getElementById('qrCodePreview');
+            const loadingElement = document.querySelector('.loading');
+            const sentMessageElement = document.querySelector('.sent-message');
+            const errorMessageElement = document.querySelector('.error-message');
 
-            // Fetch dispensary names from Google Sheet
+            // Update this URL to your Google Apps Script web app URL
+            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx8PzQ7LjIeCqilt9y272bbss0fjKMPj08Wwtyq1C3UQBBf3RKs3fW_E4YTJ8d5LO3N/exec';
+
+            // Fetch dispensary names
             fetchDispensaryNames();
 
             // Handle dispensary selection
@@ -153,7 +151,7 @@
             });
 
             function fetchDispensaryNames() {
-                fetch('https://script.google.com/macros/s/AKfycbxNzd_UMjborL7beQA3p4jvvyuJUuhrrWmvEM0SFccoSusunOwnXtpgDNxKgKl8YNT9/exec?action=getDispensaryNames')
+                fetch(`${SCRIPT_URL}?action=getDispensaryNames`)
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
@@ -173,7 +171,7 @@
             }
 
             function fetchDispensaryDetails(dispensaryName) {
-                fetch(`https://script.google.com/macros/s/AKfycbxNzd_UMjborL7beQA3p4jvvyuJUuhrrWmvEM0SFccoSusunOwnXtpgDNxKgKl8YNT9/exec?action=getDispensaryDetails&name=${encodeURIComponent(dispensaryName)}`)
+                fetch(`${SCRIPT_URL}?action=getDispensaryDetails&name=${encodeURIComponent(dispensaryName)}`)
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
@@ -183,7 +181,10 @@
                             document.getElementById('phone').value = data.details.phone;
                             document.getElementById('lineContact').value = data.details.lineContact;
                             document.getElementById('history').value = data.details.history;
-                            // Update other fields as needed
+                            document.getElementById('nextTask').value = data.details.nextTask;
+                            document.getElementById('assignedMember').value = data.details.assignedMember;
+                            document.getElementById('dueDate').value = data.details.dueDate;
+                            document.getElementById('salesPipeline').value = data.details.salesPipeline;
                         } else {
                             console.error('Error fetching dispensary details:', data.message);
                         }
@@ -194,13 +195,16 @@
             }
 
             function clearFormFields() {
-                // Clear all form fields except dispensary name
                 document.getElementById('dispensaryAddress').value = '';
                 document.getElementById('contactPersonName').value = '';
                 document.getElementById('email').value = '';
                 document.getElementById('phone').value = '';
                 document.getElementById('lineContact').value = '';
                 document.getElementById('history').value = '';
+                document.getElementById('nextTask').value = '';
+                document.getElementById('assignedMember').value = '';
+                document.getElementById('dueDate').value = '';
+                document.getElementById('salesPipeline').value = '';
                 document.getElementById('qrCode').value = '';
                 qrCodePreview.style.display = 'none';
             }
@@ -224,19 +228,12 @@
             }
 
             function sendFormData(formData) {
-                const loadingElement = document.querySelector('.loading');
-                const sentMessageElement = document.querySelector('.sent-message');
-                const errorMessageElement = document.querySelector('.error-message');
-
                 loadingElement.style.display = 'block';
                 sentMessageElement.style.display = 'none';
                 errorMessageElement.style.display = 'none';
 
-                // Send form data to Google Apps Script
-                // Update the URL to Google Apps Script web app
-                fetch('https://script.google.com/macros/s/AKfycbzNSjAe_rAHeQ-WRnYlnZufdz9aKB0cjZR507O9AO9zMaKEL0H3VVcv3mN-3OH6wD4x/exec', {
+                fetch(SCRIPT_URL, {
                     method: 'POST',
-                    mode: 'no-cors',
                     body: formData
                 })
                 .then(response => response.json())
