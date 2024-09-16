@@ -15,8 +15,58 @@
             <div class="upload-form">
                 <h1 class="text-center mb-4">Dispensary Management System</h1>
                 <form id="dispensaryForm">
-                    <!-- Your form fields remain the same -->
-                    <!-- ... -->
+                    <div class="form-group">
+                        <label for="dispensaryName">Dispensary Name</label>
+                        <select id="dispensaryName" class="form-control">
+                            <option value="">Select a dispensary</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="dispensaryAddress">Dispensary Address</label>
+                        <input type="text" id="dispensaryAddress" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="contactPersonName">Contact Person Name</label>
+                        <input type="text" id="contactPersonName" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Phone</label>
+                        <input type="text" id="phone" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="lineContact">Line Contact</label>
+                        <input type="text" id="lineContact" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="history">History</label>
+                        <input type="text" id="history" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="nextTask">Next Task</label>
+                        <input type="text" id="nextTask" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="assignedMember">Assigned Member</label>
+                        <input type="text" id="assignedMember" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="dueDate">Due Date</label>
+                        <input type="date" id="dueDate" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="salesPipeline">Sales Pipeline</label>
+                        <input type="text" id="salesPipeline" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="qrCode">QR Code</label>
+                        <input type="file" id="qrCode" class="form-control">
+                        <img id="qrCodePreview" alt="QR Code Preview" style="display: none;">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Submit</button>
                 </form>
                 <div class="loading" style="display: none;">Loading...</div>
                 <div class="sent-message" style="display: none;"></div>
@@ -113,8 +163,17 @@
             }
 
             function clearFormFields() {
-                // Clear form fields code remains the same
-                // ...
+                document.getElementById('dispensaryAddress').value = '';
+                document.getElementById('contactPersonName').value = '';
+                document.getElementById('email').value = '';
+                document.getElementById('phone').value = '';
+                document.getElementById('lineContact').value = '';
+                document.getElementById('history').value = '';
+                document.getElementById('nextTask').value = '';
+                document.getElementById('assignedMember').value = '';
+                document.getElementById('dueDate').value = '';
+                document.getElementById('salesPipeline').value = '';
+                qrCodePreview.style.display = 'none';
             }
 
             function submitForm() {
