@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Existing head content -->
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TPO Wellness Store - Dispensary Management System</title>
     <!-- Add any additional CSS for new form elements -->
@@ -153,7 +153,7 @@
             });
 
             function fetchDispensaryNames() {
-                fetch('https://script.google.com/macros/s/AKfycbxif0rx4u9dxXnllwbRhfGlyGzq6q6V6fP0L7XWjHGLtzZHY7cuCLqHqgLMIp9Ujn_E/exec?action=getDispensaryNames')
+                fetch('https://script.google.com/macros/s/AKfycbxNzd_UMjborL7beQA3p4jvvyuJUuhrrWmvEM0SFccoSusunOwnXtpgDNxKgKl8YNT9/exec?action=getDispensaryNames')
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
@@ -173,23 +173,17 @@
             }
 
             function fetchDispensaryDetails(dispensaryName) {
-                fetch(`https://script.google.com/macros/s/AKfycbxif0rx4u9dxXnllwbRhfGlyGzq6q6V6fP0L7XWjHGLtzZHY7cuCLqHqgLMIp9Ujn_E/exec?action=getDispensaryDetails&name=${encodeURIComponent(dispensaryName)}`)
+                fetch(`https://script.google.com/macros/s/AKfycbxNzd_UMjborL7beQA3p4jvvyuJUuhrrWmvEM0SFccoSusunOwnXtpgDNxKgKl8YNT9/exec?action=getDispensaryDetails&name=${encodeURIComponent(dispensaryName)}`)
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            const details = data.details;
-                            document.getElementById('dispensaryAddress').value = details.address;
-                            document.getElementById('contactPersonName').value = details.contactPerson;
-                            document.getElementById('email').value = details.email;
-                            document.getElementById('phone').value = details.phone;
-                            document.getElementById('lineContact').value = details.lineContact;
-                            document.getElementById('history').value = details.history;
-                            document.getElementById('nextTask').value = details.nextTask;
-                            document.getElementById('assignedMember').value = details.assignedMember;
-                            document.getElementById('dueDate').value = details.dueDate;
-                            document.getElementById('salesPipeline').value = details.salesPipeline;
-                            qrCodePreview.src = details.qrCodeUrl;
-                            qrCodePreview.style.display = 'block';
+                            document.getElementById('dispensaryAddress').value = data.details.address;
+                            document.getElementById('contactPersonName').value = data.details.contactPerson;
+                            document.getElementById('email').value = data.details.email;
+                            document.getElementById('phone').value = data.details.phone;
+                            document.getElementById('lineContact').value = data.details.lineContact;
+                            document.getElementById('history').value = data.details.history;
+                            // Update other fields as needed
                         } else {
                             console.error('Error fetching dispensary details:', data.message);
                         }
@@ -240,7 +234,7 @@
 
                 // Send form data to Google Apps Script
                 // Update the URL to Google Apps Script web app
-                fetch('https://script.google.com/macros/s/AKfycbxif0rx4u9dxXnllwbRhfGlyGzq6q6V6fP0L7XWjHGLtzZHY7cuCLqHqgLMIp9Ujn_E/exec', {
+                fetch('https://script.google.com/macros/s/AKfycbxNzd_UMjborL7beQA3p4jvvyuJUuhrrWmvEM0SFccoSusunOwnXtpgDNxKgKl8YNT9/exec', {
                     method: 'POST',
                     mode: 'cors',
                     body: formData
