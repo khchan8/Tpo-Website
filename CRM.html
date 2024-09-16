@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Existing head content -->
+    <title>TPO Wellness Store - Dispensary Management System</title>
+    <!-- Add any additional CSS for new form elements -->
+    <style>
+        /* Add styles for new form elements */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        #qrCodePreview {
+            max-width: 200px;
+            max-height: 200px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Existing header content -->
+
+    <main class="content">
+        <div class="container">
+            <div class="upload-form">
+                <h1 class="text-center mb-4">Dispensary Management System</h1>
+                <form id="dispensaryForm">
+                    <div class="form-group">
+                        <label for="dispensaryName" class="form-label">Dispensary Name</label>
+                        <select class="form-control" id="dispensaryName" required>
+                            <option value="">Select a Dispensary</option>
+                            <!-- Options will be populated dynamically -->
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dispensaryAddress" class="form-label">Dispensary Address</label>
+                        <input type="text" class="form-control" id="dispensaryAddress" required readonly>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="contactPersonName" class="form-label">Contact Person Name</label>
+                        <input type="text" class="form-control" id="contactPersonName" required readonly>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" required readonly>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone" class="form-label">Phone</label>
+                        <input type="tel" class="form-control" id="phone" required readonly>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="lineContact" class="form-label">Line Contact</label>
+                        <input type="text" class="form-control" id="lineContact" required readonly>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="qrCode" class="form-label">Line/WhatsApp QR Code</label>
+                        <input type="file" class="form-control" id="qrCode" accept="image/*" required>
+                        <img id="qrCodePreview" src="#" alt="QR Code Preview" style="display:none;">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="history" class="form-label">History</label>
+                        <textarea class="form-control" id="history" rows="3" readonly></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="nextTask" class="form-label">Next Task Description</label>
+                        <input type="text" class="form-control" id="nextTask" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="assignedMember" class="form-label">Assigned Member</label>
+                        <input type="text" class="form-control" id="assignedMember" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dueDate" class="form-label">Due Date</label>
+                        <input type="date" class="form-control" id="dueDate" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="salesPipeline" class="form-label">Sales Pipeline</label>
+                        <select class="form-control" id="salesPipeline" required>
+                            <option value="Lead">Lead</option>
+                            <option value="Prospect">Prospect</option>
+                            <option value="Opportunity">Opportunity</option>
+                            <option value="Negotiation">Negotiation</option>
+                            <option value="Closed Won">Closed Won</option>
+                            <option value="Closed Lost">Closed Lost</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="activityLogging" class="form-label">Activity Logging</label>
+                        <textarea class="form-control" id="activityLogging" rows="3"></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">Submit</button>
+                </form>
+                <div class="loading" style="display: none;">Loading...</div>
+                <div class="sent-message" style="display: none;"></div>
+                <div class="error-message" style="display: none;"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Existing footer content -->
+
+    <!-- Existing scripts -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const dispensaryNameSelect = document.getElementById('dispensaryName');
+            const form = document.getElementById('dispensaryForm');
+            const qrCodeInput = document.getElementById('qrCode');
+            const qrCodePreview = document.getElementById('qrCodePreview');
+
+            // Fetch dispensary names from Google Sheet
+            fetchDispensaryNames();
+
+            // Handle dispensary selection
+            dispensaryNameSelect.addEventListener('change', function() {
+                const selectedDispensary = this.value;
+                if (selectedDispensary) {
+                    fetchDispensaryDetails(selectedDispensary);
+                } else {
+                    clearFormFields();
+                }
+            });
+
+            // Handle QR code preview
+            qrCodeInput.addEventListener('change', function(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        qrCodePreview.src = e.target.result;
+                        qrCodePreview.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // Handle form submission
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                submitForm();
+            });
+
+            function fetchDispensaryNames() {
+                // Fetch dispensary names from Google Sheet and populate the select element
+                // This will be implemented in the Google Apps Script
+            }
+
+            function fetchDispensaryDetails(dispensaryName) {
+                // Fetch details for the selected dispensary and populate form fields
+                // This will be implemented in the Google Apps Script
+            }
+
+            function clearFormFields() {
+                // Clear all form fields except dispensary name
+                document.getElementById('dispensaryAddress').value = '';
+                document.getElementById('contactPersonName').value = '';
+                document.getElementById('email').value = '';
+                document.getElementById('phone').value = '';
+                document.getElementById('lineContact').value = '';
+                document.getElementById('history').value = '';
+                document.getElementById('qrCode').value = '';
+                qrCodePreview.style.display = 'none';
+            }
+
+            function submitForm() {
+                const formData = new FormData(form);
+                const qrCodeFile = qrCodeInput.files[0];
+
+                if (qrCodeFile) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        const base64File = event.target.result.split(',')[1];
+                        formData.append('qrCodeFile', base64File);
+                        formData.append('qrCodeMimeType', qrCodeFile.type);
+                        sendFormData(formData);
+                    };
+                    reader.readAsDataURL(qrCodeFile);
+                } else {
+                    sendFormData(formData);
+                }
+            }
+
+            function sendFormData(formData) {
+                const loadingElement = document.querySelector('.loading');
+                const sentMessageElement = document.querySelector('.sent-message');
+                const errorMessageElement = document.querySelector('.error-message');
+
+                loadingElement.style.display = 'block';
+                sentMessageElement.style.display = 'none';
+                errorMessageElement.style.display = 'none';
+
+                // Send form data to Google Apps Script
+                // Update the URL to Google Apps Script web app
+                fetch('https://script.google.com/macros/s/AKfycbxNzd_UMjborL7beQA3p4jvvyuJUuhrrWmvEM0SFccoSusunOwnXtpgDNxKgKl8YNT9/exec', {
+                    method: 'POST',
+                    mode: 'cors',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    loadingElement.style.display = 'none';
+                    if (data.success) {
+                        sentMessageElement.textContent = 'Data submitted successfully!';
+                        sentMessageElement.style.display = 'block';
+                        form.reset();
+                        qrCodePreview.style.display = 'none';
+                    } else {
+                        errorMessageElement.textContent = data.message || 'An error occurred during submission.';
+                        errorMessageElement.style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    loadingElement.style.display = 'none';
+                    errorMessageElement.textContent = 'An error occurred during form submission.';
+                    errorMessageElement.style.display = 'block';
+                });
+            }
+        });
+    </script>
+</body>
+</html>
