@@ -236,7 +236,7 @@
                 // Update the URL to Google Apps Script web app
                 fetch('https://script.google.com/macros/s/AKfycbzNSjAe_rAHeQ-WRnYlnZufdz9aKB0cjZR507O9AO9zMaKEL0H3VVcv3mN-3OH6wD4x/exec', {
                     method: 'POST',
-                    mode: 'cors',
+                    mode: 'no-cors',
                     body: formData
                 })
                 .then(response => response.json())
