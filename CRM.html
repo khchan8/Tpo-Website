@@ -153,7 +153,7 @@
             });
 
             function fetchDispensaryNames() {
-                fetch('https://script.google.com/macros/s/AKfycbxNzd_UMjborL7beQA3p4jvvyuJUuhrrWmvEM0SFccoSusunOwnXtpgDNxKgKl8YNT9/exec?action=getDispensaryNames')
+                fetch('https://script.google.com/macros/s/AKfycbxif0rx4u9dxXnllwbRhfGlyGzq6q6V6fP0L7XWjHGLtzZHY7cuCLqHqgLMIp9Ujn_E/exec?action=getDispensaryNames')
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
@@ -173,7 +173,7 @@
             }
 
             function fetchDispensaryDetails(dispensaryName) {
-                fetch(`https://script.google.com/macros/s/AKfycbxNzd_UMjborL7beQA3p4jvvyuJUuhrrWmvEM0SFccoSusunOwnXtpgDNxKgKl8YNT9/exec?action=getDispensaryDetails&name=${encodeURIComponent(dispensaryName)}`)
+                fetch(`https://script.google.com/macros/s/AKfycbxif0rx4u9dxXnllwbRhfGlyGzq6q6V6fP0L7XWjHGLtzZHY7cuCLqHqgLMIp9Ujn_E/exec?action=getDispensaryDetails&name=${encodeURIComponent(dispensaryName)}`)
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
@@ -240,7 +240,7 @@
 
                 // Send form data to Google Apps Script
                 // Update the URL to Google Apps Script web app
-                fetch('https://script.google.com/macros/s/AKfycbxNzd_UMjborL7beQA3p4jvvyuJUuhrrWmvEM0SFccoSusunOwnXtpgDNxKgKl8YNT9/exec', {
+                fetch('https://script.google.com/macros/s/AKfycbxif0rx4u9dxXnllwbRhfGlyGzq6q6V6fP0L7XWjHGLtzZHY7cuCLqHqgLMIp9Ujn_E/exec', {
                     method: 'POST',
                     mode: 'cors',
                     body: formData
