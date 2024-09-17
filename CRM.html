@@ -97,7 +97,7 @@
 
 <script>
 	document.addEventListener('DOMContentLoaded', function() {
-		const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxeAMTcg-XrO2Rc6Ju9UHeQQgpQnjd5Vnl1WOG6odhZa08AdNyMLssH-0F7rP4Xm9k2/exec';
+		const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw07ETrR55LJa0FkwGLCZYglVFdbAHfLjDqxEVEJMcTwHmxPCiTJPm4iWUCRMEjeBjM/exec';
 		const selectDispensary = document.getElementById('selectDispensary');
 		const newDispensaryNameGroup = document.getElementById('newDispensaryNameGroup');
 		const form = document.getElementById('dispensaryForm');
@@ -205,17 +205,29 @@
 
 			fetch(SCRIPT_URL, {
 				method: 'POST',
-				body: formData
+				redirect: 'follow',
+				headers: {
+					'Content-Type': 'application/x-www-form-urlencoded',
+				},
+				body: new URLSearchParams(formData)
 			})
-			.then(response => response.text())
+			.then(response => {
+				if (!response.ok) {
+					throw new Error(`HTTP error! status: ${response.status}`);
+				}
+				return response.text();
+			})
 			.then(text => {
+				console.log('Raw response:', text);
 				try {
 					return JSON.parse(text);
 				} catch (e) {
+					console.error('JSON parse error:', e);
 					throw new Error('Invalid JSON response from server');
 				}
 			})
 			.then(data => {
+				console.log('Parsed data:', data);
 				loadingElement.style.display = 'none';
 				if (data.success) {
 					sentMessageElement.textContent = 'Data submitted successfully!';
@@ -226,7 +238,7 @@
 				}
 			})
 			.catch(error => {
-				console.error('Error:', error);
+				console.error('Fetch error:', error);
 				loadingElement.style.display = 'none';
 				errorMessageElement.textContent = error.message || 'An error occurred during form submission.';
 				errorMessageElement.style.display = 'block';
