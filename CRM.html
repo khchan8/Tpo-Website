@@ -8,6 +8,7 @@
     <style>
         .form-group { margin-bottom: 1rem; }
         #qrCodePreview { max-width: 200px; max-height: 200px; margin-top: 10px; }
+        #history { height: 100px; }
     </style>
 </head>
 <body>
@@ -57,7 +58,7 @@
                     </div>
                     <div class="form-group">
                         <label for="history">Notes & Communication History</label>
-                        <input type="text" id="history" class="form-control" name="history">
+                        <textarea id="history" class="form-control" name="history" readonly></textarea>
                     </div>
                     <div class="form-group">
                         <label for="nextActionItem">Next Action Item</label>
@@ -96,7 +97,7 @@
 
 <script>
 	document.addEventListener('DOMContentLoaded', function() {
-		const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzRCVfuhxW_QIH653H1FU3PJSKXjQb4aM8XXAa3cPTCYecRiJxDXvLSDGK85YfWw5zj/exec';
+		const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxeAMTcg-XrO2Rc6Ju9UHeQQgpQnjd5Vnl1WOG6odhZa08AdNyMLssH-0F7rP4Xm9k2/exec';
 		const selectDispensary = document.getElementById('selectDispensary');
 		const newDispensaryNameGroup = document.getElementById('newDispensaryNameGroup');
 		const form = document.getElementById('dispensaryForm');
