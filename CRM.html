@@ -176,23 +176,56 @@
                 qrCodePreview.style.display = 'none';
             }
 
-            function submitForm() {
-                const formData = new FormData(form);
-                const qrCodeFile = qrCodeInput.files[0];
+			function submitForm(formData, form) {
+				const scriptURL = 'https://script.google.com/macros/s/AKfycbxq8SkUExwx0sz5t-pU5FQTF7DMAVBmGYptiC0rY2mobkK3nfm-_xf4NYLlHYeV2sgM/exec'; // Replace script URL
 
-                if (qrCodeFile) {
-                    const reader = new FileReader();
-                    reader.onload = function(event) {
-                        const base64File = event.target.result.split(',')[1];
-                        formData.append('qrCodeFile', base64File);
-                        formData.append('qrCodeMimeType', qrCodeFile.type);
-                        sendFormData(formData);
-                    };
-                    reader.readAsDataURL(qrCodeFile);
-                } else {
-                    sendFormData(formData);
-                }
-            }
+				const formDataToSend = new FormData();
+				for (const key in formData) {
+					formDataToSend.append(key, formData[key]);
+				}
+
+				const loadingElement = document.querySelector('.loading');
+				const sentMessageElement = document.querySelector('.sent-message');
+				const errorMessageElement = document.querySelector('.error-message');
+
+				if (loadingElement && sentMessageElement && errorMessageElement) {
+					loadingElement.style.display = 'block';
+					sentMessageElement.style.display = 'none';
+					errorMessageElement.style.display = 'none';
+
+					fetch(scriptURL, {
+						method: 'POST',
+						body: formDataToSend
+					})
+					.then(response => response.text())
+					.then(text => {
+						try {
+							return JSON.parse(text);
+						} catch (e) {
+							throw new Error('Invalid JSON response from server');
+						}
+					})
+					.then(data => {
+						console.log('Response:', data);
+						if (data.success) {
+							loadingElement.style.display = 'none';
+							sentMessageElement.textContent = 'Data submitted successfully!';
+							sentMessageElement.style.display = 'block';
+							form.reset();
+						} else {
+							throw new Error(data.message || 'Unknown error occurred');
+						}
+					})
+					.catch(error => {
+						console.error('Error:', error);
+						loadingElement.style.display = 'none';
+						errorMessageElement.textContent = error.message || 'An error occurred during form submission.';
+						errorMessageElement.style.display = 'block';
+					});
+				} else {
+					console.error('Required elements not found in the DOM.');
+				}
+			}
 
             function sendFormData(formData) {
                 loadingElement.style.display = 'block';
