@@ -76,130 +76,122 @@
     </main>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx0hr9S4MiIAWfCBOS5LC8nO2aC0xG_TN-ixGUnjF-ot4CFgo0aT62QPwFpEgsHxNKd/exec';
-        const dispensaryNameSelect = document.getElementById('dispensaryName');
-        const form = document.getElementById('dispensaryForm');
-        const qrCodeInput = document.getElementById('qrCode');
-        const qrCodePreview = document.getElementById('qrCodePreview');
-        const loadingElement = document.querySelector('.loading');
-        const sentMessageElement = document.querySelector('.sent-message');
-        const errorMessageElement = document.querySelector('.error-message');
+	document.addEventListener('DOMContentLoaded', function() {
+		const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwvJZqBpd4Dii5R5y_abjQahtkumUL1hDd-nG3slGvI7hkAMBFWZg_S4RyUm89PzN0u/exec';
+		const dispensaryNameSelect = document.getElementById('dispensaryName');
+		const form = document.getElementById('dispensaryForm');
 
-        // Fetch dispensary names
-        fetchDispensaryNames();
+		// Fetch dispensary names
+		fetchDispensaryNames();
 
-        // Handle dispensary selection
-        dispensaryNameSelect.addEventListener('change', function() {
-            const selectedDispensary = this.value;
-            if (selectedDispensary) {
-                fetchDispensaryDetails(selectedDispensary);
-            } else {
-                clearFormFields();
-            }
-        });
+		// Handle dispensary selection
+		dispensaryNameSelect.addEventListener('change', function() {
+			const selectedDispensary = this.value;
+			if (selectedDispensary) {
+				fetchDispensaryDetails(selectedDispensary);
+			} else {
+				clearFormFields();
+			}
+		});
 
-        // Handle QR code preview
-        qrCodeInput.addEventListener('change', function(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    qrCodePreview.src = e.target.result;
-                    qrCodePreview.style.display = 'block';
-                };
-                reader.readAsDataURL(file);
-            }
-        });
+		// Handle form submission
+		form.addEventListener('submit', function(e) {
+			e.preventDefault();
+			submitForm();
+		});
 
-        // Handle form submission
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            submitForm();
-        });
+		function fetchDispensaryNames() {
+			const script = document.createElement('script');
+			script.src = `${SCRIPT_URL}?action=getDispensaryNames&callback=handleDispensaryNames`;
+			document.body.appendChild(script);
+		}
 
-        function fetchDispensaryNames() {
-            fetch(`${SCRIPT_URL}?action=getDispensaryNames`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        data.names.forEach(name => {
-                            const option = document.createElement('option');
-                            option.value = name;
-                            option.textContent = name;
-                            dispensaryNameSelect.appendChild(option);
-                        });
-                    } else {
-                        console.error('Error fetching dispensary names:', data.message);
-                    }
-                })
-                .catch(error => console.error('Error:', error));
-        }
+		window.handleDispensaryNames = function(data) {
+			if (data.success) {
+				data.names.forEach(name => {
+					const option = document.createElement('option');
+					option.value = name;
+					option.textContent = name;
+					dispensaryNameSelect.appendChild(option);
+				});
+			} else {
+				console.error('Error fetching dispensary names:', data.message);
+			}
+		}
 
-        function fetchDispensaryDetails(dispensaryName) {
-            fetch(`${SCRIPT_URL}?action=getDispensaryDetails&name=${encodeURIComponent(dispensaryName)}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        populateFormFields(data.details);
-                    } else {
-                        console.error('Error fetching dispensary details:', data.message);
-                    }
-                })
-                .catch(error => console.error('Error:', error));
-        }
+		function fetchDispensaryDetails(dispensaryName) {
+			const script = document.createElement('script');
+			script.src = `${SCRIPT_URL}?action=getDispensaryDetails&name=${encodeURIComponent(dispensaryName)}&callback=handleDispensaryDetails`;
+			document.body.appendChild(script);
+		}
 
-        function populateFormFields(details) {
-            document.getElementById('dispensaryAddress').value = details.address;
-            document.getElementById('contactPersonName').value = details.contactPerson;
-            document.getElementById('email').value = details.email;
-            document.getElementById('phone').value = details.phone;
-            document.getElementById('lineContact').value = details.lineContact;
-            document.getElementById('history').value = details.history;
-            document.getElementById('nextTask').value = details.nextTask;
-            document.getElementById('assignedMember').value = details.assignedMember;
-            document.getElementById('dueDate').value = details.dueDate;
-            document.getElementById('salesPipeline').value = details.salesPipeline;
-        }
+		window.handleDispensaryDetails = function(data) {
+			if (data.success) {
+				populateFormFields(data.details);
+			} else {
+				console.error('Error fetching dispensary details:', data.message);
+			}
+		}
 
-        function clearFormFields() {
-            ['dispensaryAddress', 'contactPersonName', 'email', 'phone', 'lineContact', 'history', 'nextTask', 'assignedMember', 'dueDate', 'salesPipeline'].forEach(id => {
-                document.getElementById(id).value = '';
-            });
-            qrCodePreview.style.display = 'none';
-        }
+		function populateFormFields(details) {
+			document.getElementById('dispensaryAddress').value = details.address;
+			document.getElementById('contactPersonName').value = details.contactPerson;
+			document.getElementById('email').value = details.email;
+			document.getElementById('phone').value = details.phone;
+			document.getElementById('lineContact').value = details.lineContact;
+			document.getElementById('history').value = details.history;
+			document.getElementById('nextTask').value = details.nextTask;
+			document.getElementById('assignedMember').value = details.assignedMember;
+			document.getElementById('dueDate').value = details.dueDate;
+			document.getElementById('salesPipeline').value = details.salesPipeline;
+		}
 
-        function submitForm() {
-            const formData = new FormData(form);
+		function clearFormFields() {
+			['dispensaryAddress', 'contactPersonName', 'email', 'phone', 'lineContact', 'history', 'nextTask', 'assignedMember', 'dueDate', 'salesPipeline'].forEach(id => {
+				document.getElementById(id).value = '';
+			});
+		}
 
-            loadingElement.style.display = 'block';
-            sentMessageElement.style.display = 'none';
-            errorMessageElement.style.display = 'none';
+		function submitForm() {
+			const formData = new FormData(form);
+			const loadingElement = document.querySelector('.loading');
+			const sentMessageElement = document.querySelector('.sent-message');
+			const errorMessageElement = document.querySelector('.error-message');
 
-            fetch(SCRIPT_URL, {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                loadingElement.style.display = 'none';
-                if (data.success) {
-                    sentMessageElement.textContent = 'Data submitted successfully!';
-                    sentMessageElement.style.display = 'block';
-                    form.reset();
-                    qrCodePreview.style.display = 'none';
-                } else {
-                    throw new Error(data.message || 'Unknown error occurred');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                loadingElement.style.display = 'none';
-                errorMessageElement.textContent = error.message || 'An error occurred during form submission.';
-                errorMessageElement.style.display = 'block';
-            });
-        }
-    });
+			loadingElement.style.display = 'block';
+			sentMessageElement.style.display = 'none';
+			errorMessageElement.style.display = 'none';
+
+			fetch(SCRIPT_URL, {
+				method: 'POST',
+				body: formData
+			})
+			.then(response => response.text())
+			.then(text => {
+				try {
+					return JSON.parse(text);
+				} catch (e) {
+					throw new Error('Invalid JSON response from server');
+				}
+			})
+			.then(data => {
+				loadingElement.style.display = 'none';
+				if (data.success) {
+					sentMessageElement.textContent = 'Data submitted successfully!';
+					sentMessageElement.style.display = 'block';
+					form.reset();
+				} else {
+					throw new Error(data.message || 'Unknown error occurred');
+				}
+			})
+			.catch(error => {
+				console.error('Error:', error);
+				loadingElement.style.display = 'none';
+				errorMessageElement.textContent = error.message || 'An error occurred during form submission.';
+				errorMessageElement.style.display = 'block';
+			});
+		}
+	});
 </script>
 
 </body>
