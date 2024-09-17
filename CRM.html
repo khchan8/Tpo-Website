@@ -97,7 +97,7 @@
 
 <script>
 	document.addEventListener('DOMContentLoaded', function() {
-		const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw07ETrR55LJa0FkwGLCZYglVFdbAHfLjDqxEVEJMcTwHmxPCiTJPm4iWUCRMEjeBjM/exec';
+		const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxop0d1La86gtSFiyCsBTSsfxlufORYVIDrgUBZ75_TROXGAXVKoqTWAzm4hzFClH9e/exec';
 		const selectDispensary = document.getElementById('selectDispensary');
 		const newDispensaryNameGroup = document.getElementById('newDispensaryNameGroup');
 		const form = document.getElementById('dispensaryForm');
@@ -195,6 +195,8 @@
 
 		function submitForm() {
 			const formData = new FormData(form);
+			const urlEncodedData = new URLSearchParams(formData);
+
 			const loadingElement = document.querySelector('.loading');
 			const sentMessageElement = document.querySelector('.sent-message');
 			const errorMessageElement = document.querySelector('.error-message');
@@ -203,15 +205,19 @@
 			sentMessageElement.style.display = 'none';
 			errorMessageElement.style.display = 'none';
 
+			console.log('Form data being sent:', Object.fromEntries(formData));
+			console.log('URL-encoded data:', urlEncodedData.toString());
+
 			fetch(SCRIPT_URL, {
 				method: 'POST',
-				redirect: 'follow',
 				headers: {
 					'Content-Type': 'application/x-www-form-urlencoded',
 				},
-				body: new URLSearchParams(formData)
+				body: urlEncodedData
 			})
 			.then(response => {
+				console.log('Response status:', response.status);
+				console.log('Response headers:', Object.fromEntries(response.headers));
 				if (!response.ok) {
 					throw new Error(`HTTP error! status: ${response.status}`);
 				}
