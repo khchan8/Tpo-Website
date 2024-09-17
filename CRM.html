@@ -77,9 +77,11 @@
 
 <script>
 	document.addEventListener('DOMContentLoaded', function() {
-		const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzuWMxrW1__eVRLXheew-auLCsmcE4zQ2vrRS0DeLiBEcn5OUAumoZKAPRtQTF0I95U/exec';
+		const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxMqlWmZKkhsXIp7D5z1D5kjFBSkJ7N2YcPZkfVdy2RTAtZGRwCa37U-Y1ZbUEZz8yc/exec';
 		const dispensaryNameSelect = document.getElementById('dispensaryName');
 		const form = document.getElementById('dispensaryForm');
+		const qrCodeInput = document.getElementById('qrCode');
+		const qrCodePreview = document.getElementById('qrCodePreview');
 
 		// Fetch dispensary names
 		fetchDispensaryNames();
@@ -98,6 +100,19 @@
 		form.addEventListener('submit', function(e) {
 			e.preventDefault();
 			submitForm();
+		});
+
+		// Handle QR code preview
+		qrCodeInput.addEventListener('change', function(event) {
+			const file = event.target.files[0];
+			if (file) {
+				const reader = new FileReader();
+				reader.onload = function(e) {
+					qrCodePreview.src = e.target.result;
+					qrCodePreview.style.display = 'block';
+				};
+				reader.readAsDataURL(file);
+			}
 		});
 
 		function fetchDispensaryNames() {
