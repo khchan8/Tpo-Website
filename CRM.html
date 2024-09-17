@@ -17,53 +17,53 @@
                 <form id="dispensaryForm">
                     <div class="form-group">
                         <label for="dispensaryName">Dispensary Name</label>
-                        <select id="dispensaryName" class="form-control">
+                        <select id="dispensaryName" class="form-control" name="dispensaryName">
                             <option value="">Select a dispensary</option>
                         </select>
                     </div>
                     <div class="form-group">
                         <label for="dispensaryAddress">Dispensary Address</label>
-                        <input type="text" id="dispensaryAddress" class="form-control">
+                        <input type="text" id="dispensaryAddress" class="form-control" name="dispensaryAddress">
                     </div>
                     <div class="form-group">
                         <label for="contactPersonName">Contact Person Name</label>
-                        <input type="text" id="contactPersonName" class="form-control">
+                        <input type="text" id="contactPersonName" class="form-control" name="contactPersonName">
                     </div>
                     <div class="form-group">
                         <label for="email">Email</label>
-                        <input type="email" id="email" class="form-control">
+                        <input type="email" id="email" class="form-control" name="email">
                     </div>
                     <div class="form-group">
                         <label for="phone">Phone</label>
-                        <input type="text" id="phone" class="form-control">
+                        <input type="text" id="phone" class="form-control" name="phone">
                     </div>
                     <div class="form-group">
                         <label for="lineContact">Line Contact</label>
-                        <input type="text" id="lineContact" class="form-control">
+                        <input type="text" id="lineContact" class="form-control" name="lineContact">
                     </div>
                     <div class="form-group">
                         <label for="history">History</label>
-                        <input type="text" id="history" class="form-control">
+                        <input type="text" id="history" class="form-control" name="history">
                     </div>
                     <div class="form-group">
                         <label for="nextTask">Next Task</label>
-                        <input type="text" id="nextTask" class="form-control">
+                        <input type="text" id="nextTask" class="form-control" name="nextTask">
                     </div>
                     <div class="form-group">
                         <label for="assignedMember">Assigned Member</label>
-                        <input type="text" id="assignedMember" class="form-control">
+                        <input type="text" id="assignedMember" class="form-control" name="assignedMember">
                     </div>
                     <div class="form-group">
                         <label for="dueDate">Due Date</label>
-                        <input type="date" id="dueDate" class="form-control">
+                        <input type="date" id="dueDate" class="form-control" name="dueDate">
                     </div>
                     <div class="form-group">
                         <label for="salesPipeline">Sales Pipeline</label>
-                        <input type="text" id="salesPipeline" class="form-control">
+                        <input type="text" id="salesPipeline" class="form-control" name="salesPipeline">
                     </div>
                     <div class="form-group">
                         <label for="qrCode">QR Code</label>
-                        <input type="file" id="qrCode" class="form-control">
+                        <input type="file" id="qrCode" class="form-control" name="qrCode">
                         <img id="qrCodePreview" alt="QR Code Preview" style="display: none;">
                     </div>
                     <button type="submit" class="btn btn-primary">Submit</button>
@@ -77,7 +77,7 @@
 
 <script>
 	document.addEventListener('DOMContentLoaded', function() {
-		const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwvJZqBpd4Dii5R5y_abjQahtkumUL1hDd-nG3slGvI7hkAMBFWZg_S4RyUm89PzN0u/exec';
+		const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzuWMxrW1__eVRLXheew-auLCsmcE4zQ2vrRS0DeLiBEcn5OUAumoZKAPRtQTF0I95U/exec';
 		const dispensaryNameSelect = document.getElementById('dispensaryName');
 		const form = document.getElementById('dispensaryForm');
 
