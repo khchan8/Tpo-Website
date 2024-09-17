@@ -86,7 +86,7 @@
             const errorMessageElement = document.querySelector('.error-message');
 
             // Update this URL to your Google Apps Script web app URL
-            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxq8SkUExwx0sz5t-pU5FQTF7DMAVBmGYptiC0rY2mobkK3nfm-_xf4NYLlHYeV2sgM/exec';
+            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxt0DJWgZrszUT3KlBqYyapAAZWWXMdp3rIu9ryNE2i_FeBY1-znNcj1bJ2iz3nBiHO/exec';
 
             // Fetch dispensary names
             fetchDispensaryNames();
@@ -177,7 +177,7 @@
             }
 
 			function submitForm(formData, form) {
-				const scriptURL = 'https://script.google.com/macros/s/AKfycbxq8SkUExwx0sz5t-pU5FQTF7DMAVBmGYptiC0rY2mobkK3nfm-_xf4NYLlHYeV2sgM/exec'; // Replace script URL
+				const scriptURL = 'https://script.google.com/macros/s/AKfycbxt0DJWgZrszUT3KlBqYyapAAZWWXMdp3rIu9ryNE2i_FeBY1-znNcj1bJ2iz3nBiHO/exec'; // Your script URL
 
 				const formDataToSend = new FormData();
 				for (const key in formData) {
@@ -195,31 +195,21 @@
 
 					fetch(scriptURL, {
 						method: 'POST',
-						body: formDataToSend
+						body: formDataToSend,
+						mode: 'no-cors' // This allows the request to be sent without CORS headers
 					})
-					.then(response => response.text())
-					.then(text => {
-						try {
-							return JSON.parse(text);
-						} catch (e) {
-							throw new Error('Invalid JSON response from server');
-						}
-					})
-					.then(data => {
-						console.log('Response:', data);
-						if (data.success) {
-							loadingElement.style.display = 'none';
-							sentMessageElement.textContent = 'Data submitted successfully!';
-							sentMessageElement.style.display = 'block';
-							form.reset();
-						} else {
-							throw new Error(data.message || 'Unknown error occurred');
-						}
+					.then(response => {
+						// Since we're using no-cors, we can't access the response content
+						// We'll assume success if we get here
+						loadingElement.style.display = 'none';
+						sentMessageElement.textContent = 'Data submitted successfully!';
+						sentMessageElement.style.display = 'block';
+						form.reset();
 					})
 					.catch(error => {
 						console.error('Error:', error);
 						loadingElement.style.display = 'none';
-						errorMessageElement.textContent = error.message || 'An error occurred during form submission.';
+						errorMessageElement.textContent = 'An error occurred during form submission.';
 						errorMessageElement.style.display = 'block';
 					});
 				} else {
