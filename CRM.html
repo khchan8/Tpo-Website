@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TPO Wellness Store - Dispensary Management System</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <style>
         .form-group { margin-bottom: 1rem; }
         #qrCodePreview { max-width: 200px; max-height: 200px; margin-top: 10px; }
@@ -16,10 +17,14 @@
                 <h1 class="text-center mb-4">Dispensary Management System</h1>
                 <form id="dispensaryForm">
                     <div class="form-group">
-                        <label for="dispensaryName">Dispensary Name</label>
-                        <select id="dispensaryName" class="form-control" name="dispensaryName">
-                            <option value="">Select a dispensary</option>
+                        <label for="selectDispensary">Select Dispensary</label>
+                        <select id="selectDispensary" class="form-control" name="selectDispensary">
+                            <option value="new">New Dispensary</option>
                         </select>
+                    </div>
+                    <div class="form-group" id="newDispensaryNameGroup" style="display: none;">
+                        <label for="newDispensaryName">Dispensary Name</label>
+                        <input type="text" id="newDispensaryName" class="form-control" name="newDispensaryName">
                     </div>
                     <div class="form-group">
                         <label for="dispensaryAddress">Dispensary Address</label>
@@ -47,12 +52,16 @@
                         <img id="qrCodePreview" alt="QR Code Preview" style="display: none;">
                     </div>
                     <div class="form-group">
+                        <label for="activityLogging">Activity Logging</label>
+                        <input type="text" id="activityLogging" class="form-control" name="activityLogging">
+                    </div>
+                    <div class="form-group">
                         <label for="history">Notes & Communication History</label>
                         <input type="text" id="history" class="form-control" name="history">
                     </div>
                     <div class="form-group">
-                        <label for="nextTask">Task Description</label>
-                        <input type="text" id="nextTask" class="form-control" name="nextTask">
+                        <label for="nextActionItem">Next Action Item</label>
+                        <input type="text" id="nextActionItem" class="form-control" name="nextActionItem">
                     </div>
                     <div class="form-group">
                         <label for="dueDate">Due Date</label>
@@ -60,11 +69,21 @@
                     </div>
                     <div class="form-group">
                         <label for="assignedMember">Assigned Member</label>
-                        <input type="text" id="assignedMember" class="form-control" name="assignedMember">
+                        <select id="assignedMember" class="form-control" name="assignedMember">
+                            <option value="Mike Ray">Mike Ray</option>
+                            <option value="Natalie">Natalie</option>
+                            <option value="Pan">Pan</option>
+                            <option value="NewSales">NewSales</option>
+                        </select>
                     </div>
                     <div class="form-group">
                         <label for="salesPipeline">Sales Pipeline</label>
-                        <input type="text" id="salesPipeline" class="form-control" name="salesPipeline">
+                        <select id="salesPipeline" class="form-control" name="salesPipeline">
+                            <option value="Lead">Lead</option>
+                            <option value="Contacted">Contacted</option>
+                            <option value="Proposal">Proposal</option>
+                            <option value="Closed">Closed</option>
+                        </select>
                     </div>
                     <button type="submit" class="btn btn-primary">Submit</button>
                 </form>
@@ -77,8 +96,9 @@
 
 <script>
 	document.addEventListener('DOMContentLoaded', function() {
-		const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwlpjpwAzrOl-UqB53DmTKy8HIxw_SjUALWLdky0rh_9GKlVZPqC2Y-0ArOt6RAHhlN/exec';
-		const dispensaryNameSelect = document.getElementById('dispensaryName');
+		const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzRCVfuhxW_QIH653H1FU3PJSKXjQb4aM8XXAa3cPTCYecRiJxDXvLSDGK85YfWw5zj/exec';
+		const selectDispensary = document.getElementById('selectDispensary');
+		const newDispensaryNameGroup = document.getElementById('newDispensaryNameGroup');
 		const form = document.getElementById('dispensaryForm');
 		const qrCodeInput = document.getElementById('qrCode');
 		const qrCodePreview = document.getElementById('qrCodePreview');
@@ -87,11 +107,16 @@
 		fetchDispensaryNames();
 
 		// Handle dispensary selection
-		dispensaryNameSelect.addEventListener('change', function() {
+		selectDispensary.addEventListener('change', function() {
 			const selectedDispensary = this.value;
-			if (selectedDispensary) {
+			if (selectedDispensary === 'new') {
+				newDispensaryNameGroup.style.display = 'block';
+				clearFormFields();
+			} else if (selectedDispensary) {
+				newDispensaryNameGroup.style.display = 'none';
 				fetchDispensaryDetails(selectedDispensary);
 			} else {
+				newDispensaryNameGroup.style.display = 'none';
 				clearFormFields();
 			}
 		});
@@ -127,7 +152,7 @@
 					const option = document.createElement('option');
 					option.value = name;
 					option.textContent = name;
-					dispensaryNameSelect.appendChild(option);
+					selectDispensary.appendChild(option);
 				});
 			} else {
 				console.error('Error fetching dispensary names:', data.message);
@@ -155,14 +180,14 @@
 			document.getElementById('phone').value = details.phone;
 			document.getElementById('lineContact').value = details.lineContact;
 			document.getElementById('history').value = details.history;
-			document.getElementById('nextTask').value = details.nextTask;
+			document.getElementById('nextActionItem').value = details.nextTask;
 			document.getElementById('assignedMember').value = details.assignedMember;
 			document.getElementById('dueDate').value = details.dueDate;
 			document.getElementById('salesPipeline').value = details.salesPipeline;
 		}
 
 		function clearFormFields() {
-			['dispensaryAddress', 'contactPersonName', 'email', 'phone', 'lineContact', 'history', 'nextTask', 'assignedMember', 'dueDate', 'salesPipeline'].forEach(id => {
+			['dispensaryAddress', 'contactPersonName', 'email', 'phone', 'lineContact', 'history', 'nextActionItem', 'assignedMember', 'dueDate', 'salesPipeline'].forEach(id => {
 				document.getElementById(id).value = '';
 			});
 		}
