@@ -42,29 +42,29 @@
                         <input type="text" id="lineContact" class="form-control" name="lineContact">
                     </div>
                     <div class="form-group">
-                        <label for="history">History</label>
+                        <label for="qrCode">Line/Whatsapp QR Code</label>
+                        <input type="file" id="qrCode" class="form-control" name="qrCode">
+                        <img id="qrCodePreview" alt="QR Code Preview" style="display: none;">
+                    </div>
+                    <div class="form-group">
+                        <label for="history">Notes & Communication History</label>
                         <input type="text" id="history" class="form-control" name="history">
                     </div>
                     <div class="form-group">
-                        <label for="nextTask">Next Task</label>
+                        <label for="nextTask">Task Description</label>
                         <input type="text" id="nextTask" class="form-control" name="nextTask">
-                    </div>
-                    <div class="form-group">
-                        <label for="assignedMember">Assigned Member</label>
-                        <input type="text" id="assignedMember" class="form-control" name="assignedMember">
                     </div>
                     <div class="form-group">
                         <label for="dueDate">Due Date</label>
                         <input type="date" id="dueDate" class="form-control" name="dueDate">
                     </div>
                     <div class="form-group">
-                        <label for="salesPipeline">Sales Pipeline</label>
-                        <input type="text" id="salesPipeline" class="form-control" name="salesPipeline">
+                        <label for="assignedMember">Assigned Member</label>
+                        <input type="text" id="assignedMember" class="form-control" name="assignedMember">
                     </div>
                     <div class="form-group">
-                        <label for="qrCode">QR Code</label>
-                        <input type="file" id="qrCode" class="form-control" name="qrCode">
-                        <img id="qrCodePreview" alt="QR Code Preview" style="display: none;">
+                        <label for="salesPipeline">Sales Pipeline</label>
+                        <input type="text" id="salesPipeline" class="form-control" name="salesPipeline">
                     </div>
                     <button type="submit" class="btn btn-primary">Submit</button>
                 </form>
@@ -77,7 +77,7 @@
 
 <script>
 	document.addEventListener('DOMContentLoaded', function() {
-		const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxMqlWmZKkhsXIp7D5z1D5kjFBSkJ7N2YcPZkfVdy2RTAtZGRwCa37U-Y1ZbUEZz8yc/exec';
+		const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwlpjpwAzrOl-UqB53DmTKy8HIxw_SjUALWLdky0rh_9GKlVZPqC2Y-0ArOt6RAHhlN/exec';
 		const dispensaryNameSelect = document.getElementById('dispensaryName');
 		const form = document.getElementById('dispensaryForm');
 		const qrCodeInput = document.getElementById('qrCode');
