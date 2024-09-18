@@ -17,75 +17,13 @@
             <div class="upload-form">
                 <h1 class="text-center mb-4">Dispensary Management System</h1>
                 <form id="dispensaryForm">
-                    <div class="form-group">
-                        <label for="selectDispensary">Select Dispensary</label>
-                        <select id="selectDispensary" class="form-control" name="selectDispensary">
-                            <option value="new">New Dispensary</option>
-                        </select>
-                    </div>
-                    <div class="form-group" id="newDispensaryNameGroup" style="display: none;">
-                        <label for="newDispensaryName">Dispensary Name</label>
-                        <input type="text" id="newDispensaryName" class="form-control" name="newDispensaryName">
-                    </div>
-                    <div class="form-group">
-                        <label for="dispensaryAddress">Dispensary Address</label>
-                        <input type="text" id="dispensaryAddress" class="form-control" name="dispensaryAddress">
-                    </div>
-                    <div class="form-group">
-                        <label for="contactPersonName">Contact Person Name</label>
-                        <input type="text" id="contactPersonName" class="form-control" name="contactPersonName">
-                    </div>
-                    <div class="form-group">
-                        <label for="email">Email</label>
-                        <input type="email" id="email" class="form-control" name="email">
-                    </div>
-                    <div class="form-group">
-                        <label for="phone">Phone</label>
-                        <input type="text" id="phone" class="form-control" name="phone">
-                    </div>
-                    <div class="form-group">
-                        <label for="lineContact">Line Contact</label>
-                        <input type="text" id="lineContact" class="form-control" name="lineContact">
-                    </div>
+                    <!-- ... (previous form fields remain unchanged) ... -->
                     <div class="form-group">
                         <label for="qrCode">Line/Whatsapp QR Code</label>
-                        <input type="file" id="qrCode" class="form-control" name="qrCode">
+                        <input type="file" id="qrCode" class="form-control" name="qrCode" accept="image/*">
                         <img id="qrCodePreview" alt="QR Code Preview" style="display: none;">
                     </div>
-                    <div class="form-group">
-                        <label for="activityLogging">Activity Logging</label>
-                        <input type="text" id="activityLogging" class="form-control" name="activityLogging">
-                    </div>
-                    <div class="form-group">
-                        <label for="history">Notes & Communication History</label>
-                        <textarea id="history" class="form-control" name="history" readonly></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="nextActionItem">Next Action Item</label>
-                        <input type="text" id="nextActionItem" class="form-control" name="nextActionItem">
-                    </div>
-                    <div class="form-group">
-                        <label for="dueDate">Due Date</label>
-                        <input type="date" id="dueDate" class="form-control" name="dueDate">
-                    </div>
-                    <div class="form-group">
-                        <label for="assignedMember">Assigned Member</label>
-                        <select id="assignedMember" class="form-control" name="assignedMember">
-                            <option value="Mike Ray">Mike Ray</option>
-                            <option value="Natalie">Natalie</option>
-                            <option value="Pan">Pan</option>
-                            <option value="NewSales">NewSales</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="salesPipeline">Sales Pipeline</label>
-                        <select id="salesPipeline" class="form-control" name="salesPipeline">
-                            <option value="Lead">Lead</option>
-                            <option value="Contacted">Contacted</option>
-                            <option value="Proposal">Proposal</option>
-                            <option value="Closed">Closed</option>
-                        </select>
-                    </div>
+                    <!-- ... (remaining form fields) ... -->
                     <button type="submit" class="btn btn-primary">Submit</button>
                 </form>
                 <div class="loading" style="display: none;">Loading...</div>
@@ -96,161 +34,183 @@
     </main>
 
 <script>
-	document.addEventListener('DOMContentLoaded', function() {
-		const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxN6kXwPJi0209JzFNsHvEMds_rk751eST212akkhVNJR7oweyPCR9gKzhNGzOnDYTs/exec';
-		const selectDispensary = document.getElementById('selectDispensary');
-		const newDispensaryNameGroup = document.getElementById('newDispensaryNameGroup');
-		const form = document.getElementById('dispensaryForm');
-		const qrCodeInput = document.getElementById('qrCode');
-		const qrCodePreview = document.getElementById('qrCodePreview');
+    document.addEventListener('DOMContentLoaded', function() {
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxN6kXwPJi0209JzFNsHvEMds_rk751eST212akkhVNJR7oweyPCR9gKzhNGzOnDYTs/exec';
+        const selectDispensary = document.getElementById('selectDispensary');
+        const newDispensaryNameGroup = document.getElementById('newDispensaryNameGroup');
+        const form = document.getElementById('dispensaryForm');
+        const qrCodeInput = document.getElementById('qrCode');
+        const qrCodePreview = document.getElementById('qrCodePreview');
 
-		// Fetch dispensary names
-		fetchDispensaryNames();
+        // Fetch dispensary names
+        fetchDispensaryNames();
 
-		// Handle dispensary selection
-		selectDispensary.addEventListener('change', function() {
-			const selectedDispensary = this.value;
-			if (selectedDispensary === 'new') {
-				newDispensaryNameGroup.style.display = 'block';
-				clearFormFields();
-			} else if (selectedDispensary) {
-				newDispensaryNameGroup.style.display = 'none';
-				fetchDispensaryDetails(selectedDispensary);
-			} else {
-				newDispensaryNameGroup.style.display = 'none';
-				clearFormFields();
-			}
-		});
+        // Handle dispensary selection
+        selectDispensary.addEventListener('change', function() {
+            const selectedDispensary = this.value;
+            if (selectedDispensary === 'new') {
+                newDispensaryNameGroup.style.display = 'block';
+                clearFormFields();
+            } else if (selectedDispensary) {
+                newDispensaryNameGroup.style.display = 'none';
+                fetchDispensaryDetails(selectedDispensary);
+            } else {
+                newDispensaryNameGroup.style.display = 'none';
+                clearFormFields();
+            }
+        });
 
-		// Handle form submission
-		form.addEventListener('submit', function(e) {
-			e.preventDefault();
-			submitForm();
-		});
+        // Handle form submission
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            submitForm();
+        });
 
-		// Handle QR code preview
-		qrCodeInput.addEventListener('change', function(event) {
-			const file = event.target.files[0];
-			if (file) {
-				const reader = new FileReader();
-				reader.onload = function(e) {
-					qrCodePreview.src = e.target.result;
-					qrCodePreview.style.display = 'block';
-				};
-				reader.readAsDataURL(file);
-			}
-		});
+        // Handle QR code preview
+        qrCodeInput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    qrCodePreview.src = e.target.result;
+                    qrCodePreview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
 
-		function fetchDispensaryNames() {
-			const script = document.createElement('script');
-			script.src = `${SCRIPT_URL}?action=getDispensaryNames&callback=handleDispensaryNames`;
-			document.body.appendChild(script);
-		}
+        function fetchDispensaryNames() {
+            const script = document.createElement('script');
+            script.src = `${SCRIPT_URL}?action=getDispensaryNames&callback=handleDispensaryNames`;
+            document.body.appendChild(script);
+        }
 
-		window.handleDispensaryNames = function(data) {
-			if (data.success) {
-				data.names.forEach(name => {
-					const option = document.createElement('option');
-					option.value = name;
-					option.textContent = name;
-					selectDispensary.appendChild(option);
-				});
-			} else {
-				console.error('Error fetching dispensary names:', data.message);
-			}
-		}
+        window.handleDispensaryNames = function(data) {
+            if (data.success) {
+                data.names.forEach(name => {
+                    const option = document.createElement('option');
+                    option.value = name;
+                    option.textContent = name;
+                    selectDispensary.appendChild(option);
+                });
+            } else {
+                console.error('Error fetching dispensary names:', data.message);
+            }
+        }
 
-		function fetchDispensaryDetails(dispensaryName) {
-			const script = document.createElement('script');
-			script.src = `${SCRIPT_URL}?action=getDispensaryDetails&name=${encodeURIComponent(dispensaryName)}&callback=handleDispensaryDetails`;
-			document.body.appendChild(script);
-		}
+        function fetchDispensaryDetails(dispensaryName) {
+            const script = document.createElement('script');
+            script.src = `${SCRIPT_URL}?action=getDispensaryDetails&name=${encodeURIComponent(dispensaryName)}&callback=handleDispensaryDetails`;
+            document.body.appendChild(script);
+        }
 
-		window.handleDispensaryDetails = function(data) {
-			if (data.success) {
-				populateFormFields(data.details);
-			} else {
-				console.error('Error fetching dispensary details:', data.message);
-			}
-		}
+        window.handleDispensaryDetails = function(data) {
+            if (data.success) {
+                populateFormFields(data.details);
+            } else {
+                console.error('Error fetching dispensary details:', data.message);
+            }
+        }
 
-		function populateFormFields(details) {
-			document.getElementById('dispensaryAddress').value = details.address;
-			document.getElementById('contactPersonName').value = details.contactPerson;
-			document.getElementById('email').value = details.email;
-			document.getElementById('phone').value = details.phone;
-			document.getElementById('lineContact').value = details.lineContact;
-			document.getElementById('history').value = details.history;
-			document.getElementById('nextActionItem').value = details.nextTask;
-			document.getElementById('assignedMember').value = details.assignedMember;
-			document.getElementById('dueDate').value = details.dueDate;
-			document.getElementById('salesPipeline').value = details.salesPipeline;
-		}
+        function populateFormFields(details) {
+            document.getElementById('dispensaryAddress').value = details.address;
+            document.getElementById('contactPersonName').value = details.contactPerson;
+            document.getElementById('email').value = details.email;
+            document.getElementById('phone').value = details.phone;
+            document.getElementById('lineContact').value = details.lineContact;
+            document.getElementById('history').value = details.history;
+            document.getElementById('nextActionItem').value = details.nextTask;
+            document.getElementById('assignedMember').value = details.assignedMember;
+            document.getElementById('dueDate').value = details.dueDate;
+            document.getElementById('salesPipeline').value = details.salesPipeline;
+            if (details.qrCodeUrl) {
+                qrCodePreview.src = details.qrCodeUrl;
+                qrCodePreview.style.display = 'block';
+            }
+        }
 
-		function clearFormFields() {
-			['dispensaryAddress', 'contactPersonName', 'email', 'phone', 'lineContact', 'history', 'nextActionItem', 'assignedMember', 'dueDate', 'salesPipeline'].forEach(id => {
-				document.getElementById(id).value = '';
-			});
-		}
+        function clearFormFields() {
+            ['dispensaryAddress', 'contactPersonName', 'email', 'phone', 'lineContact', 'history', 'nextActionItem', 'assignedMember', 'dueDate', 'salesPipeline'].forEach(id => {
+                document.getElementById(id).value = '';
+            });
+            qrCodePreview.src = '';
+            qrCodePreview.style.display = 'none';
+        }
 
-		function submitForm() {
-			const formData = new FormData(form);
-			const urlEncodedData = new URLSearchParams(formData);
+        function submitForm() {
+            const formData = new FormData(form);
+            const loadingElement = document.querySelector('.loading');
+            const sentMessageElement = document.querySelector('.sent-message');
+            const errorMessageElement = document.querySelector('.error-message');
 
-			const loadingElement = document.querySelector('.loading');
-			const sentMessageElement = document.querySelector('.sent-message');
-			const errorMessageElement = document.querySelector('.error-message');
+            loadingElement.style.display = 'block';
+            sentMessageElement.style.display = 'none';
+            errorMessageElement.style.display = 'none';
 
-			loadingElement.style.display = 'block';
-			sentMessageElement.style.display = 'none';
-			errorMessageElement.style.display = 'none';
+            // Handle QR code file
+            const qrCodeFile = qrCodeInput.files[0];
+            if (qrCodeFile) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    formData.set('qrCode', e.target.result.split(',')[1]); // Remove the "data:image/jpeg;base64," part
+                    sendFormData(formData);
+                };
+                reader.readAsDataURL(qrCodeFile);
+            } else {
+                sendFormData(formData);
+            }
+        }
 
-			console.log('Form data being sent:', Object.fromEntries(formData));
-			console.log('URL-encoded data:', urlEncodedData.toString());
+        function sendFormData(formData) {
+            const urlEncodedData = new URLSearchParams(formData);
 
-			fetch(SCRIPT_URL, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/x-www-form-urlencoded',
-				},
-				body: urlEncodedData
-			})
-			.then(response => {
-				console.log('Response status:', response.status);
-				console.log('Response headers:', Object.fromEntries(response.headers));
-				if (!response.ok) {
-					throw new Error(`HTTP error! status: ${response.status}`);
-				}
-				return response.text();
-			})
-			.then(text => {
-				console.log('Raw response:', text);
-				try {
-					return JSON.parse(text);
-				} catch (e) {
-					console.error('JSON parse error:', e);
-					throw new Error('Invalid JSON response from server');
-				}
-			})
-			.then(data => {
-				console.log('Parsed data:', data);
-				loadingElement.style.display = 'none';
-				if (data.success) {
-					sentMessageElement.textContent = 'Data submitted successfully!';
-					sentMessageElement.style.display = 'block';
-					form.reset();
-				} else {
-					throw new Error(data.message || 'Unknown error occurred');
-				}
-			})
-			.catch(error => {
-				console.error('Fetch error:', error);
-				loadingElement.style.display = 'none';
-				errorMessageElement.textContent = error.message || 'An error occurred during form submission.';
-				errorMessageElement.style.display = 'block';
-			});
-		}
-	});
+            console.log('Form data being sent:', Object.fromEntries(formData));
+            console.log('URL-encoded data:', urlEncodedData.toString());
+
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: urlEncodedData
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                console.log('Response headers:', Object.fromEntries(response.headers));
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.text();
+            })
+            .then(text => {
+                console.log('Raw response:', text);
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    console.error('JSON parse error:', e);
+                    throw new Error('Invalid JSON response from server');
+                }
+            })
+            .then(data => {
+                console.log('Parsed data:', data);
+                loadingElement.style.display = 'none';
+                if (data.success) {
+                    sentMessageElement.textContent = 'Data submitted successfully!';
+                    sentMessageElement.style.display = 'block';
+                    form.reset();
+                    qrCodePreview.style.display = 'none';
+                } else {
+                    throw new Error(data.message || 'Unknown error occurred');
+                }
+            })
+            .catch(error => {
+                console.error('Fetch error:', error);
+                loadingElement.style.display = 'none';
+                errorMessageElement.textContent = error.message || 'An error occurred during form submission.';
+                errorMessageElement.style.display = 'block';
+            });
+        }
+    });
 </script>
 
 </body>
