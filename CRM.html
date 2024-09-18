@@ -9,6 +9,10 @@
         .form-group { margin-bottom: 1rem; }
         #qrCodePreview { max-width: 200px; max-height: 200px; margin-top: 10px; }
         #history { height: 100px; }
+        .message { display: none; margin-top: 1rem; padding: 0.5rem; border-radius: 0.25rem; }
+        .loading { background-color: #e9ecef; }
+        .sent-message { background-color: #d4edda; color: #155724; }
+        .error-message { background-color: #f8d7da; color: #721c24; }
     </style>
 </head>
 <body>
@@ -17,30 +21,98 @@
             <div class="upload-form">
                 <h1 class="text-center mb-4">Dispensary Management System</h1>
                 <form id="dispensaryForm">
-                    <!-- ... (previous form fields remain unchanged) ... -->
+                    <div class="form-group">
+                        <label for="selectDispensary">Select Dispensary</label>
+                        <select id="selectDispensary" class="form-control" name="selectDispensary" required>
+                            <option value="">Select a dispensary</option>
+                            <option value="new">New Dispensary</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="newDispensaryNameGroup" style="display: none;">
+                        <label for="newDispensaryName">Dispensary Name</label>
+                        <input type="text" id="newDispensaryName" class="form-control" name="newDispensaryName">
+                    </div>
+                    <div class="form-group">
+                        <label for="dispensaryAddress">Dispensary Address</label>
+                        <input type="text" id="dispensaryAddress" class="form-control" name="dispensaryAddress" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="contactPersonName">Contact Person Name</label>
+                        <input type="text" id="contactPersonName" class="form-control" name="contactPersonName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" class="form-control" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Phone</label>
+                        <input type="tel" id="phone" class="form-control" name="phone" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="lineContact">Line Contact</label>
+                        <input type="text" id="lineContact" class="form-control" name="lineContact">
+                    </div>
                     <div class="form-group">
                         <label for="qrCode">Line/Whatsapp QR Code</label>
                         <input type="file" id="qrCode" class="form-control" name="qrCode" accept="image/*">
                         <img id="qrCodePreview" alt="QR Code Preview" style="display: none;">
                     </div>
-                    <!-- ... (remaining form fields) ... -->
+                    <div class="form-group">
+                        <label for="activityLogging">Activity Logging</label>
+                        <textarea id="activityLogging" class="form-control" name="activityLogging" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="history">Notes & Communication History</label>
+                        <textarea id="history" class="form-control" name="history" readonly></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="nextActionItem">Next Action Item</label>
+                        <input type="text" id="nextActionItem" class="form-control" name="nextActionItem">
+                    </div>
+                    <div class="form-group">
+                        <label for="dueDate">Due Date</label>
+                        <input type="date" id="dueDate" class="form-control" name="dueDate">
+                    </div>
+                    <div class="form-group">
+                        <label for="assignedMember">Assigned Member</label>
+                        <select id="assignedMember" class="form-control" name="assignedMember" required>
+                            <option value="">Select a member</option>
+                            <option value="Mike Ray">Mike Ray</option>
+                            <option value="Natalie">Natalie</option>
+                            <option value="Pan">Pan</option>
+                            <option value="NewSales">NewSales</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="salesPipeline">Sales Pipeline</label>
+                        <select id="salesPipeline" class="form-control" name="salesPipeline" required>
+                            <option value="">Select pipeline stage</option>
+                            <option value="Lead">Lead</option>
+                            <option value="Contacted">Contacted</option>
+                            <option value="Proposal">Proposal</option>
+                            <option value="Closed">Closed</option>
+                        </select>
+                    </div>
                     <button type="submit" class="btn btn-primary">Submit</button>
                 </form>
-                <div class="loading" style="display: none;">Loading...</div>
-                <div class="sent-message" style="display: none;"></div>
-                <div class="error-message" style="display: none;"></div>
+                <div class="message loading">Loading...</div>
+                <div class="message sent-message"></div>
+                <div class="message error-message"></div>
             </div>
         </div>
     </main>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxN6kXwPJi0209JzFNsHvEMds_rk751eST212akkhVNJR7oweyPCR9gKzhNGzOnDYTs/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwrjcnxClRDUoQfs2K2nS2Bul50tS0L97fIG6SkRfagjB_9E-sN2mQPoGGh7cefvUVL/exec';
         const selectDispensary = document.getElementById('selectDispensary');
         const newDispensaryNameGroup = document.getElementById('newDispensaryNameGroup');
         const form = document.getElementById('dispensaryForm');
         const qrCodeInput = document.getElementById('qrCode');
         const qrCodePreview = document.getElementById('qrCodePreview');
+        const loadingElement = document.querySelector('.loading');
+        const sentMessageElement = document.querySelector('.sent-message');
+        const errorMessageElement = document.querySelector('.error-message');
 
         // Fetch dispensary names
         fetchDispensaryNames();
@@ -80,36 +152,44 @@
         });
 
         function fetchDispensaryNames() {
-            const script = document.createElement('script');
-            script.src = `${SCRIPT_URL}?action=getDispensaryNames&callback=handleDispensaryNames`;
-            document.body.appendChild(script);
-        }
-
-        window.handleDispensaryNames = function(data) {
-            if (data.success) {
-                data.names.forEach(name => {
-                    const option = document.createElement('option');
-                    option.value = name;
-                    option.textContent = name;
-                    selectDispensary.appendChild(option);
+            showMessage(loadingElement, 'Fetching dispensary names...');
+            fetch(`${SCRIPT_URL}?action=getDispensaryNames`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        data.names.forEach(name => {
+                            const option = document.createElement('option');
+                            option.value = name;
+                            option.textContent = name;
+                            selectDispensary.appendChild(option);
+                        });
+                        hideMessage(loadingElement);
+                    } else {
+                        throw new Error(data.message || 'Failed to fetch dispensary names');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching dispensary names:', error);
+                    showMessage(errorMessageElement, 'Error fetching dispensary names: ' + error.message);
                 });
-            } else {
-                console.error('Error fetching dispensary names:', data.message);
-            }
         }
 
         function fetchDispensaryDetails(dispensaryName) {
-            const script = document.createElement('script');
-            script.src = `${SCRIPT_URL}?action=getDispensaryDetails&name=${encodeURIComponent(dispensaryName)}&callback=handleDispensaryDetails`;
-            document.body.appendChild(script);
-        }
-
-        window.handleDispensaryDetails = function(data) {
-            if (data.success) {
-                populateFormFields(data.details);
-            } else {
-                console.error('Error fetching dispensary details:', data.message);
-            }
+            showMessage(loadingElement, 'Fetching dispensary details...');
+            fetch(`${SCRIPT_URL}?action=getDispensaryDetails&name=${encodeURIComponent(dispensaryName)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        populateFormFields(data.details);
+                        hideMessage(loadingElement);
+                    } else {
+                        throw new Error(data.message || 'Failed to fetch dispensary details');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching dispensary details:', error);
+                    showMessage(errorMessageElement, 'Error fetching dispensary details: ' + error.message);
+                });
         }
 
         function populateFormFields(details) {
@@ -130,22 +210,17 @@
         }
 
         function clearFormFields() {
-            ['dispensaryAddress', 'contactPersonName', 'email', 'phone', 'lineContact', 'history', 'nextActionItem', 'assignedMember', 'dueDate', 'salesPipeline'].forEach(id => {
-                document.getElementById(id).value = '';
-            });
+            form.reset();
             qrCodePreview.src = '';
             qrCodePreview.style.display = 'none';
         }
 
         function submitForm() {
             const formData = new FormData(form);
-            const loadingElement = document.querySelector('.loading');
-            const sentMessageElement = document.querySelector('.sent-message');
-            const errorMessageElement = document.querySelector('.error-message');
 
-            loadingElement.style.display = 'block';
-            sentMessageElement.style.display = 'none';
-            errorMessageElement.style.display = 'none';
+            showMessage(loadingElement, 'Submitting form...');
+            hideMessage(sentMessageElement);
+            hideMessage(errorMessageElement);
 
             // Handle QR code file
             const qrCodeFile = qrCodeInput.files[0];
@@ -180,35 +255,32 @@
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                return response.text();
-            })
-            .then(text => {
-                console.log('Raw response:', text);
-                try {
-                    return JSON.parse(text);
-                } catch (e) {
-                    console.error('JSON parse error:', e);
-                    throw new Error('Invalid JSON response from server');
-                }
+                return response.json();
             })
             .then(data => {
                 console.log('Parsed data:', data);
-                loadingElement.style.display = 'none';
+                hideMessage(loadingElement);
                 if (data.success) {
-                    sentMessageElement.textContent = 'Data submitted successfully!';
-                    sentMessageElement.style.display = 'block';
-                    form.reset();
-                    qrCodePreview.style.display = 'none';
+                    showMessage(sentMessageElement, 'Data submitted successfully!');
+                    clearFormFields();
                 } else {
                     throw new Error(data.message || 'Unknown error occurred');
                 }
             })
             .catch(error => {
                 console.error('Fetch error:', error);
-                loadingElement.style.display = 'none';
-                errorMessageElement.textContent = error.message || 'An error occurred during form submission.';
-                errorMessageElement.style.display = 'block';
+                hideMessage(loadingElement);
+                showMessage(errorMessageElement, 'Error: ' + (error.message || 'An error occurred during form submission.'));
             });
+        }
+
+        function showMessage(element, message) {
+            element.textContent = message;
+            element.style.display = 'block';
+        }
+
+        function hideMessage(element) {
+            element.style.display = 'none';
         }
     });
 </script>
