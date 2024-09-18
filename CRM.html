@@ -104,7 +104,7 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwD6OsyTevS0xRm5NrahLw4ANa1LP5TuNrU6UiXZlkh3EZP6NkFNsatYJ5D0q4pThc/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwb28l9P5zYfB1jP0H_DhyubCy2ERj07wLq_lfn5RsJAWmEWol7iJflGX6qJvMRnM5-/exec';
         const selectDispensary = document.getElementById('selectDispensary');
         const newDispensaryNameGroup = document.getElementById('newDispensaryNameGroup');
         const form = document.getElementById('dispensaryForm');
@@ -154,12 +154,7 @@
         function fetchDispensaryNames() {
             showMessage(loadingElement, 'Fetching dispensary names...');
             fetch(`${SCRIPT_URL}?action=getDispensaryNames`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json();
-                })
+                .then(response => response.json())
                 .then(data => {
                     if (data.success) {
                         data.names.forEach(name => {
@@ -182,12 +177,7 @@
         function fetchDispensaryDetails(dispensaryName) {
             showMessage(loadingElement, 'Fetching dispensary details...');
             fetch(`${SCRIPT_URL}?action=getDispensaryDetails&name=${encodeURIComponent(dispensaryName)}`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json();
-                })
+                .then(response => response.json())
                 .then(data => {
                     if (data.success) {
                         populateFormFields(data.details);
@@ -227,18 +217,14 @@
 
         function submitForm() {
             const formData = new FormData(form);
-
-            showMessage(loadingElement, 'Submitting form...');
-            hideMessage(sentMessageElement);
-            hideMessage(errorMessageElement);
-
-            // Handle QR code file
             const qrCodeFile = qrCodeInput.files[0];
+
             if (qrCodeFile) {
                 const reader = new FileReader();
-                reader.onload = function(e) {
-                    // Send the full data URL instead of removing the prefix
-                    formData.set('qrCode', e.target.result);
+                reader.onload = function(event) {
+                    const base64File = event.target.result.split(',')[1]; // Extract base64 data
+                    formData.set('qrCode', base64File);
+                    formData.set('qrCodeMimeType', qrCodeFile.type);
                     sendFormData(formData);
                 };
                 reader.readAsDataURL(qrCodeFile);
@@ -248,28 +234,17 @@
         }
 
         function sendFormData(formData) {
-            // Convert FormData to a plain object
-            const plainFormData = Object.fromEntries(formData.entries());
-
-            console.log('Form data being sent:', plainFormData);
+            showMessage(loadingElement, 'Submitting form...');
+            hideMessage(sentMessageElement);
+            hideMessage(errorMessageElement);
 
             fetch(SCRIPT_URL, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(plainFormData)
+                mode: 'cors',
+                body: formData
             })
-            .then(response => {
-                console.log('Response status:', response.status);
-                console.log('Response headers:', Object.fromEntries(response.headers));
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
+            .then(response => response.json())
             .then(data => {
-                console.log('Parsed data:', data);
                 hideMessage(loadingElement);
                 if (data.success) {
                     showMessage(sentMessageElement, 'Data submitted successfully!');
@@ -279,7 +254,7 @@
                 }
             })
             .catch(error => {
-                console.error('Fetch error:', error);
+                console.error('Error:', error);
                 hideMessage(loadingElement);
                 showMessage(errorMessageElement, 'Error: ' + (error.message || 'An error occurred during form submission.'));
             });
