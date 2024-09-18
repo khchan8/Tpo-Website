@@ -104,7 +104,7 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyldoaY-Lh--Vv5bQbv5IHaUWrdZXvFO68UsKtm065YpMVwGE40xfszfLB0DZtZZoE2/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwD6OsyTevS0xRm5NrahLw4ANa1LP5TuNrU6UiXZlkh3EZP6NkFNsatYJ5D0q4pThc/exec';
         const selectDispensary = document.getElementById('selectDispensary');
         const newDispensaryNameGroup = document.getElementById('newDispensaryNameGroup');
         const form = document.getElementById('dispensaryForm');
@@ -237,7 +237,8 @@
             if (qrCodeFile) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    formData.set('qrCode', e.target.result.split(',')[1]); // Remove the "data:image/jpeg;base64," part
+                    // Send the full data URL instead of removing the prefix
+                    formData.set('qrCode', e.target.result);
                     sendFormData(formData);
                 };
                 reader.readAsDataURL(qrCodeFile);
@@ -247,17 +248,17 @@
         }
 
         function sendFormData(formData) {
-            const urlEncodedData = new URLSearchParams(formData);
+            // Convert FormData to a plain object
+            const plainFormData = Object.fromEntries(formData.entries());
 
-            console.log('Form data being sent:', Object.fromEntries(formData));
-            console.log('URL-encoded data:', urlEncodedData.toString());
+            console.log('Form data being sent:', plainFormData);
 
             fetch(SCRIPT_URL, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Content-Type': 'application/json',
                 },
-                body: urlEncodedData
+                body: JSON.stringify(plainFormData)
             })
             .then(response => {
                 console.log('Response status:', response.status);
