@@ -40,7 +40,7 @@
             background-color: #0056b3;
             border-color: #0056b3;
         }
-        #qrCodePreview {
+        .qr-code-preview {
             max-width: 200px;
             max-height: 200px;
             margin-top: 10px;
@@ -149,8 +149,8 @@
                     <div class="form-group">
                         <label for="qrCode">Line/Whatsapp QR Code</label>
                         <div id="qrCodeContent"></div>
-                        <input type="file" id="qrCode" class="form-control-file" name="qrCode" accept="image/*">
-                        <img id="qrCodePreview" alt="QR Code Preview" style="display: none;">
+                        <input type="file" id="qrCode" class="form-control-file" name="qrCode" accept="image/*" multiple>
+                        <div id="qrCodePreviewContainer"></div>
                     </div>
                 </div>
             </div>
@@ -200,20 +200,12 @@
                         <label for="assignedMember">Assigned Member</label>
                         <select id="assignedMember" class="form-control" name="assignedMember" required>
                             <option value="">Select a member</option>
-                            <option value="Mike Ray">Mike Ray</option>
-                            <option value="Natalie">Natalie</option>
-                            <option value="Pan">Pan</option>
-                            <option value="NewSales">NewSales</option>
                         </select>
                     </div>
                     <div class="form-group">
                         <label for="salesPipeline">Sales Pipeline</label>
                         <select id="salesPipeline" class="form-control" name="salesPipeline" required>
                             <option value="">Select pipeline stage</option>
-                            <option value="Lead">Lead</option>
-                            <option value="Contacted">Contacted</option>
-                            <option value="Proposal">Proposal</option>
-                            <option value="Closed">Closed</option>
                         </select>
                     </div>
                 </div>
@@ -246,253 +238,289 @@
             content.style.display = 'block';
         });
     </script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzZ9mnoY1EUuRMbZZA_sWOlKTTqtPQCpcLZRwz6s56ClqXbKyWgqgZ-gZ6MZfKX3tfu/exec';
-    const selectDispensary = document.getElementById('selectDispensary');
-    const newDispensaryNameGroup = document.getElementById('newDispensaryNameGroup');
-    const form = document.getElementById('dispensaryForm');
-    const qrCodeInput = document.getElementById('qrCode');
-    const qrCodePreview = document.getElementById('qrCodePreview');
-    const qrCodeContent = document.getElementById('qrCodeContent');
-    const loadingElement = document.querySelector('.loading');
-    const sentMessageElement = document.querySelector('.sent-message');
-    const errorMessageElement = document.querySelector('.error-message');
-    const nextActionItem = document.getElementById('nextActionItem');
-    const nextActionItemDetails = document.getElementById('nextActionItemDetails');
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxkibfdRTe6AtHaj5JUK2wYVVvhngzjdWAkjoR4FnOCm3DwIPa4Rs7Ptaq5E6xi8al3/exec';
+            const selectDispensary = document.getElementById('selectDispensary');
+            const newDispensaryNameGroup = document.getElementById('newDispensaryNameGroup');
+            const form = document.getElementById('dispensaryForm');
+            const qrCodeInput = document.getElementById('qrCode');
+            const qrCodePreviewContainer = document.getElementById('qrCodePreviewContainer');
+            const qrCodeContent = document.getElementById('qrCodeContent');
+            const loadingElement = document.querySelector('.loading');
+            const sentMessageElement = document.querySelector('.sent-message');
+            const errorMessageElement = document.querySelector('.error-message');
+            const nextActionItem = document.getElementById('nextActionItem');
+            const nextActionItemDetails = document.getElementById('nextActionItemDetails');
+            const assignedMember = document.getElementById('assignedMember');
+            const salesPipeline = document.getElementById('salesPipeline');
 
-    let dispensariesData = [];
+            let dispensariesData = [];
+            let setupData = {};
 
-    // Fetch all dispensary data
-    fetchAllDispensaryData();
+            // Fetch all dispensary data and setup data
+            fetchAllDispensaryData();
+            fetchSetupData();
 
-    // Handle dispensary selection
-    selectDispensary.addEventListener('change', function() {
-        const selectedDispensary = this.value;
-        if (selectedDispensary === 'new') {
-            newDispensaryNameGroup.style.display = 'block';
-            clearFormFields();
-            this.value = 'new';
-        } else if (selectedDispensary) {
-            newDispensaryNameGroup.style.display = 'none';
-            populateFormFields(selectedDispensary);
-        } else {
-            newDispensaryNameGroup.style.display = 'none';
-            clearFormFields();
-        }
-    });
-
-    // Handle form submission
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        submitForm();
-    });
-
-    // Handle QR code preview
-    qrCodeInput.addEventListener('change', function(event) {
-        const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                qrCodePreview.src = e.target.result;
-                qrCodePreview.style.display = 'block';
-            };
-            reader.readAsDataURL(file);
-        }
-    });
-
-/**    // Handle collapsible sections
-    const collapsibleHeaders = document.querySelectorAll('.collapsible-header');
-    collapsibleHeaders.forEach(header => {
-        header.addEventListener('click', function() {
-            this.parentElement.classList.toggle('active');
-            const content = this.nextElementSibling;
-            if (content.style.display === "block") {
-                content.style.display = "none";
-            } else {
-                content.style.display = "block";
-            }
-        });
-    });
-*/
-    function fetchAllDispensaryData() {
-        showMessage(loadingElement, 'Fetching dispensary data...');
-        const script = document.createElement('script');
-        script.src = `${SCRIPT_URL}?action=getAllDispensaryData&callback=handleDispensaryData`;
-        document.body.appendChild(script);
-    }
-
-    // This function needs to be global to be called by JSONP
-    window.handleDispensaryData = function(response) {
-        if (response.success) {
-            dispensariesData = response.data;
-            populateDispensarySelect();
-            hideMessage(loadingElement);
-        } else {
-            console.error('Error fetching dispensary data:', response.message);
-            showMessage(errorMessageElement, 'Error fetching dispensary data: ' + response.message);
-        }
-    }
-
-    function populateDispensarySelect() {
-        selectDispensary.innerHTML = '<option value="">Select a dispensary</option><option value="new">New Dispensary</option>';
-        dispensariesData.forEach(dispensary => {
-            const option = document.createElement('option');
-            option.value = dispensary['Dispensary Name'];
-            option.textContent = dispensary['Dispensary Name'];
-            selectDispensary.appendChild(option);
-        });
-    }
-
-    function populateFormFields(dispensaryName) {
-        const dispensary = dispensariesData.find(d => d['Dispensary Name'] === dispensaryName);
-        if (dispensary) {
-            document.getElementById('dispensaryAddress').value = dispensary['Dispensary Address'] || '';
-            document.getElementById('contactPersonName').value = dispensary['Contact Person Name'] || '';
-            document.getElementById('email').value = dispensary['Email'] || '';
-            document.getElementById('phone').value = dispensary['Phone'] || '';
-            document.getElementById('lineContact').value = dispensary['Line Contact'] || '';
-            document.getElementById('history').value = dispensary['Notes & Communication History'] || '';
-            
-            // Handle Next Action Item
-            const nextActionItemFull = dispensary['Next Action Item'] || '';
-            const [action, ...details] = nextActionItemFull.split(': ');
-            document.getElementById('nextActionItem').value = action || '';
-            document.getElementById('nextActionItemDetails').value = details.join(': ') || '';
-            
-            document.getElementById('assignedMember').value = dispensary['Assigned Member'] || '';
-            document.getElementById('salesPipeline').value = dispensary['Sales pipeline'] || '';
-
-            // Handle the Due Date and Time
-            if (dispensary['Due Date']) {
-                const dueDate = new Date(dispensary['Due Date']);
-                const formattedDate = dueDate.toISOString().slice(0, 16);
-                document.getElementById('dueDate').value = formattedDate;
-            } else {
-                document.getElementById('dueDate').value = '';
-            }
-
-            // Handle QR Code content
-            const qrCodeData = dispensary['Line/Whatsapp QR Code'];
-            if (qrCodeData) {
-                if (qrCodeData.startsWith('http')) {
-                    qrCodeContent.innerHTML = `<a href="${qrCodeData}" target="_blank">${qrCodeData}</a>`;
+            // Handle dispensary selection
+            selectDispensary.addEventListener('change', function() {
+                const selectedDispensary = this.value;
+                if (selectedDispensary === 'new') {
+                    newDispensaryNameGroup.style.display = 'block';
+                    clearFormFields();
+                    this.value = 'new';
+                } else if (selectedDispensary) {
+                    newDispensaryNameGroup.style.display = 'none';
+                    populateFormFields(selectedDispensary);
                 } else {
-                    qrCodeContent.textContent = qrCodeData;
+                    newDispensaryNameGroup.style.display = 'none';
+                    clearFormFields();
                 }
-            } else {
+            });
+
+            // Handle form submission
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                submitForm();
+            });
+
+            // Handle QR code preview
+            qrCodeInput.addEventListener('change', function(event) {
+                qrCodePreviewContainer.innerHTML = '';
+                const files = event.target.files;
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const img = document.createElement('img');
+                            img.src = e.target.result;
+                            img.className = 'qr-code-preview';
+                            qrCodePreviewContainer.appendChild(img);
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                }
+            });
+
+            function fetchAllDispensaryData() {
+                showMessage(loadingElement, 'Fetching dispensary data...');
+                const script = document.createElement('script');
+                script.src = `${SCRIPT_URL}?action=getAllDispensaryData&callback=handleDispensaryData`;
+                document.body.appendChild(script);
+            }
+
+            function fetchSetupData() {
+                showMessage(loadingElement, 'Fetching setup data...');
+                const script = document.createElement('script');
+                script.src = `${SCRIPT_URL}?action=getSetupData&callback=handleSetupData`;
+                document.body.appendChild(script);
+            }
+
+            // This function needs to be global to be called by JSONP
+            window.handleDispensaryData = function(response) {
+                if (response.success) {
+                    dispensariesData = response.data;
+                    populateDispensarySelect();
+                    hideMessage(loadingElement);
+                } else {
+                    console.error('Error fetching dispensary data:', response.message);
+                    showMessage(errorMessageElement, 'Error fetching dispensary data: ' + response.message);
+                }
+            }
+
+            // This function needs to be global to be called by JSONP
+            window.handleSetupData = function(response) {
+                if (response.success) {
+                    setupData = response.data;
+                    populateAssignedMemberSelect();
+                    populateSalesPipelineSelect();
+                    hideMessage(loadingElement);
+                } else {
+                    console.error('Error fetching setup data:', response.message);
+                    showMessage(errorMessageElement, 'Error fetching setup data: ' + response.message);
+                }
+            }
+
+            function populateDispensarySelect() {
+                selectDispensary.innerHTML = '<option value="">Select a dispensary</option><option value="new">New Dispensary</option>';
+                dispensariesData.forEach(dispensary => {
+                    const option = document.createElement('option');
+                    option.value = dispensary['Dispensary Name'];
+                    option.textContent = dispensary['Dispensary Name'];
+                    selectDispensary.appendChild(option);
+                });
+            }
+
+            function populateAssignedMemberSelect() {
+                assignedMember.innerHTML = '<option value="">Select a member</option>';
+                setupData.members.forEach(member => {
+                    const option = document.createElement('option');
+                    const [name, email] = member.split(', ');
+                    option.value = name;
+                    option.textContent = name;
+                    assignedMember.appendChild(option);
+                });
+            }
+
+            function populateSalesPipelineSelect() {
+                salesPipeline.innerHTML = '<option value="">Select pipeline stage</option>';
+                setupData.salesPipelines.forEach(pipeline => {
+                    const option = document.createElement('option');
+                    option.value = pipeline;
+                    option.textContent = pipeline;
+                    salesPipeline.appendChild(option);
+                });
+            }
+
+            function populateFormFields(dispensaryName) {
+                const dispensary = dispensariesData.find(d => d['Dispensary Name'] === dispensaryName);
+                if (dispensary) {
+                    document.getElementById('dispensaryAddress').value = dispensary['Dispensary Address'] || '';
+                    document.getElementById('contactPersonName').value = dispensary['Contact Person Name'] || '';
+                    document.getElementById('email').value = dispensary['Email'] || '';
+                    document.getElementById('phone').value = dispensary['Phone'] || '';
+                    document.getElementById('lineContact').value = dispensary['Line Contact'] || '';
+                    document.getElementById('history').value = dispensary['Notes & Communication History'] || '';
+                    
+                    // Handle Next Action Item
+                    const nextActionItemFull = dispensary['Next Action Item'] || '';
+                    const [action, ...details] = nextActionItemFull.split(': ');
+                    document.getElementById('nextActionItem').value = action || '';
+                    document.getElementById('nextActionItemDetails').value = details.join(': ') || '';
+                    
+                    document.getElementById('assignedMember').value = dispensary['Assigned Member'] || '';
+                    document.getElementById('salesPipeline').value = dispensary['Sales pipeline'] || '';
+
+                    // Handle the Due Date and Time
+                    if (dispensary['Due Date']) {
+                        const dueDate = new Date(dispensary['Due Date']);
+                        const formattedDate = dueDate.toISOString().slice(0, 16);
+                        document.getElementById('dueDate').value = formattedDate;
+                    } else {
+                        document.getElementById('dueDate').value = '';
+                    }
+
+                    // Handle QR Code content
+                    const qrCodeData = dispensary['Line/Whatsapp QR Code'];
+                    if (qrCodeData) {
+                        const qrCodeUrls = qrCodeData.split('\n');
+                        qrCodeContent.innerHTML = qrCodeUrls.map(url => `<a href="${url}" target="_blank">${url}</a>`).join('<br>');
+                        qrCodePreviewContainer.innerHTML = qrCodeUrls.map(url => `<img src="${url}" class="qr-code-preview" alt="QR Code">`).join('');
+                    } else {
+                        qrCodeContent.textContent = '';
+                        qrCodePreviewContainer.innerHTML = '';
+                    }
+                } else {
+                    console.error("Dispensary not found:", dispensaryName);
+                }
+            }
+
+            function clearFormFields() {
+                form.reset();
+                qrCodePreviewContainer.innerHTML = '';
                 qrCodeContent.textContent = '';
             }
 
-            // Handle QR Code preview
-            if (qrCodeData && qrCodeData.trim() !== '') {
-                qrCodePreview.src = qrCodeData;
-                qrCodePreview.style.display = 'block';
-                qrCodePreview.onerror = function() {
-                    this.style.display = 'none';
-                    console.log('Failed to load QR Code image');
-                };
-            } else {
-                qrCodePreview.style.display = 'none';
+            function submitForm() {
+                const formData = new FormData(form);
+                
+                // Combine Next Action Item and Details
+                const nextActionItemValue = formData.get('nextActionItem');
+                const nextActionItemDetailsValue = formData.get('nextActionItemDetails');
+                formData.set('nextActionItem', `${nextActionItemValue}: ${nextActionItemDetailsValue}`);
+                
+                // Handle QR Code files
+                const qrCodeFiles = qrCodeInput.files;
+                if (qrCodeFiles.length > 0) {
+                    const qrCodePromises = Array.from(qrCodeFiles).map(file => 
+                        new Promise((resolve, reject) => {
+                            const reader = new FileReader();
+                            reader.onload = e => resolve({ data: e.target.result.split(',')[1], type: file.type });
+                            reader.onerror = reject;
+                            reader.readAsDataURL(file);
+                        })
+                    );
+
+                    Promise.all(qrCodePromises).then(qrCodes => {
+                        formData.delete('qrCode');
+                        formData.delete('qrCodeMimeType');
+                        qrCodes.forEach((qrCode, index) => {
+                            formData.append('qrCode', qrCode.data);
+                            formData.append('qrCodeMimeType', qrCode.type);
+                        });
+                        sendFormData(formData);
+                    }).catch(error => {
+                        console.error('Error processing QR code files:', error);
+                        showMessage(errorMessageElement, 'Error processing QR code files.');
+                    });
+                } else {
+                    sendFormData(formData);
+                }
             }
-        } else {
-            console.error("Dispensary not found:", dispensaryName);
-        }
-    }
 
-    function clearFormFields() {
-        form.reset();
-        qrCodePreview.src = '';
-        qrCodePreview.style.display = 'none';
-        qrCodeContent.textContent = '';
-    }
+            function sendFormData(formData) {
+                showMessage(loadingElement, 'Submitting form...');
+                hideMessage(sentMessageElement);
+                hideMessage(errorMessageElement);
 
-    function submitForm() {
-        const formData = new FormData(form);
-        
-        // Combine Next Action Item and Details
-        const nextActionItemValue = formData.get('nextActionItem');
-        const nextActionItemDetailsValue = formData.get('nextActionItemDetails');
-        formData.set('nextActionItem', `${nextActionItemValue}: ${nextActionItemDetailsValue}`);
-        
-        // Handle QR Code file
-        const qrCodeFile = qrCodeInput.files[0];
-        if (qrCodeFile) {
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                const base64File = event.target.result.split(',')[1];
-                formData.set('qrCode', base64File);
-                formData.set('qrCodeMimeType', qrCodeFile.type);
-                sendFormData(formData);
-            };
-            reader.readAsDataURL(qrCodeFile);
-        } else {
-            sendFormData(formData);
-        }
-    }
-
-    function sendFormData(formData) {
-        showMessage(loadingElement, 'Submitting form...');
-        hideMessage(sentMessageElement);
-        hideMessage(errorMessageElement);
-
-        fetch(SCRIPT_URL, {
-            method: 'POST',
-            mode: 'cors',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            hideMessage(loadingElement);
-            if (data.success) {
-                showMessage(sentMessageElement, 'Data submitted successfully!');
-                updateLocalCache(formData);
-                clearFormFields();
-            } else {
-                throw new Error(data.message || 'Unknown error occurred');
+                fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'cors',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    hideMessage(loadingElement);
+                    if (data.success) {
+                        showMessage(sentMessageElement, 'Data submitted successfully!');
+                        updateLocalCache(formData);
+                        clearFormFields();
+                    } else {
+                        throw new Error(data.message || 'Unknown error occurred');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    hideMessage(loadingElement);
+                    showMessage(errorMessageElement, 'Error: ' + (error.message || 'An error occurred during form submission.'));
+                });
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            hideMessage(loadingElement);
-            showMessage(errorMessageElement, 'Error: ' + (error.message || 'An error occurred during form submission.'));
+
+            function updateLocalCache(formData) {
+                const dispensaryName = formData.get('selectDispensary') === 'new' ? formData.get('newDispensaryName') : formData.get('selectDispensary');
+                let dispensary = dispensariesData.find(d => d['Dispensary Name'] === dispensaryName);
+
+                if (!dispensary) {
+                    dispensary = { 'Dispensary Name': dispensaryName };
+                    dispensariesData.push(dispensary);
+                }
+
+                dispensary['Dispensary Address'] = formData.get('dispensaryAddress');
+                dispensary['Contact Person Name'] = formData.get('contactPersonName');
+                dispensary['Email'] = formData.get('email');
+                dispensary['Phone'] = formData.get('phone');
+                dispensary['Line Contact'] = formData.get('lineContact');
+                dispensary['Notes & Communication History'] = formData.get('history');
+                dispensary['Next Action Item'] = formData.get('nextActionItem');
+                dispensary['Assigned Member'] = formData.get('assignedMember');
+                dispensary['Due Date'] = formData.get('dueDate');
+                dispensary['Sales pipeline'] = formData.get('salesPipeline');
+
+                if (formData.get('selectDispensary') === 'new') {
+                    populateDispensarySelect();
+                }
+            }
+
+            function showMessage(element, message) {
+                element.textContent = message;
+                element.style.display = 'block';
+            }
+
+            function hideMessage(element) {
+                element.style.display = 'none';
+            }
         });
-    }
-
-    function updateLocalCache(formData) {
-        const dispensaryName = formData.get('selectDispensary') === 'new' ? formData.get('newDispensaryName') : formData.get('selectDispensary');
-        let dispensary = dispensariesData.find(d => d['Dispensary Name'] === dispensaryName);
-
-        if (!dispensary) {
-            dispensary = { 'Dispensary Name': dispensaryName };
-            dispensariesData.push(dispensary);
-        }
-
-        dispensary['Dispensary Address'] = formData.get('dispensaryAddress');
-        dispensary['Contact Person Name'] = formData.get('contactPersonName');
-        dispensary['Email'] = formData.get('email');
-        dispensary['Phone'] = formData.get('phone');
-        dispensary['Line Contact'] = formData.get('lineContact');
-        dispensary['Notes & Communication History'] = formData.get('history');
-        dispensary['Next Action Item'] = formData.get('nextActionItem');
-        dispensary['Assigned Member'] = formData.get('assignedMember');
-        dispensary['Due Date'] = formData.get('dueDate');
-        dispensary['Sales pipeline'] = formData.get('salesPipeline');
-
-        if (formData.get('selectDispensary') === 'new') {
-            populateDispensarySelect();
-        }
-    }
-
-    function showMessage(element, message) {
-        element.textContent = message;
-        element.style.display = 'block';
-    }
-
-    function hideMessage(element) {
-        element.style.display = 'none';
-    }
-});
-</script>
+    </script>
 </body>
 </html>
