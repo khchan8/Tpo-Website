@@ -240,7 +240,7 @@
     </script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx7vrJqbCS_UCRLPaGpPFCTBPZzixbK3zhjYBsYMhVFC0wA_CoZmqNlGjQ-FnN31TWl/exec';
+            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxsy8QsGjDp6ExmYgtGCegSMU2_GqBR9zjKIn-FMbsjNyh0q6SpV7wIKbXDPqtoSS8L/exec';
             const selectDispensary = document.getElementById('selectDispensary');
             const newDispensaryNameGroup = document.getElementById('newDispensaryNameGroup');
             const form = document.getElementById('dispensaryForm');
@@ -390,7 +390,7 @@
                     document.getElementById('nextActionItemDetails').value = details.join(': ') || '';
                     
                     document.getElementById('assignedMember').value = dispensary['Assigned Member'] || '';
-                    document.getElementById('salesPipeline').value = dispensary['Sales pipeline'] || '';
+                    document.getElementById('salesPipeline').value = dispensary['Sales Pipeline'] || '';
 
                     // Handle the Due Date and Time
                     if (dispensary['Due Date']) {
@@ -471,14 +471,17 @@
                 })
                 .then(response => response.json())
                 .then(data => {
-                    hideMessage(loadingElement);
-                    if (data.success) {
-                        showMessage(sentMessageElement, 'Data submitted successfully!');
-                        updateLocalCache(formData);
-                        clearFormFields();
-                    } else {
-                        throw new Error(data.message || 'Unknown error occurred');
-                    }
+				  hideMessage(loadingElement);
+				  if (data.success) {
+					showMessage(sentMessageElement, 'Data submitted successfully!');
+					if (data.calendarEventCreated) {
+					  showMessage(sentMessageElement, 'Data submitted and calendar event created successfully!');
+					}
+					updateLocalCache(formData);
+					clearFormFields();
+				  } else {
+					throw new Error(data.message || 'Unknown error occurred');
+				  }
                 })
                 .catch(error => {
                     console.error('Error:', error);
@@ -505,7 +508,7 @@
                 dispensary['Next Action Item'] = formData.get('nextActionItem');
                 dispensary['Assigned Member'] = formData.get('assignedMember');
                 dispensary['Due Date'] = formData.get('dueDate');
-                dispensary['Sales pipeline'] = formData.get('salesPipeline');
+                dispensary['Sales Pipeline'] = formData.get('salesPipeline');
 
                 if (formData.get('selectDispensary') === 'new') {
                     populateDispensarySelect();
