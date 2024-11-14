@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <base href="">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TPO Wellness - CRM</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        h1 {
+            color: #007bff;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        label {
+            font-weight: bold;
+            color: #555;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+            border-color: #0056b3;
+        }
+        .qr-code-preview {
+            max-width: 200px;
+            max-height: 200px;
+            margin-top: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .message {
+            display: none;
+            margin-top: 1rem;
+            padding: 0.75rem;
+            border-radius: 0.25rem;
+            font-weight: bold;
+        }
+        .loading {
+            background-color: #e9ecef;
+            color: #495057;
+        }
+        .sent-message {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error-message {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .collapsible-section {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+        }
+        .collapsible-header {
+            background-color: #f8f9fa;
+            padding: 10px 15px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .collapsible-content {
+            padding: 15px;
+            display: none;
+        }
+        .collapsible-icon {
+            transition: transform 0.3s ease;
+        }
+        .collapsible-section.active .collapsible-icon {
+            transform: rotate(180deg);
+        }
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center">Tiny CRM</h1>
+        <form id="dispensaryForm">
+            <div class="collapsible-section active">
+                <div class="collapsible-header">
+                    <span>Dispensary Information</span>
+                    <i class="fas fa-chevron-down collapsible-icon"></i>
+                </div>
+                <div class="collapsible-content">
+                    <div class="form-group">
+                        <label for="selectDispensary">Select Dispensary</label>
+                        <select id="selectDispensary" class="form-control" name="selectDispensary" required>
+                            <option value="">Select a dispensary</option>
+                            <option value="new">New Dispensary</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="newDispensaryNameGroup" style="display: none;">
+                        <label for="newDispensaryName">Dispensary Name</label>
+                        <input type="text" id="newDispensaryName" class="form-control" name="newDispensaryName">
+                    </div>
+                    <div class="form-group">
+                        <label for="dispensaryAddress">Dispensary Address</label>
+                        <input type="text" id="dispensaryAddress" class="form-control" name="dispensaryAddress" required>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible-section active">
+                <div class="collapsible-header">
+                    <span>Contact Information</span>
+                    <i class="fas fa-chevron-down collapsible-icon"></i>
+                </div>
+                <div class="collapsible-content">
+                    <div class="form-group">
+                        <label for="contactPersonName">Contact Person Name</label>
+                        <input type="text" id="contactPersonName" class="form-control" name="contactPersonName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" class="form-control" name="email">
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Phone</label>
+                        <input type="tel" id="phone" class="form-control" name="phone" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="lineContact">Line Contact</label>
+                        <input type="text" id="lineContact" class="form-control" name="lineContact">
+                    </div>
+                    <div class="form-group">
+                        <label for="qrCode">Line/Whatsapp QR Code</label>
+                        <div id="qrCodeContent"></div>
+                        <input type="file" id="qrCode" class="form-control-file" name="qrCode" accept="image/*" multiple>
+                        <div id="qrCodePreviewContainer"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible-section active">
+                <div class="collapsible-header">
+                    <span>Activity and Notes</span>
+                    <i class="fas fa-chevron-down collapsible-icon"></i>
+                </div>
+                <div class="collapsible-content">
+                    <div class="form-group">
+                        <label for="activityLogging">Activity Logging</label>
+                        <textarea id="activityLogging" class="form-control" name="activityLogging" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="history">Notes & Communication History</label>
+                        <textarea id="history" class="form-control" name="history" readonly></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible-section active">
+                <div class="collapsible-header">
+                    <span>Action Items and Assignment</span>
+                    <i class="fas fa-chevron-down collapsible-icon"></i>
+                </div>
+                <div class="collapsible-content">
+                    <div class="form-group">
+                        <label for="nextActionItem">Next Action Item</label>
+                        <select id="nextActionItem" class="form-control" name="nextActionItem">
+                            <option value="">Select an action</option>
+                            <option value="Follow up">Follow up</option>
+                            <option value="Send proposal">Send proposal</option>
+                            <option value="Schedule meeting">Schedule meeting</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="nextActionItemDetails">Next Action Item Details</label>
+                        <textarea id="nextActionItemDetails" class="form-control" name="nextActionItemDetails" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="dueDate">Due Date and Time</label>
+                        <input type="datetime-local" id="dueDate" class="form-control" name="dueDate">
+                    </div>
+                    <div class="form-group">
+                        <label for="assignedMember">Assigned Member</label>
+                        <select id="assignedMember" class="form-control" name="assignedMember" required>
+                            <option value="">Select a member</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="salesPipeline">Sales Pipeline</label>
+                        <select id="salesPipeline" class="form-control" name="salesPipeline" required>
+                            <option value="">Select pipeline stage</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">Submit</button>
+        </form>
+        <div class="message loading">Loading...</div>
+        <div class="message sent-message"></div>
+        <div class="message error-message"></div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        // Add JavaScript to toggle the collapsible sections
+        document.querySelectorAll('.collapsible-header').forEach(header => {
+            header.addEventListener('click', () => {
+                const section = header.parentElement;
+                section.classList.toggle('active');
+                const content = header.nextElementSibling;
+                content.style.display = section.classList.contains('active') ? 'block' : 'none';
+            });
+        });
+
+        // Ensure the collapsible sections are expanded by default
+        document.querySelectorAll('.collapsible-section').forEach(section => {
+            const content = section.querySelector('.collapsible-content');
+            content.style.display = 'block';
+        });
+    </script>
+    <script>
+        // Utility functions for caching
+        function cacheData(key, data) {
+            try {
+                localStorage.setItem(key, JSON.stringify({
+                    timestamp: new Date().getTime(),
+                    data: data
+                }));
+            } catch (error) {
+                console.warn('Caching failed:', error);
+            }
+        }
+
+        function getCachedData(key, maxAge = 5 * 60 * 1000) { // 5 minutes default
+            try {
+                const cached = localStorage.getItem(key);
+                if (!cached) return null;
+                
+                const { timestamp, data } = JSON.parse(cached);
+                if (Date.now() - timestamp > maxAge) return null;
+                
+                return data;
+            } catch (error) {
+                console.warn('Cache retrieval failed:', error);
+                return null;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxYYVfcaEy0vv0gAs3pWiLWopd8Xk4-hrDSFJTXNpUvc4aX0Aq-A0LUbl-kC-5vwMWpHA/exec';
+            const selectDispensary = document.getElementById('selectDispensary');
+            const newDispensaryNameGroup = document.getElementById('newDispensaryNameGroup');
+            const form = document.getElementById('dispensaryForm');
+            const qrCodeInput = document.getElementById('qrCode');
+            const qrCodePreviewContainer = document.getElementById('qrCodePreviewContainer');
+            const qrCodeContent = document.getElementById('qrCodeContent');
+            const loadingElement = document.querySelector('.loading');
+            const sentMessageElement = document.querySelector('.sent-message');
+            const errorMessageElement = document.querySelector('.error-message');
+            const nextActionItem = document.getElementById('nextActionItem');
+            const nextActionItemDetails = document.getElementById('nextActionItemDetails');
+            const assignedMember = document.getElementById('assignedMember');
+            const salesPipeline = document.getElementById('salesPipeline');
+
+            let dispensariesData = [];
+            let setupData = {};
+
+            // Fetch all dispensary data and setup data
+            fetchAllDispensaryData();
+            fetchSetupData();
+
+            // Handle dispensary selection
+            selectDispensary.addEventListener('change', function() {
+                const selectedDispensary = this.value;
+                if (selectedDispensary === 'new') {
+                    newDispensaryNameGroup.style.display = 'block';
+                    clearFormFields();
+                    this.value = 'new';
+                } else if (selectedDispensary) {
+                    newDispensaryNameGroup.style.display = 'none';
+                    populateFormFields(selectedDispensary);
+                } else {
+                    newDispensaryNameGroup.style.display = 'none';
+                    clearFormFields();
+                }
+            });
+
+            // Handle form submission
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                submitForm();
+            });
+
+            // Handle QR code preview
+            qrCodeInput.addEventListener('change', function(event) {
+                qrCodePreviewContainer.innerHTML = '';
+                const files = event.target.files;
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const img = document.createElement('img');
+                            img.src = e.target.result;
+                            img.className = 'qr-code-preview';
+                            qrCodePreviewContainer.appendChild(img);
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                }
+            });
+
+            function fetchAllDispensaryData() {
+                // Try to get cached data first
+                const cachedData = getCachedData('dispensaryData');
+                if (cachedData) {
+                    dispensariesData = cachedData;
+                    populateDispensarySelect();
+                    hideMessage(loadingElement);
+                    
+                    // Fetch fresh data in background
+                    fetchFreshData();
+                } else {
+                    fetchFreshData();
+                }
+            }
+
+            function fetchFreshData() {
+                showMessage(loadingElement, 'Fetching dispensary data...');
+                const script = document.createElement('script');
+                script.src = `${SCRIPT_URL}?action=getAllDispensaryData&callback=handleDispensaryData`;
+                document.body.appendChild(script);
+            }
+
+            function fetchSetupData() {
+                showMessage(loadingElement, 'Fetching setup data...');
+                const script = document.createElement('script');
+                script.src = `${SCRIPT_URL}?action=getSetupData&callback=handleSetupData`;
+                document.body.appendChild(script);
+            }
+
+            // This function needs to be global to be called by JSONP
+            window.handleDispensaryData = function(response) {
+                if (response.success) {
+                    dispensariesData = response.data;
+                    cacheData('dispensaryData', response.data);  // Cache the data
+                    populateDispensarySelect();
+                    hideMessage(loadingElement);
+                } else {
+                    console.error('Error fetching dispensary data:', response.message);
+                    showMessage(errorMessageElement, 'Error fetching dispensary data: ' + response.message);
+                }
+            }
+
+            // This function needs to be global to be called by JSONP
+            window.handleSetupData = function(response) {
+                if (response.success) {
+                    setupData = response.data;
+                    populateAssignedMemberSelect();
+                    populateSalesPipelineSelect();
+                    hideMessage(loadingElement);
+                } else {
+                    console.error('Error fetching setup data:', response.message);
+                    showMessage(errorMessageElement, 'Error fetching setup data: ' + response.message);
+                }
+            }
+
+            function populateDispensarySelect() {
+                selectDispensary.innerHTML = '<option value="">Select a dispensary</option><option value="new">New Dispensary</option>';
+                dispensariesData.forEach(dispensary => {
+                    const option = document.createElement('option');
+                    option.value = dispensary['Dispensary Name'];
+                    option.textContent = dispensary['Dispensary Name'];
+                    selectDispensary.appendChild(option);
+                });
+            }
+
+            function populateAssignedMemberSelect() {
+                assignedMember.innerHTML = '<option value="">Select a member</option>';
+                setupData.members.forEach(member => {
+                    const option = document.createElement('option');
+                    const [name, email] = member.split(', ');
+                    option.value = name;
+                    option.textContent = name;
+                    assignedMember.appendChild(option);
+                });
+            }
+
+            function populateSalesPipelineSelect() {
+                salesPipeline.innerHTML = '<option value="">Select pipeline stage</option>';
+                setupData.salesPipelines.forEach(pipeline => {
+                    const option = document.createElement('option');
+                    option.value = pipeline;
+                    option.textContent = pipeline;
+                    salesPipeline.appendChild(option);
+                });
+            }
+
+            function populateFormFields(dispensaryName) {
+                const dispensary = dispensariesData.find(d => d['Dispensary Name'] === dispensaryName);
+                if (dispensary) {
+                    document.getElementById('dispensaryAddress').value = dispensary['Dispensary Address'] || '';
+                    document.getElementById('contactPersonName').value = dispensary['Contact Person Name'] || '';
+                    document.getElementById('email').value = dispensary['Email'] || '';
+                    document.getElementById('phone').value = dispensary['Phone'] || '';
+                    document.getElementById('lineContact').value = dispensary['Line Contact'] || '';
+                    document.getElementById('history').value = dispensary['Notes & Communication History'] || '';
+                    
+                    // Handle Next Action Item
+                    const nextActionItemFull = dispensary['Next Action Item'] || '';
+                    const [action, ...details] = nextActionItemFull.split(': ');
+                    document.getElementById('nextActionItem').value = action || '';
+                    document.getElementById('nextActionItemDetails').value = details.join(': ') || '';
+                    
+                    document.getElementById('assignedMember').value = dispensary['Assigned Member'] || '';
+                    document.getElementById('salesPipeline').value = dispensary['Sales Pipeline'] || '';
+
+                    // Handle the Due Date and Time
+                    if (dispensary['Due Date']) {
+                        const dueDate = new Date(dispensary['Due Date']);
+                        const formattedDate = dueDate.toISOString().slice(0, 16);
+                        document.getElementById('dueDate').value = formattedDate;
+                    } else {
+                        document.getElementById('dueDate').value = '';
+                    }
+
+                    // Handle QR Code content
+                    const qrCodeData = dispensary['Line/Whatsapp QR Code'];
+                    if (qrCodeData) {
+                        const qrCodeUrls = qrCodeData.split('\n');
+                        qrCodeContent.innerHTML = qrCodeUrls.map(url => `<a href="${url}" target="_blank">${url}</a>`).join('<br>');
+                        qrCodePreviewContainer.innerHTML = qrCodeUrls.map(url => `<img src="${url}" class="qr-code-preview" alt="QR Code">`).join('');
+                    } else {
+                        qrCodeContent.textContent = '';
+                        qrCodePreviewContainer.innerHTML = '';
+                    }
+                } else {
+                    console.error("Dispensary not found:", dispensaryName);
+                }
+            }
+
+            function clearFormFields() {
+                form.reset();
+                qrCodePreviewContainer.innerHTML = '';
+                qrCodeContent.textContent = '';
+            }
+
+            function submitForm() {
+                const formData = new FormData(form);
+                
+                // Combine Next Action Item and Details
+                const nextActionItemValue = formData.get('nextActionItem');
+                const nextActionItemDetailsValue = formData.get('nextActionItemDetails');
+                formData.set('nextActionItem', `${nextActionItemValue}: ${nextActionItemDetailsValue}`);
+                
+                // Handle QR Code files
+                const qrCodeFiles = qrCodeInput.files;
+                if (qrCodeFiles.length > 0) {
+                    const qrCodePromises = Array.from(qrCodeFiles).map(file => 
+                        new Promise((resolve, reject) => {
+                            const reader = new FileReader();
+                            reader.onload = e => resolve({ data: e.target.result.split(',')[1], type: file.type });
+                            reader.onerror = reject;
+                            reader.readAsDataURL(file);
+                        })
+                    );
+
+                    Promise.all(qrCodePromises).then(qrCodes => {
+                        formData.delete('qrCode');
+                        formData.delete('qrCodeMimeType');
+                        qrCodes.forEach((qrCode, index) => {
+                            formData.append('qrCode', qrCode.data);
+                            formData.append('qrCodeMimeType', qrCode.type);
+                        });
+                        sendFormData(formData);
+                    }).catch(error => {
+                        console.error('Error processing QR code files:', error);
+                        showMessage(errorMessageElement, 'Error processing QR code files.');
+                    });
+                } else {
+                    sendFormData(formData);
+                }
+            }
+
+            function sendFormData(formData) {
+                showMessage(loadingElement, 'Submitting form...');
+                hideMessage(sentMessageElement);
+                hideMessage(errorMessageElement);
+
+                fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'cors',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    hideMessage(loadingElement);
+                    if (data.success) {
+                        showMessage(sentMessageElement, 'Data submitted successfully!');
+                        if (data.calendarEventCreated) {
+                            showMessage(sentMessageElement, 'Data submitted and calendar event created successfully!');
+                        }
+                        updateLocalCache(formData);
+                        clearFormFields();
+                    } else {
+                        throw new Error(data.message || 'Unknown error occurred');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    hideMessage(loadingElement);
+                    showMessage(errorMessageElement, 'Error: ' + (error.message || 'An error occurred during form submission.'));
+                });
+            }
+
+            function updateLocalCache(formData) {
+                const dispensaryName = formData.get('selectDispensary') === 'new' ? 
+                    formData.get('newDispensaryName') : formData.get('selectDispensary');
+                
+                let dispensary = dispensariesData.find(d => d['Dispensary Name'] === dispensaryName);
+
+                if (!dispensary) {
+                    dispensary = { 'Dispensary Name': dispensaryName };
+                    dispensariesData.push(dispensary);
+                }
+
+                // Update dispensary data
+                dispensary['Dispensary Address'] = formData.get('dispensaryAddress');
+                dispensary['Contact Person Name'] = formData.get('contactPersonName');
+                dispensary['Email'] = formData.get('email');
+                dispensary['Phone'] = formData.get('phone');
+                dispensary['Line Contact'] = formData.get('lineContact');
+
+                // Special handling for history
+                const newActivity = formData.get('activityLogging');
+                if (newActivity) {
+                    const timestamp = new Date().toLocaleString();
+                    const newEntry = `${timestamp}: ${newActivity}`;
+                    const currentHistory = dispensary['Notes & Communication History'] || '';
+                    dispensary['Notes & Communication History'] = currentHistory ? 
+                        `${newEntry}\n${currentHistory}` : newEntry;
+                }
+
+                dispensary['Next Action Item'] = `${formData.get('nextActionItem')}: ${formData.get('nextActionItemDetails')}`;
+                dispensary['Assigned Member'] = formData.get('assignedMember');
+                dispensary['Due Date'] = formData.get('dueDate');
+                dispensary['Sales Pipeline'] = formData.get('salesPipeline');
+
+                // Update cache
+                cacheData('dispensaryData', dispensariesData);
+
+                if (formData.get('selectDispensary') === 'new') {
+                    populateDispensarySelect();
+                }
+            }
+
+            function showMessage(element, message) {
+                element.textContent = message;
+                element.style.display = 'block';
+            }
+
+            function hideMessage(element) {
+                element.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
