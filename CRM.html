@@ -239,8 +239,35 @@
         });
     </script>
     <script>
+        // Utility functions for caching
+        function cacheData(key, data) {
+            try {
+                localStorage.setItem(key, JSON.stringify({
+                    timestamp: new Date().getTime(),
+                    data: data
+                }));
+            } catch (error) {
+                console.warn('Caching failed:', error);
+            }
+        }
+
+        function getCachedData(key, maxAge = 5 * 60 * 1000) { // 5 minutes default
+            try {
+                const cached = localStorage.getItem(key);
+                if (!cached) return null;
+                
+                const { timestamp, data } = JSON.parse(cached);
+                if (Date.now() - timestamp > maxAge) return null;
+                
+                return data;
+            } catch (error) {
+                console.warn('Cache retrieval failed:', error);
+                return null;
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
-            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzdYBfLR7l2RwIlYJ6ts0uve4dCRXgwI-D0OfBJfk9GM6p5ttz7CgSKG4tOqcEkl_WPnQ/exec';
+            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx3B7yZnE-Ke0uv-hWGx0bFQwwVZYl2aDOu9GXCxhjlzXitEEB6dXAYoaSMnv52qMn-1Q/exec';
             const selectDispensary = document.getElementById('selectDispensary');
             const newDispensaryNameGroup = document.getElementById('newDispensaryNameGroup');
             const form = document.getElementById('dispensaryForm');
@@ -304,6 +331,21 @@
             });
 
             function fetchAllDispensaryData() {
+                // Try to get cached data first
+                const cachedData = getCachedData('dispensaryData');
+                if (cachedData) {
+                    dispensariesData = cachedData;
+                    populateDispensarySelect();
+                    hideMessage(loadingElement);
+                    
+                    // Fetch fresh data in background
+                    fetchFreshData();
+                } else {
+                    fetchFreshData();
+                }
+            }
+
+            function fetchFreshData() {
                 showMessage(loadingElement, 'Fetching dispensary data...');
                 const script = document.createElement('script');
                 script.src = `${SCRIPT_URL}?action=getAllDispensaryData&callback=handleDispensaryData`;
@@ -321,6 +363,7 @@
             window.handleDispensaryData = function(response) {
                 if (response.success) {
                     dispensariesData = response.data;
+                    cacheData('dispensaryData', response.data);  // Cache the data
                     populateDispensarySelect();
                     hideMessage(loadingElement);
                 } else {
@@ -471,17 +514,17 @@
                 })
                 .then(response => response.json())
                 .then(data => {
-				  hideMessage(loadingElement);
-				  if (data.success) {
-					showMessage(sentMessageElement, 'Data submitted successfully!');
-					if (data.calendarEventCreated) {
-					  showMessage(sentMessageElement, 'Data submitted and calendar event created successfully!');
-					}
-					updateLocalCache(formData);
-					clearFormFields();
-				  } else {
-					throw new Error(data.message || 'Unknown error occurred');
-				  }
+                    hideMessage(loadingElement);
+                    if (data.success) {
+                        showMessage(sentMessageElement, 'Data submitted successfully!');
+                        if (data.calendarEventCreated) {
+                            showMessage(sentMessageElement, 'Data submitted and calendar event created successfully!');
+                        }
+                        updateLocalCache(formData);
+                        clearFormFields();
+                    } else {
+                        throw new Error(data.message || 'Unknown error occurred');
+                    }
                 })
                 .catch(error => {
                     console.error('Error:', error);
@@ -491,7 +534,9 @@
             }
 
             function updateLocalCache(formData) {
-                const dispensaryName = formData.get('selectDispensary') === 'new' ? formData.get('newDispensaryName') : formData.get('selectDispensary');
+                const dispensaryName = formData.get('selectDispensary') === 'new' ? 
+                    formData.get('newDispensaryName') : formData.get('selectDispensary');
+                
                 let dispensary = dispensariesData.find(d => d['Dispensary Name'] === dispensaryName);
 
                 if (!dispensary) {
@@ -499,16 +544,30 @@
                     dispensariesData.push(dispensary);
                 }
 
+                // Update dispensary data
                 dispensary['Dispensary Address'] = formData.get('dispensaryAddress');
                 dispensary['Contact Person Name'] = formData.get('contactPersonName');
                 dispensary['Email'] = formData.get('email');
                 dispensary['Phone'] = formData.get('phone');
                 dispensary['Line Contact'] = formData.get('lineContact');
-                dispensary['Notes & Communication History'] = formData.get('history');
-                dispensary['Next Action Item'] = formData.get('nextActionItem');
+
+                // Special handling for history
+                const newActivity = formData.get('activityLogging');
+                if (newActivity) {
+                    const timestamp = new Date().toLocaleString();
+                    const newEntry = `${timestamp}: ${newActivity}`;
+                    const currentHistory = dispensary['Notes & Communication History'] || '';
+                    dispensary['Notes & Communication History'] = currentHistory ? 
+                        `${newEntry}\n${currentHistory}` : newEntry;
+                }
+
+                dispensary['Next Action Item'] = `${formData.get('nextActionItem')}: ${formData.get('nextActionItemDetails')}`;
                 dispensary['Assigned Member'] = formData.get('assignedMember');
                 dispensary['Due Date'] = formData.get('dueDate');
                 dispensary['Sales Pipeline'] = formData.get('salesPipeline');
+
+                // Update cache
+                cacheData('dispensaryData', dispensariesData);
 
                 if (formData.get('selectDispensary') === 'new') {
                     populateDispensarySelect();
