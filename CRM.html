@@ -399,22 +399,23 @@
                 }
             }
 
-            function populateDispensarySelect() {
-                const filter = searchDispensary.value.toLowerCase();
-                selectDispensary.innerHTML = '<option value="">Select a dispensary</option><option value="new">New Dispensary</option>';
+			function populateDispensarySelect() {
+				const filter = searchDispensary.value.toLowerCase();
+				selectDispensary.innerHTML = '<option value="">Select a dispensary</option><option value="new">New Dispensary</option>';
 
-                if (Array.isArray(dispensariesData) && dispensariesData.length > 0) {
-                    dispensariesData.forEach(dispensary => {
-                        const dispensaryName = (dispensary['Dispensary Name'] || '').toLowerCase();
-                        if (dispensaryName.includes(filter)) {
-                            const option = document.createElement('option');
-                            option.value = dispensary['Dispensary Name'];
-                            option.textContent = dispensary['Dispensary Name'];
-                            selectDispensary.appendChild(option);
-                        }
-                    });
-                }
-            }
+				if (Array.isArray(dispensariesData) && dispensariesData.length > 0) {
+					dispensariesData.forEach(dispensary => {
+						// Ensure 'Dispensary Name' is treated as a string
+						const dispensaryName = String(dispensary['Dispensary Name'] || "").toLowerCase();
+						if (dispensaryName.includes(filter)) {
+							const option = document.createElement('option');
+							option.value = dispensary['Dispensary Name'];
+							option.textContent = dispensary['Dispensary Name'];
+							selectDispensary.appendChild(option);
+						}
+					});
+				}
+			}
 
             function populateAssignedMemberSelect() {
                 assignedMember.innerHTML = '<option value="">Select a member</option>';

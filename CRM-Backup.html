@@ -106,6 +106,11 @@
                     <i class="fas fa-chevron-down collapsible-icon"></i>
                 </div>
                 <div class="collapsible-content">
+                    <!-- Add the search input here -->
+                    <div class="form-group">
+                        <label for="searchDispensary">Filter Dispensary</label>
+                        <input type="text" id="searchDispensary" class="form-control" placeholder="Type to Filter...">
+                    </div>
                     <div class="form-group">
                         <label for="selectDispensary">Select Dispensary</label>
                         <select id="selectDispensary" class="form-control" name="selectDispensary" required>
@@ -147,7 +152,7 @@
                         <input type="text" id="lineContact" class="form-control" name="lineContact">
                     </div>
                     <div class="form-group">
-                        <label for="qrCode">Line/Whatsapp QR Code</label>
+                        <label for="qrCode">Line QR Code, Store/Product Images</label>
                         <div id="qrCodeContent"></div>
                         <input type="file" id="qrCode" class="form-control-file" name="qrCode" accept="image/*" multiple>
                         <div id="qrCodePreviewContainer"></div>
@@ -237,8 +242,7 @@
             const content = section.querySelector('.collapsible-content');
             content.style.display = 'block';
         });
-    </script>
-    <script>
+
         // Utility functions for caching
         function cacheData(key, data) {
             try {
@@ -255,10 +259,10 @@
             try {
                 const cached = localStorage.getItem(key);
                 if (!cached) return null;
-                
+
                 const { timestamp, data } = JSON.parse(cached);
                 if (Date.now() - timestamp > maxAge) return null;
-                
+
                 return data;
             } catch (error) {
                 console.warn('Cache retrieval failed:', error);
@@ -269,6 +273,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx3B7yZnE-Ke0uv-hWGx0bFQwwVZYl2aDOu9GXCxhjlzXitEEB6dXAYoaSMnv52qMn-1Q/exec';
             const selectDispensary = document.getElementById('selectDispensary');
+            const searchDispensary = document.getElementById('searchDispensary'); // Added search input
             const newDispensaryNameGroup = document.getElementById('newDispensaryNameGroup');
             const form = document.getElementById('dispensaryForm');
             const qrCodeInput = document.getElementById('qrCode');
@@ -305,6 +310,18 @@
                 }
             });
 
+            // Debounce function
+            function debounce(func, timeout = 300) {
+                let timer;
+                return (...args) => {
+                    clearTimeout(timer);
+                    timer = setTimeout(() => { func.apply(this, args); }, timeout);
+                };
+            }
+
+            // Handle search input with debounce
+            searchDispensary.addEventListener('input', debounce(populateDispensarySelect));
+
             // Handle form submission
             form.addEventListener('submit', function(e) {
                 e.preventDefault();
@@ -331,15 +348,12 @@
             });
 
             function fetchAllDispensaryData() {
-                // Try to get cached data first
                 const cachedData = getCachedData('dispensaryData');
                 if (cachedData) {
                     dispensariesData = cachedData;
                     populateDispensarySelect();
                     hideMessage(loadingElement);
-                    
-                    // Fetch fresh data in background
-                    fetchFreshData();
+                    fetchFreshData(); // Fetch fresh data in background
                 } else {
                     fetchFreshData();
                 }
@@ -386,13 +400,20 @@
             }
 
             function populateDispensarySelect() {
+                const filter = searchDispensary.value.toLowerCase();
                 selectDispensary.innerHTML = '<option value="">Select a dispensary</option><option value="new">New Dispensary</option>';
-                dispensariesData.forEach(dispensary => {
-                    const option = document.createElement('option');
-                    option.value = dispensary['Dispensary Name'];
-                    option.textContent = dispensary['Dispensary Name'];
-                    selectDispensary.appendChild(option);
-                });
+
+                if (Array.isArray(dispensariesData) && dispensariesData.length > 0) {
+                    dispensariesData.forEach(dispensary => {
+                        const dispensaryName = (dispensary['Dispensary Name'] || '').toLowerCase();
+                        if (dispensaryName.includes(filter)) {
+                            const option = document.createElement('option');
+                            option.value = dispensary['Dispensary Name'];
+                            option.textContent = dispensary['Dispensary Name'];
+                            selectDispensary.appendChild(option);
+                        }
+                    });
+                }
             }
 
             function populateAssignedMemberSelect() {
@@ -425,13 +446,13 @@
                     document.getElementById('phone').value = dispensary['Phone'] || '';
                     document.getElementById('lineContact').value = dispensary['Line Contact'] || '';
                     document.getElementById('history').value = dispensary['Notes & Communication History'] || '';
-                    
+
                     // Handle Next Action Item
                     const nextActionItemFull = dispensary['Next Action Item'] || '';
                     const [action, ...details] = nextActionItemFull.split(': ');
                     document.getElementById('nextActionItem').value = action || '';
                     document.getElementById('nextActionItemDetails').value = details.join(': ') || '';
-                    
+
                     document.getElementById('assignedMember').value = dispensary['Assigned Member'] || '';
                     document.getElementById('salesPipeline').value = dispensary['Sales Pipeline'] || '';
 
@@ -467,16 +488,16 @@
 
             function submitForm() {
                 const formData = new FormData(form);
-                
+
                 // Combine Next Action Item and Details
                 const nextActionItemValue = formData.get('nextActionItem');
                 const nextActionItemDetailsValue = formData.get('nextActionItemDetails');
                 formData.set('nextActionItem', `${nextActionItemValue}: ${nextActionItemDetailsValue}`);
-                
+
                 // Handle QR Code files
                 const qrCodeFiles = qrCodeInput.files;
                 if (qrCodeFiles.length > 0) {
-                    const qrCodePromises = Array.from(qrCodeFiles).map(file => 
+                    const qrCodePromises = Array.from(qrCodeFiles).map(file =>
                         new Promise((resolve, reject) => {
                             const reader = new FileReader();
                             reader.onload = e => resolve({ data: e.target.result.split(',')[1], type: file.type });
@@ -534,9 +555,9 @@
             }
 
             function updateLocalCache(formData) {
-                const dispensaryName = formData.get('selectDispensary') === 'new' ? 
+                const dispensaryName = formData.get('selectDispensary') === 'new' ?
                     formData.get('newDispensaryName') : formData.get('selectDispensary');
-                
+
                 let dispensary = dispensariesData.find(d => d['Dispensary Name'] === dispensaryName);
 
                 if (!dispensary) {
@@ -557,7 +578,7 @@
                     const timestamp = new Date().toLocaleString();
                     const newEntry = `${timestamp}: ${newActivity}`;
                     const currentHistory = dispensary['Notes & Communication History'] || '';
-                    dispensary['Notes & Communication History'] = currentHistory ? 
+                    dispensary['Notes & Communication History'] = currentHistory ?
                         `${newEntry}\n${currentHistory}` : newEntry;
                 }
 
