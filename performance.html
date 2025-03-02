@@ -187,7 +187,8 @@
             <li data-target="sales-by-agent">Sales By Agent</li>
             <li data-target="previous-month">Previous Months by Agents</li>
             <li data-target="current-month">Current Month by Agent</li>
-            <li data-target="duenow-sales">Due Now vs. Consignment</li>
+            <li data-target="duenow-sales">Due Now Sales Order By Month</li>
+            <li data-target="consignment-sales">Consignment Sales Order By Month</li>
           </ul>
 
           <!-- Sales by Month by Agent -->
@@ -264,8 +265,20 @@
               </div>
             </div>
           </div>
-        </div>
-      </div>
+          <!-- Consignment Sales -->
+          <div class="submenu-content" id="consignment-sales">
+            <div class="dashboard-container">
+              <h3 class="dashboard-title">Consignment Sales Order by Month</h3>
+              <div class="iframe-container">
+                <div id="consignment-sales-loader" class="loader">
+                  <div class="spinner-border text-danger" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
+                </div>
+                <iframe id="consignment-sales-iframe" class="responsive-iframe" src="about:blank" data-src="https://lookerstudio.google.com/embed/reporting/a2e80547-caf4-4554-abfb-0306cf2d3086/page/YXy3E" frameborder="0" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"></iframe>
+              </div>
+            </div>
+          </div>
     </section><!-- End Sales Performance Section -->
 
     <!-- ======= Outstanding Orders Section ======= -->
