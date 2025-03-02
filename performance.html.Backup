@@ -182,25 +182,17 @@
               </div>
             </div>
           </div>
-
-          <!-- Sales By Agent -->
+          
+		  <!-- Sales By Agent -->
           <div class="submenu-content" id="sales-by-agent">
             <div class="dashboard-container">
               <h3 class="dashboard-title">Sales by Agent All</h3>
               <div class="iframe-container">
-                <div id="sales-agent-loader" class="text-center p-5 position-absolute w-100 h-100 bg-white" style="z-index: 10; top: 0; left: 0;">
-                  <div class="d-flex flex-column justify-content-center align-items-center h-100">
-                    <div class="spinner-border text-danger mb-3" role="status">
-                      <span class="visually-hidden">Loading...</span>
-                    </div>
-                    <p>Loading report data...</p>
-                  </div>
-                </div>
-                <iframe id="sales-agent-iframe" class="responsive-iframe" src="about:blank" data-src="https://lookerstudio.google.com/embed/reporting/0f2be493-16d7-4e74-b0d2-243153ddfb1e/page/J7j3E?params=%7B%22df7%22:%22include%25EE%2580%25800%25EE%2580%2580IN%25EE%2580%2580Order%2520Total%22%7D" frameborder="0" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"></iframe>
+                <iframe class="responsive-iframe" width="1200" height="900" src="https://lookerstudio.google.com/embed/reporting/0f2be493-16d7-4e74-b0d2-243153ddfb1e/page/J7j3E?params=%7B%22df7%22:%22include%25EE%2580%25800%25EE%2580%2580IN%25EE%2580%2580Order%2520Total%22%7D" frameborder="0" style="border:0" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"></iframe>
               </div>
             </div>
           </div>
-           
+		  
           <!-- Previous Month by Agent -->
           <div class="submenu-content" id="previous-month">
             <div class="dashboard-container">
@@ -688,37 +680,7 @@
         // Show the target content and hide others
         parentContainer.find('.submenu-content').removeClass('active');
         parentContainer.find('#' + targetId).addClass('active');
-        
-        // Handle iframe loading for Looker Studio reports
-        if (targetId === 'sales-by-agent') {
-          var iframe = $('#sales-agent-iframe');
-          var loader = $('#sales-agent-loader');
-          
-          // Show loader
-          loader.show();
-          
-          // Set the iframe src from data-src attribute
-          if (iframe.attr('src') === 'about:blank') {
-            iframe.attr('src', iframe.data('src'));
-          } else {
-            // If already loaded once, reload to ensure proper rendering
-            iframe.attr('src', iframe.attr('src'));
-          }
-          
-          // Hide loader when iframe is loaded
-          iframe.on('load', function() {
-            setTimeout(function() {
-              loader.fadeOut();
-            }, 1500); // Give extra time for the report to render
-          });
-        }
       });
-      
-      // Check if we need to load the sales-by-agent iframe on page load
-      // (in case the URL has a hash pointing to that section)
-      if (window.location.hash === '#sales-by-agent') {
-        $('#sales-submenu li[data-target="sales-by-agent"]').click();
-      }
     });
   </script>
 </body>
