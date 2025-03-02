@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+
+  <title>TPO Wellness - Performance Dashboard</title>
+  <meta content="Performance metrics and analytics for TPO Wellness" name="description">
+  <meta content="cannabis, performance, analytics, sales, inventory, production" name="keywords">
+
+  <!-- Favicons -->
+  <link href="assets/img/favicon.png" rel="icon">
+  <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Raleway:300,300i,400,400i,500,500i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="assets/vendor/aos/aos.css" rel="stylesheet">
+  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="assets/vendor/boxicons/css/boxicons.min.css" rel="stylesheet">
+  <link href="assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+  <link href="assets/vendor/remixicon/remixicon.css" rel="stylesheet">
+  <link href="assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+
+  <!-- Template Main CSS File -->
+  <link href="assets/css/style.css" rel="stylesheet">
+
+  <!-- Added jQuery Library -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script> 
+
+  <style>
+    /* Additional styles for performance dashboard */
+    .dashboard-section {
+      padding: 60px 0;
+      overflow: hidden;
+    }
+    
+    .dashboard-container {
+      background: #fff;
+      padding: 30px;
+      border-radius: 5px;
+      box-shadow: 0px 0 30px rgba(21, 21, 21, 0.08);
+      margin-bottom: 30px;
+    }
+    
+    .dashboard-title {
+      font-size: 20px;
+      font-weight: 700;
+      padding: 0 0 20px 0;
+      margin: 0;
+      color: #151515;
+    }
+    
+    .submenu-container {
+      margin-bottom: 40px;
+    }
+    
+    .submenu-nav {
+      padding: 0;
+      margin: 0 0 20px 0;
+      list-style: none;
+      background: #f9f9f9;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+    
+    .submenu-nav li {
+      display: inline-block;
+      margin: 0;
+      padding: 10px 15px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .submenu-nav li:hover, .submenu-nav li.active {
+      background: #e03a3c;
+      color: #fff;
+    }
+    
+    .submenu-content {
+      display: none;
+    }
+    
+    .submenu-content.active {
+      display: block;
+    }
+    
+    .iframe-container {
+      position: relative;
+      overflow: hidden;
+      width: 100%;
+      padding-top: 56.25%; /* 16:9 Aspect Ratio */
+    }
+    
+    .responsive-iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      right: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ======= Top Bar ======= -->
+  <section id="topbar" class="d-flex align-items-center">
+    <div class="container d-flex justify-content-center justify-content-md-between">
+      <div class="contact-info d-flex align-items-center">
+        <i class="bi bi-envelope d-flex align-items-center"><a href="mailto:info@tpo-wellness.com">info@tpo-wellness.com</a></i>
+        <i class="bi bi-phone d-flex align-items-center ms-4"><span>+66 87 789 4950</span></i>
+      </div>
+      <div class="social-links d-none d-md-flex align-items-center">
+        <a href="#" class="twitter"><i class="bi bi-twitter"></i></a>
+        <a href="#" class="facebook"><i class="bi bi-facebook"></i></a>
+        <a href="#" class="instagram"><i class="bi bi-instagram"></i></a>
+        <a href="#" class="linkedin"><i class="bi bi-linkedin"></i></i></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======= Header ======= -->
+  <header id="header" class="d-flex align-items-center">
+    <div class="container d-flex align-items-center justify-content-between">
+      <h1 class="logo"><a href="index.html"><img src="./assets/img/TPOLogo.png" alt="TPO Wellness Logo" class="img-fluid"></a></h1>
+      <nav id="navbar" class="navbar">
+        <ul>
+          <li><a class="nav-link scrollto" href="index.html">Home</a></li>
+          <li><a class="nav-link scrollto active" href="#sales-performance">Sales Performance</a></li>
+          <li><a class="nav-link scrollto" href="#outstanding-orders">Outstanding Orders</a></li>
+          <li><a class="nav-link scrollto" href="#inventory-status">Inventory Status</a></li>
+          <li><a class="nav-link scrollto" href="#production-performance">Production Performance</a></li>
+          <li><a class="nav-link scrollto" href="#white-label-data">White Label Data</a></li>
+        </ul>
+        <i class="bi bi-list mobile-nav-toggle"></i>
+      </nav><!-- .navbar -->
+    </div>
+  </header><!-- End Header -->
+
+  <!-- ======= Hero Section ======= -->
+  <section id="hero" class="d-flex align-items-center">
+    <div class="container position-relative" data-aos="fade-up" data-aos-delay="500">
+      <h1>TPO Wellness Performance Dashboard</h1>
+      <h2>Comprehensive Analytics and Business Intelligence</h2>
+      <a href="#sales-performance" class="btn-get-started scrollto">View Reports</a>
+    </div>
+  </section><!-- End Hero -->
+
+  <main id="main">
+
+    <!-- ======= Sales Performance Section ======= -->
+    <section id="sales-performance" class="dashboard-section">
+      <div class="container" data-aos="fade-up">
+        <div class="section-title">
+          <span>Sales Performance</span>
+          <h2>Sales Performance</h2>
+          <p>Detailed analytics of our sales performance across different dimensions</p>
+        </div>
+
+        <div class="submenu-container">
+          <ul class="submenu-nav" id="sales-submenu">
+            <li class="active" data-target="monthly-by-agent">Sales by Month by Agent</li>
+            <li data-target="previous-month">Previous Month by Agent</li>
+            <li data-target="current-month">Current Month by Agent</li>
+            <li data-target="due-vs-consignment">Due Now vs. Consignment</li>
+          </ul>
+
+          <!-- Sales by Month by Agent -->
+          <div class="submenu-content active" id="monthly-by-agent">
+            <div class="dashboard-container">
+              <h3 class="dashboard-title">Sales Performance by Month by Agent</h3>
+              <div class="iframe-container">
+                <iframe class="responsive-iframe" src="https://lookerstudio.google.com/embed/reporting/d382249f-dd45-4e7d-9acd-da577f5036d1/page/KqU3E" frameborder="0" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
+              </div>
+            </div>
+          </div>
+
+          <!-- Previous Month by Agent -->
+          <div class="submenu-content" id="previous-month">
+            <div class="dashboard-container">
+              <h3 class="dashboard-title">Sales by Agent for Previous Month</h3>
+              <div class="iframe-container">
+                <!-- Replace with actual iframe when ready -->
+                <div class="text-center p-5">
+                  <i class="bi bi-bar-chart-line fs-1 text-secondary"></i>
+                  <p class="mt-3">Report will be available soon. Please check back later.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Current Month by Agent -->
+          <div class="submenu-content" id="current-month">
+            <div class="dashboard-container">
+              <h3 class="dashboard-title">Sales by Agent for Current Month</h3>
+              <div class="iframe-container">
+                <!-- Replace with actual iframe when ready -->
+                <div class="text-center p-5">
+                  <i class="bi bi-graph-up fs-1 text-secondary"></i>
+                  <p class="mt-3">Report will be available soon. Please check back later.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Due Now vs. Consignment -->
+          <div class="submenu-content" id="due-vs-consignment">
+            <div class="dashboard-container">
+              <h3 class="dashboard-title">Due Now vs. Consignment Order by Month</h3>
+              <div class="iframe-container">
+                <!-- Replace with actual iframe when ready -->
+                <div class="text-center p-5">
+                  <i class="bi bi-pie-chart fs-1 text-secondary"></i>
+                  <p class="mt-3">Report will be available soon. Please check back later.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section><!-- End Sales Performance Section -->
+
+    <!-- ======= Outstanding Orders Section ======= -->
+    <section id="outstanding-orders" class="dashboard-section section-bg">
+      <div class="container" data-aos="fade-up">
+        <div class="section-title">
+          <span>Outstanding Orders</span>
+          <h2>Outstanding Orders</h2>
+          <p>Track and manage all pending and in-progress orders</p>
+        </div>
+
+        <div class="submenu-container">
+          <ul class="submenu-nav" id="orders-submenu">
+            <li class="active" data-target="pending-orders">Pending Orders</li>
+            <li data-target="in-progress-orders">In-Progress Orders</li>
+            <li data-target="delayed-orders">Delayed Orders</li>
+            <li data-target="order-forecast">Order Forecast</li>
+          </ul>
+
+          <!-- Pending Orders -->
+          <div class="submenu-content active" id="pending-orders">
+            <div class="dashboard-container">
+              <h3 class="dashboard-title">Pending Orders</h3>
+              <div class="iframe-container">
+                <!-- Replace with actual iframe when ready -->
+                <div class="text-center p-5">
+                  <i class="bi bi-hourglass-split fs-1 text-secondary"></i>
+                  <p class="mt-3">Report will be available soon. Please check back later.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- In-Progress Orders -->
+          <div class="submenu-content" id="in-progress-orders">
+            <div class="dashboard-container">
+              <h3 class="dashboard-title">In-Progress Orders</h3>
+              <div class="iframe-container">
+                <!-- Replace with actual iframe when ready -->
+                <div class="text-center p-5">
+                  <i class="bi bi-gear fs-1 text-secondary"></i>
+                  <p class="mt-3">Report will be available soon. Please check back later.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Delayed Orders -->
+          <div class="submenu-content" id="delayed-orders">
+            <div class="dashboard-container">
+              <h3 class="dashboard-title">Delayed Orders</h3>
+              <div class="iframe-container">
+                <!-- Replace with actual iframe when ready -->
+                <div class="text-center p-5">
+                  <i class="bi bi-exclamation-triangle fs-1 text-secondary"></i>
+                  <p class="mt-3">Report will be available soon. Please check back later.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Order Forecast -->
+          <div class="submenu-content" id="order-forecast">
+            <div class="dashboard-container">
+              <h3 class="dashboard-title">Order Forecast</h3>
+              <div class="iframe-container">
+                <!-- Replace with actual iframe when ready -->
+                <div class="text-center p-5">
+                  <i class="bi bi-calendar-check fs-1 text-secondary"></i>
+                  <p class="mt-3">Report will be available soon. Please check back later.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section><!-- End Outstanding Orders Section -->
+
+    <!-- ======= Inventory Status Section ======= -->
+    <section id="inventory-status" class="dashboard-section">
+      <div class="container" data-aos="fade-up">
+        <div class="section-title">
+          <span>Inventory Status</span>
+          <h2>Inventory Status</h2>
+          <p>Monitor current inventory levels and stock management</p>
+        </div>
+
+        <div class="submenu-container">
+          <ul class="submenu-nav" id="inventory-submenu">
+            <li class="active" data-target="current-stock">Current Stock</li>
+            <li data-target="low-stock">Low Stock Alerts</li>
+            <li data-target="inventory-turnover">Inventory Turnover</li>
+            <li data-target="stock-forecast">Stock Forecast</li>
+          </ul>
+
+          <!-- Current Stock -->
+          <div class="submenu-content active" id="current-stock">
+            <div class="dashboard-container">
+              <h3 class="dashboard-title">Current Stock Levels</h3>
+              <div class="iframe-container">
+                <!-- Replace with actual iframe when ready -->
+                <div class="text-center p-5">
+                  <i class="bi bi-box-seam fs-1 text-secondary"></i>
+                  <p class="mt-3">Report will be available soon. Please check back later.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Low Stock Alerts -->
+          <div class="submenu-content" id="low-stock">
+            <div class="dashboard-container">
+			<h3 class="dashboard-title">Low Stock Alerts</h3>
+              <div class="iframe-container">
+                <!-- Replace with actual iframe when ready -->
+                <div class="text-center p-5">
+                  <i class="bi bi-exclamation-circle fs-1 text-secondary"></i>
+                  <p class="mt-3">Report will be available soon. Please check back later.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Inventory Turnover -->
+          <div class="submenu-content" id="inventory-turnover">
+            <div class="dashboard-container">
+              <h3 class="dashboard-title">Inventory Turnover</h3>
+              <div class="iframe-container">
+                <!-- Replace with actual iframe when ready -->
+                <div class="text-center p-5">
+                  <i class="bi bi-arrow-repeat fs-1 text-secondary"></i>
+                  <p class="mt-3">Report will be available soon. Please check back later.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stock Forecast -->
+          <div class="submenu-content" id="stock-forecast">
+            <div class="dashboard-container">
+              <h3 class="dashboard-title">Stock Forecast</h3>
+              <div class="iframe-container">
+                <!-- Replace with actual iframe when ready -->
+                <div class="text-center p-5">
+                  <i class="bi bi-graph-up-arrow fs-1 text-secondary"></i>
+                  <p class="mt-3">Report will be available soon. Please check back later.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section><!-- End Inventory Status Section -->
+
+    <!-- ======= Production Performance Section ======= -->
+    <section id="production-performance" class="dashboard-section section-bg">
+      <div class="container" data-aos="fade-up">
+        <div class="section-title">
+          <span>Production Performance</span>
+          <h2>Production Performance</h2>
+          <p>Track production efficiency and output metrics</p>
+        </div>
+
+        <div class="submenu-container">
+          <ul class="submenu-nav" id="production-submenu">
+            <li class="active" data-target="production-output">Production Output</li>
+            <li data-target="efficiency-metrics">Efficiency Metrics</li>
+            <li data-target="quality-control">Quality Control</li>
+            <li data-target="production-forecast">Production Forecast</li>
+          </ul>
+
+          <!-- Production Output -->
+          <div class="submenu-content active" id="production-output">
+            <div class="dashboard-container">
+              <h3 class="dashboard-title">Production Output</h3>
+              <div class="iframe-container">
+                <!-- Replace with actual iframe when ready -->
+                <div class="text-center p-5">
+                  <i class="bi bi-boxes fs-1 text-secondary"></i>
+                  <p class="mt-3">Report will be available soon. Please check back later.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Efficiency Metrics -->
+          <div class="submenu-content" id="efficiency-metrics">
+            <div class="dashboard-container">
+              <h3 class="dashboard-title">Efficiency Metrics</h3>
+              <div class="iframe-container">
+                <!-- Replace with actual iframe when ready -->
+                <div class="text-center p-5">
+                  <i class="bi bi-speedometer2 fs-1 text-secondary"></i>
+                  <p class="mt-3">Report will be available soon. Please check back later.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quality Control -->
+          <div class="submenu-content" id="quality-control">
+            <div class="dashboard-container">
+              <h3 class="dashboard-title">Quality Control</h3>
+              <div class="iframe-container">
+                <!-- Replace with actual iframe when ready -->
+                <div class="text-center p-5">
+                  <i class="bi bi-check-circle fs-1 text-secondary"></i>
+                  <p class="mt-3">Report will be available soon. Please check back later.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Production Forecast -->
+          <div class="submenu-content" id="production-forecast">
+            <div class="dashboard-container">
+              <h3 class="dashboard-title">Production Forecast</h3>
+              <div class="iframe-container">
+                <!-- Replace with actual iframe when ready -->
+                <div class="text-center p-5">
+                  <i class="bi bi-calendar-week fs-1 text-secondary"></i>
+                  <p class="mt-3">Report will be available soon. Please check back later.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section><!-- End Production Performance Section -->
+
+    <!-- ======= White Label Data Section ======= -->
+    <section id="white-label-data" class="dashboard-section">
+      <div class="container" data-aos="fade-up">
+        <div class="section-title">
+          <span>White Label Data</span>
+          <h2>White Label Data</h2>
+          <p>Analyze white label client performance and trends</p>
+        </div>
+
+        <div class="submenu-container">
+          <ul class="submenu-nav" id="white-label-submenu">
+            <li class="active" data-target="client-performance">Client Performance</li>
+            <li data-target="product-popularity">Product Popularity</li>
+            <li data-target="client-growth">Client Growth</li>
+            <li data-target="market-trends">Market Trends</li>
+          </ul>
+
+          <!-- Client Performance -->
+          <div class="submenu-content active" id="client-performance">
+            <div class="dashboard-container">
+              <h3 class="dashboard-title">Client Performance</h3>
+              <div class="iframe-container">
+                <!-- Replace with actual iframe when ready -->
+                <div class="text-center p-5">
+                  <i class="bi bi-people fs-1 text-secondary"></i>
+                  <p class="mt-3">Report will be available soon. Please check back later.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Product Popularity -->
+          <div class="submenu-content" id="product-popularity">
+            <div class="dashboard-container">
+              <h3 class="dashboard-title">Product Popularity</h3>
+              <div class="iframe-container">
+                <!-- Replace with actual iframe when ready -->
+                <div class="text-center p-5">
+                  <i class="bi bi-star fs-1 text-secondary"></i>
+                  <p class="mt-3">Report will be available soon. Please check back later.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Client Growth -->
+          <div class="submenu-content" id="client-growth">
+            <div class="dashboard-container">
+              <h3 class="dashboard-title">Client Growth</h3>
+              <div class="iframe-container">
+                <!-- Replace with actual iframe when ready -->
+                <div class="text-center p-5">
+                  <i class="bi bi-graph-up fs-1 text-secondary"></i>
+                  <p class="mt-3">Report will be available soon. Please check back later.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Market Trends -->
+          <div class="submenu-content" id="market-trends">
+            <div class="dashboard-container">
+              <h3 class="dashboard-title">Market Trends</h3>
+              <div class="iframe-container">
+                <!-- Replace with actual iframe when ready -->
+                <div class="text-center p-5">
+                  <i class="bi bi-bar-chart-line fs-1 text-secondary"></i>
+                  <p class="mt-3">Report will be available soon. Please check back later.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section><!-- End White Label Data Section -->
+
+  </main><!-- End #main -->
+
+  <!-- ======= Footer ======= -->
+  <footer id="footer">
+    <div class="footer-top">
+      <div class="container">
+        <div class="row">
+
+          <div class="col-lg-4 col-md-6">
+            <div class="footer-info">
+              <h3>TPO Wellness</h3>
+              <p>
+                3388/77 Sirinrat Building, 21st Floor <br>Rama IV Road, Kwang Klongton<br>
+                Khet Klongtoey, Bangkok, 10110<br><br>
+                <strong>Phone:</strong> +66 87 789 4950<br>
+                <strong>Email:</strong> info@tpo-wellness.com<br>
+              </p>
+              <div class="social-links mt-3">
+                <a href="#" class="twitter"><i class="bx bxl-twitter"></i></a>
+                <a href="#" class="facebook"><i class="bx bxl-facebook"></i></a>
+                <a href="#" class="instagram"><i class="bx bxl-instagram"></i></a>
+                <a href="#" class="linkedin"><i class="bx bxl-linkedin"></i></a>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-2 col-md-6 footer-links">
+            <h4>Useful Links</h4>
+            <ul>
+              <li><i class="bx bx-chevron-right"></i> <a href="index.html">Home</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="#sales-performance">Sales Performance</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="#inventory-status">Inventory Status</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="#">Terms of service</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="#">Privacy policy</a></li>
+            </ul>
+          </div>
+
+          <div class="col-lg-2 col-md-6 footer-links">
+            <h4>Our Services</h4>
+            <ul>
+              <li><i class="bx bx-chevron-right"></i> <a href="#">Edibles Manufacturing</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="#">Pre-Roll Production</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="#">Cannabis Flower Packaging</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="#">R&D Services</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="#">Quality Control & Assurance</a></li>
+            </ul>
+          </div>
+
+          <div class="col-lg-4 col-md-6 footer-newsletter">
+            <h4>Our Newsletter</h4>
+            <p>Subscribe to our newsletter for the latest updates on our products and services</p>
+            <form id="newsletterForm">
+              <input type="email" name="email" required><input type="submit" value="Subscribe">
+            </form>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="copyright">
+        © Copyright <strong><span>TPO Wellness</span></strong>. All Rights Reserved
+      </div>
+      <div class="credits">
+        Designed by <a href="#">KH</a>
+      </div>
+    </div>
+  </footer><!-- End Footer -->
+
+  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+  <div id="preloader"></div>
+
+  <!-- Vendor JS Files -->
+  <script src="assets/vendor/aos/aos.js"></script>
+  <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/vendor/glightbox/js/glightbox.min.js"></script>
+  <script src="assets/vendor/isotope-layout/isotope.pkgd.min.js"></script>
+  <script src="assets/vendor/swiper/swiper-bundle.min.js"></script>
+
+  <!-- Template Main JS File -->
+  <script src="assets/js/main.js"></script>
+
+  <!-- Added JavaScript for Form Submission -->
+  <script>
+    $(document).ready(function() {
+      // Form submission handler for newsletter form
+      $('#newsletterForm').submit(function(e) {
+        e.preventDefault();
+        
+        var $form = $(this);
+        var formData = {
+          action: 'newsletter'
+        };
+
+        $form.serializeArray().forEach(function(item) {
+          formData[item.name] = item.value;
+        });
+
+        submitForm(formData, $form);
+      });
+
+      function submitForm(formData, $form) { 
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbwJDAeDBi1-_iodvcl_4bFZ6HlFXouWRkZ0kiCOlj7g4lXbI6yXQsi33QjAVYMYKb09/exec';
+
+        fetch(scriptURL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(formData)
+        })
+        .then(response => {
+          console.log('Response (no-cors):', response); 
+          $form.find('.loading').hide();
+          $('#newsletterForm .sent-message').text('Thank you for subscribing!').show();
+          $('#newsletterForm')[0].reset();
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          $form.find('.loading').hide();
+          $form.find('.error-message').text('An error occurred during form submission.').show();
+        });
+      }
+
+      // Submenu navigation functionality
+      $('.submenu-nav li').click(function() {
+        var targetId = $(this).data('target');
+        var parentContainer = $(this).closest('.submenu-container');
+        
+        // Update active class on nav items
+        $(this).siblings().removeClass('active');
+        $(this).addClass('active');
+        
+        // Show the target content and hide others
+        parentContainer.find('.submenu-content').removeClass('active');
+        parentContainer.find('#' + targetId).addClass('active');
+      });
+    });
+  </script>
+</body>
+</html>
