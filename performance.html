@@ -4,7 +4,6 @@
 <head>
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
-
   <title>TPO Wellness - Performance Dashboard</title>
   <meta content="Performance metrics and analytics for TPO Wellness" name="description">
   <meta content="cannabis, performance, analytics, sales, inventory, production" name="keywords">
@@ -29,7 +28,7 @@
   <link href="assets/css/style.css" rel="stylesheet">
 
   <!-- Added jQuery Library -->
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script> 
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
   <style>
     /* Additional styles for performance dashboard */
@@ -37,7 +36,7 @@
       padding: 60px 0;
       overflow: hidden;
     }
-    
+
     .dashboard-container {
       background: #fff;
       padding: 30px;
@@ -45,7 +44,7 @@
       box-shadow: 0px 0 30px rgba(21, 21, 21, 0.08);
       margin-bottom: 30px;
     }
-    
+
     .dashboard-title {
       font-size: 20px;
       font-weight: 700;
@@ -53,11 +52,11 @@
       margin: 0;
       color: #151515;
     }
-    
+
     .submenu-container {
       margin-bottom: 40px;
     }
-    
+
     .submenu-nav {
       padding: 0;
       margin: 0 0 20px 0;
@@ -66,7 +65,7 @@
       border-radius: 5px;
       overflow: hidden;
     }
-    
+
     .submenu-nav li {
       display: inline-block;
       margin: 0;
@@ -74,27 +73,27 @@
       cursor: pointer;
       transition: all 0.3s ease;
     }
-    
+
     .submenu-nav li:hover, .submenu-nav li.active {
       background: #e03a3c;
       color: #fff;
     }
-    
+
     .submenu-content {
       display: none;
     }
-    
+
     .submenu-content.active {
       display: block;
     }
-    
+
     .iframe-container {
       position: relative;
       overflow: hidden;
       width: 100%;
       padding-top: 56.25%; /* 16:9 Aspect Ratio */
     }
-    
+
     .responsive-iframe {
       position: absolute;
       top: 0;
@@ -104,6 +103,24 @@
       width: 100%;
       height: 100%;
       border: none;
+    }
+
+    .loader {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+    }
+
+    .loader .spinner-border {
+      width: 3rem;
+      height: 3rem;
     }
   </style>
 </head>
@@ -167,7 +184,7 @@
         <div class="submenu-container">
           <ul class="submenu-nav" id="sales-submenu">
             <li class="active" data-target="monthly-by-agent">Sales by Month by Agent</li>
-			<li data-target="sales-by-agent">Sales By Agent</li>
+            <li data-target="sales-by-agent">Sales By Agent</li>
             <li data-target="previous-month">Previous Month by Agent</li>
             <li data-target="current-month">Current Month by Agent</li>
             <li data-target="due-vs-consignment">Due Now vs. Consignment</li>
@@ -178,7 +195,12 @@
             <div class="dashboard-container">
               <h3 class="dashboard-title">Sales Performance by Month by Agent</h3>
               <div class="iframe-container">
-                <iframe class="responsive-iframe" src="https://lookerstudio.google.com/embed/reporting/d382249f-dd45-4e7d-9acd-da577f5036d1/page/KqU3E" frameborder="0" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
+                <div id="monthly-by-agent-loader" class="loader">
+                  <div class="spinner-border text-danger" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
+                </div>
+                <iframe id="monthly-by-agent-iframe" class="responsive-iframe" src="about:blank" data-src="https://lookerstudio.google.com/embed/reporting/d382249f-dd45-4e7d-9acd-da577f5036d1/page/KqU3E" frameborder="0" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
               </div>
             </div>
           </div>
@@ -188,30 +210,24 @@
             <div class="dashboard-container">
               <h3 class="dashboard-title">Sales by Agent All</h3>
               <div class="iframe-container">
-                <div id="sales-agent-loader" class="text-center p-5 position-absolute w-100 h-100 bg-white" style="z-index: 10; top: 0; left: 0;">
-                  <div class="d-flex flex-column justify-content-center align-items-center h-100">
-                    <div class="spinner-border text-danger mb-3" role="status">
-                      <span class="visually-hidden">Loading...</span>
-                    </div>
-                    <p>Loading report data...</p>
+                <div id="sales-agent-loader" class="loader">
+                  <div class="spinner-border text-danger" role="status">
+                    <span class="visually-hidden">Loading...</span>
                   </div>
                 </div>
-                <iframe id="sales-agent-iframe" class="responsive-iframe" src="about:blank" data-src="https://lookerstudio.google.com/embed/reporting/0f2be493-16d7-4e74-b0d2-243153ddfb1e/page/J7j3E?params=%7B%22df7%22:%22include%25EE%2580%25800%25EE%2580%2580IN%25EE%2580%2580Order%2520Total%22%7D" frameborder="0" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"></iframe>
+                <iframe id="sales-agent-iframe" class="responsive-iframe" src="about:blank" data-src="https://lookerstudio.google.com/embed/reporting/0f2be493-16d7-4e74-b0d2-243153ddfb1e/page/J7j3E" frameborder="0" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"></iframe>
               </div>
             </div>
           </div>
-           
+
           <!-- Previous Month by Agent -->
           <div class="submenu-content" id="previous-month">
             <div class="dashboard-container">
               <h3 class="dashboard-title">Sales by Agent for Previous Months</h3>
               <div class="iframe-container">
-                <div id="previous-month-loader" class="text-center p-5 position-absolute w-100 h-100 bg-white" style="z-index: 10; top: 0; left: 0;">
-                  <div class="d-flex flex-column justify-content-center align-items-center h-100">
-                    <div class="spinner-border text-danger mb-3" role="status">
-                      <span class="visually-hidden">Loading...</span>
-                    </div>
-                    <p>Loading report data...</p>
+                <div id="previous-month-loader" class="loader">
+                  <div class="spinner-border text-danger" role="status">
+                    <span class="visually-hidden">Loading...</span>
                   </div>
                 </div>
                 <iframe id="previous-month-iframe" class="responsive-iframe" src="about:blank" data-src="https://lookerstudio.google.com/embed/reporting/7fdccf2f-51a1-4cc9-ba38-04a5467f2188/page/qom3E" frameborder="0" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"></iframe>
@@ -224,11 +240,12 @@
             <div class="dashboard-container">
               <h3 class="dashboard-title">Sales by Agent for Current Month</h3>
               <div class="iframe-container">
-                <!-- Replace with actual iframe when ready -->
-                <div class="text-center p-5">
-                  <i class="bi bi-graph-up fs-1 text-secondary"></i>
-                  <p class="mt-3">Report will be available soon. Please check back later.</p>
+                <div id="current-month-loader" class="loader">
+                  <div class="spinner-border text-danger" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
                 </div>
+                <iframe id="current-month-iframe" class="responsive-iframe" src="about:blank" data-src="https://lookerstudio.google.com/embed/reporting/7fdccf2f-51a1-4cc9-ba38-04a5467f2188/page/qom3E" frameborder="0" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"></iframe>
               </div>
             </div>
           </div>
@@ -238,11 +255,12 @@
             <div class="dashboard-container">
               <h3 class="dashboard-title">Due Now vs. Consignment Order by Month</h3>
               <div class="iframe-container">
-                <!-- Replace with actual iframe when ready -->
-                <div class="text-center p-5">
-                  <i class="bi bi-pie-chart fs-1 text-secondary"></i>
-                  <p class="mt-3">Report will be available soon. Please check back later.</p>
+                <div id="due-vs-consignment-loader" class="loader">
+                  <div class="spinner-border text-danger" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
                 </div>
+                <iframe id="due-vs-consignment-iframe" class="responsive-iframe" src="about:blank" data-src="https://lookerstudio.google.com/embed/reporting/7fdccf2f-51a1-4cc9-ba38-04a5467f2188/page/qom3E" frameborder="0" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"></iframe>
               </div>
             </div>
           </div>
@@ -272,11 +290,12 @@
             <div class="dashboard-container">
               <h3 class="dashboard-title">Pending Orders</h3>
               <div class="iframe-container">
-                <!-- Replace with actual iframe when ready -->
-                <div class="text-center p-5">
-                  <i class="bi bi-hourglass-split fs-1 text-secondary"></i>
-                  <p class="mt-3">Report will be available soon. Please check back later.</p>
+                <div id="pending-orders-loader" class="loader">
+                  <div class="spinner-border text-danger" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
                 </div>
+                <iframe id="pending-orders-iframe" class="responsive-iframe" src="about:blank" data-src="https://lookerstudio.google.com/embed/reporting/7fdccf2f-51a1-4cc9-ba38-04a5467f2188/page/qom3E" frameborder="0" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"></iframe>
               </div>
             </div>
           </div>
@@ -286,11 +305,12 @@
             <div class="dashboard-container">
               <h3 class="dashboard-title">In-Progress Orders</h3>
               <div class="iframe-container">
-                <!-- Replace with actual iframe when ready -->
-                <div class="text-center p-5">
-                  <i class="bi bi-gear fs-1 text-secondary"></i>
-                  <p class="mt-3">Report will be available soon. Please check back later.</p>
+                <div id="in-progress-orders-loader" class="loader">
+                  <div class="spinner-border text-danger" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
                 </div>
+                <iframe id="in-progress-orders-iframe" class="responsive-iframe" src="about:blank" data-src="https://lookerstudio.google.com/embed/reporting/7fdccf2f-51a1-4cc9-ba38-04a5467f2188/page/qom3E" frameborder="0" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"></iframe>
               </div>
             </div>
           </div>
@@ -300,11 +320,12 @@
             <div class="dashboard-container">
               <h3 class="dashboard-title">Delayed Orders</h3>
               <div class="iframe-container">
-                <!-- Replace with actual iframe when ready -->
-                <div class="text-center p-5">
-                  <i class="bi bi-exclamation-triangle fs-1 text-secondary"></i>
-                  <p class="mt-3">Report will be available soon. Please check back later.</p>
+                <div id="delayed-orders-loader" class="loader">
+                  <div class="spinner-border text-danger" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
                 </div>
+                <iframe id="delayed-orders-iframe" class="responsive-iframe" src="about:blank" data-src="INSERT_LOOKERSTUDIO_URL_HERE" frameborder="0" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"></iframe>
               </div>
             </div>
           </div>
@@ -314,11 +335,12 @@
             <div class="dashboard-container">
               <h3 class="dashboard-title">Order Forecast</h3>
               <div class="iframe-container">
-                <!-- Replace with actual iframe when ready -->
-                <div class="text-center p-5">
-                  <i class="bi bi-calendar-check fs-1 text-secondary"></i>
-                  <p class="mt-3">Report will be available soon. Please check back later.</p>
+                <div id="order-forecast-loader" class="loader">
+                  <div class="spinner-border text-danger" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
                 </div>
+                <iframe id="order-forecast-iframe" class="responsive-iframe" src="about:blank" data-src="INSERT_LOOKERSTUDIO_URL_HERE" frameborder="0" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"></iframe>
               </div>
             </div>
           </div>
@@ -348,11 +370,12 @@
             <div class="dashboard-container">
               <h3 class="dashboard-title">Current Stock Levels</h3>
               <div class="iframe-container">
-                <!-- Replace with actual iframe when ready -->
-                <div class="text-center p-5">
-                  <i class="bi bi-box-seam fs-1 text-secondary"></i>
-                  <p class="mt-3">Report will be available soon. Please check back later.</p>
+                <div id="current-stock-loader" class="loader">
+                  <div class="spinner-border text-danger" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
                 </div>
+                <iframe id="current-stock-iframe" class="responsive-iframe" src="about:blank" data-src="INSERT_LOOKERSTUDIO_URL_HERE" frameborder="0" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"></iframe>
               </div>
             </div>
           </div>
@@ -360,13 +383,14 @@
           <!-- Low Stock Alerts -->
           <div class="submenu-content" id="low-stock">
             <div class="dashboard-container">
-			<h3 class="dashboard-title">Low Stock Alerts</h3>
+              <h3 class="dashboard-title">Low Stock Alerts</h3>
               <div class="iframe-container">
-                <!-- Replace with actual iframe when ready -->
-                <div class="text-center p-5">
-                  <i class="bi bi-exclamation-circle fs-1 text-secondary"></i>
-                  <p class="mt-3">Report will be available soon. Please check back later.</p>
+                <div id="low-stock-loader" class="loader">
+                  <div class="spinner-border text-danger" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
                 </div>
+                <iframe id="low-stock-iframe" class="responsive-iframe" src="about:blank" data-src="INSERT_LOOKERSTUDIO_URL_HERE" frameborder="0" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"></iframe>
               </div>
             </div>
           </div>
@@ -376,11 +400,12 @@
             <div class="dashboard-container">
               <h3 class="dashboard-title">Inventory Turnover</h3>
               <div class="iframe-container">
-                <!-- Replace with actual iframe when ready -->
-                <div class="text-center p-5">
-                  <i class="bi bi-arrow-repeat fs-1 text-secondary"></i>
-                  <p class="mt-3">Report will be available soon. Please check back later.</p>
+                <div id="inventory-turnover-loader" class="loader">
+                  <div class="spinner-border text-danger" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
                 </div>
+                <iframe id="inventory-turnover-iframe" class="responsive-iframe" src="about:blank" data-src="INSERT_LOOKERSTUDIO_URL_HERE" frameborder="0" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"></iframe>
               </div>
             </div>
           </div>
@@ -390,11 +415,12 @@
             <div class="dashboard-container">
               <h3 class="dashboard-title">Stock Forecast</h3>
               <div class="iframe-container">
-                <!-- Replace with actual iframe when ready -->
-                <div class="text-center p-5">
-                  <i class="bi bi-graph-up-arrow fs-1 text-secondary"></i>
-                  <p class="mt-3">Report will be available soon. Please check back later.</p>
+                <div id="stock-forecast-loader" class="loader">
+                  <div class="spinner-border text-danger" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
                 </div>
+                <iframe id="stock-forecast-iframe" class="responsive-iframe" src="about:blank" data-src="INSERT_LOOKERSTUDIO_URL_HERE" frameborder="0" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"></iframe>
               </div>
             </div>
           </div>
@@ -424,11 +450,12 @@
             <div class="dashboard-container">
               <h3 class="dashboard-title">Production Output</h3>
               <div class="iframe-container">
-                <!-- Replace with actual iframe when ready -->
-                <div class="text-center p-5">
-                  <i class="bi bi-boxes fs-1 text-secondary"></i>
-                  <p class="mt-3">Report will be available soon. Please check back later.</p>
+                <div id="production-output-loader" class="loader">
+                  <div class="spinner-border text-danger" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
                 </div>
+                <iframe id="production-output-iframe" class="responsive-iframe" src="about:blank" data-src="INSERT_LOOKERSTUDIO_URL_HERE" frameborder="0" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"></iframe>
               </div>
             </div>
           </div>
@@ -438,11 +465,12 @@
             <div class="dashboard-container">
               <h3 class="dashboard-title">Efficiency Metrics</h3>
               <div class="iframe-container">
-                <!-- Replace with actual iframe when ready -->
-                <div class="text-center p-5">
-                  <i class="bi bi-speedometer2 fs-1 text-secondary"></i>
-                  <p class="mt-3">Report will be available soon. Please check back later.</p>
+                <div id="efficiency-metrics-loader" class="loader">
+                  <div class="spinner-border text-danger" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
                 </div>
+                <iframe id="efficiency-metrics-iframe" class="responsive-iframe" src="about:blank" data-src="INSERT_LOOKERSTUDIO_URL_HERE" frameborder="0" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"></iframe>
               </div>
             </div>
           </div>
@@ -452,11 +480,12 @@
             <div class="dashboard-container">
               <h3 class="dashboard-title">Quality Control</h3>
               <div class="iframe-container">
-                <!-- Replace with actual iframe when ready -->
-                <div class="text-center p-5">
-                  <i class="bi bi-check-circle fs-1 text-secondary"></i>
-                  <p class="mt-3">Report will be available soon. Please check back later.</p>
+                <div id="quality-control-loader" class="loader">
+                  <div class="spinner-border text-danger" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
                 </div>
+                <iframe id="quality-control-iframe" class="responsive-iframe" src="about:blank" data-src="INSERT_LOOKERSTUDIO_URL_HERE" frameborder="0" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"></iframe>
               </div>
             </div>
           </div>
@@ -466,11 +495,12 @@
             <div class="dashboard-container">
               <h3 class="dashboard-title">Production Forecast</h3>
               <div class="iframe-container">
-                <!-- Replace with actual iframe when ready -->
-                <div class="text-center p-5">
-                  <i class="bi bi-calendar-week fs-1 text-secondary"></i>
-                  <p class="mt-3">Report will be available soon. Please check back later.</p>
+                <div id="production-forecast-loader" class="loader">
+                  <div class="spinner-border text-danger" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
                 </div>
+                <iframe id="production-forecast-iframe" class="responsive-iframe" src="about:blank" data-src="INSERT_LOOKERSTUDIO_URL_HERE" frameborder="0" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"></iframe>
               </div>
             </div>
           </div>
@@ -500,11 +530,12 @@
             <div class="dashboard-container">
               <h3 class="dashboard-title">Client Performance</h3>
               <div class="iframe-container">
-                <!-- Replace with actual iframe when ready -->
-                <div class="text-center p-5">
-                  <i class="bi bi-people fs-1 text-secondary"></i>
-                  <p class="mt-3">Report will be available soon. Please check back later.</p>
+                <div id="client-performance-loader" class="loader">
+                  <div class="spinner-border text-danger" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
                 </div>
+                <iframe id="client-performance-iframe" class="responsive-iframe" src="about:blank" data-src="INSERT_LOOKERSTUDIO_URL_HERE" frameborder="0" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"></iframe>
               </div>
             </div>
           </div>
@@ -514,11 +545,12 @@
             <div class="dashboard-container">
               <h3 class="dashboard-title">Product Popularity</h3>
               <div class="iframe-container">
-                <!-- Replace with actual iframe when ready -->
-                <div class="text-center p-5">
-                  <i class="bi bi-star fs-1 text-secondary"></i>
-                  <p class="mt-3">Report will be available soon. Please check back later.</p>
+                <div id="product-popularity-loader" class="loader">
+                  <div class="spinner-border text-danger" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
                 </div>
+                <iframe id="product-popularity-iframe" class="responsive-iframe" src="about:blank" data-src="INSERT_LOOKERSTUDIO_URL_HERE" frameborder="0" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"></iframe>
               </div>
             </div>
           </div>
@@ -528,11 +560,12 @@
             <div class="dashboard-container">
               <h3 class="dashboard-title">Client Growth</h3>
               <div class="iframe-container">
-                <!-- Replace with actual iframe when ready -->
-                <div class="text-center p-5">
-                  <i class="bi bi-graph-up fs-1 text-secondary"></i>
-                  <p class="mt-3">Report will be available soon. Please check back later.</p>
+                <div id="client-growth-loader" class="loader">
+                  <div class="spinner-border text-danger" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
                 </div>
+                <iframe id="client-growth-iframe" class="responsive-iframe" src="about:blank" data-src="INSERT_LOOKERSTUDIO_URL_HERE" frameborder="0" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"></iframe>
               </div>
             </div>
           </div>
@@ -542,11 +575,12 @@
             <div class="dashboard-container">
               <h3 class="dashboard-title">Market Trends</h3>
               <div class="iframe-container">
-                <!-- Replace with actual iframe when ready -->
-                <div class="text-center p-5">
-                  <i class="bi bi-bar-chart-line fs-1 text-secondary"></i>
-                  <p class="mt-3">Report will be available soon. Please check back later.</p>
+                <div id="market-trends-loader" class="loader">
+                  <div class="spinner-border text-danger" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
                 </div>
+                <iframe id="market-trends-iframe" class="responsive-iframe" src="about:blank" data-src="INSERT_LOOKERSTUDIO_URL_HERE" frameborder="0" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"></iframe>
               </div>
             </div>
           </div>
@@ -643,7 +677,7 @@
       // Form submission handler for newsletter form
       $('#newsletterForm').submit(function(e) {
         e.preventDefault();
-        
+
         var $form = $(this);
         var formData = {
           action: 'newsletter'
@@ -656,7 +690,7 @@
         submitForm(formData, $form);
       });
 
-      function submitForm(formData, $form) { 
+      function submitForm(formData, $form) {
         const scriptURL = 'https://script.google.com/macros/s/AKfycbwJDAeDBi1-_iodvcl_4bFZ6HlFXouWRkZ0kiCOlj7g4lXbI6yXQsi33QjAVYMYKb09/exec';
 
         fetch(scriptURL, {
@@ -668,7 +702,7 @@
           body: JSON.stringify(formData)
         })
         .then(response => {
-          console.log('Response (no-cors):', response); 
+          console.log('Response (no-cors):', response);
           $form.find('.loading').hide();
           $('#newsletterForm .sent-message').text('Thank you for subscribing!').show();
           $('#newsletterForm')[0].reset();
@@ -680,24 +714,12 @@
         });
       }
 
-      // Submenu navigation functionality
-      $('.submenu-nav li').click(function() {
-        var targetId = $(this).data('target');
-        var parentContainer = $(this).closest('.submenu-container');
+      // Function to load iframe content
+      function loadIframeContent(iframeId, loaderId) {
+        var iframe = $('#' + iframeId);
+        var loader = $('#' + loaderId);
         
-        // Update active class on nav items
-        $(this).siblings().removeClass('active');
-        $(this).addClass('active');
-        
-        // Show the target content and hide others
-        parentContainer.find('.submenu-content').removeClass('active');
-        parentContainer.find('#' + targetId).addClass('active');
-        
-        // Handle iframe loading for Looker Studio reports
-        if (targetId === 'sales-by-agent') {
-          var iframe = $('#sales-agent-iframe');
-          var loader = $('#sales-agent-loader');
-          
+        if (iframe.length && loader.length && iframe.data('src')) {
           // Show loader
           loader.show();
           
@@ -709,26 +731,8 @@
             iframe.attr('src', iframe.attr('src'));
           }
           
-          // Hide loader when iframe is loaded
-          iframe.on('load', function() {
-            setTimeout(function() {
-              loader.fadeOut();
-            }, 1500); // Give extra time for the report to render
-          });
-        } else if (targetId === 'previous-month') {
-          var iframe = $('#previous-month-iframe');
-          var loader = $('#previous-month-loader');
-          
-          // Show loader
-          loader.show();
-          
-          // Set the iframe src from data-src attribute
-          if (iframe.attr('src') === 'about:blank') {
-            iframe.attr('src', iframe.data('src'));
-          } else {
-            // If already loaded once, reload to ensure proper rendering
-            iframe.attr('src', iframe.attr('src'));
-          }
+          // Remove any existing load handlers to prevent multiple handlers
+          iframe.off('load');
           
           // Hide loader when iframe is loaded
           iframe.on('load', function() {
@@ -737,13 +741,59 @@
             }, 1500); // Give extra time for the report to render
           });
         }
+      }
+
+      // Submenu navigation functionality
+      $('.submenu-nav li').click(function() {
+        var targetId = $(this).data('target');
+        var parentContainer = $(this).closest('.submenu-container');
+
+        // Update active class on nav items
+        $(this).siblings().removeClass('active');
+        $(this).addClass('active');
+
+        // Show the target content and hide others
+        parentContainer.find('.submenu-content').removeClass('active');
+        parentContainer.find('#' + targetId).addClass('active');
+
+        // Handle iframe loading for Looker Studio reports
+        var iframeId = targetId + '-iframe';
+        var loaderId = targetId + '-loader';
+        
+        // Special case for sales-by-agent which might have a different ID pattern
+        if (targetId === 'sales-by-agent') {
+          iframeId = 'sales-agent-iframe';
+          loaderId = 'sales-agent-loader';
+        }
+
+        loadIframeContent(iframeId, loaderId);
       });
+
+      // Load all active tabs on page load
+      function loadInitialTabs() {
+        // Get all active submenu content sections
+        $('.submenu-content.active').each(function() {
+          var tabId = $(this).attr('id');
+          var iframeId = tabId + '-iframe';
+          var loaderId = tabId + '-loader';
+          
+          // Special case for sales-by-agent
+          if (tabId === 'sales-by-agent') {
+            iframeId = 'sales-agent-iframe';
+            loaderId = 'sales-agent-loader';
+          }
+          
+          loadIframeContent(iframeId, loaderId);
+        });
+      }
       
+      // Load initial tabs when document is ready
+      loadInitialTabs();
+
       // Check if we need to load iframes on page load based on URL hash
-      if (window.location.hash === '#sales-by-agent') {
-        $('#sales-submenu li[data-target="sales-by-agent"]').click();
-      } else if (window.location.hash === '#previous-month') {
-        $('#sales-submenu li[data-target="previous-month"]').click();
+      if (window.location.hash) {
+        var targetId = window.location.hash.substring(1);
+        $('li[data-target="' + targetId + '"]').click();
       }
     });
   </script>
