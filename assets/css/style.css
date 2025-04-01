@@ -878,6 +878,13 @@ section {
   bottom: 20px;
 }
 
+/* Added rule for standardizing portfolio image size */
+.portfolio .portfolio-item .portfolio-img {
+  height: 250px; /* Adjust height as needed */
+  width: 100%;
+  object-fit: cover; /* Ensures the image covers the area, cropping if necessary */
+}
+
 /*--------------------------------------------------------------
 # Portfolio Details
 --------------------------------------------------------------*/
