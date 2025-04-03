@@ -106,14 +106,6 @@
                     <i class="fas fa-chevron-down collapsible-icon"></i>
                 </div>
                 <div class="collapsible-content">
-                    <!-- Add the Assigned Member filter here -->
-                    <div class="form-group">
-                        <label for="filterAssignedMember">Filter by Assigned Member</label>
-                        <select id="filterAssignedMember" class="form-control">
-                            <option value="">All Members</option>
-                            <!-- Options will be populated by JavaScript -->
-                        </select>
-                    </div>
                     <!-- Add the search input here -->
                     <div class="form-group">
                         <label for="searchDispensary">Filter Dispensary</label>
@@ -294,7 +286,6 @@
             const nextActionItemDetails = document.getElementById('nextActionItemDetails');
             const assignedMember = document.getElementById('assignedMember');
             const salesPipeline = document.getElementById('salesPipeline');
-            const filterAssignedMember = document.getElementById('filterAssignedMember'); // Added filter element
 
             let dispensariesData = [];
             let setupData = {};
@@ -330,9 +321,6 @@
 
             // Handle search input with debounce
             searchDispensary.addEventListener('input', debounce(populateDispensarySelect));
-
-            // Handle assigned member filter change
-            filterAssignedMember.addEventListener('change', populateDispensarySelect); // Added event listener
 
             // Handle form submission
             form.addEventListener('submit', function(e) {
@@ -402,8 +390,7 @@
             window.handleSetupData = function(response) {
                 if (response.success) {
                     setupData = response.data;
-                    populateAssignedMemberSelect(); // Populates the form dropdown
-                    populateFilterAssignedMemberSelect(); // Populates the filter dropdown
+                    populateAssignedMemberSelect();
                     populateSalesPipelineSelect();
                     hideMessage(loadingElement);
                 } else {
@@ -413,21 +400,14 @@
             }
 
 			function populateDispensarySelect() {
-				const textFilter = searchDispensary.value.toLowerCase();
-                const memberFilter = filterAssignedMember.value; // Get selected member from filter
+				const filter = searchDispensary.value.toLowerCase();
 				selectDispensary.innerHTML = '<option value="">Select a dispensary</option><option value="new">New Dispensary</option>';
 
 				if (Array.isArray(dispensariesData) && dispensariesData.length > 0) {
 					dispensariesData.forEach(dispensary => {
-						// Ensure 'Dispensary Name' and 'Assigned Member' are treated as strings
+						// Ensure 'Dispensary Name' is treated as a string
 						const dispensaryName = String(dispensary['Dispensary Name'] || "").toLowerCase();
-                        const assignedMemberName = String(dispensary['Assigned Member'] || "");
-
-                        // Apply both filters
-                        const nameMatches = dispensaryName.includes(textFilter);
-                        const memberMatches = !memberFilter || assignedMemberName === memberFilter; // True if no member selected or member matches
-
-						if (nameMatches && memberMatches) {
+						if (dispensaryName.includes(filter)) {
 							const option = document.createElement('option');
 							option.value = dispensary['Dispensary Name'];
 							option.textContent = dispensary['Dispensary Name'];
@@ -437,7 +417,6 @@
 				}
 			}
 
-            // Populates the Assigned Member dropdown in the form
             function populateAssignedMemberSelect() {
                 assignedMember.innerHTML = '<option value="">Select a member</option>';
                 setupData.members.forEach(member => {
@@ -447,22 +426,6 @@
                     option.textContent = name;
                     assignedMember.appendChild(option);
                 });
-            }
-
-            // Populates the Assigned Member filter dropdown
-            function populateFilterAssignedMemberSelect() {
-                filterAssignedMember.innerHTML = '<option value="">All Members</option>'; // Keep the "All Members" option
-                if (setupData.members && Array.isArray(setupData.members)) {
-                    setupData.members.forEach(member => {
-                        const option = document.createElement('option');
-                        const [name, email] = member.split(', '); // Assuming format "Name, Email"
-                        option.value = name; // Use only the name for filtering value
-                        option.textContent = name; // Display only the name
-                        filterAssignedMember.appendChild(option);
-                    });
-                } else {
-                     console.error("setupData.members is not defined or not an array");
-                }
             }
 
             function populateSalesPipelineSelect() {
