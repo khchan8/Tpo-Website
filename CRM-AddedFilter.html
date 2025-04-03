@@ -81,16 +81,13 @@
         }
         .collapsible-content {
             padding: 15px;
-            display: none; /* Collapsed by default */
+            display: none;
         }
         .collapsible-icon {
             transition: transform 0.3s ease;
         }
         .collapsible-section.active .collapsible-icon {
             transform: rotate(180deg);
-        }
-        .collapsible-section.active .collapsible-content {
-             display: block; /* Show content when active */
         }
         @media (max-width: 768px) {
             .container {
@@ -103,53 +100,25 @@
     <div class="container">
         <h1 class="text-center">Tiny CRM</h1>
         <form id="dispensaryForm">
-            <!-- New Filter Section -->
-            <div class="collapsible-section" id="filterSection">
-                <div class="collapsible-header">
-                    <span>Filters</span>
-                    <i class="fas fa-chevron-down collapsible-icon"></i>
-                </div>
-                <div class="collapsible-content">
-                    <div class="form-row">
-                        <div class="form-group col-md-6">
-                            <label for="filterAssignedMember">Filter by Assigned Member</label>
-                            <select id="filterAssignedMember" class="form-control">
-                                <option value="">All Members</option>
-                                <!-- Options will be populated by JavaScript -->
-                            </select>
-                        </div>
-                        <div class="form-group col-md-6">
-                            <label for="searchDispensary">Filter Dispensary Name</label>
-                            <input type="text" id="searchDispensary" class="form-control" placeholder="Type Dispensary Name...">
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group col-md-6">
-                            <label for="filterSalesPipeline">Filter Sales Pipeline</label>
-                            <select id="filterSalesPipeline" class="form-control">
-                                <option value="">All Stages</option>
-                                <!-- Options will be populated by JavaScript -->
-                            </select>
-                        </div>
-                        <div class="form-group col-md-6">
-                            <label for="filterDispensaryAddress">Filter Dispensary Address</label>
-                            <input type="text" id="filterDispensaryAddress" class="form-control" placeholder="Type Address...">
-                        </div>
-                    </div>
-                     <div class="form-group">
-                        <label for="filterAdditional">Additional Filter (Searches All Fields)</label>
-                        <input type="text" id="filterAdditional" class="form-control" placeholder="Type to search across fields...">
-                    </div>
-                </div>
-            </div>
-            <!-- End New Filter Section -->
-
             <div class="collapsible-section active">
                 <div class="collapsible-header">
                     <span>Dispensary Information</span>
                     <i class="fas fa-chevron-down collapsible-icon"></i>
                 </div>
                 <div class="collapsible-content">
+                    <!-- Add the Assigned Member filter here -->
+                    <div class="form-group">
+                        <label for="filterAssignedMember">Filter by Assigned Member</label>
+                        <select id="filterAssignedMember" class="form-control">
+                            <option value="">All Members</option>
+                            <!-- Options will be populated by JavaScript -->
+                        </select>
+                    </div>
+                    <!-- Add the search input here -->
+                    <div class="form-group">
+                        <label for="searchDispensary">Filter Dispensary</label>
+                        <input type="text" id="searchDispensary" class="form-control" placeholder="Type to Filter...">
+                    </div>
                     <div class="form-group">
                         <label for="selectDispensary">Select Dispensary</label>
                         <select id="selectDispensary" class="form-control" name="selectDispensary" required>
@@ -271,18 +240,16 @@
             header.addEventListener('click', () => {
                 const section = header.parentElement;
                 section.classList.toggle('active');
-                // No need to manually set display style here, CSS handles it via .active class
+                const content = header.nextElementSibling;
+                content.style.display = section.classList.contains('active') ? 'block' : 'none';
             });
         });
 
-        // Set initial state: Filters closed, others open
-        document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('.collapsible-section:not(#filterSection)').forEach(section => {
-                section.classList.add('active');
-            });
-            // Filter section starts without 'active' class, so it's closed by default CSS
+        // Ensure the collapsible sections are expanded by default
+        document.querySelectorAll('.collapsible-section').forEach(section => {
+            const content = section.querySelector('.collapsible-content');
+            content.style.display = 'block';
         });
-
 
         // Utility functions for caching
         function cacheData(key, data) {
@@ -314,6 +281,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx3B7yZnE-Ke0uv-hWGx0bFQwwVZYl2aDOu9GXCxhjlzXitEEB6dXAYoaSMnv52qMn-1Q/exec';
             const selectDispensary = document.getElementById('selectDispensary');
+            const searchDispensary = document.getElementById('searchDispensary'); // Added search input
             const newDispensaryNameGroup = document.getElementById('newDispensaryNameGroup');
             const form = document.getElementById('dispensaryForm');
             const qrCodeInput = document.getElementById('qrCode');
@@ -324,16 +292,9 @@
             const errorMessageElement = document.querySelector('.error-message');
             const nextActionItem = document.getElementById('nextActionItem');
             const nextActionItemDetails = document.getElementById('nextActionItemDetails');
-            const assignedMember = document.getElementById('assignedMember'); // Form field
-            const salesPipeline = document.getElementById('salesPipeline'); // Form field
-
-            // Get filter elements from the new filter section
-            const filterAssignedMember = document.getElementById('filterAssignedMember');
-            const searchDispensary = document.getElementById('searchDispensary'); // Filter input
-            const filterSalesPipeline = document.getElementById('filterSalesPipeline');
-            const filterDispensaryAddress = document.getElementById('filterDispensaryAddress');
-            const filterAdditional = document.getElementById('filterAdditional');
-
+            const assignedMember = document.getElementById('assignedMember');
+            const salesPipeline = document.getElementById('salesPipeline');
+            const filterAssignedMember = document.getElementById('filterAssignedMember'); // Added filter element
 
             let dispensariesData = [];
             let setupData = {};
@@ -367,15 +328,11 @@
                 };
             }
 
-            // Handle filter inputs with debounce for text fields
+            // Handle search input with debounce
             searchDispensary.addEventListener('input', debounce(populateDispensarySelect));
-            filterDispensaryAddress.addEventListener('input', debounce(populateDispensarySelect));
-            filterAdditional.addEventListener('input', debounce(populateDispensarySelect));
 
-            // Handle filter dropdown changes
-            filterAssignedMember.addEventListener('change', populateDispensarySelect);
-            filterSalesPipeline.addEventListener('change', populateDispensarySelect);
-
+            // Handle assigned member filter change
+            filterAssignedMember.addEventListener('change', populateDispensarySelect); // Added event listener
 
             // Handle form submission
             form.addEventListener('submit', function(e) {
@@ -447,8 +404,7 @@
                     setupData = response.data;
                     populateAssignedMemberSelect(); // Populates the form dropdown
                     populateFilterAssignedMemberSelect(); // Populates the filter dropdown
-                    populateSalesPipelineSelect(); // Populates the form dropdown
-                    populateFilterSalesPipelineSelect(); // Populates the filter dropdown
+                    populateSalesPipelineSelect();
                     hideMessage(loadingElement);
                 } else {
                     console.error('Error fetching setup data:', response.message);
@@ -457,90 +413,40 @@
             }
 
 			function populateDispensarySelect() {
-                const currentSelectedValue = selectDispensary.value; // Store current selection
-				const nameFilter = searchDispensary.value.toLowerCase(); // Use the correct ID
-                const memberFilter = filterAssignedMember.value;
-                const pipelineFilter = filterSalesPipeline.value;
-                const addressFilter = filterDispensaryAddress.value.toLowerCase();
-                const additionalFilter = filterAdditional.value.toLowerCase();
-
+				const textFilter = searchDispensary.value.toLowerCase();
+                const memberFilter = filterAssignedMember.value; // Get selected member from filter
 				selectDispensary.innerHTML = '<option value="">Select a dispensary</option><option value="new">New Dispensary</option>';
 
 				if (Array.isArray(dispensariesData) && dispensariesData.length > 0) {
 					dispensariesData.forEach(dispensary => {
-						// Get all relevant fields as strings for filtering
+						// Ensure 'Dispensary Name' and 'Assigned Member' are treated as strings
 						const dispensaryName = String(dispensary['Dispensary Name'] || "").toLowerCase();
                         const assignedMemberName = String(dispensary['Assigned Member'] || "");
-                        const salesPipelineStage = String(dispensary['Sales Pipeline'] || "");
-                        const dispensaryAddress = String(dispensary['Dispensary Address'] || "").toLowerCase();
-                        const contactPerson = String(dispensary['Contact Person Name'] || "").toLowerCase();
-                        const email = String(dispensary['Email'] || "").toLowerCase();
-                        const phone = String(dispensary['Phone'] || "").toLowerCase();
-                        const lineContact = String(dispensary['Line Contact'] || "").toLowerCase();
-                        const history = String(dispensary['Notes & Communication History'] || "").toLowerCase();
-                        const nextAction = String(dispensary['Next Action Item'] || "").toLowerCase();
 
+                        // Apply both filters
+                        const nameMatches = dispensaryName.includes(textFilter);
+                        const memberMatches = !memberFilter || assignedMemberName === memberFilter; // True if no member selected or member matches
 
-                        // Apply specific filters
-                        const nameMatches = dispensaryName.includes(nameFilter);
-                        const memberMatches = !memberFilter || assignedMemberName === memberFilter;
-                        const pipelineMatches = !pipelineFilter || salesPipelineStage === pipelineFilter;
-                        const addressMatches = dispensaryAddress.includes(addressFilter);
-
-                        // Apply additional filter across multiple fields
-                        let additionalMatches = true;
-                        if (additionalFilter) {
-                            additionalMatches = dispensaryName.includes(additionalFilter) ||
-                                                dispensaryAddress.includes(additionalFilter) ||
-                                                contactPerson.includes(additionalFilter) ||
-                                                email.includes(additionalFilter) ||
-                                                phone.includes(additionalFilter) ||
-                                                lineContact.includes(additionalFilter) ||
-                                                history.includes(additionalFilter) ||
-                                                nextAction.includes(additionalFilter) ||
-                                                assignedMemberName.toLowerCase().includes(additionalFilter) || // Include non-lowercased fields
-                                                salesPipelineStage.toLowerCase().includes(additionalFilter);
-                        }
-
-
-						if (nameMatches && memberMatches && pipelineMatches && addressMatches && additionalMatches) {
+						if (nameMatches && memberMatches) {
 							const option = document.createElement('option');
-							option.value = dispensary['Dispensary Name']; // Use original case for value
-							option.textContent = dispensary['Dispensary Name']; // Use original case for display
+							option.value = dispensary['Dispensary Name'];
+							option.textContent = dispensary['Dispensary Name'];
 							selectDispensary.appendChild(option);
 						}
 					});
-                    // Restore selection if it still exists after filtering
-                    if (Array.from(selectDispensary.options).some(opt => opt.value === currentSelectedValue)) {
-                        selectDispensary.value = currentSelectedValue;
-                    } else {
-                         // If previous selection is filtered out, clear the form
-                         if (currentSelectedValue && currentSelectedValue !== 'new') {
-                            clearFormFields();
-                         }
-                    }
-				} else {
-                     // If no data, ensure selection is reset
-                     selectDispensary.value = "";
-                     // clearFormFields(); // Avoid calling this
-                     selectDispensary.classList.add('no-match'); // Add no-match class if data array is empty
-                }
+				}
 			}
 
             // Populates the Assigned Member dropdown in the form
             function populateAssignedMemberSelect() {
                 assignedMember.innerHTML = '<option value="">Select a member</option>';
-                if (setupData.members && Array.isArray(setupData.members)) {
-                    setupData.members.forEach(member => {
-                        const option = document.createElement('option');
-                        const [name, email] = member.split(', ');
-                        option.value = name;
-                        option.textContent = name;
-                        assignedMember.appendChild(option);
-                    });
-                } else {
-                     console.error("setupData.members is not defined or not an array");
-                }
+                setupData.members.forEach(member => {
+                    const option = document.createElement('option');
+                    const [name, email] = member.split(', ');
+                    option.value = name;
+                    option.textContent = name;
+                    assignedMember.appendChild(option);
+                });
             }
 
             // Populates the Assigned Member filter dropdown
@@ -559,34 +465,14 @@
                 }
             }
 
-             // Populates the Sales Pipeline filter dropdown
-            function populateFilterSalesPipelineSelect() {
-                filterSalesPipeline.innerHTML = '<option value="">All Stages</option>'; // Default option
-                if (setupData.salesPipelines && Array.isArray(setupData.salesPipelines)) {
-                    setupData.salesPipelines.forEach(pipeline => {
-                        const option = document.createElement('option');
-                        option.value = pipeline;
-                        option.textContent = pipeline;
-                        filterSalesPipeline.appendChild(option);
-                    });
-                } else {
-                    console.error("setupData.salesPipelines is not defined or not an array");
-                }
-            }
-
-
             function populateSalesPipelineSelect() {
                 salesPipeline.innerHTML = '<option value="">Select pipeline stage</option>';
-                 if (setupData.salesPipelines && Array.isArray(setupData.salesPipelines)) {
-                    setupData.salesPipelines.forEach(pipeline => {
-                        const option = document.createElement('option');
-                        option.value = pipeline;
-                        option.textContent = pipeline;
-                        salesPipeline.appendChild(option);
-                    });
-                } else {
-                     console.error("setupData.salesPipelines is not defined or not an array");
-                 }
+                setupData.salesPipelines.forEach(pipeline => {
+                    const option = document.createElement('option');
+                    option.value = pipeline;
+                    option.textContent = pipeline;
+                    salesPipeline.appendChild(option);
+                });
             }
 
             function populateFormFields(dispensaryName) {
