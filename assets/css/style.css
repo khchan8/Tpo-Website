@@ -421,7 +421,7 @@ h6 {
 #hero {
   width: 100%;
   height: calc(100vh - 110px);
-  background: url("../img/hero-bg.jpg") top center;
+  /* background: url("../img/hero-bg.jpg") top center; */ /* Removed for dynamic background */
   background-size: cover;
   position: relative;
 }
@@ -434,6 +434,13 @@ h6 {
   top: 0;
   left: 0;
   right: 0;
+}
+
+#hero .container {
+  position: relative; /* Establish stacking context */
+  z-index: 1;       /* Place above canvas */
+  text-align: left; /* Align text to the left */
+  /* Vertical centering handled by d-flex on section */
 }
 
 #hero h1 {
@@ -736,9 +743,9 @@ section {
 # Cta
 --------------------------------------------------------------*/
 .cta {
-  background: linear-gradient(rgba(2, 2, 2, 0.5), rgba(0, 0, 0, 0.5)), url("../img/cta-bg.jpg") fixed center center;
+  /* background: linear-gradient(rgba(2, 2, 2, 0.5), rgba(0, 0, 0, 0.5)), url("../img/cta-bg.jpg") fixed center center; */ /* Removed for dynamic background */
   background-size: cover;
-  padding: 120px 0;
+  padding: 120px 0; /* Restore original padding */
 }
 
 .cta h3 {
@@ -1436,3 +1443,54 @@ section {
     margin: -20px 0 30px 0;
   }
 }
+
+/* --- Flowing Energy Stream Background Styles (Section-Specific) --- */
+
+#hero {
+    position: relative; /* Essential for positioning the absolute canvas inside */
+    overflow: hidden; /* Keep the effect contained */
+    background: #000000 !important; /* Set explicit black background for the section */
+    /* Original hero height was calc(100vh - 110px), padding might need adjustment if height changes */
+}
+#cta {
+    position: relative; /* Essential for positioning the absolute canvas inside */
+    overflow: hidden; /* Keep the effect contained */
+    background: #000000 !important; /* Set explicit black background for the section */
+    padding: 120px 0; /* Original padding */
+}
+
+/* General canvas style */
+/* General canvas style (used by Hero) */
+.energy-stream-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0; /* Behind content */
+    pointer-events: none;
+    display: block;
+}
+
+#cta {
+    position: relative; /* Essential for positioning the absolute canvas inside */
+    overflow: hidden; /* Keep the effect contained */
+    background: #000000 !important; /* Set explicit black background for the section */
+    padding: 120px 0; /* Original padding */
+}
+
+/* Canvas style is handled by the general .energy-stream-canvas rule */
+
+#cta .container .text-center { /* Target the inner div for stacking */
+    position: relative; /* Establish stacking context */
+    z-index: 1;       /* Place above canvas */
+    color: #ffffff;   /* Ensure text is white */
+}
+
+/* Ensure Section Content is Above the Canvas */
+/* #hero > * rule removed previously */
+/* #cta rules handled by new structure */
+
+/* Redundant #cta > * rule removed */
+
+/* --- End Flowing Energy Stream Background Styles --- */

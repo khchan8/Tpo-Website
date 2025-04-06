@@ -1,0 +1,122 @@
+I've analyzed the code in both the `index.html` and `style.css` files to understand the issue with the welcome text positioning. Let me provide a detailed recommendation.
+
+## Analysis of the Issue
+
+Looking at the images you provided, I can see:
+
+1. The welcome text and "Learn More" button are currently positioned on the left side of the page
+2. You want them to be centered and overlaid on top of the animated background (the energy stream canvas)
+3. The canvas is correctly positioned, but the text container isn't properly positioned relative to it
+
+## Root Cause
+
+The issue is in the hero section's CSS and HTML structure. The canvas element is positioned absolutely, but the container with the welcome text doesn't have the proper CSS to position it centrally over the canvas.
+
+## Solution
+
+Here's my recommendation to fix this issue:
+
+```css:f:\!! KH App\TPO Shop\Github\Tpo-Website\assets\css\style.css
+/*--------------------------------------------------------------
+# Hero Section
+--------------------------------------------------------------*/
+#hero {
+  width: 100%;
+  height: calc(100vh - 110px);
+  /* background: url("../img/hero-bg.jpg") top center; */ /* Removed for dynamic background */
+  background-size: cover;
+  position: relative;
+}
+
+#hero:before {
+  content: "";
+  background: rgba(0, 0, 0, 0.5);
+  position: absolute;
+  bottom: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+}
+
+#hero .container {
+  position: absolute; /* Change from relative to absolute */
+  top: 50%;          /* Position at 50% from the top */
+  left: 50%;         /* Position at 50% from the left */
+  transform: translate(-50%, -50%); /* Center the container precisely */
+  text-align: center; /* Center the text inside the container */
+  z-index: 10;       /* Ensure it's above the canvas */
+  width: 80%;        /* Control the width of the text container */
+}
+
+#hero h1 {
+  margin: 0 0 10px 0;
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 56px;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+#hero h2 {
+  color: #eee;
+  margin-bottom: 30px;
+  font-size: 24px;
+}
+
+/* Rest of the hero CSS remains unchanged */
+```
+
+And for the HTML, make sure the canvas has a proper z-index that's lower than the container:
+
+```html:f:\!! KH App\TPO Shop\Github\Tpo-Website\index.html
+<!-- ======= Hero Section ======= -->
+<section id="hero" class="d-flex align-items-center">
+  <div class="container" data-aos="fade-up" data-aos-delay="500">
+    <h1>Welcome to TPO Wellness</h1>
+    <h2>Your Trusted Cannabis White Label Manufacturer in Thailand</h2>
+    <a href="#about" class="btn-get-started scrollto">Learn More</a>
+  </div>
+  <!-- Inside the #hero section, before its closing tag -->
+  <canvas class="energy-stream-canvas" id="hero-energy-stream" style="position: absolute; z-index: 1;"></canvas>
+</section><!-- End Hero -->
+```
+
+## Additional Recommendations
+
+1. You might also want to add some CSS for the canvas to ensure it covers the entire hero section:
+
+```css:f:\!! KH App\TPO Shop\Github\Tpo-Website\assets\css\style.css
+/* Add this to your CSS */
+.energy-stream-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1; /* Lower than the container */
+}
+```
+
+2. For better mobile responsiveness, consider adjusting the text alignment and container width for smaller screens:
+
+```css:f:\!! KH App\TPO Shop\Github\Tpo-Website\assets\css\style.css
+@media (max-width: 768px) {
+  #hero .container {
+    width: 90%; /* Wider container on mobile */
+    padding: 0 15px; /* Add some padding */
+  }
+  
+  #hero h1 {
+    font-size: 28px;
+    line-height: 36px;
+  }
+
+  #hero h2 {
+    font-size: 18px;
+    line-height: 24px;
+    margin-bottom: 30px;
+  }
+}
+```
+
+These changes should position your welcome text and button centrally over the animated background, exactly as shown in your second image. The key changes are making the container absolutely positioned and using transform to center it precisely.
