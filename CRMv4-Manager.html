@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <base href="">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TPO Wellness - CRM (Manager View)</title>
+
+    <!-- Favicons -->
+    <link href="assets/img/favicon.png" rel="icon">
+    <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        /* Use container-fluid for full width */
+        .container-fluid {
+            margin: 20px auto;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        h1 {
+            color: #007bff;
+            /* margin-bottom: 30px; Removed for header layout */
+        }
+        .form-group {
+            margin-bottom: 1rem; /* Consistent bottom margin */
+        }
+        label {
+            font-weight: bold;
+            color: #555;
+            margin-bottom: .5rem; /* Standard label bottom margin */
+            display: block; /* Ensure label is block for alignment */
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+            border-color: #0056b3;
+        }
+        /* Enhanced Loading Indicator */
+        .loading-overlay {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 9999; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+        }
+        .loading-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #fff;
+            padding: 20px 40px;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: bold;
+            color: #495057;
+        }
+        /* Simple spinner */
+        .spinner {
+            border: 4px solid #f3f3f3; /* Light grey */
+            border-top: 4px solid #3498db; /* Blue */
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .message {
+            display: none;
+            margin-top: 1rem;
+            padding: 0.75rem;
+            border-radius: 0.25rem;
+            font-weight: bold;
+        }
+        .sent-message {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error-message {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .collapsible-section {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+        }
+        .collapsible-header {
+            background-color: #f8f9fa;
+            padding: 10px 15px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .collapsible-content {
+            padding: 15px;
+            display: none; /* Collapsed by default */
+        }
+        .collapsible-icon {
+            transition: transform 0.3s ease;
+        }
+        .collapsible-section.active .collapsible-icon {
+            transform: rotate(180deg);
+        }
+        .collapsible-section.active .collapsible-content {
+             display: block; /* Show content when active */
+        }
+        @media (max-width: 768px) {
+            .container-fluid { /* Target container-fluid */
+                padding: 15px;
+            }
+        }
+        /* Allow container-fluid to use more width */
+        @media (min-width: 992px) { /* Bootstrap lg breakpoint */
+            .container-fluid {
+                 padding-left: 30px; /* Add padding */
+                 padding-right: 30px;
+            }
+        }
+        /* Style for pending filter changes */
+        .filter-dirty {
+            border-color: #dc3545 !important; /* Red border */
+            box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25); /* Red glow */
+        }
+        /* Ensure consistent height for filter controls */
+        .form-row .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .form-row label {
+            flex-shrink: 0; /* Prevent label from shrinking */
+        }
+        .form-row .form-control,
+        .form-row .input-group,
+        .form-row #pipelineStageCheckboxes {
+            flex-grow: 1; /* Allow control to grow */
+            height: calc(1.5em + .5rem + 2px); /* Match form-control-sm height */
+        }
+         .form-row #pipelineStageCheckboxes {
+             height: 80px; /* Override for checkbox container */
+             padding: .25rem .5rem; /* Match sm padding */
+         }
+         .form-row .input-group .form-control {
+             height: auto; /* Reset height for inputs within group */
+         }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+             <h1 class="text-center mb-0">Tiny CRM - Manager Tools</h1> <!-- Title Corrected -->
+             <button class="btn btn-sm btn-outline-primary" id="reloadDataBtn" title="Reload All Data"><i class="fas fa-sync-alt"></i> Reload All</button>
+        </div>
+
+            <!-- PRD 5.1: New Assignment Section -->
+            <div class="collapsible-section" id="assignmentSection">
+                <div class="collapsible-header">
+                    <span>Assign New Shops</span>
+                    <i class="fas fa-chevron-down collapsible-icon"></i>
+                </div>
+                <div class="collapsible-content">
+                    <!-- Filtering -->
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="filterAssignProvince">Province</label> <!-- Removed "Filter by" -->
+                            <select id="filterAssignProvince" class="form-control form-control-sm"> <!-- Added sm -->
+                                <option value="">All Provinces</option>
+                                <!-- Options populated by JS -->
+                            </select>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="searchAssignName">Dispensary Name</label> <!-- Removed "Search" -->
+                            <input type="text" id="searchAssignName" class="form-control form-control-sm" placeholder="Type name..."> <!-- Added sm -->
+                        </div>
+                    </div>
+                    <!-- Display -->
+                    <div id="assignmentTableContainer" class="table-responsive">
+                        <!-- Table will be generated here by JS -->
+                        <p>Loading unassigned shops...</p>
+                    </div>
+                    <div id="assignmentPaginationControls" class="text-center mt-2">
+                        <!-- Pagination controls will be generated here by JS -->
+                    </div>
+                    <!-- Assignment Controls -->
+                    <div class="form-row mt-3">
+                         <div class="form-group col-md-6">
+                            <label for="assignToMember">Assign to Member</label>
+                            <select id="assignToMember" class="form-control form-control-sm"> <!-- Added sm -->
+                                <option value="">Select Member</option>
+                                <!-- Options populated from setupData -->
+                            </select>
+                        </div>
+                        <div class="form-group col-md-6 align-self-end">
+                             <button id="assignSelectedButton" class="btn btn-primary btn-block">Assign Selected Shops</button>
+                        </div>
+                    </div>
+                     <!-- Optional: Add Assignment Notes textarea -->
+                     <div class="form-group">
+                        <label for="assignmentNotes">Assignment Notes (Optional)</label>
+                        <textarea id="assignmentNotes" class="form-control" rows="2"></textarea>
+                    </div>
+                </div>
+            </div>
+            <!-- End Assignment Section -->
+
+            <!-- PRD 5.2 / Stage 6: Sales Pipeline View Section -->
+            <div class="collapsible-section" id="pipelineViewSection">
+                <div class="collapsible-header">
+                    <span>Sales Pipeline View</span>
+                    <i class="fas fa-chevron-down collapsible-icon"></i>
+                </div>
+                <div class="collapsible-content">
+                    <!-- Filtering -->
+                    <div class="form-row"> <!-- Standard top alignment -->
+                        <div class="form-group col-md-2">
+                            <label for="filterPipelineMember">Member</label>
+                            <select id="filterPipelineMember" class="form-control form-control-sm">
+                                <option value="">All</option>
+                            </select>
+                        </div>
+                         <div class="form-group col-md-3">
+                            <label>Pipeline Stages</label>
+                            <div id="pipelineStageCheckboxes" class="border p-1 rounded" style="max-height: 80px; overflow-y: auto;">
+                                <small class="text-muted">Loading stages...</small>
+                            </div>
+                        </div>
+                        <!-- Province Filter Removed -->
+                         <div class="form-group col-md-3">
+                            <label>Activity Date</label>
+                             <div id="customDateInputs">
+                                 <div class="input-group input-group-sm"> <!-- Use input-group -->
+                                     <input type="date" class="form-control" id="startDateInput" title="Start Date">
+                                     <input type="date" class="form-control" id="endDateInput" title="End Date">
+                                 </div>
+                             </div>
+                        </div>
+                        <div class="form-group col-md-2">
+                            <label for="searchPipelineName">Dispensary Name</label>
+                            <input type="text" id="searchPipelineName" class="form-control form-control-sm" placeholder="Type name...">
+                        </div>
+                         <!-- Buttons Group Moved to Right -->
+                         <div class="form-group col-md-2 d-flex align-items-end justify-content-end flex-wrap">
+                             <div class="form-check mr-2 mb-1">
+                                 <input class="form-check-input" type="checkbox" value="" id="multiFieldSelectCheck">
+                                 <label class="form-check-label small" for="multiFieldSelectCheck">
+                                     Multi-Select
+                                 </label>
+                             </div>
+                             <button class="btn btn-sm btn-primary mr-1 mb-1" type="button" id="applyPipelineFilterBtn" title="Apply Filters">Apply</button>
+                             <button class="btn btn-sm btn-secondary mb-1" type="button" id="reloadPipelineBtn" title="Reload Pipeline Data"><i class="fas fa-sync-alt"></i></button>
+                         </div>
+                    </div>
+                    <!-- Display -->
+                    <div id="assignedShopsTableContainer" class="table-responsive">
+                        <!-- Table will be generated here by JS -->
+                        <p>Loading assigned shops...</p>
+                    </div>
+                    <div id="assignedShopsPaginationControls" class="text-center mt-2">
+                        <!-- Pagination controls will be generated here by JS -->
+                    </div>
+                </div>
+            </div>
+            <!-- End Sales Pipeline View Section -->
+
+        <!-- Main CRM Form Removed -->
+        <!-- Message Area -->
+        <div id="loadingOverlay" class="loading-overlay">
+            <div class="loading-content">
+                <div class="spinner"></div>
+                <span id="loadingMessage">Loading...</span>
+            </div>
+        </div>
+        <div class="message sent-message mt-3"></div>
+        <div class="message error-message mt-3"></div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        // Add JavaScript to toggle the collapsible sections
+        document.querySelectorAll('.collapsible-header').forEach(header => {
+            header.addEventListener('click', () => {
+                const section = header.parentElement;
+                section.classList.toggle('active');
+            });
+        });
+
+        // Set initial state: Keep Assignment section closed initially
+        document.addEventListener('DOMContentLoaded', function() {
+             // Keep Assignment closed, open Pipeline View by default
+             const assignmentSec = document.getElementById('assignmentSection');
+             const pipelineSec = document.getElementById('pipelineViewSection');
+             if (assignmentSec) assignmentSec.classList.remove('active');
+             if (pipelineSec) pipelineSec.classList.add('active');
+        });
+
+
+        // Utility functions for caching
+        function cacheData(key, data) {
+            try {
+                localStorage.setItem(key, JSON.stringify({
+                    timestamp: new Date().getTime(),
+                    data: data
+                }));
+            } catch (error) {
+                console.warn('Caching failed:', error);
+            }
+        }
+
+        function getCachedData(key, maxAge = 5 * 60 * 1000) { // 5 minutes default
+            try {
+                const cached = localStorage.getItem(key);
+                if (!cached) return null;
+
+                const { timestamp, data } = JSON.parse(cached);
+                if (Date.now() - timestamp > maxAge) return null;
+
+                return data;
+            } catch (error) {
+                console.warn('Cache retrieval failed:', error);
+                return null;
+            }
+        }
+
+        // Utility function to escape HTML for security
+        function escapeHtml(unsafe) {
+            if (typeof unsafe !== 'string') {
+                return unsafe === null || typeof unsafe === 'undefined' ? '' : String(unsafe);
+            }
+            return unsafe
+                 .replace(/&/g, "&amp;")
+                 .replace(/</g, '<')
+                 .replace(/>/g, '>')
+                 .replace(/"/g, '"')
+                 .replace(/'/g, '&#039;');
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwXsvicb1IDuffOA9Sotw0234r4HfBHWQTxWN0ermvMDZnbrmvYHfU6fGAhlT7uWOG6/exec'; // Replace with your actual Script URL
+            // Message Elements (Keep these)
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const loadingMessage = document.getElementById('loadingMessage');
+            const sentMessageElement = document.querySelector('.sent-message');
+            const errorMessageElement = document.querySelector('.error-message');
+
+            // --- Main Form & Filter Elements Removed ---
+
+            // --- Stage 2: Assignment Tab Elements ---
+            const assignmentSection = document.getElementById('assignmentSection');
+            const filterAssignProvince = document.getElementById('filterAssignProvince');
+            const searchAssignName = document.getElementById('searchAssignName');
+            const assignmentTableContainer = document.getElementById('assignmentTableContainer');
+            const assignmentPaginationControls = document.getElementById('assignmentPaginationControls');
+            const assignToMember = document.getElementById('assignToMember');
+            const assignSelectedButton = document.getElementById('assignSelectedButton');
+            const assignmentNotes = document.getElementById('assignmentNotes');
+            let currentAssignmentPage = 1;
+            // --- End Stage 2 ---
+
+            // --- Stage 6: Sales Pipeline View Elements ---
+            const pipelineViewSection = document.getElementById('pipelineViewSection');
+            const filterPipelineMember = document.getElementById('filterPipelineMember');
+            const pipelineStageCheckboxes = document.getElementById('pipelineStageCheckboxes'); // Checkbox container
+            // const filterPipelineProvince = document.getElementById('filterPipelineProvince'); // Removed Province Filter Element
+            const searchPipelineName = document.getElementById('searchPipelineName');
+            const pipelineTableContainer = document.getElementById('assignedShopsTableContainer');
+            const pipelinePaginationControls = document.getElementById('assignedShopsPaginationControls');
+            let currentPipelinePage = 1;
+            // Date Filter Elements (Simplified)
+            const startDateInput = document.getElementById('startDateInput');
+            const endDateInput = document.getElementById('endDateInput');
+            const reloadPipelineBtn = document.getElementById('reloadPipelineBtn');
+            const applyPipelineFilterBtn = document.getElementById('applyPipelineFilterBtn');
+            const reloadDataBtn = document.getElementById('reloadDataBtn');
+            const multiFieldSelectCheck = document.getElementById('multiFieldSelectCheck'); // Multi-select checkbox
+            // --- End Stage 6 ---
+
+            let setupData = {};
+
+            // --- Initial Setup ---
+            initializeDateFilter(); // Set initial date range first
+            fetchSetupData(); // Fetch setup data, which triggers other fetches on success
+
+            // --- Event Listeners ---
+
+            // Debounce function
+            function debounce(func, timeout = 300) {
+                let timer;
+                return (...args) => {
+                    clearTimeout(timer);
+                    timer = setTimeout(() => { func.apply(this, args); }, timeout);
+                };
+            }
+
+            // Assignment Tab Listeners
+            if (filterAssignProvince) filterAssignProvince.addEventListener('change', () => fetchUnassignedData(1));
+            if (searchAssignName) searchAssignName.addEventListener('input', debounce(() => fetchUnassignedData(1), 500));
+            if (assignmentPaginationControls) {
+                assignmentPaginationControls.addEventListener('click', function(event) {
+                    if (event.target.matches('.assign-page-btn')) {
+                         event.preventDefault();
+                         const page = parseInt(event.target.getAttribute('data-page'), 10);
+                         if (!isNaN(page)) {
+                             fetchUnassignedData(page);
+                         }
+                    }
+                });
+            }
+            if (assignSelectedButton) {
+                assignSelectedButton.addEventListener('click', handleAssignButtonClick);
+            }
+
+            // Stage 6: Sales Pipeline View Listeners
+            // Conditional fetch based on multi-select checkbox
+            function handleFilterChange() {
+                if (!multiFieldSelectCheck.checked) {
+                    applyPipelineFilters(); // Fetch immediately if multi-select is off
+                } else {
+                    markPipelineFilterDirty(); // Otherwise, just mark as dirty
+                }
+            }
+
+            if (filterPipelineMember) filterPipelineMember.addEventListener('change', handleFilterChange);
+            // Pipeline stage checkbox listeners are added dynamically in populatePipelineStageFilter
+            // if (filterPipelineProvince) filterPipelineProvince.addEventListener('change', handleFilterChange); // Removed Province Filter Listener
+            if (searchPipelineName) searchPipelineName.addEventListener('input', debounce(handleFilterChange, 500));
+            if (startDateInput) startDateInput.addEventListener('change', handleFilterChange);
+            if (endDateInput) endDateInput.addEventListener('change', handleFilterChange);
+
+            // Pagination still triggers fetch directly
+            if (pipelinePaginationControls) {
+                pipelinePaginationControls.addEventListener('click', function(event) {
+                    if (event.target.matches('.pipeline-page-btn')) {
+                         event.preventDefault();
+                         const page = parseInt(event.target.getAttribute('data-page'), 10);
+                         if (!isNaN(page)) { fetchPipelineData(page); }
+                    }
+                });
+            }
+            // Apply button triggers fetch and clears dirty state
+            if (applyPipelineFilterBtn) applyPipelineFilterBtn.addEventListener('click', applyPipelineFilters);
+            // Reload button triggers fetch and clears dirty state
+            if (reloadPipelineBtn) reloadPipelineBtn.addEventListener('click', applyPipelineFilters);
+            // Reload All button clears cache and fetches everything
+            if (reloadDataBtn) reloadDataBtn.addEventListener('click', reloadAllData);
+            // Multi-select checkbox listener
+            if (multiFieldSelectCheck) {
+                multiFieldSelectCheck.addEventListener('change', function() {
+                    // If unchecked, immediately apply current filters
+                    if (!this.checked) {
+                        applyPipelineFilters();
+                    }
+                    // Enable/disable Apply button based on state
+                    applyPipelineFilterBtn.disabled = !this.checked;
+                });
+                // Initial state for Apply button
+                applyPipelineFilterBtn.disabled = !multiFieldSelectCheck.checked;
+            }
+
+
+            // --- Date Filter Helper Functions ---
+
+            // Sets the initial date filter to the past 7 days (Today - 7 days to Today)
+            function initializeDateFilter() {
+                const today = new Date();
+                today.setHours(23, 59, 59, 999); // End of today
+
+                const sevenDaysAgo = new Date();
+                // Correctly calculate 7 days ago without modifying 'today' prematurely
+                sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+                sevenDaysAgo.setHours(0, 0, 0, 0); // Start of that day
+
+                // Set input values directly
+                startDateInput.value = formatDateYYYYMMDD(sevenDaysAgo);
+                endDateInput.value = formatDateYYYYMMDD(today);
+            }
+
+            // Formats a Date object as YYYY-MM-DD
+            function formatDateYYYYMMDD(date) {
+                if (!date) return '';
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+
+            // Marks pipeline filter controls as dirty
+            function markPipelineFilterDirty() {
+                 // Add visual indicator to relevant controls
+                 if (pipelineStageCheckboxes) pipelineStageCheckboxes.classList.add('filter-dirty');
+                 if (filterPipelineMember) filterPipelineMember.classList.add('filter-dirty');
+                 // if (filterPipelineProvince) filterPipelineProvince.classList.add('filter-dirty'); // Removed
+                 if (searchPipelineName) searchPipelineName.classList.add('filter-dirty');
+                 if (startDateInput) startDateInput.classList.add('filter-dirty');
+                 if (endDateInput) endDateInput.classList.add('filter-dirty');
+            }
+
+            // Applies filters (fetches data) and clears dirty state
+            function applyPipelineFilters() {
+                 // Remove visual indicator
+                 if (pipelineStageCheckboxes) pipelineStageCheckboxes.classList.remove('filter-dirty');
+                 if (filterPipelineMember) filterPipelineMember.classList.remove('filter-dirty');
+                 // if (filterPipelineProvince) filterPipelineProvince.classList.remove('filter-dirty'); // Removed
+                 if (searchPipelineName) searchPipelineName.classList.remove('filter-dirty');
+                 if (startDateInput) startDateInput.classList.remove('filter-dirty');
+                 if (endDateInput) endDateInput.classList.remove('filter-dirty');
+
+                 // Basic date validation before fetching
+                 const startVal = startDateInput.value;
+                 const endVal = endDateInput.value;
+                 if (startVal && endVal) {
+                     const startDate = new Date(startVal);
+                     const endDate = new Date(endVal);
+                     if (endDate < startDate) {
+                         showMessage(errorMessageElement, 'End date cannot be before start date.');
+                         return; // Prevent fetch if dates are invalid
+                     }
+                 } else if (startVal || endVal) {
+                     // If only one date is set, maybe show a message or clear the other?
+                     // For now, we only fetch if BOTH are set or BOTH are clear in fetchPipelineData
+                 }
+
+                 fetchPipelineData(1); // Fetch with current filter values
+            }
+
+             // Clears cache and re-fetches all initial data
+            function reloadAllData() {
+                console.log("Reloading all data...");
+                localStorage.removeItem('setupData'); // Clear setup cache
+                // Re-run initial fetches
+                initializeDateFilter();
+                fetchSetupData(); // This will trigger the others after success
+            }
+
+
+            // Handles changes in the custom date inputs - now calls handleFilterChange
+            function handleCustomDateChange() {
+                handleFilterChange(); // Trigger conditional fetch/dirty marking
+                // Validation can still happen here if needed
+                const startVal = startDateInput.value;
+                const endVal = endDateInput.value;
+                 if (startVal && endVal) {
+                     const startDate = new Date(startVal);
+                     const endDate = new Date(endVal);
+                     if (endDate < startDate) {
+                         showMessage(errorMessageElement, 'End date cannot be before start date.');
+                     }
+                 }
+            }
+
+
+            // --- Data Fetching Functions ---
+
+            // --- fetchAllDispensaryData function removed ---
+
+            // --- fetchFreshData function removed ---
+
+            function fetchSetupData() {
+                const cachedSetup = getCachedData('setupData'); // Check cache first
+                if (cachedSetup) {
+                    // Directly handle cached data
+                    setupData = cachedSetup;
+                    // Populate relevant dropdowns for Manager view
+                    populateAssignToMemberSelect();
+                    populateAssignProvinceFilter();
+                    populatePipelineMemberFilter();
+                    populatePipelineStageFilter();
+                    // populatePipelineProvinceFilter(); // Removed Province Filter Population Call
+
+                    console.log("Using cached setup data.");
+                    // Now fetch the other data sections since setup is complete
+                    fetchUnassignedData();
+                    fetchPipelineData(); // Initial fetch for pipeline view
+                    return; // Don't fetch if cache is valid
+                }
+                showLoading('Fetching setup data...');
+                fetch(`${SCRIPT_URL}?action=getSetupData`) // No callback needed
+                    .then(response => {
+                         if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        // Directly call the handler logic
+                        hideLoading();
+                        if (data && data.success) {
+                            setupData = data.data;
+                            cacheData('setupData', data.data); // Cache the fetched setup data
+                            // Populate relevant dropdowns for Manager view
+                            populateAssignToMemberSelect(); // For assignment section
+                            populateAssignProvinceFilter(); // For assignment section
+                            populatePipelineMemberFilter(); // Renamed function
+                            populatePipelineStageFilter(); // New function
+                            // populatePipelineProvinceFilter(); // Removed Province Filter Population Call
+
+                            // Now fetch the other data sections since setup is complete
+                            fetchUnassignedData();
+                            fetchPipelineData(); // Renamed function call
+                        } else {
+                            console.error('Error fetching setup data:', data ? data.message : 'Invalid response');
+                            showMessage(errorMessageElement, 'Error fetching setup data: ' + (data ? data.message : 'Invalid response'));
+                        }
+                    })
+                    .catch(error => {
+                        hideLoading();
+                        console.error('Fetch Error for getSetupData:', error);
+                        showMessage(errorMessageElement, 'Network or server error fetching setup data: ' + error);
+                    });
+            }
+
+            // --- Global Callbacks Removed ---
+
+             // --- UI Population Functions ---
+
+            // --- Main form UI population functions removed ---
+
+            // --- Messaging Functions (Keep these) ---
+            function showLoading(message = "Loading...") {
+                if (loadingMessage) loadingMessage.textContent = message;
+                if (loadingOverlay) loadingOverlay.style.display = 'block';
+                hideMessage(sentMessageElement); // Hide other messages
+                hideMessage(errorMessageElement);
+            }
+
+            function hideLoading() {
+                 if (loadingOverlay) loadingOverlay.style.display = 'none';
+            }
+
+            function showMessage(element, message) {
+                // Use overlay for loading, specific elements for success/error
+                if(element === loadingOverlay || element === loadingMessage) {
+                    showLoading(message);
+                } else {
+                    hideLoading(); // Hide loading overlay when showing success/error
+                    if(element) {
+                        element.textContent = message;
+                        element.style.display = 'block';
+                    }
+                }
+            }
+
+            function hideMessage(element) {
+                 if(element === loadingOverlay || element === loadingMessage) {
+                    hideLoading();
+                } else if (element) {
+                    element.style.display = 'none';
+                    element.textContent = '';
+                }
+            }
+
+             // Populate Sales Pipeline Checkboxes in the PIPELINE VIEW section
+            function populatePipelineStageFilter() {
+                 if (!pipelineStageCheckboxes) return; // Use new ID
+                 pipelineStageCheckboxes.innerHTML = ''; // Clear previous content
+                 const defaultStages = ['Assignment', 'Lead', 'Contacted', 'Proposal']; // Default selections
+
+                 if (setupData && setupData.salesPipelines && Array.isArray(setupData.salesPipelines)) {
+                    setupData.salesPipelines.forEach(stage => {
+                         if (stage) {
+                            const div = document.createElement('div');
+                            div.className = 'form-check';
+                            const input = document.createElement('input');
+                            input.className = 'form-check-input pipeline-stage-checkbox'; // Add class for listener
+                            input.type = 'checkbox';
+                            input.value = stage;
+                            input.id = `pipelineStage_${stage.replace(/\s+/g, '_')}`; // Create unique ID
+                            // Check if this stage should be checked by default
+                            if (defaultStages.includes(stage)) {
+                                input.checked = true;
+                            }
+                            const label = document.createElement('label');
+                            label.className = 'form-check-label';
+                            label.htmlFor = input.id;
+                            label.textContent = stage;
+
+                            div.appendChild(input);
+                            div.appendChild(label);
+                            pipelineStageCheckboxes.appendChild(div);
+
+                            // Add listener to mark dirty on change
+                            input.addEventListener('change', handleFilterChange); // Changed listener
+                         }
+                    });
+                 } else {
+                      pipelineStageCheckboxes.innerHTML = '<small class="text-danger">Could not load stages.</small>';
+                      console.warn("Setup data for sales pipelines not found or not an array.");
+                 }
+            }
+            // Extra brace removed
+
+            // --- Dropdown Population Functions (Manager View Specific) ---
+
+            // Populates the "Assign to Member" dropdown in the ASSIGNMENT section
+            function populateAssignToMemberSelect() {
+                if (!assignToMember) return;
+                assignToMember.innerHTML = '<option value="">Select Member</option>';
+                if (setupData && setupData.members) {
+                    const membersList = Array.isArray(setupData.members) ? setupData.members : (setupData.memberEmails ? setupData.memberEmails.map(m => m.name) : []);
+                    membersList.forEach(member => {
+                         if (member) {
+                            const option = document.createElement('option');
+                            option.value = member;
+                            option.textContent = member;
+                            assignToMember.appendChild(option);
+                         }
+                    });
+                } else {
+                     console.warn("Setup data for members not found or in unexpected format for assignment dropdown.");
+                }
+            }
+
+            // Populate Member Filter in the PIPELINE VIEW section
+            function populatePipelineMemberFilter() { // Renamed function
+                 if (!filterPipelineMember) return; // Use new ID
+                 filterPipelineMember.innerHTML = '<option value="">All Members</option>'; // Use new ID
+                 if (setupData && setupData.members && Array.isArray(setupData.members)) {
+                    setupData.members.forEach(member => {
+                         if (member) {
+                            const option = document.createElement('option');
+                            option.value = member;
+                            option.textContent = member;
+                            filterPipelineMember.appendChild(option); // Use new ID
+                         }
+                    });
+                 } else {
+                      console.warn("Setup data for members not found or not an array for pipeline filter.");
+                 }
+            }
+
+            // Removed duplicate/incorrect populatePipelineStageFilter function definition and orphaned code block
+
+
+            // Removed populatePipelineProvinceFilter function
+
+            // Populate Province Filter in the ASSIGNMENT section
+            function populateAssignProvinceFilter() {
+                if (!filterAssignProvince) return;
+                filterAssignProvince.innerHTML = '<option value="">All Provinces</option>';
+                if (setupData && setupData.unassignedProvinces && Array.isArray(setupData.unassignedProvinces)) {
+                    setupData.unassignedProvinces.forEach(province => {
+                         if (province) {
+                            const option = document.createElement('option');
+                            option.value = province;
+                            option.textContent = province;
+                            filterAssignProvince.appendChild(option);
+                         }
+                    });
+                     console.log("Populated province filter with:", setupData.unassignedProvinces);
+                } else {
+                     console.warn("Setup data for unassigned provinces not found or not an array.");
+                }
+            }
+
+            // --- Main form dropdown population functions removed ---
+
+            // --- Form Submission Functions ---
+
+            // --- Main form submission function removed ---
+
+
+            // --- Stage 2: Assignment Tab Functions ---
+
+            function fetchUnassignedData(page = 1) {
+                if (!filterAssignProvince || !searchAssignName) {
+                    console.error("Assignment filter elements not found.");
+                    return;
+                }
+                showLoading('Fetching unassigned shops...');
+                currentAssignmentPage = page;
+                const province = filterAssignProvince.value;
+                const name = searchAssignName.value;
+
+                const url = new URL(SCRIPT_URL);
+                url.searchParams.append('action', 'getUnassignedShops');
+                url.searchParams.append('province', province);
+                url.searchParams.append('name', name);
+                url.searchParams.append('page', page);
+
+                fetch(url)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        // Directly handle the response data
+                        hideLoading();
+                        if (data && data.success) {
+                            if (assignmentTableContainer) populateAssignmentTable(data.data);
+                            if (assignmentPaginationControls) populateAssignmentPagination(data.currentPage, data.totalPages);
+                        } else {
+                            const errorMsg = data ? data.message : 'Invalid response format';
+                            console.error('Error fetching unassigned shops:', errorMsg);
+                            if (assignmentTableContainer) assignmentTableContainer.innerHTML = `<p class="text-danger">Error loading data: ${escapeHtml(errorMsg)}</p>`;
+                            if (assignmentPaginationControls) assignmentPaginationControls.innerHTML = '';
+                            showMessage(errorMessageElement, 'Error fetching unassigned shops: ' + escapeHtml(errorMsg));
+                        }
+                    })
+                    .catch(error => {
+                        hideLoading();
+                        console.error('Fetch Error for getUnassignedShops:', error);
+                        showMessage(errorMessageElement, 'Network or server error fetching unassigned shops: ' + error);
+                    });
+            }
+
+            // --- handleUnassignedData callback removed (logic moved into fetch .then block) ---
+
+            function populateAssignmentTable(data) {
+                 if (!assignmentTableContainer) return;
+
+                if (!data || data.length === 0) {
+                    assignmentTableContainer.innerHTML = '<p>No unassigned shops found matching the criteria.</p>';
+                    return;
+                }
+
+                let tableHTML = '<table class="table table-striped table-bordered table-sm"><thead><tr>';
+                tableHTML += '<th><input type="checkbox" id="selectAllAssignCheckbox" title="Select/Deselect All"></th>';
+                // Updated headers as per user request
+                tableHTML += '<th>Name</th><th>Google Maps</th><th>Line</th><th>Line URL</th><th>Phone#</th><th>Website</th><th>Website URL</th>';
+                tableHTML += '</tr></thead><tbody>';
+
+                data.forEach(shop => {
+                    const shopId = shop.name;
+                    if (!shopId) {
+                        console.warn("Skipping shop with missing name:", shop);
+                        return; // Use return inside forEach to skip iteration
+                    }
+                    tableHTML += `<tr>`;
+                    tableHTML += `<td><input type="checkbox" class="assign-checkbox" data-shop-id="${escapeHtml(shopId)}"></td>`;
+                    tableHTML += `<td>${escapeHtml(shop.name)}</td>`;
+                    // Google Maps Link
+                    tableHTML += `<td>${shop.google_maps_url ? `<a href="${escapeHtml(shop.google_maps_url)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(shop.google_maps_url)}">Map</a>` : ''}</td>`;
+                    // Line ID
+                    tableHTML += `<td>${escapeHtml(shop.line)}</td>`;
+                    // Line URL Link
+                    tableHTML += `<td>${shop.line_url ? `<a href="${escapeHtml(shop.line_url)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(shop.line_url)}">Link</a>` : ''}</td>`;
+                    // Phone Number (using 'phone' key from backend which corresponds to 'phone#' column)
+                    tableHTML += `<td>${escapeHtml(shop.phone)}</td>`;
+                    // Website Name/Text
+                    tableHTML += `<td>${escapeHtml(shop.website)}</td>`;
+                    // Website URL Link
+                    tableHTML += `<td>${shop.website_url ? `<a href="${escapeHtml(shop.website_url)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(shop.website_url)}">Link</a>` : ''}</td>`;
+                    // Status column removed
+                    tableHTML += `</tr>`;
+                });
+
+                tableHTML += '</tbody></table>';
+                assignmentTableContainer.innerHTML = tableHTML;
+
+                // Add event listener for "Select All" checkbox AFTER table is in DOM
+                const selectAllCheckbox = document.getElementById('selectAllAssignCheckbox');
+                if (selectAllCheckbox) {
+                    selectAllCheckbox.replaceWith(selectAllCheckbox.cloneNode(true)); // Re-attach listener safely
+                    document.getElementById('selectAllAssignCheckbox').addEventListener('change', function() {
+                        document.querySelectorAll('.assign-checkbox').forEach(checkbox => {
+                            checkbox.checked = this.checked;
+                        });
+                    });
+                } else {
+                     console.error("Could not find selectAllAssignCheckbox element after table population");
+                }
+            }
+
+             function populateAssignmentPagination(currentPage, totalPages) {
+                 if (!assignmentPaginationControls) return;
+                let paginationHTML = '';
+                 currentPage = parseInt(currentPage, 10);
+                 totalPages = parseInt(totalPages, 10);
+
+                if (totalPages > 0) {
+                     paginationHTML += `<span class="mr-2">Page ${currentPage} of ${totalPages}</span>`;
+                    // Previous Button
+                    if (currentPage > 1) {
+                        paginationHTML += `<button type="button" class="btn btn-sm btn-outline-secondary mr-1 assign-page-btn" data-page="${currentPage - 1}">&laquo; Prev</button>`;
+                    } else {
+                         paginationHTML += `<button type="button" class="btn btn-sm btn-outline-secondary mr-1" disabled>&laquo; Prev</button>`;
+                    }
+                    // Next Button
+                    if (currentPage < totalPages) {
+                        paginationHTML += `<button type="button" class="btn btn-sm btn-outline-secondary assign-page-btn" data-page="${currentPage + 1}">Next &raquo;</button>`;
+                    } else {
+                         paginationHTML += `<button type="button" class="btn btn-sm btn-outline-secondary" disabled>Next &raquo;</button>`;
+                    }
+                } else {
+                     paginationHTML = '<span>No results found</span>';
+                }
+                assignmentPaginationControls.innerHTML = paginationHTML;
+            }
+
+            // --- Stage 2: Handler for Assign Button Click ---
+            function handleAssignButtonClick() {
+                const selectedMember = assignToMember.value;
+                const notes = assignmentNotes.value.trim();
+                const checkedCheckboxes = document.querySelectorAll('.assign-checkbox:checked');
+                const shopIdsToAssign = [];
+
+                checkedCheckboxes.forEach(checkbox => {
+                    shopIdsToAssign.push(checkbox.getAttribute('data-shop-id'));
+                });
+
+                // Validation
+                if (shopIdsToAssign.length === 0) {
+                    showMessage(errorMessageElement, 'Please select at least one shop to assign.');
+                    return;
+                }
+
+                // Re-insert missing logic for handleAssignButtonClick:
+                if (!selectedMember) { // Second validation
+                    showMessage(errorMessageElement, 'Please select a member to assign the shops to.');
+                    return;
+                }
+
+                // Confirmation (Optional but recommended)
+                if (!confirm(`Assign ${shopIdsToAssign.length} shop(s) to ${selectedMember}?`)) {
+                    return;
+                }
+    
+                showLoading('Assigning shops...'); // Use enhanced loading
+
+                const payload = new FormData();
+                payload.append('action', 'assignShops');
+                payload.append('shopIds', JSON.stringify(shopIdsToAssign));
+                payload.append('assignedMember', selectedMember);
+                payload.append('assignmentNotes', notes);
+
+                fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: payload
+                })
+                .then(response => response.json())
+                .then(data => {
+                    hideLoading(); // Hide loading
+                    if (data.success) {
+                        showMessage(sentMessageElement, data.message || 'Shops assigned successfully!');
+                        assignmentNotes.value = '';
+                        fetchUnassignedData(currentAssignmentPage); // Refresh list
+                    } else {
+                        showMessage(errorMessageElement, data.message || 'An error occurred during assignment.');
+                    }
+                })
+                .catch(error => {
+                    hideLoading();
+                    console.error('Error assigning shops:', error);
+                    showMessage(errorMessageElement, 'Network or server error during assignment: ' + error);
+                });
+            } // End of handleAssignButtonClick
+    
+            // --- Stage 6: Sales Pipeline View Functions --- // Renamed Stage
+        
+            function fetchPipelineData(page = 1) {
+                // Check if all necessary filter *controls* exist
+                if (!filterPipelineMember || !pipelineStageCheckboxes || !searchPipelineName || !startDateInput || !endDateInput) { // Removed province check
+                    console.error("Pipeline View filter controls not found.");
+                    return;
+                }
+                showLoading('Fetching pipeline data...');
+                currentPipelinePage = page;
+                const member = filterPipelineMember.value;
+                // Get selected pipelines from checkboxes
+                const pipelineCheckboxesChecked = document.querySelectorAll('.pipeline-stage-checkbox:checked');
+                const selectedPipelines = Array.from(pipelineCheckboxesChecked).map(cb => cb.value);
+                // const province = filterPipelineProvince.value; // Removed province
+                const name = searchPipelineName.value;
+                // Get date strings directly from input values
+                const startDateStr = startDateInput.value;
+                const endDateStr = endDateInput.value;
+
+                const url = new URL(SCRIPT_URL);
+                url.searchParams.append('action', 'getPipelineData');
+                url.searchParams.append('member', member);
+                url.searchParams.append('pipelines', JSON.stringify(selectedPipelines)); // Pass JSON array string
+                // url.searchParams.append('province', province); // Removed province
+                url.searchParams.append('name', name);
+                url.searchParams.append('page', page);
+                // Only add date params if both inputs have values
+                if (startDateStr && endDateStr) {
+                    url.searchParams.append('startDate', startDateStr);
+                    url.searchParams.append('endDate', endDateStr);
+                }
+        
+                fetch(url)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        hideLoading();
+                        if (data && data.success) {
+                            if (pipelineTableContainer) populatePipelineTable(data.data); // Use new function/variable
+                            if (pipelinePaginationControls) populatePipelinePagination(data.currentPage, data.totalPages); // Use new function/variable
+                        } else {
+                            const errorMsg = data ? data.message : 'Invalid response format';
+                            console.error('Error fetching pipeline data:', errorMsg); // Update message
+                            if (pipelineTableContainer) pipelineTableContainer.innerHTML = `<p class="text-danger">Error loading pipeline data: ${escapeHtml(errorMsg)}</p>`; // Update message
+                            if (pipelinePaginationControls) pipelinePaginationControls.innerHTML = '';
+                            showMessage(errorMessageElement, 'Error fetching pipeline data: ' + escapeHtml(errorMsg)); // Update message
+                        }
+                    })
+                    .catch(error => {
+                        hideLoading();
+                        console.error('Fetch Error for getPipelineData:', error); // Update message
+                        showMessage(errorMessageElement, 'Network or server error fetching pipeline data: ' + error); // Update message
+                    });
+            }
+        
+            function populatePipelineTable(data) { // Renamed function
+                if (!pipelineTableContainer) return; // Use new variable
+        
+                if (!data || data.length === 0) {
+                    pipelineTableContainer.innerHTML = '<p>No pipeline entries found matching the criteria.</p>'; // Update message
+                    return;
+                }
+        
+                // Define headers for the pipeline table
+                let tableHTML = '<table class="table table-striped table-bordered table-sm"><thead><tr>';
+                tableHTML += '<th>Dispensary Name</th><th>Assigned Member</th><th>Sales Pipeline</th><th>Sales Pipeline Record</th><th>Notes & History</th><th>Next Action Item</th>'; // New Headers
+                tableHTML += '</tr></thead><tbody>';
+        
+                data.forEach(shop => {
+                    tableHTML += `<tr>`;
+                    tableHTML += `<td>${escapeHtml(shop.dispensaryName)}</td>`;
+                    tableHTML += `<td>${escapeHtml(shop.assignedMember)}</td>`;
+                    tableHTML += `<td>${escapeHtml(shop.salesPipeline)}</td>`;
+                    // Display record fields potentially with line breaks
+                    tableHTML += `<td style="white-space: pre-wrap;">${escapeHtml(shop.salesPipelineRecord)}</td>`;
+                    tableHTML += `<td style="white-space: pre-wrap;">${escapeHtml(shop.notesHistory)}</td>`;
+                    tableHTML += `<td>${escapeHtml(shop.nextActionItem)}</td>`;
+                    tableHTML += `</tr>`;
+                });
+        
+                tableHTML += '</tbody></table>';
+                pipelineTableContainer.innerHTML = tableHTML; // Use new variable
+            }
+        
+             function populatePipelinePagination(currentPage, totalPages) { // Renamed function
+                 if (!pipelinePaginationControls) return; // Use new variable
+                let paginationHTML = '';
+                 currentPage = parseInt(currentPage, 10);
+                 totalPages = parseInt(totalPages, 10);
+    
+                if (totalPages > 0) {
+                     paginationHTML += `<span class="mr-2">Page ${currentPage} of ${totalPages}</span>`;
+                    // Previous Button
+                    if (currentPage > 1) {
+                        paginationHTML += `<button type="button" class="btn btn-sm btn-outline-secondary mr-1 pipeline-page-btn" data-page="${currentPage - 1}">&laquo; Prev</button>`; // Use new class
+                    } else {
+                         paginationHTML += `<button type="button" class="btn btn-sm btn-outline-secondary mr-1" disabled>&laquo; Prev</button>`;
+                    }
+                    // Next Button
+                    if (currentPage < totalPages) {
+                        paginationHTML += `<button type="button" class="btn btn-sm btn-outline-secondary pipeline-page-btn" data-page="${currentPage + 1}">Next &raquo;</button>`; // Use new class
+                    } else {
+                         paginationHTML += `<button type="button" class="btn btn-sm btn-outline-secondary" disabled>Next &raquo;</button>`;
+                    }
+                } else {
+                     paginationHTML = '<span>No results found</span>';
+                }
+                pipelinePaginationControls.innerHTML = paginationHTML; // Use new variable
+            }
+    
+            // --- End Stage 6 --- // Renamed Stage
+        });
+    </script>
+</body>
+</html>
