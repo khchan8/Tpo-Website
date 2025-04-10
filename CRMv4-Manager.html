@@ -163,6 +163,18 @@
          .form-row .input-group .form-control {
              height: auto; /* Reset height for inputs within group */
          }
+         /* Column Visibility */
+         .column-toggle-controls label {
+             margin-right: 15px;
+             font-weight: normal; /* Make labels less prominent */
+             display: inline-block; /* Keep them inline */
+         }
+         .column-toggle-controls input[type="checkbox"] {
+             margin-right: 5px;
+         }
+         th.hidden, td.hidden {
+             display: none;
+         }
     </style>
 </head>
 <body>
@@ -182,15 +194,15 @@
                     <!-- Filtering -->
                     <div class="form-row">
                         <div class="form-group col-md-6">
-                            <label for="filterAssignProvince">Province</label> <!-- Removed "Filter by" -->
-                            <select id="filterAssignProvince" class="form-control form-control-sm"> <!-- Added sm -->
+                            <label for="filterAssignProvince">Province</label>
+                            <select id="filterAssignProvince" class="form-control form-control-sm">
                                 <option value="">All Provinces</option>
                                 <!-- Options populated by JS -->
                             </select>
                         </div>
                         <div class="form-group col-md-6">
-                            <label for="searchAssignName">Dispensary Name</label> <!-- Removed "Search" -->
-                            <input type="text" id="searchAssignName" class="form-control form-control-sm" placeholder="Type name..."> <!-- Added sm -->
+                            <label for="searchAssignName">Dispensary Name</label>
+                            <input type="text" id="searchAssignName" class="form-control form-control-sm" placeholder="Type name...">
                         </div>
                     </div>
                     <!-- Display -->
@@ -205,7 +217,7 @@
                     <div class="form-row mt-3">
                          <div class="form-group col-md-6">
                             <label for="assignToMember">Assign to Member</label>
-                            <select id="assignToMember" class="form-control form-control-sm"> <!-- Added sm -->
+                            <select id="assignToMember" class="form-control form-control-sm">
                                 <option value="">Select Member</option>
                                 <!-- Options populated from setupData -->
                             </select>
@@ -269,6 +281,14 @@
                              <button class="btn btn-sm btn-primary mr-1 mb-1" type="button" id="applyPipelineFilterBtn" title="Apply Filters">Apply</button>
                              <button class="btn btn-sm btn-secondary mb-1" type="button" id="reloadPipelineBtn" title="Reload Pipeline Data"><i class="fas fa-sync-alt"></i></button>
                          </div>
+                    </div>
+                    <!-- Column Visibility Toggle -->
+                    <div id="pipelineColumnToggle" class="mb-2 column-toggle-controls">
+                        <small>Show Columns:</small>
+                        <label><input type="checkbox" class="column-toggle" data-column-class="col-assigned-member" checked> Member</label>
+                        <label><input type="checkbox" class="column-toggle" data-column-class="col-pipeline-record" checked> Pipeline Record</label>
+                        <label><input type="checkbox" class="column-toggle" data-column-class="col-notes-history" checked> Notes/History</label>
+                        <label><input type="checkbox" class="column-toggle" data-column-class="col-next-action" checked> Next Action</label>
                     </div>
                     <!-- Display -->
                     <div id="assignedShopsTableContainer" class="table-responsive">
@@ -357,7 +377,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwXsvicb1IDuffOA9Sotw0234r4HfBHWQTxWN0ermvMDZnbrmvYHfU6fGAhlT7uWOG6/exec'; // Replace with your actual Script URL
+            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwUUYDIQCOqjF0IeklmIYZWX463roDuE2KM1-5qNG2hjUA1L4epfLj0DsQKH2mq54Q0/exec'; // Replace with your actual Script URL
             // Message Elements (Keep these)
             const loadingOverlay = document.getElementById('loadingOverlay');
             const loadingMessage = document.getElementById('loadingMessage');
@@ -394,6 +414,7 @@
             const applyPipelineFilterBtn = document.getElementById('applyPipelineFilterBtn');
             const reloadDataBtn = document.getElementById('reloadDataBtn');
             const multiFieldSelectCheck = document.getElementById('multiFieldSelectCheck'); // Multi-select checkbox
+            const pipelineColumnToggle = document.getElementById('pipelineColumnToggle'); // Column toggle container
             // --- End Stage 6 ---
 
             let setupData = {};
@@ -478,20 +499,94 @@
                 applyPipelineFilterBtn.disabled = !multiFieldSelectCheck.checked;
             }
 
+            // Column Toggle Listener
+            if (pipelineColumnToggle) {
+                pipelineColumnToggle.addEventListener('change', function(event) {
+                    if (event.target.classList.contains('column-toggle')) {
+                        handleColumnToggle(event.target);
+                    }
+                });
+            }
+
+
+            // --- Stage 2: Add Manager Comment ---
+            function handleSendCommentClick(event) {
+                console.log("handleSendCommentClick triggered by event:", event); // DEBUG
+                const button = event.target.closest('.send-comment-btn');
+                console.log("Button found:", button); // DEBUG
+                if (!button) return; // Ignore clicks not on the button
+
+                const shopName = button.getAttribute('data-shop-name');
+                console.log("Shop name:", shopName); // DEBUG
+                // Find the input within the same table row or parent container for better scoping
+                const commentRow = button.closest('tr'); // Assuming button is in a table row
+                console.log("Comment row:", commentRow); // DEBUG
+                const input = commentRow ? commentRow.querySelector(`.manager-comment-input[data-shop-name="${shopName}"]`) : null;
+                console.log("Input field:", input); // DEBUG
+
+                if (!input) {
+                     console.error(`Could not find comment input for shop: ${shopName}`);
+                     showMessage(errorMessageElement, 'Error: Could not find comment input field.');
+                     return;
+                }
+                const commentText = input.value.trim();
+                console.log("Comment text:", commentText); // DEBUG
+
+
+                if (!shopName) {
+                    console.error("Could not find shop name for comment button.");
+                    showMessage(errorMessageElement, 'Error: Could not identify shop.');
+                    return;
+                }
+                if (!commentText) {
+                    showMessage(errorMessageElement, 'Comment cannot be empty.');
+                    input.focus();
+                    return;
+                }
+
+                showLoading('Sending comment...');
+
+                const payload = new FormData();
+                payload.append('action', 'addManagerComment');
+                payload.append('shopName', shopName);
+                payload.append('commentText', commentText);
+
+                fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: payload
+                })
+                .then(response => response.json())
+                .then(data => {
+                    hideLoading();
+                    if (data.success) {
+                        showMessage(sentMessageElement, data.message || 'Comment sent successfully!');
+                        if (input) input.value = ''; // Clear input on success
+                        // Refresh pipeline data to show updated history immediately
+                        fetchPipelineData(currentPipelinePage);
+                    } else {
+                        showMessage(errorMessageElement, data.message || 'Error sending comment.');
+                    }
+                })
+                .catch(error => {
+                    hideLoading();
+                    console.error('Error sending comment:', error);
+                    showMessage(errorMessageElement, 'Network or server error sending comment: ' + error);
+                });
+            }
+            // Add delegated listener for comment buttons - MOVED INSIDE populatePipelineTable
+            // --- End Stage 2 ---
+
 
             // --- Date Filter Helper Functions ---
 
             // Sets the initial date filter to the past 7 days (Today - 7 days to Today)
             function initializeDateFilter() {
                 const today = new Date();
-                today.setHours(23, 59, 59, 999); // End of today
-
+                // Don't set hours here, format function handles date part only
                 const sevenDaysAgo = new Date();
-                // Correctly calculate 7 days ago without modifying 'today' prematurely
-                sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-                sevenDaysAgo.setHours(0, 0, 0, 0); // Start of that day
+                sevenDaysAgo.setDate(today.getDate() - 7); // Subtract 7 days
 
-                // Set input values directly
+                // Set input values directly using YYYY-MM-DD format
                 startDateInput.value = formatDateYYYYMMDD(sevenDaysAgo);
                 endDateInput.value = formatDateYYYYMMDD(today);
             }
@@ -499,6 +594,14 @@
             // Formats a Date object as YYYY-MM-DD
             function formatDateYYYYMMDD(date) {
                 if (!date) return '';
+                // Ensure date is a Date object
+                if (!(date instanceof Date)) {
+                    date = new Date(date);
+                }
+                if (isNaN(date.getTime())) { // Check if date is valid
+                    console.error("Invalid date provided to formatDateYYYYMMDD:", date);
+                    return '';
+                }
                 const year = date.getFullYear();
                 const month = String(date.getMonth() + 1).padStart(2, '0');
                 const day = String(date.getDate()).padStart(2, '0');
@@ -532,6 +635,8 @@
                  if (startVal && endVal) {
                      const startDate = new Date(startVal);
                      const endDate = new Date(endVal);
+                     // Add time component to end date for inclusive check
+                     endDate.setHours(23, 59, 59, 999);
                      if (endDate < startDate) {
                          showMessage(errorMessageElement, 'End date cannot be before start date.');
                          return; // Prevent fetch if dates are invalid
@@ -539,6 +644,7 @@
                  } else if (startVal || endVal) {
                      // If only one date is set, maybe show a message or clear the other?
                      // For now, we only fetch if BOTH are set or BOTH are clear in fetchPipelineData
+                     // Let fetchPipelineData handle sending only if both are present
                  }
 
                  fetchPipelineData(1); // Fetch with current filter values
@@ -549,7 +655,7 @@
                 console.log("Reloading all data...");
                 localStorage.removeItem('setupData'); // Clear setup cache
                 // Re-run initial fetches
-                initializeDateFilter();
+                initializeDateFilter(); // Reset dates first
                 fetchSetupData(); // This will trigger the others after success
             }
 
@@ -699,8 +805,8 @@
                             div.appendChild(label);
                             pipelineStageCheckboxes.appendChild(div);
 
-                            // Add listener to mark dirty on change
-                            input.addEventListener('change', handleFilterChange); // Changed listener
+                            // Add listener to trigger filter change logic
+                            input.addEventListener('change', handleFilterChange);
                          }
                     });
                  } else {
@@ -937,7 +1043,7 @@
                 if (!confirm(`Assign ${shopIdsToAssign.length} shop(s) to ${selectedMember}?`)) {
                     return;
                 }
-    
+
                 showLoading('Assigning shops...'); // Use enhanced loading
 
                 const payload = new FormData();
@@ -967,9 +1073,9 @@
                     showMessage(errorMessageElement, 'Network or server error during assignment: ' + error);
                 });
             } // End of handleAssignButtonClick
-    
+
             // --- Stage 6: Sales Pipeline View Functions --- // Renamed Stage
-        
+
             function fetchPipelineData(page = 1) {
                 // Check if all necessary filter *controls* exist
                 if (!filterPipelineMember || !pipelineStageCheckboxes || !searchPipelineName || !startDateInput || !endDateInput) { // Removed province check
@@ -1000,7 +1106,7 @@
                     url.searchParams.append('startDate', startDateStr);
                     url.searchParams.append('endDate', endDateStr);
                 }
-        
+
                 fetch(url)
                     .then(response => {
                         if (!response.ok) {
@@ -1027,42 +1133,62 @@
                         showMessage(errorMessageElement, 'Network or server error fetching pipeline data: ' + error); // Update message
                     });
             }
-        
+
             function populatePipelineTable(data) { // Renamed function
                 if (!pipelineTableContainer) return; // Use new variable
-        
+
                 if (!data || data.length === 0) {
                     pipelineTableContainer.innerHTML = '<p>No pipeline entries found matching the criteria.</p>'; // Update message
                     return;
                 }
-        
-                // Define headers for the pipeline table
+
+                // Define headers for the pipeline table, adding Comment column
                 let tableHTML = '<table class="table table-striped table-bordered table-sm"><thead><tr>';
-                tableHTML += '<th>Dispensary Name</th><th>Assigned Member</th><th>Sales Pipeline</th><th>Sales Pipeline Record</th><th>Notes & History</th><th>Next Action Item</th>'; // New Headers
+                tableHTML += '<th class="col-dispensary-name">Dispensary Name</th><th class="col-assigned-member">Assigned Member</th><th class="col-pipeline-record">Sales Pipeline Record</th><th class="col-notes-history">Notes & History</th><th class="col-next-action">Next Action Item</th><th class="col-add-comment">Add Comment</th>'; // Removed Sales Pipeline Header, Added Classes
                 tableHTML += '</tr></thead><tbody>';
-        
+
                 data.forEach(shop => {
                     tableHTML += `<tr>`;
-                    tableHTML += `<td>${escapeHtml(shop.dispensaryName)}</td>`;
-                    tableHTML += `<td>${escapeHtml(shop.assignedMember)}</td>`;
-                    tableHTML += `<td>${escapeHtml(shop.salesPipeline)}</td>`;
+                    tableHTML += `<td class="col-dispensary-name">${escapeHtml(shop.dispensaryName)}</td>`;
+                    tableHTML += `<td class="col-assigned-member">${escapeHtml(shop.assignedMember)}</td>`;
+                    // Removed Sales Pipeline Data Cell: tableHTML += `<td>${escapeHtml(shop.salesPipeline)}</td>`;
                     // Display record fields potentially with line breaks
-                    tableHTML += `<td style="white-space: pre-wrap;">${escapeHtml(shop.salesPipelineRecord)}</td>`;
-                    tableHTML += `<td style="white-space: pre-wrap;">${escapeHtml(shop.notesHistory)}</td>`;
-                    tableHTML += `<td>${escapeHtml(shop.nextActionItem)}</td>`;
+                    tableHTML += `<td class="col-pipeline-record" style="white-space: pre-wrap;">${escapeHtml(shop.salesPipelineRecord)}</td>`;
+                    tableHTML += `<td class="col-notes-history" style="white-space: pre-wrap;">${escapeHtml(shop.notesHistory)}</td>`;
+                    tableHTML += `<td class="col-next-action">${escapeHtml(shop.nextActionItem)}</td>`;
+                    // Add Comment Input and Button Column (Stage 2)
+                    tableHTML += `<td class="col-add-comment">
+                                    <div class="input-group input-group-sm">
+                                        <input type='text' class='form-control manager-comment-input' data-shop-name='${escapeHtml(shop.dispensaryName)}' placeholder='Add comment...'>
+                                        <div class="input-group-append">
+                                            <button class='btn btn-sm btn-outline-primary send-comment-btn' data-shop-name='${escapeHtml(shop.dispensaryName)}' title="Send Comment">Send</button>
+                                        </div>
+                                    </div>
+                                  </td>`;
                     tableHTML += `</tr>`;
                 });
-        
+
                 tableHTML += '</tbody></table>';
                 pipelineTableContainer.innerHTML = tableHTML; // Use new variable
+
+                // Attach listener AFTER table HTML is set
+                 if (pipelineTableContainer) {
+                     console.log("Attaching comment click listener inside populatePipelineTable to:", pipelineTableContainer); // DEBUG
+                     // Using event delegation on the container
+                     pipelineTableContainer.addEventListener('click', handleSendCommentClick);
+                 } else {
+                      console.error("Could not find pipelineTableContainer inside populatePipelineTable to attach comment listener."); // DEBUG
+                 }
+                 // Apply initial visibility based on checkboxes
+                 applyColumnVisibility();
             }
-        
+
              function populatePipelinePagination(currentPage, totalPages) { // Renamed function
                  if (!pipelinePaginationControls) return; // Use new variable
                 let paginationHTML = '';
                  currentPage = parseInt(currentPage, 10);
                  totalPages = parseInt(totalPages, 10);
-    
+
                 if (totalPages > 0) {
                      paginationHTML += `<span class="mr-2">Page ${currentPage} of ${totalPages}</span>`;
                     // Previous Button
@@ -1082,7 +1208,48 @@
                 }
                 pipelinePaginationControls.innerHTML = paginationHTML; // Use new variable
             }
-    
+
+            // --- Column Visibility Functions ---
+            function handleColumnToggle(checkbox) {
+                const columnClass = checkbox.getAttribute('data-column-class');
+                if (!columnClass) return;
+
+                const table = pipelineTableContainer.querySelector('table');
+                if (!table) return;
+
+                const cells = table.querySelectorAll(`th.${columnClass}, td.${columnClass}`);
+                cells.forEach(cell => {
+                    if (checkbox.checked) {
+                        cell.classList.remove('hidden');
+                    } else {
+                        cell.classList.add('hidden');
+                    }
+                });
+                // Optional: Save state to localStorage
+                // saveColumnVisibilityState();
+            }
+
+            function applyColumnVisibility() {
+                 const checkboxes = pipelineColumnToggle.querySelectorAll('.column-toggle');
+                 checkboxes.forEach(cb => {
+                     // Optional: Load state from localStorage first
+                     // const savedState = localStorage.getItem(`col-visible-${cb.getAttribute('data-column-class')}`);
+                     // if (savedState !== null) {
+                     //     cb.checked = savedState === 'true';
+                     // }
+                     handleColumnToggle(cb); // Apply state for each checkbox
+                 });
+            }
+
+            // Optional: Function to save state
+            // function saveColumnVisibilityState() {
+            //     const checkboxes = pipelineColumnToggle.querySelectorAll('.column-toggle');
+            //     checkboxes.forEach(cb => {
+            //         localStorage.setItem(`col-visible-${cb.getAttribute('data-column-class')}`, cb.checked);
+            //     });
+            // }
+            // --- End Column Visibility ---
+
             // --- End Stage 6 --- // Renamed Stage
         });
     </script>

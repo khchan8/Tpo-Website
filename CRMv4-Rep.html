@@ -149,7 +149,10 @@
 </head>
 <body>
     <div class="container">
-        <h1 class="text-center">Tiny CRM</h1>
+         <div class="d-flex justify-content-between align-items-center mb-4">
+             <h1 class="text-center mb-0">Tiny CRM</h1>
+             <button class="btn btn-sm btn-outline-primary" id="reloadDataBtn" title="Reload All Data"><i class="fas fa-sync-alt"></i> Reload All</button>
+         </div>
 
         <!-- Assignment Section Removed -->
 
@@ -212,6 +215,15 @@
                         <label for="newDispensaryName">Dispensary Name</label>
                         <input type="text" id="newDispensaryName" class="form-control" name="newDispensaryName">
                     </div>
+                    <!-- NEW: Current Distributor Field (PRD 5.6) -->
+                    <div class="form-group">
+                        <label for="currentDistributor">Current Distributor</label>
+                        <input type="text" id="currentDistributor" name="Current Distributor" class="form-control" list="distributorList" placeholder="Type or select distributor">
+                        <datalist id="distributorList">
+                            <!-- Options populated by JavaScript -->
+                        </datalist>
+                    </div>
+                    <!-- END NEW -->
                     <div class="form-group">
                         <label for="dispensaryAddress">Dispensary Address</label>
                         <input type="text" id="dispensaryAddress" class="form-control" name="Dispensary Address" required> <!-- Name matches header -->
@@ -223,10 +235,10 @@
                     </div>
                     <div class="form-group"><label for="province">Province</label><input type="text" id="province" name="Province" class="form-control"></div>
                     <div class="form-group"><label>Original Name (from Unassigned)</label><p id="originalNameDisplay" class="form-control-static font-italic text-muted"></p></div> <!-- Display only -->
-                    <div class="form-group"><label for="url">URL</label><input type="url" id="url" name="url" class="form-control"></div>
-                    <div class="form-group"><label for="google_maps_url">Google Maps URL</label><input type="url" id="google_maps_url" name="google_maps_url" class="form-control"></div>
+                    <div class="form-group"><label>URL</label><div id="url_link_container"></div></div>
+                    <div class="form-group"><label>Google Maps URL</label><div id="google_maps_url_link_container"></div></div>
                     <div class="form-group"><label for="website">Website</label><input type="text" id="website" name="website" class="form-control"></div>
-                    <div class="form-group"><label for="website_url">Website URL</label><input type="url" id="website_url" name="website_url" class="form-control"></div>
+                    <div class="form-group"><label>Website URL</label><div id="website_url_link_container"></div></div>
                     <!-- Shop Size Dropdown -->
                     <div class="form-group"><label for="shopSize">Shop Size</label><select id="shopSize" name="Shop Size" class="form-control"><option value="">Select Size</option><option value="Small">Small</option><option value="Medium">Medium</option><option value="Large">Large</option></select></div>
                      <!-- End New Fields -->
@@ -240,7 +252,7 @@
                 </div>
                 <div class="collapsible-content">
                     <div class="form-group">
-                        <label for="contactPersonName">Contact Person Name</label>
+                        <label for="contactPersonName">Contact Person Name <span style="color: red;">(Required)</span></label>
                         <input type="text" id="contactPersonName" class="form-control" name="Contact Person Name" required> <!-- Name matches header -->
                     </div>
                     <div class="form-group">
@@ -248,7 +260,7 @@
                         <input type="email" id="email" class="form-control" name="Email"> <!-- Name matches header -->
                     </div>
                     <div class="form-group">
-                        <label for="phone">Phone</label>
+                        <label for="phone">Phone <span style="color: red;">(Required)</span></label>
                         <input type="tel" id="phone" class="form-control" name="Phone" required> <!-- Name matches header -->
                     </div>
                     <div class="form-group">
@@ -259,7 +271,7 @@
                     <div class="form-group"><label for="facebook">Facebook</label><input type="text" id="facebook" name="facebook" class="form-control"></div>
                     <div class="form-group"><label for="facebook_url">Facebook URL</label><input type="url" id="facebook_url" name="facebook_url" class="form-control"></div>
                     <div class="form-group"><label for="line">Line ID</label><input type="text" id="line" name="line" class="form-control"></div>
-                    <div class="form-group"><label for="line_url">Line URL</label><input type="url" id="line_url" name="line_url" class="form-control"></div>
+                    <div class="form-group"><label>Line URL</label><div id="line_url_link_container"></div></div>
                     <div class="form-group"><label for="phoneHash">Phone #</label><input type="tel" id="phoneHash" name="phone#" class="form-control"></div> <!-- Name matches header -->
                      <!-- End New Fields -->
                     <div class="form-group">
@@ -401,7 +413,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwXsvicb1IDuffOA9Sotw0234r4HfBHWQTxWN0ermvMDZnbrmvYHfU6fGAhlT7uWOG6/exec'; // Replace with your actual Script URL
+            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwUUYDIQCOqjF0IeklmIYZWX463roDuE2KM1-5qNG2hjUA1L4epfLj0DsQKH2mq54Q0/exec'; // Replace with your actual Script URL
             const selectDispensary = document.getElementById('selectDispensary');
             const newDispensaryNameGroup = document.getElementById('newDispensaryNameGroup');
             const form = document.getElementById('dispensaryForm');
@@ -422,16 +434,18 @@
             const longitudeInput = document.getElementById('longitude');
             const provinceInput = document.getElementById('province');
             const originalNameDisplay = document.getElementById('originalNameDisplay');
-            const urlInput = document.getElementById('url');
-            const googleMapsUrlInput = document.getElementById('google_maps_url');
+            const urlLinkContainer = document.getElementById('url_link_container'); // New container ID
+            const googleMapsUrlContainer = document.getElementById('google_maps_url_link_container'); // New container ID
             const websiteInput = document.getElementById('website');
-            const websiteUrlInput = document.getElementById('website_url');
+            const websiteUrlContainer = document.getElementById('website_url_link_container'); // New container ID
             const shopSizeSelect = document.getElementById('shopSize');
             const facebookInput = document.getElementById('facebook');
             const facebookUrlInput = document.getElementById('facebook_url');
             const lineInput = document.getElementById('line');
-            const lineUrlInput = document.getElementById('line_url');
+            const lineUrlContainer = document.getElementById('line_url_link_container'); // New container ID
             const phoneHashInput = document.getElementById('phoneHash');
+            const currentDistributorInput = document.getElementById('currentDistributor'); // NEW
+            const distributorDatalist = document.getElementById('distributorList'); // NEW
 
 
             // Filter Elements
@@ -440,6 +454,7 @@
             const filterSalesPipeline = document.getElementById('filterSalesPipeline');
             const filterDispensaryAddress = document.getElementById('filterDispensaryAddress');
             const filterAdditional = document.getElementById('filterAdditional');
+            const reloadDataBtn = document.getElementById('reloadDataBtn'); // NEW
 
             // --- Assignment Tab Elements Removed ---
 
@@ -484,6 +499,9 @@
             filterAdditional.addEventListener('input', debounce(populateDispensarySelect));
             filterAssignedMember.addEventListener('change', populateDispensarySelect);
             filterSalesPipeline.addEventListener('change', populateDispensarySelect);
+
+            // Reload All button listener
+            if (reloadDataBtn) reloadDataBtn.addEventListener('click', reloadAllData); // NEW
 
             // --- Assignment Tab Listeners Removed ---
 
@@ -562,6 +580,7 @@
                     populateFilterAssignedMemberSelect();
                     populateSalesPipelineSelect();
                     populateFilterSalesPipelineSelect();
+                    populateDistributorDatalist(); // NEW: Populate distributor list
                     // populateAssignProvinceFilter(); // Not needed in Rep view
                     console.log("Using cached setup data.");
                     return; // Don't fetch if cache is valid
@@ -584,6 +603,7 @@
                             populateFilterAssignedMemberSelect();
                             populateSalesPipelineSelect();
                             populateFilterSalesPipelineSelect();
+                            populateDistributorDatalist(); // NEW: Populate distributor list
                             // populateAssignProvinceFilter(); // Not needed in Rep view
                         } else {
                             console.error('Error fetching setup data:', data ? data.message : 'Invalid response');
@@ -666,21 +686,28 @@
                     assignedMember.value = dispensary['Assigned Member'] || '';
                     salesPipeline.value = dispensary['Sales Pipeline'] || '';
                     if (shopSizeSelect) shopSizeSelect.value = dispensary['Shop Size'] || '';
+                    if (currentDistributorInput) currentDistributorInput.value = dispensary['Current Distributor'] || ''; // NEW
 
                     // Populate new fields
                     if(latitudeInput) latitudeInput.value = dispensary['Latitude'] || '';
                     if(longitudeInput) longitudeInput.value = dispensary['Longitude'] || '';
                     if(provinceInput) provinceInput.value = dispensary['Province'] || '';
-                    if(originalNameDisplay) originalNameDisplay.textContent = dispensary['name'] || '(Not set)'; // Display original name (Col G)
-                    if(urlInput) urlInput.value = dispensary['url'] || '';
-                    if(googleMapsUrlInput) googleMapsUrlInput.value = dispensary['google_maps_url'] || '';
+                    if(originalNameDisplay) originalNameDisplay.textContent = dispensary['name'] || '(Not set)'; // Display original name (Col H)
+                    // if(urlInput) urlInput.value = dispensary['url'] || ''; // Removed
+                    populateLink(urlLinkContainer, dispensary.url, dispensary.url); // Populate link container
+                    // if(googleMapsUrlInput) googleMapsUrlInput.value = dispensary['google_maps_url'] || ''; // Removed
                     if(websiteInput) websiteInput.value = dispensary['website'] || '';
-                    if(websiteUrlInput) websiteUrlInput.value = dispensary['website_url'] || '';
+                    // if(websiteUrlInput) websiteUrlInput.value = dispensary['website_url'] || ''; // Removed
                     if(facebookInput) facebookInput.value = dispensary['facebook'] || '';
                     if(facebookUrlInput) facebookUrlInput.value = dispensary['facebook_url'] || '';
                     if(lineInput) lineInput.value = dispensary['line'] || '';
-                    if(lineUrlInput) lineUrlInput.value = dispensary['line_url'] || '';
-                    if(phoneHashInput) phoneHashInput.value = dispensary['phone#'] || ''; // Populate phone# field
+                    // if(lineUrlInput) lineUrlInput.value = dispensary['line_url'] || ''; // Removed
+                    if(phoneHashInput) phoneHashInput.value = dispensary['phone#'] || ''; // This corresponds to Col O in new structure
+
+                    // Populate Link Containers
+                    populateLink(googleMapsUrlContainer, dispensary.google_maps_url, 'Open Google Maps');
+                    populateLink(websiteUrlContainer, dispensary.website_url, dispensary.website_url); // Use URL as text if available
+                    populateLink(lineUrlContainer, dispensary.line_url, 'Open Line URL');
 
                     // Populate QR code/image links
                     qrCodeContent.innerHTML = '';
@@ -711,16 +738,39 @@
                 if(longitudeInput) longitudeInput.value = '';
                 if(provinceInput) provinceInput.value = '';
                 if(originalNameDisplay) originalNameDisplay.textContent = '';
-                if(urlInput) urlInput.value = '';
-                if(googleMapsUrlInput) googleMapsUrlInput.value = '';
+                // if(urlInput) urlInput.value = ''; // Removed
+                if (urlLinkContainer) urlLinkContainer.innerHTML = ''; // Clear link container
+                // if(googleMapsUrlInput) googleMapsUrlInput.value = ''; // Removed
                 if(websiteInput) websiteInput.value = '';
-                if(websiteUrlInput) websiteUrlInput.value = '';
+                // if(websiteUrlInput) websiteUrlInput.value = ''; // Removed
                 if(shopSizeSelect) shopSizeSelect.value = '';
                 if(facebookInput) facebookInput.value = '';
                 if(facebookUrlInput) facebookUrlInput.value = '';
                 if(lineInput) lineInput.value = '';
-                if(lineUrlInput) lineUrlInput.value = '';
+                // if(lineUrlInput) lineUrlInput.value = ''; // Removed
                 if(phoneHashInput) phoneHashInput.value = '';
+// Clear link containers
+if (googleMapsUrlContainer) googleMapsUrlContainer.innerHTML = '';
+if (websiteUrlContainer) websiteUrlContainer.innerHTML = '';
+if (lineUrlContainer) lineUrlContainer.innerHTML = '';
+if (currentDistributorInput) currentDistributorInput.value = ''; // NEW
+                if (lineUrlContainer) lineUrlContainer.innerHTML = '';
+            }
+
+            // Helper function to populate link containers
+            function populateLink(container, url, linkText) {
+                if (!container) return;
+                container.innerHTML = ''; // Clear previous
+                if (url) {
+                    const link = document.createElement('a');
+                    link.href = escapeHtml(url);
+                    link.textContent = escapeHtml(linkText || url); // Use URL as text if no specific text provided
+                    link.target = '_blank'; // Open in new tab
+                    link.rel = 'noopener noreferrer';
+                    container.appendChild(link);
+                } else {
+                    container.innerHTML = '<span class="text-muted">N/A</span>'; // Indicate if no URL
+                }
             }
 
             // --- Messaging Functions ---
@@ -811,6 +861,29 @@
                 }
             }
 
+            // NEW: Populate Distributor Datalist
+            function populateDistributorDatalist() {
+                if (!distributorDatalist) return;
+                distributorDatalist.innerHTML = ''; // Clear existing options
+                if (setupData && setupData.distributors && Array.isArray(setupData.distributors)) {
+                    setupData.distributors.forEach(distributor => {
+                        const option = document.createElement('option');
+                        option.value = distributor;
+                        distributorDatalist.appendChild(option);
+                    });
+                }
+            }
+
+            // NEW: Function to reload all data
+            function reloadAllData() {
+                console.log("Reloading all data for Rep view...");
+                localStorage.removeItem('setupData'); // Clear setup cache
+                localStorage.removeItem('dispensaryData'); // Clear dispensary cache
+                // Re-run initial fetches
+                fetchAllDispensaryData(); // Fetch dispensaries (will show loading)
+                fetchSetupData(); // Fetch setup data (will show loading if not cached)
+            }
+
             // --- Form Submission Functions ---
 
             function submitForm() {
@@ -869,6 +942,21 @@
                         .then(() => sendData())
                         .catch(() => hideLoading());
                 } else {
+            // Helper function to populate link containers
+            function populateLink(container, url, linkText) {
+                if (!container) return;
+                container.innerHTML = ''; // Clear previous
+                if (url) {
+                    const link = document.createElement('a');
+                    link.href = escapeHtml(url);
+                    link.textContent = escapeHtml(linkText || url); // Use URL as text if no specific text provided
+                    link.target = '_blank'; // Open in new tab
+                    link.rel = 'noopener noreferrer';
+                    container.appendChild(link);
+                } else {
+                    container.innerHTML = '<span class="text-muted">N/A</span>'; // Indicate if no URL
+                }
+            }
                     sendData();
                 }
             }
