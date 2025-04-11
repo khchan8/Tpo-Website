@@ -108,19 +108,30 @@
         .collapsible-section {
             border: 1px solid #ddd;
             border-radius: 5px;
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem; /* Increased margin like Rep */
+            overflow: hidden; /* Ensure background color fills corners */
         }
         .collapsible-header {
-            background-color: #f8f9fa;
-            padding: 10px 15px;
+            /* background-color: #f8f9fa; */ /* Default removed */
+            padding: 12px 15px; /* Slightly more padding like Rep */
             cursor: pointer;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border-bottom: 2px solid #ccc; /* Stronger border like Rep */
         }
+        /* Style header titles like Rep */
+        .collapsible-header span {
+            font-weight: bold;
+            font-size: 1.15em; /* Slightly larger font like Rep */
+        }
+        /* Different background colors for headers */
+        #assignmentSection .collapsible-header { background-color: #e2f0fb; border-color: #b8daff;} /* Light blue */
+        #pipelineViewSection .collapsible-header { background-color: #e2fbf5; border-color: #b1dfbb;} /* Light green */
         .collapsible-content {
-            padding: 15px;
+            padding: 20px; /* Increased padding like Rep */
             display: none; /* Collapsed by default */
+            background-color: #ffffff; /* Ensure content area is white like Rep */
         }
         .collapsible-icon {
             transition: transform 0.3s ease;
@@ -170,6 +181,41 @@
         .filter-dirty {
             border-color: #dc3545 !important; /* Red border */
             box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25); /* Red glow */
+        }
+        /* Pipeline controls styling */
+        .pipeline-controls-container {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+        .pipeline-control-item {
+            width: 100%;
+            margin-right: 0;
+            text-align: center;
+        }
+        .pipeline-control-item.form-check {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            height: 31px; /* Match button height */
+            border: 1px solid transparent;
+            border-radius: 0.2rem;
+            padding: 0.25rem 0.5rem;
+        }
+        /* Fix checkbox alignment */
+        .form-check-input {
+            margin-top: 0;
+            margin-right: 0.3rem;
+            position: static;
+        }
+        .form-check-label {
+            margin-bottom: 0;
+            display: inline-block;
+        }
+        .pipeline-control-item.btn {
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         /* Ensure consistent height for filter controls */
         .form-row .form-group {
@@ -333,15 +379,17 @@
                             <input type="text" id="searchPipelineName" class="form-control form-control-sm" placeholder="Type name...">
                         </div>
                          <!-- Buttons Group Moved to Right -->
-                         <div class="form-group col-md-2 d-flex align-items-end justify-content-end flex-wrap">
-                             <div class="form-check mr-2 mb-1">
-                                 <input class="form-check-input" type="checkbox" value="" id="multiFieldSelectCheck">
-                                 <label class="form-check-label small" for="multiFieldSelectCheck">
-                                     Multi-Select
-                                 </label>
+                         <div class="form-group col-md-2 d-flex align-items-end justify-content-end">
+                             <div class="pipeline-controls-container">
+                                 <div class="form-check mb-2 pipeline-control-item">
+                                     <input class="form-check-input" type="checkbox" value="" id="multiFieldSelectCheck">
+                                     <label class="form-check-label small" for="multiFieldSelectCheck">
+                                         Multi-Select
+                                     </label>
+                                 </div>
+                                 <button class="btn btn-sm btn-primary mb-2 pipeline-control-item" type="button" id="applyPipelineFilterBtn" title="Apply Filters">Apply</button>
+                                 <button class="btn btn-sm btn-secondary pipeline-control-item" type="button" id="reloadPipelineBtn" title="Reload Pipeline Data"><i class="fas fa-sync-alt"></i></button>
                              </div>
-                             <button class="btn btn-sm btn-primary mr-1 mb-1" type="button" id="applyPipelineFilterBtn" title="Apply Filters">Apply</button>
-                             <button class="btn btn-sm btn-secondary mb-1" type="button" id="reloadPipelineBtn" title="Reload Pipeline Data"><i class="fas fa-sync-alt"></i></button>
                          </div>
                     </div>
                     <!-- Column Visibility Toggle -->
@@ -573,6 +621,12 @@
                             inputElement.value = currentAssignmentPage;
                             showMessage(errorMessageElement, `Invalid page number. Please enter between 1 and ${totalPages}.`);
                         }
+            
+                        // [CUT] Body click listener moved outside this keypress listener
+                        // Removed the direct listener attachment to assignmentTableContainer
+                        // else {
+                        //      console.error("assignmentTableContainer not found when trying to add click listener."); // DEBUG
+                        // }
                     }
                 });
             }
@@ -1105,10 +1159,10 @@
                         if (row) {
                             row.classList.add('table-row-highlight');
                             row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                            // Remove highlight after a delay
-                            setTimeout(() => {
-                                row.classList.remove('table-row-highlight');
-                            }, 2500); // Highlight for 2.5 seconds
+                            // Highlight persists until another row/marker is clicked (timeout removed)
+                            // setTimeout(() => {
+                            //     row.classList.remove('table-row-highlight');
+                            // }, 2500); // Highlight for 2.5 seconds - REMOVED
                         }
                         break;
                     }
@@ -1147,10 +1201,29 @@
                         console.warn("Skipping shop with missing name:", shop);
                         return; // Use return inside forEach to skip iteration
                     }
+
+                    // Declare lat/lon once for this iteration
+                    const lat = parseFloat(shop.latitude);
+                    const lon = parseFloat(shop.longitude);
+
                     // Add row ID for easier selection
                     tableHTML += `<tr id="assign-row-${escapeHtml(shopId.replace(/\s+/g, '-'))}">`;
                     tableHTML += `<td><input type="checkbox" class="assign-checkbox" data-shop-id="${escapeHtml(shopId)}"></td>`;
-                    tableHTML += `<td>${escapeHtml(shop.name)}</td>`;
+                    // Add data attributes for event delegation instead of inline onclick
+                    let mapDataAttributes = '';
+                    if (assignMap && !isNaN(lat) && !isNaN(lon)) {
+                        mapDataAttributes = `
+                            data-shop-id="${escapeHtml(shopId)}"
+                            data-lat="${lat}"
+                            data-lon="${lon}"
+                            class="shop-name-cell"
+                            style="cursor: pointer;"
+                            title="Click to focus map"`;
+                    } else {
+                        // Add class even if no map data, for consistent styling if needed
+                         mapDataAttributes = `class="shop-name-cell"`;
+                    }
+                    tableHTML += `<td ${mapDataAttributes}>${escapeHtml(shop.name)}</td>`;
                     // Google Maps Link
                     tableHTML += `<td>${shop.google_maps_url ? `<a href="${escapeHtml(shop.google_maps_url)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(shop.google_maps_url)}">Map</a>` : ''}</td>`;
                     // Line ID
@@ -1167,8 +1240,9 @@
                     tableHTML += `</tr>`;
 
                     // Add marker to map if coordinates are valid
-                    const lat = parseFloat(shop.latitude);
-                    const lon = parseFloat(shop.longitude);
+                    // Use the lat/lon declared earlier - remove duplicate declarations
+                    // const lat = parseFloat(shop.latitude); // REMOVED
+                    // const lon = parseFloat(shop.longitude); // REMOVED
                     if (assignMap && !isNaN(lat) && !isNaN(lon)) {
                         const coords = [lat, lon];
                         const marker = L.marker(coords).addTo(assignMap);
@@ -1559,6 +1633,73 @@
                 }
             }
             // --- End Leaflet Map Functions ---
+
+            // --- Add Delegated Body Click Listener for Shop Names ---
+            // Moved here to ensure it's added after DOM is ready and outside other listeners
+            console.log("Adding delegated click listener to document.body for shop names"); // DEBUG
+            document.body.addEventListener('click', function(event) {
+                console.log("!!! BODY CLICK DETECTED !!! Target:", event.target); // Add a very prominent log
+
+                // Check if the click originated within the assignment table container
+                // This check IS needed here now that the listener is on the body
+                if (!assignmentTableContainer || !assignmentTableContainer.contains(event.target)) {
+                     // console.log("Click was outside assignmentTableContainer."); // DEBUG - Too noisy
+                    return;
+                }
+
+                const targetCell = event.target.closest('td.shop-name-cell');
+                console.log("Closest 'td.shop-name-cell':", targetCell); // DEBUG
+
+                if (!targetCell) {
+                    console.log("Click was not on a shop-name-cell or its descendant."); // DEBUG
+                    return; // Exit if the click wasn't on a relevant cell
+                }
+
+                const shopId = targetCell.dataset.shopId;
+                const latStr = targetCell.dataset.lat;
+                const lonStr = targetCell.dataset.lon;
+                console.log(`Found cell data: shopId=${shopId}, latStr=${latStr}, lonStr=${lonStr}`); // DEBUG
+
+                if (shopId && latStr && lonStr) {
+                    try {
+                        const lat = parseFloat(latStr);
+                        const lon = parseFloat(lonStr);
+                        console.log(`Parsed coordinates: lat=${lat}, lon=${lon}`); // DEBUG
+
+                        if (isNaN(lat) || isNaN(lon)) {
+                            console.warn('Invalid coordinates parsed from data attributes.'); // DEBUG
+                            return;
+                        }
+
+                        // Check if assignMap is initialized
+                        if (!assignMap) {
+                            console.warn('assignMap is not initialized yet.'); // DEBUG
+                            return;
+                        }
+
+                        console.log(`Attempting to focus map on ${shopId} at [${lat}, ${lon}]`); // DEBUG
+                        assignMap.setView([lat, lon], 16); // Zoom level 16
+
+                        // Optionally open the marker popup
+                        if (assignMarkers && assignMarkers[shopId]) {
+                            console.log(`Opening popup for marker: ${shopId}`); // DEBUG
+                            assignMarkers[shopId].openPopup();
+                        } else {
+                            console.log(`Marker not found for shopId: ${shopId}`); // DEBUG
+                        }
+
+                        // Highlight the row (highlight function already removes previous highlights)
+                        console.log(`Attempting to highlight row for shopId: ${shopId}`); // DEBUG
+                        highlightTableRow(shopId);
+
+                    } catch (e) {
+                        console.error('Error handling shop name click:', e);
+                    }
+                } else {
+                    console.log("Cell missing required data attributes (shopId, lat, lon)."); // DEBUG
+                }
+            });
+            // --- End Delegated Body Click Listener ---
 
             // --- End Stage 6 --- // Renamed Stage
         });

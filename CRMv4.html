@@ -42,6 +42,11 @@
             font-weight: bold;
             color: #555;
         }
+        .required-indicator { /* Style for red asterisk */
+            color: red;
+            font-weight: bold;
+            margin-left: 2px;
+        }
         .btn-primary {
             background-color: #007bff;
             border-color: #007bff;
@@ -56,6 +61,8 @@
             margin-top: 10px;
             border: 1px solid #ddd;
             border-radius: 5px;
+            margin-right: 5px; /* Add spacing between previews */
+            display: inline-block; /* Allow multiple previews */
         }
         /* Enhanced Loading Indicator */
         .loading-overlay {
@@ -114,19 +121,34 @@
         .collapsible-section {
             border: 1px solid #ddd;
             border-radius: 5px;
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem; /* Increased margin */
+            overflow: hidden; /* Ensure background color fills corners */
         }
         .collapsible-header {
-            background-color: #f8f9fa;
-            padding: 10px 15px;
+            /* background-color: #f8f9fa; */ /* Default removed */
+            padding: 12px 15px; /* Slightly more padding */
             cursor: pointer;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border-bottom: 2px solid #ccc; /* Stronger border */
         }
+        /* Style header titles */
+        .collapsible-header span {
+            font-weight: bold;
+            font-size: 1.15em; /* Slightly larger font */
+        }
+        /* Different background colors for headers */
+        #filterSection .collapsible-header { background-color: #e9ecef; border-color: #ced4da;}
+        #dispensaryInfoSection .collapsible-header { background-color: #e2f0fb; border-color: #b8daff;}
+        #contactInfoSection .collapsible-header { background-color: #e2fbf5; border-color: #b1dfbb;}
+        #activityNotesSection .collapsible-header { background-color: #fff3cd; border-color: #ffeeba;}
+        #actionItemsSection .collapsible-header { background-color: #f8d7da; border-color: #f5c6cb;}
+
         .collapsible-content {
-            padding: 15px;
+            padding: 20px; /* Increased padding */
             display: none; /* Collapsed by default */
+            background-color: #ffffff; /* Ensure content area is white */
         }
         .collapsible-icon {
             transition: transform 0.3s ease;
@@ -157,6 +179,16 @@
         #repMap:fullscreen { width: 100% !important; height: 100% !important; z-index: 99999; }
         .leaflet-pseudo-fullscreen { position: fixed !important; width: 100% !important; height: 100% !important; top: 0px !important; left: 0px !important; z-index: 99999; }
 
+        /* Read-only textarea styling */
+        textarea[readonly] {
+            background-color: #e9ecef; /* Light grey background */
+            cursor: not-allowed; /* Indicate non-editable */
+            color: #495057; /* Standard text color */
+            font-size: 0.9em; /* Slightly smaller font for history */
+            line-height: 1.4;
+            white-space: pre-wrap; /* Preserve line breaks */
+        }
+
 
         @media (max-width: 768px) {
             .container {
@@ -164,6 +196,10 @@
             }
             #repMap {
                 height: 300px; /* Adjust height for smaller screens */
+            }
+            .form-row .col-md-6, .form-row .col-md-4, .form-row .col-md-2 { /* Stack columns on small screens */
+                flex-basis: 100%;
+                max-width: 100%;
             }
         }
         /* Allow container to expand on larger screens */
@@ -228,40 +264,51 @@
             </div>
             <!-- End New Filter Section -->
 
-            <div class="collapsible-section active">
+            <div class="collapsible-section active" id="dispensaryInfoSection">
                 <div class="collapsible-header">
                     <span>Dispensary Information</span>
                     <i class="fas fa-chevron-down collapsible-icon"></i>
                 </div>
                 <div class="collapsible-content">
-                    <div class="form-group">
-                        <label for="selectDispensary">Select Dispensary</label>
-                        <select id="selectDispensary" class="form-control" name="selectDispensary" required>
-                            <option value="">Select a dispensary</option>
-                            <option value="new">New Dispensary</option>
-                        </select>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="selectDispensary">Select Dispensary</label>
+                            <select id="selectDispensary" class="form-control" name="selectDispensary" required>
+                                <option value="">Select a dispensary</option>
+                                <option value="new">New Dispensary</option>
+                            </select>
+                        </div>
+                         <div class="form-group col-md-6" id="newDispensaryNameGroup" style="display: none;">
+                            <label for="newDispensaryName">New Dispensary Name</label>
+                            <input type="text" id="newDispensaryName" class="form-control" name="newDispensaryName" placeholder="Enter new shop name">
+                        </div>
                     </div>
-                    <div class="form-group" id="newDispensaryNameGroup" style="display: none;">
-                        <label for="newDispensaryName">Dispensary Name</label>
-                        <input type="text" id="newDispensaryName" class="form-control" name="newDispensaryName">
+                     <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="currentDistributor">Current Distributor</label>
+                            <input type="text" id="currentDistributor" name="Current Distributor" class="form-control" list="distributorList" placeholder="Type or select distributor">
+                            <datalist id="distributorList">
+                                <!-- Options populated by JavaScript -->
+                            </datalist>
+                        </div>
+                         <div class="form-group col-md-6">
+                            <label for="shopSize">Shop Size</label>
+                            <select id="shopSize" name="Shop Size" class="form-control">
+                                <option value="">Select Size</option>
+                                <option value="Small">Small</option>
+                                <option value="Medium">Medium</option>
+                                <option value="Large">Large</option>
+                            </select>
+                        </div>
                     </div>
-                    <!-- NEW: Current Distributor Field (PRD 5.6) -->
-                    <div class="form-group">
-                        <label for="currentDistributor">Current Distributor</label>
-                        <input type="text" id="currentDistributor" name="Current Distributor" class="form-control" list="distributorList" placeholder="Type or select distributor">
-                        <datalist id="distributorList">
-                            <!-- Options populated by JavaScript -->
-                        </datalist>
-                    </div>
-                    <!-- END NEW -->
                     <div class="form-group">
                         <label for="dispensaryAddress">Dispensary Address</label>
-                        <input type="text" id="dispensaryAddress" class="form-control" name="Dispensary Address" required> <!-- Name matches header -->
+                        <input type="text" id="dispensaryAddress" class="form-control" name="Dispensary Address" required placeholder="Enter full address">
                     </div>
                      <!-- Lat/Lon and Map -->
                     <div class="form-row align-items-end">
-                      <div class="form-group col-md-4"><label for="latitude">Latitude</label><input type="text" id="latitude" name="Latitude" class="form-control"></div>
-                      <div class="form-group col-md-4"><label for="longitude">Longitude</label><input type="text" id="longitude" name="Longitude" class="form-control"></div>
+                      <div class="form-group col-md-4"><label for="latitude">Latitude</label><input type="text" id="latitude" name="Latitude" class="form-control" placeholder="e.g., 13.7563"></div>
+                      <div class="form-group col-md-4"><label for="longitude">Longitude</label><input type="text" id="longitude" name="Longitude" class="form-control" placeholder="e.g., 100.5018"></div>
                       <div class="form-group col-md-2"><button type="button" id="getLocationBtn" class="btn btn-sm btn-secondary btn-block" title="Get Current GPS Location"><i class="fas fa-map-marker-alt"></i> Get</button></div>
                       <div class="form-group col-md-2"><button type="button" id="showMyLocationBtn" class="btn btn-sm btn-info btn-block" title="Show My Location on Map"><i class="fas fa-street-view"></i> Show Me</button></div>
                     </div>
@@ -270,46 +317,62 @@
                         <div id="repMap"></div>
                     </div>
                     <!-- Other Fields -->
-                    <div class="form-group"><label for="province">Province</label><input type="text" id="province" name="Province" class="form-control"></div>
-                    <div class="form-group"><label>Original Name (from Unassigned)</label><p id="originalNameDisplay" class="form-control-static font-italic text-muted"></p></div> <!-- Display only -->
-                    <div class="form-group"><label>URL</label><div id="url_link_container"></div></div>
-                    <div class="form-group"><label>Google Maps URL</label><div id="google_maps_url_link_container"></div></div>
-                    <div class="form-group"><label for="website">Website</label><input type="text" id="website" name="website" class="form-control"></div>
-                    <div class="form-group"><label>Website URL</label><div id="website_url_link_container"></div></div>
-                    <!-- Shop Size Dropdown -->
-                    <div class="form-group"><label for="shopSize">Shop Size</label><select id="shopSize" name="Shop Size" class="form-control"><option value="">Select Size</option><option value="Small">Small</option><option value="Medium">Medium</option><option value="Large">Large</option></select></div>
+                     <div class="form-row">
+                        <div class="form-group col-md-6"><label for="province">Province</label><input type="text" id="province" name="Province" class="form-control" placeholder="e.g., Bangkok"></div>
+                        <div class="form-group col-md-6"><label>Original Name (from Unassigned)</label><p id="originalNameDisplay" class="form-control-static font-italic text-muted"></p></div> <!-- Display only -->
+                    </div>
+                     <div class="form-row">
+                        <div class="form-group col-md-6"><label>URL</label><div id="url_link_container"></div></div>
+                        <div class="form-group col-md-6"><label>Google Maps URL</label><div id="google_maps_url_link_container"></div></div>
+                    </div>
+                     <div class="form-row">
+                        <div class="form-group col-md-6"><label for="website">Website</label><input type="text" id="website" name="website" class="form-control" placeholder="e.g., www.example.com"></div>
+                        <div class="form-group col-md-6"><label>Website URL</label><div id="website_url_link_container"></div></div>
+                    </div>
                 </div>
             </div>
 
-            <div class="collapsible-section active">
+            <div class="collapsible-section active" id="contactInfoSection">
                 <div class="collapsible-header">
                     <span>Contact Information</span>
                     <i class="fas fa-chevron-down collapsible-icon"></i>
                 </div>
                 <div class="collapsible-content">
-                    <div class="form-group">
-                        <label for="contactPersonName">Contact Person Name <span style="color: red;">(Required)</span></label>
-                        <input type="text" id="contactPersonName" class="form-control" name="Contact Person Name" required> <!-- Name matches header -->
+                     <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="contactPersonName">Contact Person Name <span class="required-indicator">*</span></label>
+                            <input type="text" id="contactPersonName" class="form-control" name="Contact Person Name" required placeholder="Enter contact name">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" class="form-control" name="Email" placeholder="e.g., contact@example.com">
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="email">Email</label>
-                        <input type="email" id="email" class="form-control" name="Email"> <!-- Name matches header -->
+                     <div class="form-row">
+                         <div class="form-group col-md-6">
+                            <label for="phone">Phone <span class="required-indicator">*</span></label>
+                            <input type="tel" id="phone" class="form-control" name="Phone" required placeholder="Enter primary phone number">
+                        </div>
+                         <div class="form-group col-md-6">
+                            <label for="phoneHash">Phone # (Alternative)</label>
+                            <input type="tel" id="phoneHash" name="phone#" class="form-control" placeholder="Enter alternative phone">
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="phone">Phone <span style="color: red;">(Required)</span></label>
-                        <input type="tel" id="phone" class="form-control" name="Phone" required> <!-- Name matches header -->
+                     <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="lineContact">Line Contact</label>
+                            <input type="text" id="lineContact" class="form-control" name="Line Contact" placeholder="Enter Line display name">
+                        </div>
+                         <div class="form-group col-md-6">
+                            <label for="line">Line ID</label>
+                            <input type="text" id="line" name="line" class="form-control" placeholder="Enter Line ID (e.g., @example)">
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="lineContact">Line Contact</label>
-                        <input type="text" id="lineContact" class="form-control" name="Line Contact"> <!-- Name matches header -->
+                     <div class="form-row">
+                        <div class="form-group col-md-6"><label>Line URL</label><div id="line_url_link_container"></div></div>
+                        <div class="form-group col-md-6"><label for="facebook">Facebook Name/Page</label><input type="text" id="facebook" name="facebook" class="form-control" placeholder="Enter Facebook name or page ID"></div>
                     </div>
-                     <!-- New Fields Added Here -->
-                    <div class="form-group"><label for="facebook">Facebook</label><input type="text" id="facebook" name="facebook" class="form-control"></div>
-                    <div class="form-group"><label for="facebook_url">Facebook URL</label><input type="url" id="facebook_url" name="facebook_url" class="form-control"></div>
-                    <div class="form-group"><label for="line">Line ID</label><input type="text" id="line" name="line" class="form-control"></div>
-                    <div class="form-group"><label>Line URL</label><div id="line_url_link_container"></div></div>
-                    <div class="form-group"><label for="phoneHash">Phone #</label><input type="tel" id="phoneHash" name="phone#" class="form-control"></div> <!-- Name matches header -->
-                     <!-- End New Fields -->
+                    <div class="form-group"><label>Facebook URL</label><div id="facebook_url_link_container"></div></div>
                     <div class="form-group">
                         <label for="qrCode">Line QR Code, Store/Product Images</label>
                         <div id="qrCodeContent"></div>
@@ -319,7 +382,7 @@
                 </div>
             </div>
 
-            <div class="collapsible-section active">
+            <div class="collapsible-section active" id="activityNotesSection">
                 <div class="collapsible-header">
                     <span>Activity and Notes</span>
                     <i class="fas fa-chevron-down collapsible-icon"></i>
@@ -327,50 +390,59 @@
                 <div class="collapsible-content">
                     <div class="form-group">
                         <label for="activityLogging">Activity Logging</label>
-                        <textarea id="activityLogging" class="form-control" name="activityLogging" rows="3"></textarea>
+                        <textarea id="activityLogging" class="form-control" name="activityLogging" rows="4" placeholder="Log your visit details, calls, etc. here..."></textarea>
                     </div>
                     <div class="form-group">
                         <label for="history">Notes & Communication History</label>
-                        <textarea id="history" class="form-control" name="Notes & Communication History" readonly></textarea> <!-- Name matches header -->
+                        <textarea id="history" class="form-control" name="Notes & Communication History" rows="6" readonly></textarea> <!-- Increased rows -->
                     </div>
                 </div>
             </div>
 
-            <div class="collapsible-section active">
+            <div class="collapsible-section active" id="actionItemsSection">
                 <div class="collapsible-header">
                     <span>Action Items and Assignment</span>
                     <i class="fas fa-chevron-down collapsible-icon"></i>
                 </div>
                 <div class="collapsible-content">
-                    <div class="form-group">
-                        <label for="nextActionItem">Next Action Item</label>
-                        <select id="nextActionItem" class="form-control" name="Next Action Item"> <!-- Name matches header -->
-                            <option value="">Select an action</option>
-                            <option value="Follow up">Follow up</option>
-                            <option value="Send proposal">Send proposal</option>
-                            <option value="Schedule meeting">Schedule meeting</option>
-                            <option value="Other">Other</option>
-                        </select>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="nextActionItem">Next Action Item</label>
+                            <select id="nextActionItem" class="form-control" name="Next Action Item"> <!-- Name matches header -->
+                                <option value="">Select an action</option>
+                                <option value="Follow up">Follow up</option>
+                                <option value="Send proposal">Send proposal</option>
+                                <option value="Schedule meeting">Schedule meeting</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                         <div class="form-group col-md-6">
+                            <label for="dueDate">Due Date and Time</label>
+                            <input type="datetime-local" id="dueDate" class="form-control" name="Due Date"> <!-- Name matches header -->
+                        </div>
                     </div>
                     <div class="form-group">
                         <label for="nextActionItemDetails">Next Action Item Details</label>
-                        <textarea id="nextActionItemDetails" class="form-control" name="nextActionItemDetails" rows="3"></textarea> <!-- This likely doesn't map directly to a header -->
+                        <textarea id="nextActionItemDetails" class="form-control" name="nextActionItemDetails" rows="3" placeholder="Add details for the next action..."></textarea>
                     </div>
-                    <div class="form-group">
-                        <label for="dueDate">Due Date and Time</label>
-                        <input type="datetime-local" id="dueDate" class="form-control" name="Due Date"> <!-- Name matches header -->
+                     <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="assignedMember">Assigned Member</label>
+                            <select id="assignedMember" class="form-control" name="Assigned Member" required> <!-- Name matches header -->
+                                <option value="">Select a member</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="salesPipeline">Sales Pipeline</label>
+                            <select id="salesPipeline" class="form-control" name="Sales Pipeline" required> <!-- Name matches header -->
+                                <option value="">Select pipeline stage</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="assignedMember">Assigned Member</label>
-                        <select id="assignedMember" class="form-control" name="Assigned Member" required> <!-- Name matches header -->
-                            <option value="">Select a member</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="salesPipeline">Sales Pipeline</label>
-                        <select id="salesPipeline" class="form-control" name="Sales Pipeline" required> <!-- Name matches header -->
-                            <option value="">Select pipeline stage</option>
-                        </select>
+                     <!-- NEW: Assignment Notes Display -->
+                     <div class="form-group">
+                        <label for="assignmentHistory">Assignment Notes and History (Read Only)</label>
+                        <textarea id="assignmentHistory" class="form-control" name="Assignment Notes and History" rows="4" readonly></textarea>
                     </div>
                 </div>
             </div>
@@ -453,7 +525,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx0yKDXAihNA8Dnc6Wr7yDSb6D8yAOwZ59hABQuh-ZAjTnT6OPp7w1lmAAhb4sSiEIO/exec'; // Replace with your actual Script URL
+            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx44aBek_7Am9JJjaIjDtAjWHUsic58EEgcbjMluqfED8HNcOTaDfPqPsTwGMl_VfdV/exec'; // Replace with your actual Script URL
             const selectDispensary = document.getElementById('selectDispensary');
             const newDispensaryNameGroup = document.getElementById('newDispensaryNameGroup');
             const form = document.getElementById('dispensaryForm');
@@ -469,6 +541,7 @@
             const assignedMember = document.getElementById('assignedMember');
             const salesPipeline = document.getElementById('salesPipeline');
             const historyTextarea = document.getElementById('history');
+            const assignmentHistoryTextarea = document.getElementById('assignmentHistory'); // NEW: Assignment History textarea
             // New CRM Fields
             const latitudeInput = document.getElementById('latitude');
             const longitudeInput = document.getElementById('longitude');
@@ -482,7 +555,7 @@
             const websiteUrlContainer = document.getElementById('website_url_link_container'); // New container ID
             const shopSizeSelect = document.getElementById('shopSize');
             const facebookInput = document.getElementById('facebook');
-            const facebookUrlInput = document.getElementById('facebook_url');
+            const facebookUrlLinkContainer = document.getElementById('facebook_url_link_container'); // NEW: Facebook URL container
             const lineInput = document.getElementById('line');
             const lineUrlContainer = document.getElementById('line_url_link_container'); // New container ID
             const phoneHashInput = document.getElementById('phoneHash');
@@ -738,6 +811,7 @@
                     document.getElementById('phone').value = dispensary['Phone'] || '';
                     document.getElementById('lineContact').value = dispensary['Line Contact'] || '';
                     historyTextarea.value = dispensary['Notes & Communication History'] || '';
+                    assignmentHistoryTextarea.value = dispensary['Assignment Notes and History'] || ''; // Populate Assignment History
                     document.getElementById('nextActionItem').value = dispensary['Next Action Item'] || '';
                     document.getElementById('dueDate').value = dispensary['Due Date'] ? dispensary['Due Date'].substring(0, 16) : '';
                     assignedMember.value = dispensary['Assigned Member'] || '';
@@ -758,7 +832,8 @@
                     if(websiteInput) websiteInput.value = dispensary['website'] || '';
                     // if(websiteUrlInput) websiteUrlInput.value = dispensary['website_url'] || ''; // Removed
                     if(facebookInput) facebookInput.value = dispensary['facebook'] || '';
-                    if(facebookUrlInput) facebookUrlInput.value = dispensary['facebook_url'] || '';
+                    // if(facebookUrlInput) facebookUrlInput.value = dispensary['facebook_url'] || ''; // Removed
+                    populateLink(facebookUrlLinkContainer, dispensary.facebook_url, dispensary.facebook_url); // Populate FB link container
                     if(lineInput) lineInput.value = dispensary['line'] || '';
                     // if(lineUrlInput) lineUrlInput.value = dispensary['line_url'] || ''; // Removed
                     if(phoneHashInput) phoneHashInput.value = dispensary['phone#'] || ''; // This corresponds to Col O in new structure
@@ -792,6 +867,7 @@
             function clearFormFields() {
                 form.reset();
                 historyTextarea.value = '';
+                assignmentHistoryTextarea.value = ''; // Clear Assignment History
                 qrCodeContent.innerHTML = '';
                 qrCodePreviewContainer.innerHTML = '';
                 selectDispensary.value = '';
@@ -808,7 +884,8 @@
                 // if(websiteUrlInput) websiteUrlInput.value = ''; // Removed
                 if(shopSizeSelect) shopSizeSelect.value = '';
                 if(facebookInput) facebookInput.value = '';
-                if(facebookUrlInput) facebookUrlInput.value = '';
+                // if(facebookUrlInput) facebookUrlInput.value = ''; // Removed
+                if (facebookUrlLinkContainer) facebookUrlLinkContainer.innerHTML = ''; // Clear FB link container
                 if(lineInput) lineInput.value = '';
                 // if(lineUrlInput) lineUrlInput.value = ''; // Removed
                 if(phoneHashInput) phoneHashInput.value = '';
@@ -841,6 +918,10 @@
                     link.textContent = escapeHtml(linkText || url); // Use URL as text if no specific text provided
                     link.target = '_blank'; // Open in new tab
                     link.rel = 'noopener noreferrer';
+                    // Add icon for external link
+                    const icon = document.createElement('i');
+                    icon.className = 'fas fa-external-link-alt fa-xs ml-1'; // Font Awesome icon
+                    link.appendChild(icon);
                     container.appendChild(link);
                 } else {
                     container.innerHTML = '<span class="text-muted">N/A</span>'; // Indicate if no URL
@@ -1026,6 +1107,10 @@
                     link.textContent = escapeHtml(linkText || url); // Use URL as text if no specific text provided
                     link.target = '_blank'; // Open in new tab
                     link.rel = 'noopener noreferrer';
+                    // Add icon for external link
+                    const icon = document.createElement('i');
+                    icon.className = 'fas fa-external-link-alt fa-xs ml-1'; // Font Awesome icon
+                    link.appendChild(icon);
                     container.appendChild(link);
                 } else {
                     container.innerHTML = '<span class="text-muted">N/A</span>'; // Indicate if no URL
