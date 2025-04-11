@@ -195,22 +195,24 @@
         }
         .pipeline-control-item.form-check {
             display: flex;
-            justify-content: flex-start;
+            justify-content: center; /* Center like buttons */
             align-items: center;
             height: 31px; /* Match button height */
-            border: 1px solid transparent;
+            border: 1px solid #ced4da; /* Match button border */
             border-radius: 0.2rem;
             padding: 0.25rem 0.5rem;
         }
         /* Fix checkbox alignment */
         .form-check-input {
             margin-top: 0;
-            margin-right: 0.3rem;
+            margin-right: 0.5rem;
             position: static;
+            vertical-align: middle;
         }
         .form-check-label {
             margin-bottom: 0;
             display: inline-block;
+            font-size: 1rem; /* Match button font size */
         }
         .pipeline-control-item.btn {
             display: flex;
@@ -383,7 +385,7 @@
                              <div class="pipeline-controls-container">
                                  <div class="form-check mb-2 pipeline-control-item">
                                      <input class="form-check-input" type="checkbox" value="" id="multiFieldSelectCheck">
-                                     <label class="form-check-label small" for="multiFieldSelectCheck">
+                                     <label class="form-check-label" for="multiFieldSelectCheck">
                                          Multi-Select
                                      </label>
                                  </div>
