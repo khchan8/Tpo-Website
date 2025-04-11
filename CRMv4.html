@@ -9,8 +9,12 @@
     <!-- Favicons -->
     <link href="assets/img/favicon.png" rel="icon">
     <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+    <!-- Bootstrap -->
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -131,9 +135,27 @@
         .collapsible-section.active .collapsible-content {
              display: block; /* Show content when active */
         }
+        /* Map Styling */
+        #repMap {
+             height: 350px; /* Adjust height as needed */
+             width: 100%;
+             margin-bottom: 1rem;
+             border: 1px solid #ccc;
+             border-radius: 5px;
+        }
+        .map-container {
+             display: none; /* Hide map initially */
+        }
+        .map-container.visible {
+             display: block; /* Show map when needed */
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 15px;
+            }
+            #repMap {
+                height: 300px; /* Adjust height for smaller screens */
             }
         }
         /* Allow container to expand on larger screens */
@@ -228,12 +250,17 @@
                         <label for="dispensaryAddress">Dispensary Address</label>
                         <input type="text" id="dispensaryAddress" class="form-control" name="Dispensary Address" required> <!-- Name matches header -->
                     </div>
-                     <!-- New Fields Added Here -->
+                     <!-- Lat/Lon and Map -->
                     <div class="form-row align-items-end">
                       <div class="form-group col-md-5"><label for="latitude">Latitude</label><input type="text" id="latitude" name="Latitude" class="form-control"></div>
                       <div class="form-group col-md-5"><label for="longitude">Longitude</label><input type="text" id="longitude" name="Longitude" class="form-control"></div>
                       <div class="form-group col-md-2"><button type="button" id="getLocationBtn" class="btn btn-sm btn-secondary btn-block" title="Get Current GPS Location"><i class="fas fa-map-marker-alt"></i> Get Location</button></div>
                     </div>
+                    <!-- Map Container -->
+                    <div id="repMapContainer" class="map-container">
+                        <div id="repMap"></div>
+                    </div>
+                    <!-- Other Fields -->
                     <div class="form-group"><label for="province">Province</label><input type="text" id="province" name="Province" class="form-control"></div>
                     <div class="form-group"><label>Original Name (from Unassigned)</label><p id="originalNameDisplay" class="form-control-static font-italic text-muted"></p></div> <!-- Display only -->
                     <div class="form-group"><label>URL</label><div id="url_link_container"></div></div>
@@ -242,7 +269,6 @@
                     <div class="form-group"><label>Website URL</label><div id="website_url_link_container"></div></div>
                     <!-- Shop Size Dropdown -->
                     <div class="form-group"><label for="shopSize">Shop Size</label><select id="shopSize" name="Shop Size" class="form-control"><option value="">Select Size</option><option value="Small">Small</option><option value="Medium">Medium</option><option value="Large">Large</option></select></div>
-                     <!-- End New Fields -->
                 </div>
             </div>
 
@@ -356,6 +382,8 @@
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script>
         // Add JavaScript to toggle the collapsible sections
         document.querySelectorAll('.collapsible-header').forEach(header => {
@@ -448,6 +476,8 @@
             const phoneHashInput = document.getElementById('phoneHash');
             const currentDistributorInput = document.getElementById('currentDistributor'); // NEW
             const distributorDatalist = document.getElementById('distributorList'); // NEW
+            const repMapContainer = document.getElementById('repMapContainer'); // Map container div
+            const repMapElement = document.getElementById('repMap'); // Map element
 
 
             // Filter Elements
@@ -462,10 +492,13 @@
 
             let dispensariesData = [];
             let setupData = {};
+            let repMap = null; // Leaflet map instance
+            let repMarker = null; // Leaflet marker instance
 
             // Fetch initial data
             fetchAllDispensaryData();
             fetchSetupData();
+            initializeRepMap(); // Initialize map on load
             // fetchUnassignedData(); // Removed initial fetch for Rep view
 
             // --- Event Listeners ---
@@ -696,6 +729,8 @@
                     if (currentDistributorInput) currentDistributorInput.value = dispensary['Current Distributor'] || ''; // NEW
 
                     // Populate new fields
+                    const lat = parseFloat(dispensary['Latitude']);
+                    const lon = parseFloat(dispensary['Longitude']);
                     if(latitudeInput) latitudeInput.value = dispensary['Latitude'] || '';
                     if(longitudeInput) longitudeInput.value = dispensary['Longitude'] || '';
                     if(provinceInput) provinceInput.value = dispensary['Province'] || '';
@@ -728,6 +763,10 @@
                         qrCodeContent.appendChild(link);
                         qrCodeContent.appendChild(document.createElement('br'));
                     });
+
+                    // Update Map
+                    updateRepMap(lat, lon, dispensary);
+
                 } else {
                     clearFormFields(); // Clear if dispensary not found
                 }
@@ -756,12 +795,18 @@
                 if(lineInput) lineInput.value = '';
                 // if(lineUrlInput) lineUrlInput.value = ''; // Removed
                 if(phoneHashInput) phoneHashInput.value = '';
-// Clear link containers
-if (googleMapsUrlContainer) googleMapsUrlContainer.innerHTML = '';
-if (websiteUrlContainer) websiteUrlContainer.innerHTML = '';
-if (lineUrlContainer) lineUrlContainer.innerHTML = '';
-if (currentDistributorInput) currentDistributorInput.value = ''; // NEW
+                // Clear link containers
+                if (googleMapsUrlContainer) googleMapsUrlContainer.innerHTML = '';
+                if (websiteUrlContainer) websiteUrlContainer.innerHTML = '';
                 if (lineUrlContainer) lineUrlContainer.innerHTML = '';
+                if (currentDistributorInput) currentDistributorInput.value = ''; // NEW
+                if (lineUrlContainer) lineUrlContainer.innerHTML = '';
+                // Hide map
+                if (repMapContainer) repMapContainer.classList.remove('visible');
+                if (repMarker) {
+                    repMap.removeLayer(repMarker);
+                    repMarker = null;
+                }
             }
 
             // Helper function to populate link containers
@@ -1017,6 +1062,59 @@ if (currentDistributorInput) currentDistributorInput.value = ''; // NEW
                 };
 
                 navigator.geolocation.getCurrentPosition(success, error, options);
+            }
+
+            // --- Leaflet Map Functions ---
+            function initializeRepMap() {
+                if (repMapElement && !repMap) { // Initialize only once
+                    try {
+                        repMap = L.map('repMap').setView([13.7563, 100.5018], 10); // Default view (e.g., Bangkok)
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            maxZoom: 19,
+                            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                        }).addTo(repMap);
+                        console.log("Rep map initialized.");
+                    } catch (e) {
+                        console.error("Error initializing Leaflet map:", e);
+                        if (repMapContainer) repMapContainer.innerHTML = '<p class="text-danger">Error loading map.</p>';
+                    }
+                }
+            }
+
+            function updateRepMap(lat, lon, dispensary) {
+                if (!repMap) {
+                    console.warn("Map not initialized yet.");
+                    return;
+                }
+
+                if (lat && lon && !isNaN(lat) && !isNaN(lon)) {
+                    const coords = [lat, lon];
+                    if (repMapContainer) repMapContainer.classList.add('visible'); // Show map container
+
+                    // Remove previous marker if it exists
+                    if (repMarker) {
+                        repMap.removeLayer(repMarker);
+                    }
+
+                    // Add new marker
+                    repMarker = L.marker(coords).addTo(repMap);
+                    const popupContent = `<b>${escapeHtml(dispensary['Dispensary Name'])}</b><br>${escapeHtml(dispensary['Dispensary Address'] || '')}`;
+                    repMarker.bindPopup(popupContent);
+
+                    // Set map view
+                    repMap.setView(coords, 15); // Zoom level 15
+
+                    // Invalidate size after showing container to ensure tiles load correctly
+                    setTimeout(() => { repMap.invalidateSize() }, 100);
+
+                } else {
+                    // Hide map and remove marker if coords are invalid
+                    if (repMapContainer) repMapContainer.classList.remove('visible');
+                    if (repMarker) {
+                        repMap.removeLayer(repMarker);
+                        repMarker = null;
+                    }
+                }
             }
 
             // --- Assignment Tab Functions Removed ---
