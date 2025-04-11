@@ -4,7 +4,7 @@
     <base href="">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TPO Wellness - CRM</title>
+    <title>TPO Wellness - CRM (Rep View)</title> <!-- Changed Title -->
 
     <!-- Favicons -->
     <link href="assets/img/favicon.png" rel="icon">
@@ -136,62 +136,25 @@
                 padding: 15px;
             }
         }
+        /* Allow container to expand on larger screens */
+        @media (min-width: 992px) { /* Bootstrap lg breakpoint */
+            .container {
+                max-width: none; /* Remove max-width constraint */
+                /* Optionally add some horizontal padding if needed */
+                /* padding-left: 30px; */
+                /* padding-right: 30px; */
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1 class="text-center">Tiny CRM</h1>
+         <div class="d-flex justify-content-between align-items-center mb-4">
+             <h1 class="text-center mb-0">Tiny CRM</h1>
+             <button class="btn btn-sm btn-outline-primary" id="reloadDataBtn" title="Reload All Data"><i class="fas fa-sync-alt"></i> Reload All</button>
+         </div>
 
-            <!-- PRD 5.1: New Assignment Section -->
-            <div class="collapsible-section" id="assignmentSection">
-                <div class="collapsible-header">
-                    <span>Assign New Shops</span>
-                    <i class="fas fa-chevron-down collapsible-icon"></i>
-                </div>
-                <div class="collapsible-content">
-                    <!-- Filtering -->
-                    <div class="form-row">
-                        <div class="form-group col-md-6">
-                            <label for="filterAssignProvince">Filter by Province</label>
-                            <select id="filterAssignProvince" class="form-control">
-                                <option value="">All Provinces</option>
-                                <!-- Options populated by JS -->
-                            </select>
-                        </div>
-                        <div class="form-group col-md-6">
-                            <label for="searchAssignName">Search Dispensary Name</label>
-                            <input type="text" id="searchAssignName" class="form-control" placeholder="Type name...">
-                        </div>
-                    </div>
-                    <!-- Display -->
-                    <div id="assignmentTableContainer" class="table-responsive">
-                        <!-- Table will be generated here by JS -->
-                        <p>Loading unassigned shops...</p>
-                    </div>
-                    <div id="assignmentPaginationControls" class="text-center mt-2">
-                        <!-- Pagination controls will be generated here by JS -->
-                    </div>
-                    <!-- Assignment Controls -->
-                    <div class="form-row mt-3">
-                         <div class="form-group col-md-6">
-                            <label for="assignToMember">Assign to Member</label>
-                            <select id="assignToMember" class="form-control">
-                                <option value="">Select Member</option>
-                                <!-- Options populated from setupData -->
-                            </select>
-                        </div>
-                        <div class="form-group col-md-6 align-self-end">
-                             <button id="assignSelectedButton" class="btn btn-primary btn-block">Assign Selected Shops</button>
-                        </div>
-                    </div>
-                     <!-- Optional: Add Assignment Notes textarea -->
-                     <div class="form-group">
-                        <label for="assignmentNotes">Assignment Notes (Optional)</label>
-                        <textarea id="assignmentNotes" class="form-control" rows="2"></textarea>
-                    </div>
-                </div>
-            </div>
-            <!-- End Assignment Section -->
+        <!-- Assignment Section Removed -->
 
         <form id="dispensaryForm">
             <!-- Existing Filter Section -->
@@ -252,6 +215,15 @@
                         <label for="newDispensaryName">Dispensary Name</label>
                         <input type="text" id="newDispensaryName" class="form-control" name="newDispensaryName">
                     </div>
+                    <!-- NEW: Current Distributor Field (PRD 5.6) -->
+                    <div class="form-group">
+                        <label for="currentDistributor">Current Distributor</label>
+                        <input type="text" id="currentDistributor" name="Current Distributor" class="form-control" list="distributorList" placeholder="Type or select distributor">
+                        <datalist id="distributorList">
+                            <!-- Options populated by JavaScript -->
+                        </datalist>
+                    </div>
+                    <!-- END NEW -->
                     <div class="form-group">
                         <label for="dispensaryAddress">Dispensary Address</label>
                         <input type="text" id="dispensaryAddress" class="form-control" name="Dispensary Address" required> <!-- Name matches header -->
@@ -263,10 +235,10 @@
                     </div>
                     <div class="form-group"><label for="province">Province</label><input type="text" id="province" name="Province" class="form-control"></div>
                     <div class="form-group"><label>Original Name (from Unassigned)</label><p id="originalNameDisplay" class="form-control-static font-italic text-muted"></p></div> <!-- Display only -->
-                    <div class="form-group"><label for="url">URL</label><input type="url" id="url" name="url" class="form-control"></div>
-                    <div class="form-group"><label for="google_maps_url">Google Maps URL</label><input type="url" id="google_maps_url" name="google_maps_url" class="form-control"></div>
+                    <div class="form-group"><label>URL</label><div id="url_link_container"></div></div>
+                    <div class="form-group"><label>Google Maps URL</label><div id="google_maps_url_link_container"></div></div>
                     <div class="form-group"><label for="website">Website</label><input type="text" id="website" name="website" class="form-control"></div>
-                    <div class="form-group"><label for="website_url">Website URL</label><input type="url" id="website_url" name="website_url" class="form-control"></div>
+                    <div class="form-group"><label>Website URL</label><div id="website_url_link_container"></div></div>
                     <!-- Shop Size Dropdown -->
                     <div class="form-group"><label for="shopSize">Shop Size</label><select id="shopSize" name="Shop Size" class="form-control"><option value="">Select Size</option><option value="Small">Small</option><option value="Medium">Medium</option><option value="Large">Large</option></select></div>
                      <!-- End New Fields -->
@@ -280,7 +252,7 @@
                 </div>
                 <div class="collapsible-content">
                     <div class="form-group">
-                        <label for="contactPersonName">Contact Person Name</label>
+                        <label for="contactPersonName">Contact Person Name <span style="color: red;">(Required)</span></label>
                         <input type="text" id="contactPersonName" class="form-control" name="Contact Person Name" required> <!-- Name matches header -->
                     </div>
                     <div class="form-group">
@@ -288,7 +260,7 @@
                         <input type="email" id="email" class="form-control" name="Email"> <!-- Name matches header -->
                     </div>
                     <div class="form-group">
-                        <label for="phone">Phone</label>
+                        <label for="phone">Phone <span style="color: red;">(Required)</span></label>
                         <input type="tel" id="phone" class="form-control" name="Phone" required> <!-- Name matches header -->
                     </div>
                     <div class="form-group">
@@ -299,7 +271,7 @@
                     <div class="form-group"><label for="facebook">Facebook</label><input type="text" id="facebook" name="facebook" class="form-control"></div>
                     <div class="form-group"><label for="facebook_url">Facebook URL</label><input type="url" id="facebook_url" name="facebook_url" class="form-control"></div>
                     <div class="form-group"><label for="line">Line ID</label><input type="text" id="line" name="line" class="form-control"></div>
-                    <div class="form-group"><label for="line_url">Line URL</label><input type="url" id="line_url" name="line_url" class="form-control"></div>
+                    <div class="form-group"><label>Line URL</label><div id="line_url_link_container"></div></div>
                     <div class="form-group"><label for="phoneHash">Phone #</label><input type="tel" id="phoneHash" name="phone#" class="form-control"></div> <!-- Name matches header -->
                      <!-- End New Fields -->
                     <div class="form-group">
@@ -392,9 +364,9 @@
             });
         });
 
-        // Set initial state: Keep Assignment and Filter sections closed initially
+        // Set initial state: Keep Filter section closed initially
         document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('.collapsible-section:not(#filterSection):not(#assignmentSection)').forEach(section => {
+            document.querySelectorAll('.collapsible-section:not(#filterSection)').forEach(section => {
                 section.classList.add('active');
             });
         });
@@ -441,7 +413,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwidr6BiGOO1CPE9uN_ZuvsgeljsFsyK2wOYV-ZSScYel4-enXmbe7qdKl8AQq4itGa/exec'; // Replace with your actual Script URL
+            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx0yKDXAihNA8Dnc6Wr7yDSb6D8yAOwZ59hABQuh-ZAjTnT6OPp7w1lmAAhb4sSiEIO/exec'; // Replace with your actual Script URL
             const selectDispensary = document.getElementById('selectDispensary');
             const newDispensaryNameGroup = document.getElementById('newDispensaryNameGroup');
             const form = document.getElementById('dispensaryForm');
@@ -462,16 +434,18 @@
             const longitudeInput = document.getElementById('longitude');
             const provinceInput = document.getElementById('province');
             const originalNameDisplay = document.getElementById('originalNameDisplay');
-            const urlInput = document.getElementById('url');
-            const googleMapsUrlInput = document.getElementById('google_maps_url');
+            const urlLinkContainer = document.getElementById('url_link_container'); // New container ID
+            const googleMapsUrlContainer = document.getElementById('google_maps_url_link_container'); // New container ID
             const websiteInput = document.getElementById('website');
-            const websiteUrlInput = document.getElementById('website_url');
+            const websiteUrlContainer = document.getElementById('website_url_link_container'); // New container ID
             const shopSizeSelect = document.getElementById('shopSize');
             const facebookInput = document.getElementById('facebook');
             const facebookUrlInput = document.getElementById('facebook_url');
             const lineInput = document.getElementById('line');
-            const lineUrlInput = document.getElementById('line_url');
+            const lineUrlContainer = document.getElementById('line_url_link_container'); // New container ID
             const phoneHashInput = document.getElementById('phoneHash');
+            const currentDistributorInput = document.getElementById('currentDistributor'); // NEW
+            const distributorDatalist = document.getElementById('distributorList'); // NEW
 
 
             // Filter Elements
@@ -480,18 +454,9 @@
             const filterSalesPipeline = document.getElementById('filterSalesPipeline');
             const filterDispensaryAddress = document.getElementById('filterDispensaryAddress');
             const filterAdditional = document.getElementById('filterAdditional');
+            const reloadDataBtn = document.getElementById('reloadDataBtn'); // NEW
 
-            // --- Stage 2: Assignment Tab Elements ---
-            const assignmentSection = document.getElementById('assignmentSection');
-            const filterAssignProvince = document.getElementById('filterAssignProvince');
-            const searchAssignName = document.getElementById('searchAssignName');
-            const assignmentTableContainer = document.getElementById('assignmentTableContainer');
-            const assignmentPaginationControls = document.getElementById('assignmentPaginationControls');
-            const assignToMember = document.getElementById('assignToMember');
-            const assignSelectedButton = document.getElementById('assignSelectedButton');
-            const assignmentNotes = document.getElementById('assignmentNotes');
-            let currentAssignmentPage = 1;
-            // --- End Stage 2 ---
+            // --- Assignment Tab Elements Removed ---
 
             let dispensariesData = [];
             let setupData = {};
@@ -499,7 +464,7 @@
             // Fetch initial data
             fetchAllDispensaryData();
             fetchSetupData();
-            fetchUnassignedData();
+            // fetchUnassignedData(); // Removed initial fetch for Rep view
 
             // --- Event Listeners ---
 
@@ -535,23 +500,10 @@
             filterAssignedMember.addEventListener('change', populateDispensarySelect);
             filterSalesPipeline.addEventListener('change', populateDispensarySelect);
 
-            // Assignment Tab Listeners
-            if (filterAssignProvince) filterAssignProvince.addEventListener('change', () => fetchUnassignedData(1));
-            if (searchAssignName) searchAssignName.addEventListener('input', debounce(() => fetchUnassignedData(1), 500));
-            if (assignmentPaginationControls) {
-                assignmentPaginationControls.addEventListener('click', function(event) {
-                    if (event.target.matches('.assign-page-btn')) {
-                         event.preventDefault();
-                         const page = parseInt(event.target.getAttribute('data-page'), 10);
-                         if (!isNaN(page)) {
-                             fetchUnassignedData(page);
-                         }
-                    }
-                });
-            }
-            if (assignSelectedButton) {
-                assignSelectedButton.addEventListener('click', handleAssignButtonClick);
-            }
+            // Reload All button listener
+            if (reloadDataBtn) reloadDataBtn.addEventListener('click', reloadAllData); // NEW
+
+            // --- Assignment Tab Listeners Removed ---
 
             // Main form submission
             form.addEventListener('submit', function(e) {
@@ -593,69 +545,79 @@
 
             function fetchFreshData(showLoadingIndicator = true) {
                 if(showLoadingIndicator) showLoading('Fetching dispensary data...');
-                const scriptId = `jsonp_fetchAll_${Date.now()}`;
-                let script = document.getElementById(scriptId);
-                if(script) script.remove();
-                script = document.createElement('script');
-                script.id = scriptId;
-                script.src = `${SCRIPT_URL}?action=getAllDispensaryData&callback=handleDispensaryData`;
-                script.onerror = () => {
-                    console.error("JSONP request failed for getAllDispensaryData");
-                    hideLoading();
-                    showMessage(errorMessageElement, 'Failed to load dispensary list.');
-                    if(script.parentNode) script.remove();
-                };
-                document.body.appendChild(script);
-                setTimeout(() => { if(script.parentNode) script.remove(); }, 8000);
+                fetch(`${SCRIPT_URL}?action=getAllDispensaryData`) // No callback needed
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        // Directly call the handler logic
+                        hideLoading();
+                        if (data && data.success) {
+                            dispensariesData = data.data;
+                            cacheData('dispensaryData', data.data);
+                            populateDispensarySelect();
+                        } else {
+                            console.error('Error fetching dispensary data:', data ? data.message : 'Invalid response');
+                            showMessage(errorMessageElement, 'Error fetching dispensary list: ' + (data ? data.message : 'Invalid response'));
+                        }
+                    })
+                    .catch(error => {
+                        hideLoading();
+                        console.error('Fetch Error for getAllDispensaryData:', error);
+                        showMessage(errorMessageElement, 'Network or server error fetching dispensary list: ' + error);
+                    });
             }
 
             function fetchSetupData() {
-                showLoading('Fetching setup data...');
-                const scriptId = `jsonp_fetchSetup_${Date.now()}`;
-                let script = document.getElementById(scriptId);
-                if(script) script.remove();
-                script = document.createElement('script');
-                script.id = scriptId;
-                script.src = `${SCRIPT_URL}?action=getSetupData&callback=handleSetupData`;
-                 script.onerror = () => {
-                    console.error("JSONP request failed for getSetupData");
-                    hideLoading();
-                    showMessage(errorMessageElement, 'Failed to load setup data.');
-                     if(script.parentNode) script.remove();
-                };
-                document.body.appendChild(script);
-                setTimeout(() => { if(script.parentNode) script.remove(); }, 8000);
-            }
-
-            // --- Global Callbacks ---
-
-            window.handleDispensaryData = function(response) {
-                hideLoading();
-                if (response && response.success) {
-                    dispensariesData = response.data;
-                    cacheData('dispensaryData', response.data);
-                    populateDispensarySelect();
-                } else {
-                    console.error('Error fetching dispensary data:', response ? response.message : 'Invalid response');
-                    showMessage(errorMessageElement, 'Error fetching dispensary data: ' + (response ? response.message : 'Invalid response'));
-                }
-            }
-
-            window.handleSetupData = function(response) {
-                 hideLoading();
-                if (response && response.success) {
-                    setupData = response.data;
+                const cachedSetup = getCachedData('setupData'); // Check cache first
+                if (cachedSetup) {
+                    // Directly handle cached data
+                    setupData = cachedSetup;
                     populateAssignedMemberSelect();
                     populateFilterAssignedMemberSelect();
-                    populateAssignToMemberSelect();
                     populateSalesPipelineSelect();
                     populateFilterSalesPipelineSelect();
-                    populateAssignProvinceFilter(); // Populate Province Filter
-                } else {
-                    console.error('Error fetching setup data:', response ? response.message : 'Invalid response');
-                    showMessage(errorMessageElement, 'Error fetching setup data: ' + (response ? response.message : 'Invalid response'));
+                    populateDistributorDatalist(); // NEW: Populate distributor list
+                    // populateAssignProvinceFilter(); // Not needed in Rep view
+                    console.log("Using cached setup data.");
+                    return; // Don't fetch if cache is valid
                 }
+                showLoading('Fetching setup data...');
+                fetch(`${SCRIPT_URL}?action=getSetupData`) // No callback needed
+                    .then(response => {
+                         if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        // Directly call the handler logic
+                        hideLoading();
+                        if (data && data.success) {
+                            setupData = data.data;
+                            cacheData('setupData', data.data); // Cache the fetched setup data
+                            populateAssignedMemberSelect();
+                            populateFilterAssignedMemberSelect();
+                            populateSalesPipelineSelect();
+                            populateFilterSalesPipelineSelect();
+                            populateDistributorDatalist(); // NEW: Populate distributor list
+                            // populateAssignProvinceFilter(); // Not needed in Rep view
+                        } else {
+                            console.error('Error fetching setup data:', data ? data.message : 'Invalid response');
+                            showMessage(errorMessageElement, 'Error fetching setup data: ' + (data ? data.message : 'Invalid response'));
+                        }
+                    })
+                    .catch(error => {
+                        hideLoading();
+                        console.error('Fetch Error for getSetupData:', error);
+                        showMessage(errorMessageElement, 'Network or server error fetching setup data: ' + error);
+                    });
             }
+
+            // --- Global Callbacks Removed (logic moved into fetch .then blocks) ---
 
              // --- UI Population Functions ---
 
@@ -724,21 +686,28 @@
                     assignedMember.value = dispensary['Assigned Member'] || '';
                     salesPipeline.value = dispensary['Sales Pipeline'] || '';
                     if (shopSizeSelect) shopSizeSelect.value = dispensary['Shop Size'] || '';
+                    if (currentDistributorInput) currentDistributorInput.value = dispensary['Current Distributor'] || ''; // NEW
 
                     // Populate new fields
                     if(latitudeInput) latitudeInput.value = dispensary['Latitude'] || '';
                     if(longitudeInput) longitudeInput.value = dispensary['Longitude'] || '';
                     if(provinceInput) provinceInput.value = dispensary['Province'] || '';
-                    if(originalNameDisplay) originalNameDisplay.textContent = dispensary['name'] || '(Not set)'; // Display original name (Col G)
-                    if(urlInput) urlInput.value = dispensary['url'] || '';
-                    if(googleMapsUrlInput) googleMapsUrlInput.value = dispensary['google_maps_url'] || '';
+                    if(originalNameDisplay) originalNameDisplay.textContent = dispensary['name'] || '(Not set)'; // Display original name (Col H)
+                    // if(urlInput) urlInput.value = dispensary['url'] || ''; // Removed
+                    populateLink(urlLinkContainer, dispensary.url, dispensary.url); // Populate link container
+                    // if(googleMapsUrlInput) googleMapsUrlInput.value = dispensary['google_maps_url'] || ''; // Removed
                     if(websiteInput) websiteInput.value = dispensary['website'] || '';
-                    if(websiteUrlInput) websiteUrlInput.value = dispensary['website_url'] || '';
+                    // if(websiteUrlInput) websiteUrlInput.value = dispensary['website_url'] || ''; // Removed
                     if(facebookInput) facebookInput.value = dispensary['facebook'] || '';
                     if(facebookUrlInput) facebookUrlInput.value = dispensary['facebook_url'] || '';
                     if(lineInput) lineInput.value = dispensary['line'] || '';
-                    if(lineUrlInput) lineUrlInput.value = dispensary['line_url'] || '';
-                    if(phoneHashInput) phoneHashInput.value = dispensary['phone#'] || ''; // Populate phone# field
+                    // if(lineUrlInput) lineUrlInput.value = dispensary['line_url'] || ''; // Removed
+                    if(phoneHashInput) phoneHashInput.value = dispensary['phone#'] || ''; // This corresponds to Col O in new structure
+
+                    // Populate Link Containers
+                    populateLink(googleMapsUrlContainer, dispensary.google_maps_url, 'Open Google Maps');
+                    populateLink(websiteUrlContainer, dispensary.website_url, dispensary.website_url); // Use URL as text if available
+                    populateLink(lineUrlContainer, dispensary.line_url, 'Open Line URL');
 
                     // Populate QR code/image links
                     qrCodeContent.innerHTML = '';
@@ -769,16 +738,39 @@
                 if(longitudeInput) longitudeInput.value = '';
                 if(provinceInput) provinceInput.value = '';
                 if(originalNameDisplay) originalNameDisplay.textContent = '';
-                if(urlInput) urlInput.value = '';
-                if(googleMapsUrlInput) googleMapsUrlInput.value = '';
+                // if(urlInput) urlInput.value = ''; // Removed
+                if (urlLinkContainer) urlLinkContainer.innerHTML = ''; // Clear link container
+                // if(googleMapsUrlInput) googleMapsUrlInput.value = ''; // Removed
                 if(websiteInput) websiteInput.value = '';
-                if(websiteUrlInput) websiteUrlInput.value = '';
+                // if(websiteUrlInput) websiteUrlInput.value = ''; // Removed
                 if(shopSizeSelect) shopSizeSelect.value = '';
                 if(facebookInput) facebookInput.value = '';
                 if(facebookUrlInput) facebookUrlInput.value = '';
                 if(lineInput) lineInput.value = '';
-                if(lineUrlInput) lineUrlInput.value = '';
+                // if(lineUrlInput) lineUrlInput.value = ''; // Removed
                 if(phoneHashInput) phoneHashInput.value = '';
+// Clear link containers
+if (googleMapsUrlContainer) googleMapsUrlContainer.innerHTML = '';
+if (websiteUrlContainer) websiteUrlContainer.innerHTML = '';
+if (lineUrlContainer) lineUrlContainer.innerHTML = '';
+if (currentDistributorInput) currentDistributorInput.value = ''; // NEW
+                if (lineUrlContainer) lineUrlContainer.innerHTML = '';
+            }
+
+            // Helper function to populate link containers
+            function populateLink(container, url, linkText) {
+                if (!container) return;
+                container.innerHTML = ''; // Clear previous
+                if (url) {
+                    const link = document.createElement('a');
+                    link.href = escapeHtml(url);
+                    link.textContent = escapeHtml(linkText || url); // Use URL as text if no specific text provided
+                    link.target = '_blank'; // Open in new tab
+                    link.rel = 'noopener noreferrer';
+                    container.appendChild(link);
+                } else {
+                    container.innerHTML = '<span class="text-muted">N/A</span>'; // Indicate if no URL
+                }
             }
 
             // --- Messaging Functions ---
@@ -829,23 +821,7 @@
                 }
             }
 
-            function populateAssignToMemberSelect() {
-                if (!assignToMember) return;
-                assignToMember.innerHTML = '<option value="">Select Member</option>';
-                if (setupData && setupData.members) {
-                    const membersList = Array.isArray(setupData.members) ? setupData.members : (setupData.memberEmails ? setupData.memberEmails.map(m => m.name) : []);
-                    membersList.forEach(member => {
-                         if (member) {
-                            const option = document.createElement('option');
-                            option.value = member;
-                            option.textContent = member;
-                            assignToMember.appendChild(option);
-                         }
-                    });
-                } else {
-                     console.warn("Setup data for members not found or in unexpected format for assignment dropdown.");
-                }
-            }
+            // Removed populateAssignToMemberSelect for Rep view
 
             function populateFilterAssignedMemberSelect() {
                 filterAssignedMember.innerHTML = '<option value="">All Members</option>';
@@ -859,23 +835,7 @@
                 }
             }
 
-            function populateAssignProvinceFilter() {
-                if (!filterAssignProvince) return;
-                filterAssignProvince.innerHTML = '<option value="">All Provinces</option>';
-                if (setupData && setupData.unassignedProvinces && Array.isArray(setupData.unassignedProvinces)) {
-                    setupData.unassignedProvinces.forEach(province => {
-                         if (province) {
-                            const option = document.createElement('option');
-                            option.value = province;
-                            option.textContent = province;
-                            filterAssignProvince.appendChild(option);
-                         }
-                    });
-                     console.log("Populated province filter with:", setupData.unassignedProvinces);
-                } else {
-                     console.warn("Setup data for unassigned provinces not found or not an array.");
-                }
-            }
+            // Removed populateAssignProvinceFilter for Rep view
 
             function populateSalesPipelineSelect() {
                 salesPipeline.innerHTML = '<option value="">Select pipeline stage</option>';
@@ -899,6 +859,29 @@
                         filterSalesPipeline.appendChild(option);
                     });
                 }
+            }
+
+            // NEW: Populate Distributor Datalist
+            function populateDistributorDatalist() {
+                if (!distributorDatalist) return;
+                distributorDatalist.innerHTML = ''; // Clear existing options
+                if (setupData && setupData.distributors && Array.isArray(setupData.distributors)) {
+                    setupData.distributors.forEach(distributor => {
+                        const option = document.createElement('option');
+                        option.value = distributor;
+                        distributorDatalist.appendChild(option);
+                    });
+                }
+            }
+
+            // NEW: Function to reload all data
+            function reloadAllData() {
+                console.log("Reloading all data for Rep view...");
+                localStorage.removeItem('setupData'); // Clear setup cache
+                localStorage.removeItem('dispensaryData'); // Clear dispensary cache
+                // Re-run initial fetches
+                fetchAllDispensaryData(); // Fetch dispensaries (will show loading)
+                fetchSetupData(); // Fetch setup data (will show loading if not cached)
             }
 
             // --- Form Submission Functions ---
@@ -959,201 +942,26 @@
                         .then(() => sendData())
                         .catch(() => hideLoading());
                 } else {
+            // Helper function to populate link containers
+            function populateLink(container, url, linkText) {
+                if (!container) return;
+                container.innerHTML = ''; // Clear previous
+                if (url) {
+                    const link = document.createElement('a');
+                    link.href = escapeHtml(url);
+                    link.textContent = escapeHtml(linkText || url); // Use URL as text if no specific text provided
+                    link.target = '_blank'; // Open in new tab
+                    link.rel = 'noopener noreferrer';
+                    container.appendChild(link);
+                } else {
+                    container.innerHTML = '<span class="text-muted">N/A</span>'; // Indicate if no URL
+                }
+            }
                     sendData();
                 }
             }
 
-
-            // --- Stage 2: Assignment Tab Functions ---
-
-            function fetchUnassignedData(page = 1) {
-                if (!filterAssignProvince || !searchAssignName) {
-                    console.error("Assignment filter elements not found.");
-                    return;
-                }
-                showLoading('Fetching unassigned shops...');
-                currentAssignmentPage = page;
-                const province = filterAssignProvince.value;
-                const name = searchAssignName.value;
-                const scriptId = `jsonp_fetchUnassignedData_${Date.now()}`;
-                let script = document.getElementById(scriptId);
-                if (script) script.remove();
-
-                script = document.createElement('script');
-                script.id = scriptId;
-                script.src = `${SCRIPT_URL}?action=getUnassignedShops&province=${encodeURIComponent(province)}&name=${encodeURIComponent(name)}&page=${page}&callback=handleUnassignedData`;
-
-                script.onerror = () => {
-                    console.error("JSONP request failed for:", script.src);
-                     hideLoading();
-                     showMessage(errorMessageElement, 'Failed to load unassigned shops data. Check network or script URL.');
-                     if(script.parentNode) script.remove();
-                 };
-
-                 document.body.appendChild(script);
-
-                 setTimeout(() => {
-                     const scriptElement = document.getElementById(scriptId);
-                     if (scriptElement && scriptElement.parentNode) {
-                         scriptElement.parentNode.removeChild(scriptElement);
-                     }
-                 }, 8000);
-            }
-
-            // Global callback for JSONP
-            window.handleUnassignedData = function(response) {
-                hideLoading();
-
-                if (response && response.success) {
-                    if (assignmentTableContainer) populateAssignmentTable(response.data);
-                    if (assignmentPaginationControls) populateAssignmentPagination(response.currentPage, response.totalPages);
-                } else {
-                    const errorMsg = response ? response.message : 'Invalid response format';
-                    console.error('Error fetching unassigned shops:', errorMsg);
-                    if (assignmentTableContainer) assignmentTableContainer.innerHTML = `<p class="text-danger">Error loading data: ${escapeHtml(errorMsg)}</p>`;
-                    if (assignmentPaginationControls) assignmentPaginationControls.innerHTML = '';
-                    showMessage(errorMessageElement, 'Error fetching unassigned shops: ' + escapeHtml(errorMsg));
-                }
-            }
-
-            function populateAssignmentTable(data) {
-                 if (!assignmentTableContainer) return;
-
-                if (!data || data.length === 0) {
-                    assignmentTableContainer.innerHTML = '<p>No unassigned shops found matching the criteria.</p>';
-                    return;
-                }
-
-                let tableHTML = '<table class="table table-striped table-bordered table-sm"><thead><tr>';
-                tableHTML += '<th><input type="checkbox" id="selectAllAssignCheckbox" title="Select/Deselect All"></th>';
-                // Updated headers as per user request
-                tableHTML += '<th>Name</th><th>Google Maps</th><th>Line</th><th>Line URL</th><th>Phone#</th><th>Website</th><th>Website URL</th>';
-                tableHTML += '</tr></thead><tbody>';
-
-                data.forEach(shop => {
-                    const shopId = shop.name;
-                    if (!shopId) {
-                        console.warn("Skipping shop with missing name:", shop);
-                        return;
-                    }
-                    tableHTML += `<tr>`;
-                    tableHTML += `<td><input type="checkbox" class="assign-checkbox" data-shop-id="${escapeHtml(shopId)}"></td>`;
-                    tableHTML += `<td>${escapeHtml(shop.name)}</td>`;
-                    // Google Maps Link
-                    tableHTML += `<td>${shop.google_maps_url ? `<a href="${escapeHtml(shop.google_maps_url)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(shop.google_maps_url)}">Map</a>` : ''}</td>`;
-                    // Line ID
-                    tableHTML += `<td>${escapeHtml(shop.line)}</td>`;
-                    // Line URL Link
-                    tableHTML += `<td>${shop.line_url ? `<a href="${escapeHtml(shop.line_url)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(shop.line_url)}">Link</a>` : ''}</td>`;
-                    // Phone Number (using 'phone' key from backend which corresponds to 'phone#' column)
-                    tableHTML += `<td>${escapeHtml(shop.phone)}</td>`;
-                    // Website Name/Text
-                    tableHTML += `<td>${escapeHtml(shop.website)}</td>`;
-                    // Website URL Link
-                    tableHTML += `<td>${shop.website_url ? `<a href="${escapeHtml(shop.website_url)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(shop.website_url)}">Link</a>` : ''}</td>`;
-                    // Status column removed
-                    tableHTML += `</tr>`;
-                });
-
-                tableHTML += '</tbody></table>';
-                assignmentTableContainer.innerHTML = tableHTML;
-
-                // Add event listener for "Select All" checkbox AFTER table is in DOM
-                const selectAllCheckbox = document.getElementById('selectAllAssignCheckbox');
-                if (selectAllCheckbox) {
-                    selectAllCheckbox.replaceWith(selectAllCheckbox.cloneNode(true)); // Re-attach listener safely
-                    document.getElementById('selectAllAssignCheckbox').addEventListener('change', function() {
-                        document.querySelectorAll('.assign-checkbox').forEach(checkbox => {
-                            checkbox.checked = this.checked;
-                        });
-                    });
-                } else {
-                     console.error("Could not find selectAllAssignCheckbox element after table population");
-                }
-            }
-
-             function populateAssignmentPagination(currentPage, totalPages) {
-                 if (!assignmentPaginationControls) return;
-                let paginationHTML = '';
-                 currentPage = parseInt(currentPage, 10);
-                 totalPages = parseInt(totalPages, 10);
-
-                if (totalPages > 0) {
-                     paginationHTML += `<span class="mr-2">Page ${currentPage} of ${totalPages}</span>`;
-                    // Previous Button
-                    if (currentPage > 1) {
-                        paginationHTML += `<button type="button" class="btn btn-sm btn-outline-secondary mr-1 assign-page-btn" data-page="${currentPage - 1}">&laquo; Prev</button>`;
-                    } else {
-                         paginationHTML += `<button type="button" class="btn btn-sm btn-outline-secondary mr-1" disabled>&laquo; Prev</button>`;
-                    }
-                    // Next Button
-                    if (currentPage < totalPages) {
-                        paginationHTML += `<button type="button" class="btn btn-sm btn-outline-secondary assign-page-btn" data-page="${currentPage + 1}">Next &raquo;</button>`;
-                    } else {
-                         paginationHTML += `<button type="button" class="btn btn-sm btn-outline-secondary" disabled>Next &raquo;</button>`;
-                    }
-                } else {
-                     paginationHTML = '<span>No results found</span>';
-                }
-                assignmentPaginationControls.innerHTML = paginationHTML;
-            }
-
-            // --- Stage 2: Handler for Assign Button Click ---
-            function handleAssignButtonClick() {
-                const selectedMember = assignToMember.value;
-                const notes = assignmentNotes.value.trim();
-                const checkedCheckboxes = document.querySelectorAll('.assign-checkbox:checked');
-                const shopIdsToAssign = [];
-
-                checkedCheckboxes.forEach(checkbox => {
-                    shopIdsToAssign.push(checkbox.getAttribute('data-shop-id'));
-                });
-
-                // Validation
-                if (shopIdsToAssign.length === 0) {
-                    showMessage(errorMessageElement, 'Please select at least one shop to assign.');
-                    return;
-                }
-                if (!selectedMember) {
-                    showMessage(errorMessageElement, 'Please select a member to assign the shops to.');
-                    return;
-                }
-
-                // Confirmation (Optional but recommended)
-                if (!confirm(`Assign ${shopIdsToAssign.length} shop(s) to ${selectedMember}?`)) {
-                    return;
-                }
-
-                showLoading('Assigning shops...'); // Use enhanced loading
-
-                const payload = new FormData();
-                payload.append('action', 'assignShops');
-                payload.append('shopIds', JSON.stringify(shopIdsToAssign));
-                payload.append('assignedMember', selectedMember);
-                payload.append('assignmentNotes', notes);
-
-                fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    body: payload
-                })
-                .then(response => response.json())
-                .then(data => {
-                    hideLoading(); // Hide loading
-                    if (data.success) {
-                        showMessage(sentMessageElement, data.message || 'Shops assigned successfully!');
-                        assignmentNotes.value = '';
-                        fetchUnassignedData(currentAssignmentPage); // Refresh list
-                    } else {
-                        showMessage(errorMessageElement, data.message || 'An error occurred during assignment.');
-                    }
-                })
-                .catch(error => {
-                    hideLoading();
-                    console.error('Error assigning shops:', error);
-                    showMessage(errorMessageElement, 'Network or server error during assignment: ' + error);
-                });
-            }
-            // --- End Stage 2 ---
+            // --- Assignment Tab Functions Removed ---
 
 
         });
