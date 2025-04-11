@@ -229,9 +229,10 @@
                         <input type="text" id="dispensaryAddress" class="form-control" name="Dispensary Address" required> <!-- Name matches header -->
                     </div>
                      <!-- New Fields Added Here -->
-                    <div class="form-row">
-                      <div class="form-group col-md-6"><label for="latitude">Latitude</label><input type="text" id="latitude" name="Latitude" class="form-control"></div>
-                      <div class="form-group col-md-6"><label for="longitude">Longitude</label><input type="text" id="longitude" name="Longitude" class="form-control"></div>
+                    <div class="form-row align-items-end">
+                      <div class="form-group col-md-5"><label for="latitude">Latitude</label><input type="text" id="latitude" name="Latitude" class="form-control"></div>
+                      <div class="form-group col-md-5"><label for="longitude">Longitude</label><input type="text" id="longitude" name="Longitude" class="form-control"></div>
+                      <div class="form-group col-md-2"><button type="button" id="getLocationBtn" class="btn btn-sm btn-secondary btn-block" title="Get Current GPS Location"><i class="fas fa-map-marker-alt"></i> Get Location</button></div>
                     </div>
                     <div class="form-group"><label for="province">Province</label><input type="text" id="province" name="Province" class="form-control"></div>
                     <div class="form-group"><label>Original Name (from Unassigned)</label><p id="originalNameDisplay" class="form-control-static font-italic text-muted"></p></div> <!-- Display only -->
@@ -432,6 +433,7 @@
             // New CRM Fields
             const latitudeInput = document.getElementById('latitude');
             const longitudeInput = document.getElementById('longitude');
+            const getLocationBtn = document.getElementById('getLocationBtn'); // NEW: Get Location button
             const provinceInput = document.getElementById('province');
             const originalNameDisplay = document.getElementById('originalNameDisplay');
             const urlLinkContainer = document.getElementById('url_link_container'); // New container ID
@@ -502,6 +504,11 @@
 
             // Reload All button listener
             if (reloadDataBtn) reloadDataBtn.addEventListener('click', reloadAllData); // NEW
+
+            // Get Location button listener
+            if (getLocationBtn) {
+                getLocationBtn.addEventListener('click', getCurrentLocation);
+            }
 
             // --- Assignment Tab Listeners Removed ---
 
@@ -959,6 +966,57 @@ if (currentDistributorInput) currentDistributorInput.value = ''; // NEW
             }
                     sendData();
                 }
+            }
+
+            // --- Geolocation Function ---
+            function getCurrentLocation() {
+                if (!navigator.geolocation) {
+                    showMessage(errorMessageElement, 'Geolocation is not supported by your browser.');
+                    return;
+                }
+
+                showLoading('Getting location...');
+
+                function success(position) {
+                    const latitude  = position.coords.latitude;
+                    const longitude = position.coords.longitude;
+
+                    if (latitudeInput) latitudeInput.value = latitude.toFixed(6); // Limit precision
+                    if (longitudeInput) longitudeInput.value = longitude.toFixed(6); // Limit precision
+
+                    hideLoading();
+                    showMessage(sentMessageElement, 'Location retrieved successfully.');
+                }
+
+                function error(err) {
+                    hideLoading();
+                    let message = 'Unable to retrieve your location.';
+                    switch(err.code) {
+                        case err.PERMISSION_DENIED:
+                            message = "Geolocation request denied. Please allow location access in your browser settings.";
+                            break;
+                        case err.POSITION_UNAVAILABLE:
+                            message = "Location information is unavailable.";
+                            break;
+                        case err.TIMEOUT:
+                            message = "The request to get user location timed out.";
+                            break;
+                        case err.UNKNOWN_ERROR:
+                            message = "An unknown error occurred while getting location.";
+                            break;
+                    }
+                    console.warn(`Geolocation error (${err.code}): ${err.message}`);
+                    showMessage(errorMessageElement, message);
+                }
+
+                // Options: enableHighAccuracy for better results on mobile, timeout
+                const options = {
+                    enableHighAccuracy: true,
+                    timeout: 10000, // 10 seconds
+                    maximumAge: 0 // Don't use cached location
+                };
+
+                navigator.geolocation.getCurrentPosition(success, error, options);
             }
 
             // --- Assignment Tab Functions Removed ---
