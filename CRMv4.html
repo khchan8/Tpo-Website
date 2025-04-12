@@ -217,7 +217,11 @@
     <div class="container">
          <div class="d-flex justify-content-between align-items-center mb-4">
              <h1 class="text-center mb-0">Tiny CRM</h1>
-             <button class="btn btn-sm btn-outline-primary" id="reloadDataBtn" title="Reload All Data"><i class="fas fa-sync-alt"></i> Reload All</button>
+             <div>
+                 <!-- Initially hidden, shown by JS if user is manager -->
+                 <a href="?" id="managerViewLink" class="btn btn-sm btn-outline-secondary mr-2" title="Switch to Manager View" style="display: none;"><i class="fas fa-user-shield"></i> Manager View</a>
+                 <button class="btn btn-sm btn-outline-primary" id="reloadDataBtn" title="Reload All Data"><i class="fas fa-sync-alt"></i> Reload All</button>
+             </div>
          </div>
 
         <!-- Assignment Section Removed -->
@@ -468,20 +472,93 @@
     <!-- Leaflet Fullscreen JS -->
     <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/Leaflet.fullscreen.min.js'></script>
     <script>
-        // Add JavaScript to toggle the collapsible sections
-        document.querySelectorAll('.collapsible-header').forEach(header => {
-            header.addEventListener('click', () => {
-                const section = header.parentElement;
-                section.classList.toggle('active');
-            });
-        });
+        // --- Authentication Globals ---
+        let authToken = null;
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx3kzh2sNsO6o9QU0t2O5aFlD_wqp6EvddEoQxavFktVV098Xw4I205Y85jB3Bp75TR/exec'; // Replace with your actual Script URL
 
-        // Set initial state: Keep Filter section closed initially
-        document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('.collapsible-section:not(#filterSection)').forEach(section => {
-                section.classList.add('active');
+        // --- Authentication Check (Runs First) ---
+        function checkAuthentication() {
+            console.log("Checking authentication...");
+            const urlParams = new URLSearchParams(window.location.search);
+            let tokenFromUrl = urlParams.get('token');
+            let tokenFromStorage = localStorage.getItem('tpoCrmToken');
+
+            if (tokenFromUrl) {
+                console.log("Token found in URL.");
+                authToken = tokenFromUrl;
+                localStorage.setItem('tpoCrmToken', authToken);
+                // Clean the URL
+                window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
+            } else if (tokenFromStorage) {
+                console.log("Token found in localStorage.");
+                authToken = tokenFromStorage;
+            } else {
+                console.log("No token found. Redirecting to login.");
+                redirectToLogin();
+                return; // Stop execution
+            }
+
+            // Validate the token
+            showLoading("Validating session...");
+            fetch(`${SCRIPT_URL}?action=validateToken&token=${authToken}`)
+                .then(response => response.json())
+                .then(result => {
+                    hideLoading();
+                    if (result && result.valid) {
+                        console.log(`Token validated successfully for user: ${result.email}, Is Manager: ${result.isManager}`);
+                        // Store user info if needed (e.g., for UI customization)
+                        localStorage.setItem('tpoCrmUserEmail', result.email);
+                        localStorage.setItem('tpoCrmIsManager', result.isManager);
+                        // Proceed to initialize the main application
+                        initializeApp();
+                    } else {
+                        console.log("Token validation failed or token expired. Redirecting to login.");
+                        localStorage.removeItem('tpoCrmToken');
+                        localStorage.removeItem('tpoCrmUserEmail');
+                        localStorage.removeItem('tpoCrmIsManager');
+                        authToken = null;
+                        redirectToLogin();
+                    }
+                })
+                .catch(error => {
+                    hideLoading();
+                    console.error('Error validating token:', error);
+                    showMessage(document.querySelector('.error-message'), 'Error validating session. Please try logging in again.');
+                    // Optionally redirect to login on validation error too
+                    // redirectToLogin();
+                });
+        }
+
+        function redirectToLogin() {
+            // Redirect to the base URL, doGet will handle serving the Login page
+            window.top.location.href = SCRIPT_URL;
+        }
+
+        // --- Main Application Initialization ---
+        function initializeApp() {
+            console.log("Authentication successful. Initializing application...");
+
+            // Get manager view link element
+            const managerViewLink = document.getElementById('managerViewLink');
+
+            // Show Manager View link if applicable
+            const isManager = localStorage.getItem('tpoCrmIsManager') === 'true';
+            if (isManager && managerViewLink) {
+                managerViewLink.style.display = 'inline-block'; // Show the link
+            }
+
+            // Add JavaScript to toggle the collapsible sections
+            document.querySelectorAll('.collapsible-header').forEach(header => {
+                header.addEventListener('click', () => {
+                    const section = header.parentElement;
+                    section.classList.toggle('active');
+                });
             });
-        });
+
+            // Set initial state: Keep Filter section closed initially
+            document.querySelectorAll('.collapsible-section:not(#filterSection)').forEach(section => {
+                 section.classList.add('active');
+            });
 
 
         // Utility functions for caching
@@ -524,8 +601,7 @@
                  .replace(/'/g, '&#039;');
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxIz4dCH9lszZxIhPBTYRxtBtyyFWAHuT7tduwahavVVa-6sAkB5iADFj_7HsMcclbG/exec'; // Replace with your actual Script URL
+            // --- Original DOMContentLoaded Logic Moved Here ---
             const selectDispensary = document.getElementById('selectDispensary');
             const newDispensaryNameGroup = document.getElementById('newDispensaryNameGroup');
             const form = document.getElementById('dispensaryForm');
@@ -675,7 +751,8 @@
 
             function fetchFreshData(showLoadingIndicator = true) {
                 if(showLoadingIndicator) showLoading('Fetching dispensary data...');
-                fetch(`${SCRIPT_URL}?action=getAllDispensaryData`) // No callback needed
+                // Add token to API call
+                fetch(`${SCRIPT_URL}?action=getAllDispensaryData&token=${authToken}`)
                     .then(response => {
                         if (!response.ok) {
                             throw new Error(`HTTP error! status: ${response.status}`);
@@ -716,7 +793,8 @@
                     return; // Don't fetch if cache is valid
                 }
                 showLoading('Fetching setup data...');
-                fetch(`${SCRIPT_URL}?action=getSetupData`) // No callback needed
+                // Add token to API call
+                fetch(`${SCRIPT_URL}?action=getSetupData&token=${authToken}`)
                     .then(response => {
                          if (!response.ok) {
                             throw new Error(`HTTP error! status: ${response.status}`);
@@ -1052,9 +1130,19 @@
                 const files = fileInput.files;
 
                 const sendData = () => {
+                    // Add token to FormData before sending
+                    if (authToken) {
+                        formData.append('token', authToken);
+                    } else {
+                         showMessage(errorMessageElement, 'Authentication token missing. Please log in again.');
+                         hideLoading();
+                         redirectToLogin(); // Redirect if token is missing
+                         return;
+                    }
+
                     fetch(SCRIPT_URL, {
                         method: 'POST',
-                        body: formData // Send FormData directly
+                        body: formData // Send FormData directly (token is now included)
                     })
                     .then(response => response.json())
                     .then(data => {
@@ -1303,8 +1391,13 @@
 
 
             // --- Assignment Tab Functions Removed ---
+    // --- End Original DOMContentLoaded Logic ---
+} // End of initializeApp function
 
+// --- Start Authentication Check on Page Load ---
+document.addEventListener('DOMContentLoaded', checkAuthentication);
 
+</script>
         });
     </script>
 </body>

@@ -320,7 +320,10 @@
     <div class="container-fluid">
         <div class="d-flex justify-content-between align-items-center mb-4">
              <h1 class="text-center mb-0">Tiny CRM - Manager Tools</h1> <!-- Title Corrected -->
-             <button class="btn btn-sm btn-outline-primary" id="reloadDataBtn" title="Reload All Data"><i class="fas fa-sync-alt"></i> Reload All</button>
+             <div>
+                 <a href="?view=rep" class="btn btn-sm btn-outline-secondary mr-2" title="Switch to Rep View"><i class="fas fa-user"></i> Rep View</a>
+                 <button class="btn btn-sm btn-outline-primary" id="reloadDataBtn" title="Reload All Data"><i class="fas fa-sync-alt"></i> Reload All</button>
+             </div>
         </div>
 
             <!-- PRD 5.1: New Assignment Section -->
@@ -490,52 +493,118 @@
     <!-- Leaflet Fullscreen JS -->
     <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/Leaflet.fullscreen.min.js'></script>
     <script>
-        // Add JavaScript to toggle the collapsible sections
-        document.querySelectorAll('.collapsible-header').forEach(header => {
-            header.addEventListener('click', (event) => {
-                const section = header.parentElement;
-                const wasActive = section.classList.contains('active');
-                section.classList.toggle('active');
-                // If expanding the assignment section, invalidate map size AFTER animation might finish
-                if (section.id === 'assignmentSection' && !wasActive && assignMap) {
-                     setTimeout(() => {
-                         if (assignMap) { // Check if map still exists
-                            assignMap.invalidateSize();
-                            console.log("Invalidated assignMap size after expand."); // DEBUG
-                         }
-                     }, 350); // Delay slightly more than transition (0.3s)
-                }
-                // Handle map invalidation when section becomes visible
-                if (section.id === 'assignmentSection' && assignMap) {
-                    // Invalidate immediately if section is active
-                    if (section.classList.contains('active')) {
-                        assignMap.invalidateSize();
+        // --- Authentication Globals ---
+        let authToken = null;
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx3kzh2sNsO6o9QU0t2O5aFlD_wqp6EvddEoQxavFktVV098Xw4I205Y85jB3Bp75TR/exec'; // Replace with your actual Script URL
+
+        // --- Authentication Check (Runs First) ---
+        function checkAuthentication() {
+            console.log("Checking authentication...");
+            const urlParams = new URLSearchParams(window.location.search);
+            let tokenFromUrl = urlParams.get('token');
+            let tokenFromStorage = localStorage.getItem('tpoCrmToken');
+
+            if (tokenFromUrl) {
+                console.log("Token found in URL.");
+                authToken = tokenFromUrl;
+                localStorage.setItem('tpoCrmToken', authToken);
+                // Clean the URL
+                window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
+            } else if (tokenFromStorage) {
+                console.log("Token found in localStorage.");
+                authToken = tokenFromStorage;
+            } else {
+                console.log("No token found. Redirecting to login.");
+                redirectToLogin();
+                return; // Stop execution
+            }
+
+            // Validate the token
+            showLoading("Validating session...");
+            // Ensure fetch URL includes token for validation
+            fetch(`${SCRIPT_URL}?action=validateToken&token=${authToken}`)
+                .then(response => response.json())
+                .then(result => {
+                    hideLoading();
+                    if (result && result.valid) {
+                        console.log(`Token validated successfully for user: ${result.email}, Is Manager: ${result.isManager}`);
+                        // Store user info if needed
+                        localStorage.setItem('tpoCrmUserEmail', result.email);
+                        localStorage.setItem('tpoCrmIsManager', result.isManager);
+                        // Proceed to initialize the main application
+                        initializeApp();
+                    } else {
+                        console.log("Token validation failed or token expired. Redirecting to login.");
+                        localStorage.removeItem('tpoCrmToken');
+                        localStorage.removeItem('tpoCrmUserEmail');
+                        localStorage.removeItem('tpoCrmIsManager');
+                        authToken = null;
+                        redirectToLogin();
                     }
-                    
-                    // Set up resize observer for dynamic changes
-                    const observer = new ResizeObserver(() => {
-                        if (section.classList.contains('active') && window.getComputedStyle(section).display !== 'none') {
+                })
+                .catch(error => {
+                    hideLoading();
+                    console.error('Error validating token:', error);
+                    showMessage(document.querySelector('.error-message'), 'Error validating session. Please try logging in again.');
+                    // Optionally redirect to login on validation error too
+                    // redirectToLogin();
+                });
+        }
+
+        function redirectToLogin() {
+            // Redirect to the base URL, doGet will handle serving the Login page
+            window.top.location.href = SCRIPT_URL;
+        }
+
+        // --- Main Application Initialization ---
+        function initializeApp() {
+            console.log("Authentication successful. Initializing Manager application...");
+
+            // Add JavaScript to toggle the collapsible sections
+            document.querySelectorAll('.collapsible-header').forEach(header => {
+                header.addEventListener('click', (event) => {
+                    const section = header.parentElement;
+                    const wasActive = section.classList.contains('active');
+                    section.classList.toggle('active');
+                    // If expanding the assignment section, invalidate map size AFTER animation might finish
+                    if (section.id === 'assignmentSection' && !wasActive && assignMap) {
+                         setTimeout(() => {
+                             if (assignMap) { // Check if map still exists
+                                assignMap.invalidateSize();
+                                console.log("Invalidated assignMap size after expand."); // DEBUG
+                             }
+                         }, 350); // Delay slightly more than transition (0.3s)
+                    }
+                    // Handle map invalidation when section becomes visible
+                    if (section.id === 'assignmentSection' && assignMap) {
+                        // Invalidate immediately if section is active
+                        if (section.classList.contains('active')) {
                             assignMap.invalidateSize();
                         }
-                    });
-                    observer.observe(section);
-                    
-                    // Clean up observer when section is removed
-                    section.addEventListener('DOMNodeRemoved', () => {
-                        observer.disconnect();
-                    });
-                }
-            });
-        });
 
-        // Set initial state: Keep Assignment section closed initially
-        document.addEventListener('DOMContentLoaded', function() {
-             // Keep both sections open by default
+                        // Set up resize observer for dynamic changes
+                        const observer = new ResizeObserver(() => {
+                            if (section.classList.contains('active') && window.getComputedStyle(section).display !== 'none') {
+                                assignMap.invalidateSize();
+                            }
+                        });
+                        observer.observe(section);
+
+                        // Clean up observer when section is removed
+                        section.addEventListener('DOMNodeRemoved', () => {
+                            observer.disconnect();
+                        });
+                    }
+                });
+            });
+
+            // Set initial state: Keep both sections open by default
              const assignmentSec = document.getElementById('assignmentSection');
              const pipelineSec = document.getElementById('pipelineViewSection');
              if (assignmentSec) assignmentSec.classList.add('active');
              if (pipelineSec) pipelineSec.classList.add('active');
-        });
+
+            // --- Original DOMContentLoaded Logic Moved Here ---
 
 
         // Utility functions for caching
@@ -578,8 +647,8 @@
                  .replace(/'/g, '&#039;');
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxIz4dCH9lszZxIhPBTYRxtBtyyFWAHuT7tduwahavVVa-6sAkB5iADFj_7HsMcclbG/exec'; // Replace with your actual Script URL
+            // --- Constants and Element Selections ---
+            // SCRIPT_URL is now global
             // Message Elements (Keep these)
             const loadingOverlay = document.getElementById('loadingOverlay');
             const loadingMessage = document.getElementById('loadingMessage');
@@ -691,6 +760,8 @@
                              fetchUrl.searchParams.append('limit', newLimit); // Use new limit
                              fetchUrl.searchParams.append('maxDistance', radius);
 
+                             // Add token to nearby search fetch
+                             fetchUrl.searchParams.append('token', authToken);
                              fetch(fetchUrl)
                                  .then(response => response.json())
                                  .then(handleNearbyResults) // Reuse the results handler
@@ -849,13 +920,14 @@
                     if (assignmentPaginationControls) assignmentPaginationControls.innerHTML = ''; // Clear pagination
                     clearResultMarkers(false); // Clear only result markers, keep user and search pin
 
-                    // Replace google.script.run with fetch
+                    // Replace google.script.run with fetch, adding token
                     const fetchUrl = new URL(SCRIPT_URL);
                     fetchUrl.searchParams.append('action', 'getNearbyDispensaries');
                     fetchUrl.searchParams.append('latitude', position.lat);
                     fetchUrl.searchParams.append('longitude', position.lng); // Use lng
                     fetchUrl.searchParams.append('limit', limit);
                     fetchUrl.searchParams.append('maxDistance', radius);
+                    fetchUrl.searchParams.append('token', authToken); // Add token
 
                     fetch(fetchUrl)
                         .then(response => {
@@ -1110,6 +1182,16 @@
                 payload.append('shopName', shopName);
                 payload.append('commentText', commentText);
 
+                // Add token to comment submission
+                if (authToken) {
+                    payload.append('token', authToken);
+                } else {
+                    showMessage(errorMessageElement, 'Authentication token missing. Please log in again.');
+                    hideLoading();
+                    redirectToLogin();
+                    return;
+                }
+
                 fetch(SCRIPT_URL, {
                     method: 'POST',
                     body: payload
@@ -1260,7 +1342,8 @@
                     return; // Don't fetch if cache is valid
                 }
                 showLoading('Fetching setup data...');
-                fetch(`${SCRIPT_URL}?action=getSetupData`) // No callback needed
+                // Add token to setup data fetch
+                fetch(`${SCRIPT_URL}?action=getSetupData&token=${authToken}`)
                     .then(response => {
                          if (!response.ok) {
                             throw new Error(`HTTP error! status: ${response.status}`);
@@ -1465,6 +1548,7 @@
                 url.searchParams.append('name', name);
                 url.searchParams.append('page', page);
                 url.searchParams.append('itemsPerPage', itemsPerPage); // Add itemsPerPage param
+                url.searchParams.append('token', authToken); // Add token
 
                 fetch(url)
                     .then(response => {
@@ -1843,11 +1927,20 @@
                 payload.append('shopIds', JSON.stringify(shopIdsToAssign));
                 payload.append('assignedMember', selectedMember);
                 payload.append('assignmentNotes', notes);
+// Add token to assignment submission
+if (authToken) {
+    payload.append('token', authToken);
+} else {
+    showMessage(errorMessageElement, 'Authentication token missing. Please log in again.');
+    hideLoading();
+    redirectToLogin();
+    return;
+}
 
-                fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    body: payload
-                })
+fetch(SCRIPT_URL, {
+    method: 'POST',
+    body: payload
+})
                 .then(response => response.json())
                 .then(data => {
                     hideLoading(); // Hide loading
@@ -1900,7 +1993,9 @@
                     url.searchParams.append('startDate', startDateStr);
                     url.searchParams.append('endDate', endDateStr);
                 }
+url.searchParams.append('token', authToken); // Add token
 
+fetch(url)
                 fetch(url)
                     .then(response => {
                         if (!response.ok) {
@@ -2178,7 +2273,13 @@
             // --- End Delegated Body Click Listener ---
 
             // --- End Stage 6 --- // Renamed Stage
-        });
+
+            // --- End Original DOMContentLoaded Logic ---
+        } // End of initializeApp function
+
+        // --- Start Authentication Check on Page Load ---
+        document.addEventListener('DOMContentLoaded', checkAuthentication);
+
     </script>
 </body>
 </html>
