@@ -475,7 +475,7 @@
         // --- Authentication Globals ---
         let authToken = null;
         // !!! IMPORTANT: Replace this with your actual DEPLOYED Apps Script /exec URL !!!
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzy2g7bfHvjArMWornli3GPodDw99P4ayMjALKanAU4waL29CjcfCjHl3wiJaxSRIIV/exec';
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzy2g7bfHvjArMWornli3GPodDw99P4ayMjALKanAU4waL29CjcfCjHl3wiJaxSRIIV/exec'; // <<< MAKE SURE THIS IS YOUR LATEST DEPLOYMENT URL
 
         // --- Messaging Functions (Defined Globally) ---
         // NOTE: Need access to loadingOverlay, loadingMessage, sentMessageElement, errorMessageElement
@@ -610,11 +610,14 @@
 
         // checkGoogleSessionStatus function removed
 
+        // *** MODIFIED FUNCTION START ***
         function redirectToLogin() {
-            // Redirect to the Apps Script Login page, passing the current tpowellness.com URL
+            // Redirect to the static Login.html page on the same domain
             const currentTpoUrl = window.location.href;
-            window.top.location.href = `${APPS_SCRIPT_URL}?redirectUrl=${encodeURIComponent(currentTpoUrl)}`;
+            const staticLoginUrl = '/Login.html'; // Relative path to Login.html on the same domain
+            window.top.location.href = `${staticLoginUrl}?redirectUrl=${encodeURIComponent(currentTpoUrl)}`;
         }
+        // *** MODIFIED FUNCTION END ***
 
         // --- Main Application Initialization ---
         function initializeApp() {
@@ -676,12 +679,13 @@
                 return unsafe === null || typeof unsafe === 'undefined' ? '' : String(unsafe);
             }
             return unsafe
-                 .replace(/&/g, "&amp;")
-                 .replace(/</g, '<')
-                 .replace(/>/g, '>')
-                 .replace(/"/g, '"')
-                 .replace(/'/g, '&#039;');
+                 .replace(/&/g, "&")
+                 .replace(/</g, '<') // Use HTML entity for <
+                 .replace(/>/g, '>') // Use HTML entity for >
+                 .replace(/"/g, '"') // Use HTML entity for "
+                 .replace(/'/g, '''); // Use HTML entity for '
         }
+
 
             // --- Original DOMContentLoaded Logic Moved Here ---
             const selectDispensary = document.getElementById('selectDispensary');
@@ -753,7 +757,7 @@
                 if (selectedDispensary === 'new') {
                     newDispensaryNameGroup.style.display = 'block';
                     clearFormFields();
-                    this.value = 'new';
+                    this.value = 'new'; // Keep 'new' selected
                 } else if (selectedDispensary) {
                     newDispensaryNameGroup.style.display = 'none';
                     populateFormFields(selectedDispensary);
@@ -762,6 +766,7 @@
                     clearFormFields();
                 }
             });
+
 
             // Debounce function
             function debounce(func, timeout = 300) {
@@ -850,15 +855,16 @@
                             populateDispensarySelect();
                         } else {
                             console.error('Error fetching dispensary data:', data ? data.message : 'Invalid response');
-                            showMessage(errorMessageElement, 'Error fetching dispensary list: ' + (data ? data.message : 'Invalid response'));
+                            showMessage(errorMessageElement, 'Error fetching dispensary list: ' + (data ? escapeHtml(data.message) : 'Invalid response'));
                         }
                     })
                     .catch(error => {
                         hideLoading();
                         console.error('Fetch Error for getAllDispensaryData:', error);
-                        showMessage(errorMessageElement, 'Network or server error fetching dispensary list: ' + error);
+                        showMessage(errorMessageElement, 'Network or server error fetching dispensary list: ' + escapeHtml(error.message));
                     });
             }
+
 
             function fetchSetupData() {
                 const cachedSetup = getCachedData('setupData'); // Check cache first
@@ -897,15 +903,16 @@
                             // populateAssignProvinceFilter(); // Not needed in Rep view
                         } else {
                             console.error('Error fetching setup data:', data ? data.message : 'Invalid response');
-                            showMessage(errorMessageElement, 'Error fetching setup data: ' + (data ? data.message : 'Invalid response'));
+                            showMessage(errorMessageElement, 'Error fetching setup data: ' + (data ? escapeHtml(data.message) : 'Invalid response'));
                         }
                     })
                     .catch(error => {
                         hideLoading();
                         console.error('Fetch Error for getSetupData:', error);
-                        showMessage(errorMessageElement, 'Network or server error fetching setup data: ' + error);
+                        showMessage(errorMessageElement, 'Network or server error fetching setup data: ' + escapeHtml(error.message));
                     });
             }
+
 
             // --- Global Callbacks Removed (logic moved into fetch .then blocks) ---
 
@@ -934,6 +941,11 @@
                         const lineContact = String(dispensary['Line Contact'] || "").toLowerCase();
                         const history = String(dispensary['Notes & Communication History'] || "").toLowerCase();
                         const nextAction = String(dispensary['Next Action Item'] || "").toLowerCase();
+                        // Add more fields for additional filter if needed
+                        const province = String(dispensary['Province'] || "").toLowerCase();
+                        const shopSize = String(dispensary['Shop Size'] || "").toLowerCase();
+                        const currentDistributor = String(dispensary['Current Distributor'] || "").toLowerCase();
+                        const phoneHash = String(dispensary['phone#'] || "").toLowerCase(); // Note the hash
 
                         const nameMatches = dispensaryName.includes(nameFilter);
                         const memberMatches = !memberFilter || assignedMemberName === memberFilter;
@@ -942,8 +954,10 @@
 
                         let additionalMatches = true;
                         if (additionalFilter) {
-                            additionalMatches = [dispensaryName, dispensaryAddress, contactPerson, email, phone, lineContact, history, nextAction]
-                                                .some(field => field.includes(additionalFilter));
+                            additionalMatches = [
+                                dispensaryName, dispensaryAddress, contactPerson, email, phone, lineContact,
+                                history, nextAction, province, shopSize, currentDistributor, phoneHash
+                            ].some(field => field.includes(additionalFilter));
                         }
 
                         if (nameMatches && memberMatches && pipelineMatches && addressMatches && additionalMatches) {
@@ -956,10 +970,14 @@
                     if (selectDispensary.querySelector(`option[value="${currentSelectedValue}"]`)) {
                         selectDispensary.value = currentSelectedValue;
                     } else {
-                        clearFormFields();
+                         // Only clear if current selection is no longer valid and it wasn't 'new'
+                        if (currentSelectedValue !== 'new') {
+                             clearFormFields();
+                        }
                     }
                 }
             }
+
 
             function populateFormFields(dispensaryName) {
                 const dispensary = dispensariesData.find(d => d['Dispensary Name'] === dispensaryName);
@@ -986,16 +1004,16 @@
                     if(longitudeInput) longitudeInput.value = dispensary['Longitude'] || '';
                     if(provinceInput) provinceInput.value = dispensary['Province'] || '';
                     if(originalNameDisplay) originalNameDisplay.textContent = dispensary['name'] || '(Not set)'; // Display original name (Col H)
-                    // if(urlInput) urlInput.value = dispensary['url'] || ''; // Removed
+
                     populateLink(urlLinkContainer, dispensary.url, dispensary.url); // Populate link container
-                    // if(googleMapsUrlInput) googleMapsUrlInput.value = dispensary['google_maps_url'] || ''; // Removed
+
                     if(websiteInput) websiteInput.value = dispensary['website'] || '';
-                    // if(websiteUrlInput) websiteUrlInput.value = dispensary['website_url'] || ''; // Removed
+
                     if(facebookInput) facebookInput.value = dispensary['facebook'] || '';
-                    // if(facebookUrlInput) facebookUrlInput.value = dispensary['facebook_url'] || ''; // Removed
+
                     populateLink(facebookUrlLinkContainer, dispensary.facebook_url, dispensary.facebook_url); // Populate FB link container
                     if(lineInput) lineInput.value = dispensary['line'] || '';
-                    // if(lineUrlInput) lineUrlInput.value = dispensary['line_url'] || ''; // Removed
+
                     if(phoneHashInput) phoneHashInput.value = dispensary['phone#'] || ''; // This corresponds to Col O in new structure
 
                     // Populate Link Containers
@@ -1008,8 +1026,8 @@
                     const qrUrls = dispensary['Line/Whatsapp QR Code'] ? String(dispensary['Line/Whatsapp QR Code']).split('\n').filter(Boolean) : [];
                     qrUrls.forEach(url => {
                         const link = document.createElement('a');
-                        link.href = url;
-                        link.textContent = url.substring(url.lastIndexOf('/') + 1) || url;
+                        link.href = escapeHtml(url);
+                        link.textContent = escapeHtml(url.substring(url.lastIndexOf('/') + 1) || url);
                         link.target = '_blank';
                         link.rel = 'noopener noreferrer';
                         qrCodeContent.appendChild(link);
@@ -1037,56 +1055,66 @@
                 if(longitudeInput) longitudeInput.value = '';
                 if(provinceInput) provinceInput.value = '';
                 if(originalNameDisplay) originalNameDisplay.textContent = '';
-                // if(urlInput) urlInput.value = ''; // Removed
+
                 if (urlLinkContainer) urlLinkContainer.innerHTML = ''; // Clear link container
-                // if(googleMapsUrlInput) googleMapsUrlInput.value = ''; // Removed
+
                 if(websiteInput) websiteInput.value = '';
-                // if(websiteUrlInput) websiteUrlInput.value = ''; // Removed
+
                 if(shopSizeSelect) shopSizeSelect.value = '';
                 if(facebookInput) facebookInput.value = '';
-                // if(facebookUrlInput) facebookUrlInput.value = ''; // Removed
+
                 if (facebookUrlLinkContainer) facebookUrlLinkContainer.innerHTML = ''; // Clear FB link container
                 if(lineInput) lineInput.value = '';
-                // if(lineUrlInput) lineUrlInput.value = ''; // Removed
+
                 if(phoneHashInput) phoneHashInput.value = '';
                 // Clear link containers
                 if (googleMapsUrlContainer) googleMapsUrlContainer.innerHTML = '';
                 if (websiteUrlContainer) websiteUrlContainer.innerHTML = '';
                 if (lineUrlContainer) lineUrlContainer.innerHTML = '';
                 if (currentDistributorInput) currentDistributorInput.value = ''; // NEW
-                if (lineUrlContainer) lineUrlContainer.innerHTML = '';
                 // Hide map
                 if (repMapContainer) repMapContainer.classList.remove('visible');
                 if (repMarker) {
-                    repMap.removeLayer(repMarker);
+                    if(repMap) repMap.removeLayer(repMarker); // Check if map exists
                     repMarker = null;
                 }
                 // Also remove user location marker if present
                 if (userLocationMarker) {
-                    repMap.removeLayer(userLocationMarker);
+                     if(repMap) repMap.removeLayer(userLocationMarker); // Check if map exists
                     userLocationMarker = null;
                 }
             }
+
 
             // Helper function to populate link containers
             function populateLink(container, url, linkText) {
                 if (!container) return;
                 container.innerHTML = ''; // Clear previous
                 if (url) {
-                    const link = document.createElement('a');
-                    link.href = escapeHtml(url);
-                    link.textContent = escapeHtml(linkText || url); // Use URL as text if no specific text provided
-                    link.target = '_blank'; // Open in new tab
-                    link.rel = 'noopener noreferrer';
-                    // Add icon for external link
-                    const icon = document.createElement('i');
-                    icon.className = 'fas fa-external-link-alt fa-xs ml-1'; // Font Awesome icon
-                    link.appendChild(icon);
-                    container.appendChild(link);
+                    try {
+                        // Basic URL validation (very simple check)
+                        new URL(url); // Try parsing - throws error if invalid
+
+                        const link = document.createElement('a');
+                        link.href = escapeHtml(url);
+                        link.textContent = escapeHtml(linkText || url); // Use URL as text if no specific text provided
+                        link.target = '_blank'; // Open in new tab
+                        link.rel = 'noopener noreferrer';
+                        // Add icon for external link
+                        const icon = document.createElement('i');
+                        icon.className = 'fas fa-external-link-alt fa-xs ml-1'; // Font Awesome icon
+                        link.appendChild(icon);
+                        container.appendChild(link);
+                    } catch (_) {
+                        // URL is invalid, display as text
+                        container.innerHTML = `<span class="text-muted" title="Invalid URL">${escapeHtml(url)} (Invalid)</span>`;
+                    }
                 } else {
                     container.innerHTML = '<span class="text-muted">N/A</span>'; // Indicate if no URL
                 }
             }
+
+
 
             // --- Messaging Functions Moved Outside initializeApp ---
 
@@ -1178,23 +1206,69 @@
 
                 const fileInput = document.getElementById('qrCode');
                 const files = fileInput.files;
+                const filePromises = [];
 
-                const sendData = () => {
-                    // Add token to FormData before sending
-                    if (authToken) {
-                        formData.append('token', authToken);
-                    } else {
-                         showMessage(errorMessageElement, 'Authentication token missing. Please log in again.');
-                         hideLoading();
-                         redirectToLogin(); // Redirect if token is missing
-                         return;
-                    }
+                // Handle file reading with Promises
+                 for (let i = 0; i < files.length; i++) {
+                    filePromises.push(new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            try {
+                                const base64Data = e.target.result.split(',')[1];
+                                if (!base64Data) throw new Error("Could not extract base64 data.");
+                                resolve({
+                                    qrCode: base64Data,
+                                    qrCodeMimeType: files[i].type
+                                });
+                            } catch (error) {
+                                reject(error);
+                            }
+                        };
+                        reader.onerror = function(error) {
+                             console.error("Error reading file:", error);
+                             showMessage(errorMessageElement, 'Error reading file: ' + files[i].name);
+                             reject(error);
+                        };
+                         reader.readAsDataURL(files[i]);
+                    }));
+                 }
 
-                    fetch(APPS_SCRIPT_URL, { // Use APPS_SCRIPT_URL for POST as well
-                        method: 'POST',
-                        body: formData // Send FormData directly (token is now included)
+                Promise.all(filePromises)
+                    .then(fileDataArray => {
+                        // Append file data to FormData
+                        fileDataArray.forEach(fileData => {
+                            formData.append('qrCode', fileData.qrCode);
+                            formData.append('qrCodeMimeType', fileData.qrCodeMimeType);
+                        });
+
+                        // Add token before sending
+                        if (authToken) {
+                            formData.append('token', authToken);
+                        } else {
+                            showMessage(errorMessageElement, 'Authentication token missing. Please log in again.');
+                            hideLoading();
+                            redirectToLogin(); // Redirect if token is missing
+                            throw new Error("Authentication token missing"); // Stop promise chain
+                        }
+
+                        // Send the form data
+                        return fetch(APPS_SCRIPT_URL, {
+                            method: 'POST',
+                            body: formData // Send FormData directly
+                        });
                     })
-                    .then(response => response.json())
+                    .then(response => {
+                         if (!response.ok) {
+                            // Attempt to parse error message from backend if possible
+                            return response.json().then(errData => {
+                                throw new Error(errData.message || `HTTP error ${response.status}`);
+                            }).catch(() => {
+                                // Fallback if response wasn't JSON
+                                throw new Error(`HTTP error ${response.status}`);
+                            });
+                        }
+                        return response.json();
+                    })
                     .then(data => {
                         hideLoading();
                         if (data.success) {
@@ -1209,54 +1283,10 @@
                     .catch(error => {
                         hideLoading();
                         console.error('Submit Error:', error);
-                        showMessage(errorMessageElement, 'Network or server error during submission: ' + error);
+                        showMessage(errorMessageElement, 'Submission error: ' + escapeHtml(error.message));
                     });
-                };
+            }
 
-                if (files.length > 0) {
-                    let readFilePromises = [];
-                    for (let i = 0; i < files.length; i++) {
-                        readFilePromises.push(new Promise((resolve, reject) => {
-                            const reader = new FileReader();
-                            reader.onload = function(e) {
-                                formData.append('qrCode', e.target.result.split(',')[1]);
-                                formData.append('qrCodeMimeType', files[i].type);
-                                resolve();
-                            };
-                            reader.onerror = function(error) {
-                                 console.error("Error reading file:", error);
-                                 showMessage(errorMessageElement, 'Error reading file: ' + files[i].name);
-                                 reject(error);
-                            };
-                            reader.readAsDataURL(files[i]);
-                        }));
-                    }
-                    Promise.all(readFilePromises)
-                        .then(() => sendData())
-                        .catch(() => hideLoading());
-                } else {
-            // Helper function to populate link containers
-            function populateLink(container, url, linkText) {
-                if (!container) return;
-                container.innerHTML = ''; // Clear previous
-                if (url) {
-                    const link = document.createElement('a');
-                    link.href = escapeHtml(url);
-                    link.textContent = escapeHtml(linkText || url); // Use URL as text if no specific text provided
-                    link.target = '_blank'; // Open in new tab
-                    link.rel = 'noopener noreferrer';
-                    // Add icon for external link
-                    const icon = document.createElement('i');
-                    icon.className = 'fas fa-external-link-alt fa-xs ml-1'; // Font Awesome icon
-                    link.appendChild(icon);
-                    container.appendChild(link);
-                } else {
-                    container.innerHTML = '<span class="text-muted">N/A</span>'; // Indicate if no URL
-                }
-            }
-                    sendData();
-                }
-            }
 
             // --- Geolocation Function ---
             function getCurrentLocation() {
@@ -1276,7 +1306,10 @@
 
                     hideLoading();
                     showMessage(sentMessageElement, 'Location retrieved successfully.');
+                    // Optionally update map here if needed after getting coords
+                    // updateRepMap(latitude, longitude, null); // Pass null or find dispensary data if needed
                 }
+
 
                 function error(err) {
                     hideLoading();
@@ -1319,7 +1352,7 @@
 
                         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                             maxZoom: 19,
-                            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                            attribution: '© <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                         }).addTo(repMap);
                         console.log("Rep map initialized.");
                     } catch (e) {
@@ -1346,7 +1379,10 @@
 
                     // Add new dispensary marker
                     repMarker = L.marker(coords).addTo(repMap);
-                    const popupContent = `<b>${escapeHtml(dispensary['Dispensary Name'])}</b><br>${escapeHtml(dispensary['Dispensary Address'] || '')}`;
+                    let popupContent = `<b>${escapeHtml(dispensary['Dispensary Name'])}</b>`;
+                    if (dispensary['Dispensary Address']) {
+                        popupContent += `<br>${escapeHtml(dispensary['Dispensary Address'])}`;
+                    }
                     repMarker.bindPopup(popupContent);
 
                     // Set map view
@@ -1448,6 +1484,6 @@
 document.addEventListener('DOMContentLoaded', checkAuthentication);
 
 </script>
-    </script>
+    </script> <!-- Removed duplicate script tag -->
 </body>
 </html>
