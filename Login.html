@@ -48,7 +48,7 @@
 
   <script>
     // Define the Apps Script URL (should match the one in CRM pages)
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzoF6bHhIqzwoKawROE8l-dibYkdKdwQLxLsoZyfvaDuMbhLZD70h_f4FhXK1MvBbwe/exec';
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzy2g7bfHvjArMWornli3GPodDw99P4ayMjALKanAU4waL29CjcfCjHl3wiJaxSRIIV/exec';
 
     // Get redirect URL and error message from URL parameters
     const urlParams = new URLSearchParams(window.location.search);
@@ -67,7 +67,7 @@
         // if(googleButton) googleButton.disabled = disabled; // Removed
     }
 
-    // External user login (using fetch)
+    // External user login (using fetch with GET)
     function login() {
       const emailInput = document.getElementById('email');
       const passwordInput = document.getElementById('password');
@@ -84,19 +84,17 @@
       errorDiv.textContent = 'Logging in...';
       setButtonsDisabled(true); // Disable buttons
 
-      // *** MODIFIED: Use fetch instead of google.script.run ***
-      fetch(APPS_SCRIPT_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        // Send action and credentials in the body
-        body: JSON.stringify({
-          action: 'handleExternalLogin',
-          email: email,
-          password: password
-        }),
-        // mode: 'cors' // CORS is usually handled by Apps Script response headers, but can be explicit if needed
+      // *** MODIFIED: Use fetch with GET and query parameters ***
+      const loginUrl = new URL(APPS_SCRIPT_URL);
+      loginUrl.searchParams.append('action', 'handleExternalLogin');
+      loginUrl.searchParams.append('email', email);
+      loginUrl.searchParams.append('password', password);
+      // No need to pass redirectUrl here, the client handles it after success
+
+      fetch(loginUrl, {
+        method: 'GET', // Use GET method
+        // No headers or body needed for GET with query params
+        // mode: 'cors' // Usually not needed as Apps Script handles it
       })
       .then(response => {
         if (!response.ok) {
