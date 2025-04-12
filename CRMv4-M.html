@@ -601,7 +601,19 @@
                             authToken = potentialAuthToken; // Confirm the token
                             localStorage.setItem('tpoCrmUserEmail', result.email);
                             localStorage.setItem('tpoCrmIsManager', result.isManager);
-                            initializeApp(); // Proceed
+
+                            // --- Manager Check ---
+                            if (!result.isManager) {
+                                console.log("User is not a manager. Redirecting to Rep View.");
+                                // Redirect to Rep view (CRMv4.html), keeping the token
+                                const repViewUrl = "https://tpowellness.com/CRMv4.html";
+                                const separator = repViewUrl.includes('?') ? '&' : '?';
+                                window.top.location.href = repViewUrl + separator + 'token=' + potentialAuthToken;
+                                return; // Stop execution for non-managers
+                            }
+                            // --- End Manager Check ---
+
+                            initializeApp(); // Proceed only if manager
                         } else {
                             // Token invalid or expired
                             console.log("Token validation failed or token expired. Redirecting to login.");
@@ -868,7 +880,7 @@
                             inputElement.value = currentAssignmentPage;
                             showMessage(errorMessageElement, `Invalid page number. Please enter between 1 and ${totalPages}.`);
                         }
-            
+
                         // [CUT] Body click listener moved outside this keypress listener
                         // Removed the direct listener attachment to assignmentTableContainer
                         // else {
