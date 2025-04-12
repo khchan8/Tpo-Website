@@ -475,7 +475,76 @@
         // --- Authentication Globals ---
         let authToken = null;
         // !!! IMPORTANT: Replace this with your actual DEPLOYED Apps Script /exec URL !!!
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwjcLZHqvrDocYweLX62Nv3hkT8uu68HyIaW1CCO7eTV71RWGxbG0idRz9EDOTZREbc/exec';
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzo4zrAglE22TRPUs6WUTG5zwEQYjC6_aPsOKfKkUkzLwPKSJGmEpIbS46G5_hFmtvY/exec';
+
+        // --- Messaging Functions (Defined Globally) ---
+        // NOTE: Need access to loadingOverlay, loadingMessage, sentMessageElement, errorMessageElement
+        // These should be declared globally as well if not already. Let's assume they are for now.
+        // If errors persist, we may need to pass these elements as arguments or query them inside the functions.
+        function showLoading(message = "Loading...") {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const loadingMessage = document.getElementById('loadingMessage');
+            // Get message elements here as well, as hideMessage might be called
+            const sentMessageElement = document.querySelector('.sent-message');
+            const errorMessageElement = document.querySelector('.error-message');
+
+            // Check if elements exist before manipulating
+            if (loadingMessage) {
+                loadingMessage.textContent = message;
+            } else {
+                console.warn("showLoading: loadingMessage element not found.");
+            }
+            if (loadingOverlay) {
+                loadingOverlay.style.display = 'block';
+            } else {
+                 console.warn("showLoading: loadingOverlay element not found.");
+            }
+            // Ensure hideMessage is called only if elements exist
+            if (sentMessageElement) hideMessage(sentMessageElement);
+            if (errorMessageElement) hideMessage(errorMessageElement);
+        }
+
+        function hideLoading() {
+             const loadingOverlay = document.getElementById('loadingOverlay');
+             if (loadingOverlay) {
+                 loadingOverlay.style.display = 'none';
+             } else {
+                 console.warn("hideLoading: loadingOverlay element not found.");
+             }
+        }
+
+        function showMessage(element, message) {
+            // Use overlay for loading, specific elements for success/error
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const loadingMessage = document.getElementById('loadingMessage');
+
+            if(element === loadingOverlay || element === loadingMessage) {
+                showLoading(message);
+            } else {
+                hideLoading(); // Hide loading overlay when showing success/error
+                if(element) {
+                    element.textContent = message;
+                    element.style.display = 'block';
+                } else {
+                    console.warn("showMessage: Target element not found.");
+                }
+            }
+        }
+
+        function hideMessage(element) {
+             const loadingOverlay = document.getElementById('loadingOverlay');
+             const loadingMessage = document.getElementById('loadingMessage');
+
+             if(element === loadingOverlay || element === loadingMessage) {
+                hideLoading();
+            } else if (element) {
+                element.style.display = 'none';
+                element.textContent = '';
+            } else {
+                 // console.warn("hideMessage: Target element not found or not an element.");
+                 // This might be too noisy if called frequently for non-existent elements
+            }
+        }
 
         // --- Authentication Check (Runs First) ---
         function checkAuthentication() {
@@ -498,7 +567,12 @@
 
             if (potentialAuthToken) {
                 // Validate the token if found
-                showLoading("Validating session...");
+                // Only show loading if elements are ready
+                if (document.getElementById('loadingOverlay')) {
+                    showLoading("Validating session...");
+                } else {
+                    console.warn("DOM not ready for loading indicator during token validation.");
+                }
                 fetch(`${APPS_SCRIPT_URL}?action=validateToken&token=${potentialAuthToken}`)
                     .then(response => response.json())
                     .then(result => {
@@ -534,7 +608,12 @@
         }
 
         function checkGoogleSessionStatus() {
-             showLoading("Checking Google session...");
+             // Only show loading if elements are ready
+             if (document.getElementById('loadingOverlay')) {
+                 showLoading("Checking Google session...");
+             } else {
+                 console.warn("DOM not ready for loading indicator during Google session check.");
+             }
              // Use fetch to call the new action. Important: credentials 'include' might be needed if cookies are involved,
              // but Apps Script session usually works without it if accessed directly via /exec URL first.
              // Let's try without it first.
@@ -1046,39 +1125,7 @@
                 }
             }
 
-            // --- Messaging Functions ---
-            function showLoading(message = "Loading...") {
-                if (loadingMessage) loadingMessage.textContent = message;
-                if (loadingOverlay) loadingOverlay.style.display = 'block';
-                hideMessage(sentMessageElement); // Hide other messages
-                hideMessage(errorMessageElement);
-            }
-
-            function hideLoading() {
-                 if (loadingOverlay) loadingOverlay.style.display = 'none';
-            }
-
-            function showMessage(element, message) {
-                // Use overlay for loading, specific elements for success/error
-                if(element === loadingOverlay || element === loadingMessage) {
-                    showLoading(message);
-                } else {
-                    hideLoading(); // Hide loading overlay when showing success/error
-                    if(element) {
-                        element.textContent = message;
-                        element.style.display = 'block';
-                    }
-                }
-            }
-
-            function hideMessage(element) {
-                 if(element === loadingOverlay || element === loadingMessage) {
-                    hideLoading();
-                } else if (element) {
-                    element.style.display = 'none';
-                    element.textContent = '';
-                }
-            }
+            // --- Messaging Functions Moved Outside initializeApp ---
 
             // --- Dropdown Population Functions ---
 
@@ -1438,7 +1485,6 @@
 document.addEventListener('DOMContentLoaded', checkAuthentication);
 
 </script>
-        });
     </script>
 </body>
 </html>
