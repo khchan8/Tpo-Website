@@ -496,7 +496,7 @@
         // --- Authentication Globals ---
         let authToken = null;
         // !!! IMPORTANT: Replace this with your actual DEPLOYED Apps Script /exec URL !!!
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyNp2_gSGysOfvYHVftgYnOy1XeioD8KXQ6mOA0It1JXalHedSGpmCx25NbCx8gK7yI/exec';
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwjcLZHqvrDocYweLX62Nv3hkT8uu68HyIaW1CCO7eTV71RWGxbG0idRz9EDOTZREbc/exec';
 
         // --- Authentication Check (Runs First) ---
         function checkAuthentication() {
@@ -504,51 +504,81 @@
             const urlParams = new URLSearchParams(window.location.search);
             let tokenFromUrl = urlParams.get('token');
             let tokenFromStorage = localStorage.getItem('tpoCrmToken');
+            let potentialAuthToken = null;
 
             if (tokenFromUrl) {
                 console.log("Token found in URL.");
-                authToken = tokenFromUrl;
-                localStorage.setItem('tpoCrmToken', authToken);
-                // Clean the URL
+                potentialAuthToken = tokenFromUrl;
+                localStorage.setItem('tpoCrmToken', potentialAuthToken); // Store it immediately
+                 // Clean the URL
                 window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
             } else if (tokenFromStorage) {
                 console.log("Token found in localStorage.");
-                authToken = tokenFromStorage;
-            } else {
-                console.log("No token found. Redirecting to login.");
-                redirectToLogin();
-                return; // Stop execution
+                potentialAuthToken = tokenFromStorage;
             }
 
-            // Validate the token
-            showLoading("Validating session...");
-            // Ensure fetch URL includes token for validation
-            fetch(`${APPS_SCRIPT_URL}?action=validateToken&token=${authToken}`)
+            if (potentialAuthToken) {
+                // Validate the token if found
+                showLoading("Validating session...");
+                fetch(`${APPS_SCRIPT_URL}?action=validateToken&token=${potentialAuthToken}`)
+                    .then(response => response.json())
+                    .then(result => {
+                        hideLoading();
+                        if (result && result.valid) {
+                            console.log(`Token validated successfully for user: ${result.email}, Is Manager: ${result.isManager}`);
+                            authToken = potentialAuthToken; // Confirm the token
+                            localStorage.setItem('tpoCrmUserEmail', result.email);
+                            localStorage.setItem('tpoCrmIsManager', result.isManager);
+                            initializeApp(); // Proceed
+                        } else {
+                            console.log("Token validation failed or token expired. Checking Google session...");
+                            localStorage.removeItem('tpoCrmToken');
+                            localStorage.removeItem('tpoCrmUserEmail');
+                            localStorage.removeItem('tpoCrmIsManager');
+                            authToken = null;
+                            // Don't redirect yet, check Google session first
+                            checkGoogleSessionStatus();
+                        }
+                    })
+                    .catch(error => {
+                        hideLoading();
+                        console.error('Error validating token:', error);
+                        showMessage(document.querySelector('.error-message'), 'Error validating session. Checking Google session...');
+                        // Proceed to check Google session even if token validation fails due to network error
+                        checkGoogleSessionStatus();
+                    });
+            } else {
+                // No token found, check Google session directly
+                console.log("No token found. Checking Google session...");
+                checkGoogleSessionStatus();
+            }
+        }
+
+        function checkGoogleSessionStatus() {
+             showLoading("Checking Google session...");
+             fetch(`${APPS_SCRIPT_URL}?action=checkGoogleSession`)
                 .then(response => response.json())
                 .then(result => {
                     hideLoading();
-                    if (result && result.valid) {
-                        console.log(`Token validated successfully for user: ${result.email}, Is Manager: ${result.isManager}`);
-                        // Store user info if needed
+                    if (result && result.success) {
+                        // Authorized Google session found
+                        console.log(`Google session validated successfully for user: ${result.email}, Is Manager: ${result.isManager}`);
                         localStorage.setItem('tpoCrmUserEmail', result.email);
                         localStorage.setItem('tpoCrmIsManager', result.isManager);
-                        // Proceed to initialize the main application
-                        initializeApp();
+                        // Note: No token for Google session users in this flow
+                        initializeApp(); // Proceed for Google user
                     } else {
-                        console.log("Token validation failed or token expired. Redirecting to login.");
-                        localStorage.removeItem('tpoCrmToken');
-                        localStorage.removeItem('tpoCrmUserEmail');
-                        localStorage.removeItem('tpoCrmIsManager');
-                        authToken = null;
+                        // No valid token AND no authorized Google session
+                        console.log("No authorized Google session found. Redirecting to login.");
                         redirectToLogin();
                     }
                 })
                 .catch(error => {
-                    hideLoading();
-                    console.error('Error validating token:', error);
-                    showMessage(document.querySelector('.error-message'), 'Error validating session. Please try logging in again.');
-                    // Optionally redirect to login on validation error too
-                    // redirectToLogin();
+                     hideLoading();
+                     console.error('Error checking Google session:', error);
+                     showMessage(document.querySelector('.error-message'), 'Error checking Google session. Please try logging in manually.');
+                     // Redirect to login as a fallback on error
+                     redirectToLogin();
                 });
         }
 
