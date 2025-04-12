@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!-- base target="_top" removed -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TPO Wellness CRM - Login</title>
+  <style>
+    body { font-family: Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
+    .login-container { background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); width: 100%; max-width: 400px; }
+    .logo { text-align: center; margin-bottom: 20px; }
+    .logo img { max-width: 200px; }
+    h1 { text-align: center; color: #333; margin-bottom: 20px; }
+    .form-group { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
+    input[type="email"], input[type="password"] { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; font-size: 16px; }
+    button { width: 100%; padding: 12px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold; }
+    button:hover { background-color: #45a049; }
+    button:disabled { background-color: #cccccc; cursor: not-allowed; }
+    .error-message { color: #f44336; margin-top: 15px; text-align: center; min-height: 1em; /* Reserve space */ }
+    .info-message { margin-top: 20px; text-align: center; color: #666; font-size: 14px; }
+    .google-login { margin-top: 20px; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="logo">
+      <h2>TPO Wellness</h2>
+    </div>
+    <h1>CRM Login</h1>
+    <div id="login-form">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" required>
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required>
+      </div>
+      <button type="button" id="loginButton" onclick="login()">Login</button>
+      <div id="error-message" class="error-message"></div>
+      <!-- Google Sign-in button removed -->
+    </div>
+    <div class="info-message">
+      <p>If you're having trouble logging in, please contact your administrator.</p>
+    </div>
+  </div>
+
+  <script>
+    // Define the Apps Script URL (should match the one in CRM pages)
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzoF6bHhIqzwoKawROE8l-dibYkdKdwQLxLsoZyfvaDuMbhLZD70h_f4FhXK1MvBbwe/exec';
+
+    // Get redirect URL and error message from URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const errorParam = urlParams.get('error');
+    const redirectUrlParam = urlParams.get('redirectUrl'); // This is passed by Code.gs redirect
+    // Prioritize redirect URL from parameter, fallback to default CRM page
+    const redirectUrl = redirectUrlParam || "https://tpowellness.com/CRMv4.html";
+
+    const errorDiv = document.getElementById('error-message');
+    const loginButton = document.getElementById('loginButton');
+    // const googleButton = document.getElementById('googleButton'); // Removed
+
+    // Function to disable/enable buttons
+    function setButtonsDisabled(disabled) {
+        if(loginButton) loginButton.disabled = disabled;
+        // if(googleButton) googleButton.disabled = disabled; // Removed
+    }
+
+    // External user login (using fetch)
+    function login() {
+      const emailInput = document.getElementById('email');
+      const passwordInput = document.getElementById('password');
+      const email = emailInput.value;
+      const password = passwordInput.value;
+
+      errorDiv.textContent = ''; // Clear previous errors
+
+      if (!email || !password) {
+        errorDiv.textContent = 'Please enter both email and password';
+        return;
+      }
+
+      errorDiv.textContent = 'Logging in...';
+      setButtonsDisabled(true); // Disable buttons
+
+      // *** MODIFIED: Use fetch instead of google.script.run ***
+      fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        // Send action and credentials in the body
+        body: JSON.stringify({
+          action: 'handleExternalLogin',
+          email: email,
+          password: password
+        }),
+        // mode: 'cors' // CORS is usually handled by Apps Script response headers, but can be explicit if needed
+      })
+      .then(response => {
+        if (!response.ok) {
+          // Handle non-2xx responses (e.g., 404, 500)
+          throw new Error(`Network response was not ok (${response.status})`);
+        }
+        return response.json(); // Parse JSON body
+      })
+      .then(result => {
+        // Success handler (same logic as before)
+        setButtonsDisabled(false); // Re-enable buttons
+        if (result && result.success && result.token) {
+          errorDiv.textContent = '';
+          localStorage.setItem('tpoCrmToken', result.token);
+          localStorage.setItem('tpoCrmIsManager', result.isManager); // Store manager status
+
+          // Use the redirectUrl determined from query params or the fallback
+          let targetUrl = redirectUrl;
+
+          // Append the token to the target URL
+          const separator = targetUrl.includes('?') ? '&' : '?';
+          // Clean potential existing token before appending (important for retries)
+          targetUrl = targetUrl.replace(/&?token=[^&]*/g, '');
+          const redirectWithToken = targetUrl + separator + 'token=' + result.token;
+          console.log("External login success. Redirecting to:", redirectWithToken);
+          window.top.location.href = redirectWithToken; // Redirect WITH token
+        } else {
+          // Handle login failure (e.g., wrong password, email not authorized)
+          errorDiv.textContent = result.message || 'Login failed. Please check your credentials.';
+        }
+      })
+      .catch(error => {
+        // Failure handler (network errors, parsing errors, etc.)
+        setButtonsDisabled(false); // Re-enable buttons
+        console.error('Error during login fetch:', error);
+        errorDiv.textContent = 'An error occurred during login: ' + error.message;
+      });
+      // *** END MODIFIED fetch block ***
+    }
+
+    // useGoogleAuth function removed
+
+    // Add event listener for Enter key in password field
+    document.getElementById('password').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+         // Ensure login button isn't disabled before attempting login
+         if (!loginButton || !loginButton.disabled) {
+            login();
+         }
+      }
+    });
+
+    // Display error message from URL parameter on load
+    document.addEventListener('DOMContentLoaded', function() {
+      if (errorParam) {
+        errorDiv.textContent = decodeURIComponent(errorParam);
+      }
+    });
+  </script>
+</body>
+</html>
