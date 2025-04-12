@@ -475,7 +475,7 @@
         // --- Authentication Globals ---
         let authToken = null;
         // !!! IMPORTANT: Replace this with your actual DEPLOYED Apps Script /exec URL !!!
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzQsGdmO0MvxmsYqHFneROZnSAbCyvkr36G-OFhKEoTnQNPRPMS0RNf5ypSOW4rX1W1/exec';
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxskN2F1MLtS3TW9Ee1yHVOddY1BJBywJO3ZOjnLXxCtgMGp8JjbInHm7-aV9bal_Q-/exec';
 
         // --- Messaging Functions (Defined Globally) ---
         // NOTE: Need access to loadingOverlay, loadingMessage, sentMessageElement, errorMessageElement
@@ -547,6 +547,7 @@
         }
 
         // --- Authentication Check (Runs First) ---
+        // Simplified checkAuthentication - Token Only
         function checkAuthentication() {
             console.log("Checking authentication...");
             const urlParams = new URLSearchParams(window.location.search);
@@ -567,7 +568,6 @@
 
             if (potentialAuthToken) {
                 // Validate the token if found
-                // Only show loading if elements are ready
                 if (document.getElementById('loadingOverlay')) {
                     showLoading("Validating session...");
                 } else {
@@ -584,68 +584,31 @@
                             localStorage.setItem('tpoCrmIsManager', result.isManager);
                             initializeApp(); // Proceed
                         } else {
-                            console.log("Token validation failed or token expired. Checking Google session...");
+                            // Token invalid or expired
+                            console.log("Token validation failed or token expired. Redirecting to login.");
                             localStorage.removeItem('tpoCrmToken');
                             localStorage.removeItem('tpoCrmUserEmail');
                             localStorage.removeItem('tpoCrmIsManager');
                             authToken = null;
-                            // Don't redirect yet, check Google session first
-                            checkGoogleSessionStatus();
+                            redirectToLogin(); // Redirect if token is invalid
                         }
                     })
                     .catch(error => {
+                        // Network or other error during validation
                         hideLoading();
                         console.error('Error validating token:', error);
-                        showMessage(document.querySelector('.error-message'), 'Error validating session. Checking Google session...');
-                        // Proceed to check Google session even if token validation fails due to network error
-                        checkGoogleSessionStatus();
+                        showMessage(document.querySelector('.error-message'), 'Error validating session. Please try logging in again.');
+                        // Optionally redirect to login on validation error too
+                        // redirectToLogin();
                     });
             } else {
-                // No token found, check Google session directly
-                console.log("No token found. Checking Google session...");
-                checkGoogleSessionStatus();
+                // No token found in URL or storage
+                console.log("No token found. Redirecting to login.");
+                redirectToLogin();
             }
         }
 
-        function checkGoogleSessionStatus() {
-             // Only show loading if elements are ready
-             if (document.getElementById('loadingOverlay')) {
-                 showLoading("Checking Google session...");
-             } else {
-                 console.warn("DOM not ready for loading indicator during Google session check.");
-             }
-             // Use fetch to call the new action. Important: credentials 'include' might be needed if cookies are involved,
-             // but Apps Script session usually works without it if accessed directly via /exec URL first.
-             // Let's try without it first.
-             fetch(`${APPS_SCRIPT_URL}?action=checkGoogleSession`)
-                .then(response => response.json())
-                .then(result => {
-                    hideLoading();
-                    if (result && result.success) {
-                        // Authorized Google session found
-                        console.log(`Google session validated successfully for user: ${result.email}, Is Manager: ${result.isManager}`);
-                        // Store info but note there's no token for API calls yet
-                        localStorage.setItem('tpoCrmUserEmail', result.email);
-                        localStorage.setItem('tpoCrmIsManager', result.isManager);
-                        // We don't have a token here, so subsequent API calls might fail if they strictly require one.
-                        // This architecture might need further refinement if Google users need to make POST requests
-                        // or if API calls need to re-verify session on each request without a token.
-                        // For now, let's assume GET requests might work based on Google session cookie.
-                        initializeApp(); // Proceed for Google user
-                    } else {
-                        // No valid token AND no authorized Google session
-                        console.log("No authorized Google session found. Redirecting to login.");
-                        redirectToLogin();
-                    }
-                })
-                .catch(error => {
-                     hideLoading();
-                     console.error('Error checking Google session:', error);
-                     showMessage(document.querySelector('.error-message'), 'Error checking Google session. Please try logging in manually.');
-                     // Redirect to login as a fallback on error
-                     redirectToLogin();
-                });
-        }
+        // checkGoogleSessionStatus function removed
 
         function redirectToLogin() {
             // Redirect to the Apps Script Login page, passing the current tpowellness.com URL
