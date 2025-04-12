@@ -606,9 +606,11 @@
                             if (!result.isManager) {
                                 console.log("User is not a manager. Redirecting to Rep View.");
                                 // Redirect to Rep view (CRMv4.html), keeping the token
-                                const repViewUrl = "https://tpowellness.com/CRMv4.html";
+                                const repViewUrl = "https://tpowellness.com/CRMv4.html"; // Changed from relative path
                                 const separator = repViewUrl.includes('?') ? '&' : '?';
-                                window.top.location.href = repViewUrl + separator + 'token=' + potentialAuthToken;
+                                // Ensure potentialAuthToken is valid before using
+                                const redirectTarget = potentialAuthToken ? (repViewUrl + separator + 'token=' + potentialAuthToken) : repViewUrl;
+                                window.top.location.href = redirectTarget;
                                 return; // Stop execution for non-managers
                             }
                             // --- End Manager Check ---
@@ -642,9 +644,12 @@
         // checkGoogleSessionStatus function removed
 
         function redirectToLogin() {
-            // Redirect to the Apps Script Login page, passing the current tpowellness.com URL
+            // *** MODIFIED BLOCK START ***
+            // Redirect to the static Login.html page on the same domain
             const currentTpoUrl = window.location.href;
-            window.top.location.href = `${APPS_SCRIPT_URL}?redirectUrl=${encodeURIComponent(currentTpoUrl)}`;
+            const staticLoginUrl = '/Login.html'; // Relative path to Login.html
+            window.top.location.href = `${staticLoginUrl}?redirectUrl=${encodeURIComponent(currentTpoUrl)}`;
+            // *** MODIFIED BLOCK END ***
         }
 
         // --- Main Application Initialization ---
