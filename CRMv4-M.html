@@ -281,6 +281,39 @@
              border: 1px solid #ced4da;
              border-radius: .2rem;
          }
+
+         /* Row background colors for nearby search results */
+         tr.source-crm {
+             /* background-color: #e2f0fb; */ /* Using default stripe for non-highlight */
+         }
+         tr.source-unassigned {
+              /* background-color: #e2fbf5; */ /* Using default stripe for non-highlight */
+         }
+         /* Row highlight colors for nearby search results */
+         tr.table-row-highlight-crm {
+             background-color: #a8d0f5 !important; /* Darker blue */
+             font-weight: bold; /* Optional: make text bold */
+         }
+          tr.table-row-highlight-unassigned {
+             background-color: #a1e9c1 !important; /* Darker green */
+             font-weight: bold; /* Optional: make text bold */
+         }
+         /* Row background colors for nearby search results */
+         tr.source-crm {
+             background-color: #e2f0fb; /* Light blue */
+         }
+         tr.source-unassigned {
+              background-color: #e2fbf5; /* Light green */
+         }
+         /* Row highlight colors for nearby search results */
+         tr.table-row-highlight-crm {
+             background-color: #a8d0f5 !important; /* Darker blue */
+             font-weight: bold; /* Optional: make text bold */
+         }
+          tr.table-row-highlight-unassigned {
+             background-color: #a1e9c1 !important; /* Darker green */
+             font-weight: bold; /* Optional: make text bold */
+         }
     </style>
 </head>
 <body>
@@ -310,6 +343,29 @@
                             <label for="searchAssignName">Dispensary Name</label>
                             <input type="text" id="searchAssignName" class="form-control form-control-sm" placeholder="Type name...">
                         </div>
+                    </div>
+                    <!-- Nearby Search Controls -->
+                    <div class="form-row border-top pt-3 mt-3">
+                         <div class="form-group col-md-3">
+                            <label for="enablePinDropping">Map Pin Search</label>
+                            <button type="button" id="enablePinDropping" class="btn btn-sm btn-secondary btn-block">Enable Pin Dropping</button>
+                         </div>
+                         <div class="form-group col-md-3">
+                            <label for="searchRadiusInput">Search Radius (km)</label>
+                            <input type="number" id="searchRadiusInput" class="form-control form-control-sm" value="20" min="1" max="100">
+                         </div>
+                         <div class="form-group col-md-3 d-flex align-items-center pt-3">
+                             <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="unassignedOnlyCheckbox" checked>
+                                <label class="form-check-label" for="unassignedOnlyCheckbox">
+                                    Unassigned Shops Only
+                                </label>
+                            </div>
+                         </div>
+                         <div class="form-group col-md-3">
+                            <label>&nbsp;</label>
+                            <button type="button" id="searchNearbyBtn" class="btn btn-sm btn-primary btn-block" disabled>Search Near Pin</button>
+                         </div>
                     </div>
                     <!-- Map Display -->
                     <div id="assignMapContainer" class="mb-3">
@@ -523,7 +579,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx44aBek_7Am9JJjaIjDtAjWHUsic58EEgcbjMluqfED8HNcOTaDfPqPsTwGMl_VfdV/exec'; // Replace with your actual Script URL
+            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxIz4dCH9lszZxIhPBTYRxtBtyyFWAHuT7tduwahavVVa-6sAkB5iADFj_7HsMcclbG/exec'; // Replace with your actual Script URL
             // Message Elements (Keep these)
             const loadingOverlay = document.getElementById('loadingOverlay');
             const loadingMessage = document.getElementById('loadingMessage');
@@ -548,6 +604,9 @@
             let assignMarkers = {}; // Object to hold markers for assignment map { shopName: markerInstance }
             let assignMapUserCoords = null; // Store user's coords [lat, lon]
             let assignMapUserMarker = null; // Store user's location marker
+            let searchPinMarker = null; // Marker for nearby search location
+            let isNearbySearchActive = false; // Flag to track if nearby search results are currently displayed
+            let isPinDroppingEnabled = false; // State for pin dropping mode
             // --- End Stage 2 ---
 
             // --- Stage 6: Sales Pipeline View Elements ---
@@ -566,6 +625,12 @@
             const reloadPipelineBtn = document.getElementById('reloadPipelineBtn');
             const applyPipelineFilterBtn = document.getElementById('applyPipelineFilterBtn');
             const reloadDataBtn = document.getElementById('reloadDataBtn');
+            // Nearby Search UI Elements
+            const enablePinDroppingBtn = document.getElementById('enablePinDropping');
+            const searchRadiusInput = document.getElementById('searchRadiusInput');
+            const unassignedOnlyCheckbox = document.getElementById('unassignedOnlyCheckbox');
+            const searchNearbyBtn = document.getElementById('searchNearbyBtn');
+            // Pipeline View Elements (Existing)
             const multiFieldSelectCheck = document.getElementById('multiFieldSelectCheck'); // Multi-select checkbox
             const pipelineColumnToggle = document.getElementById('pipelineColumnToggle'); // Column toggle container
             // --- End Stage 6 ---
@@ -605,8 +670,38 @@
                 // Listener for items per page select
                 assignmentPaginationControls.addEventListener('change', function(event) {
                     if (event.target.matches('#assignItemsPerPage')) {
-                         currentAssignItemsPerPage = parseInt(event.target.value, 10);
-                         fetchUnassignedData(1); // Go back to page 1 when changing items per page
+                         const newLimit = parseInt(event.target.value, 10);
+                         currentAssignItemsPerPage = newLimit; // Update the global variable
+
+                         if (isNearbySearchActive && searchPinMarker) {
+                             // Re-run nearby search with the new limit
+                             console.log(`Items per page changed during nearby search. Re-searching with limit: ${newLimit}`);
+                             const position = searchPinMarker.getLatLng();
+                             const radius = searchRadiusInput.value || 20; // Get current radius
+
+                             showLoading('Refreshing nearby search...');
+                             clearResultMarkers(false); // Clear old markers, keep search pin
+                             if (assignmentTableContainer) assignmentTableContainer.innerHTML = '<p>Refreshing...</p>';
+
+                             // Use fetch to call the backend
+                             const fetchUrl = new URL(SCRIPT_URL);
+                             fetchUrl.searchParams.append('action', 'getNearbyDispensaries');
+                             fetchUrl.searchParams.append('latitude', position.lat);
+                             fetchUrl.searchParams.append('longitude', position.lng);
+                             fetchUrl.searchParams.append('limit', newLimit); // Use new limit
+                             fetchUrl.searchParams.append('maxDistance', radius);
+
+                             fetch(fetchUrl)
+                                 .then(response => response.json())
+                                 .then(handleNearbyResults) // Reuse the results handler
+                                 .catch(handleNearbyError); // Reuse the error handler
+
+                         } else {
+                             // Default behavior: Fetch unassigned data for page 1
+                             console.log(`Items per page changed (default view). Fetching page 1 with limit: ${newLimit}`);
+                             isNearbySearchActive = false; // Ensure flag is reset if it wasn't already
+                             fetchUnassignedData(1); // Go back to page 1
+                         }
                     }
                 });
                  // Listener for direct page input
@@ -635,6 +730,263 @@
             if (assignSelectedButton) {
                 assignSelectedButton.addEventListener('click', handleAssignButtonClick);
             }
+
+            // --- Nearby Search Map Pin Logic ---
+
+            // Function to update the state of the Search Nearby button
+            function updateSearchButtonState() {
+                if (searchNearbyBtn) {
+                    searchNearbyBtn.disabled = !searchPinMarker; // Enable only if a pin exists
+                }
+            }
+
+            // Function to handle placing/moving the search pin
+            function handleMapClickForPin(e) {
+                const lat = e.latlng.lat;
+                const lon = e.latlng.lng;
+                console.log(`Map clicked for pin at: [${lat}, ${lon}]`);
+
+                // Remove previous pin if exists
+                if (searchPinMarker) {
+                    assignMap.removeLayer(searchPinMarker);
+                }
+
+                // Create a new red, draggable marker
+                searchPinMarker = L.marker([lat, lon], {
+                    draggable: true,
+                    icon: L.icon({ // Using Leaflet.awesome-markers or similar would be better, but using basic red for now
+                        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+                        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                        iconSize: [25, 41],
+                        iconAnchor: [12, 41],
+                        popupAnchor: [1, -34],
+                        shadowSize: [41, 41]
+                    })
+                }).addTo(assignMap);
+
+                // Update popup content function
+                const updatePopup = (currentLat, currentLon) => {
+                    return `<b>Search Location</b><br>Lat: ${currentLat.toFixed(6)}<br>Lon: ${currentLon.toFixed(6)}`;
+                };
+
+                searchPinMarker.bindPopup(updatePopup(lat, lon)).openPopup();
+
+                // Update popup on drag end
+                searchPinMarker.on('dragend', function(event) {
+                    const marker = event.target;
+                    const position = marker.getLatLng();
+                    marker.setPopupContent(updatePopup(position.lat, position.lng)).openPopup();
+                    console.log(`Search pin dragged to: [${position.lat}, ${position.lon}]`);
+                    updateSearchButtonState(); // Should already be enabled, but good practice
+                });
+
+                updateSearchButtonState(); // Enable search button now that pin exists
+                isNearbySearchActive = false; // Placing a pin resets the view state
+            }
+
+            // Function to remove the search pin
+            function removeSearchPin() {
+                 if (searchPinMarker) {
+                    assignMap.removeLayer(searchPinMarker);
+                    searchPinMarker = null;
+                    console.log("Search pin removed.");
+                 }
+                 updateSearchButtonState(); // Disable search button
+            }
+
+            // Event listener for the pin dropping toggle button
+            if (enablePinDroppingBtn && assignMap) {
+                enablePinDroppingBtn.addEventListener('click', function() {
+                    isPinDroppingEnabled = !isPinDroppingEnabled; // Toggle state
+
+                    if (isPinDroppingEnabled) {
+                        enablePinDroppingBtn.textContent = 'Disable Pin Dropping';
+                        enablePinDroppingBtn.classList.remove('btn-secondary');
+                        enablePinDroppingBtn.classList.add('btn-warning');
+                        assignMap.on('click', handleMapClickForPin);
+                        assignMap.getContainer().style.cursor = 'crosshair'; // Change cursor
+                        console.log("Pin dropping enabled.");
+                        // Don't enable search button until pin is actually dropped
+                    } else {
+                        enablePinDroppingBtn.textContent = 'Enable Pin Dropping';
+                        enablePinDroppingBtn.classList.remove('btn-warning');
+                        enablePinDroppingBtn.classList.add('btn-secondary');
+                        assignMap.off('click', handleMapClickForPin);
+                        assignMap.getContainer().style.cursor = ''; // Reset cursor
+                        removeSearchPin(); // Remove the pin when disabling
+                        isNearbySearchActive = false; // Disabling pin dropping resets the view state
+                        console.log("Pin dropping disabled.");
+                    }
+                });
+            } else {
+                 if (!enablePinDroppingBtn) console.error("Enable Pin Dropping button not found.");
+                 if (!assignMap) console.error("assignMap not initialized before setting up pin dropping listener.");
+            }
+
+            // --- End Nearby Search Map Pin Logic ---
+
+
+            // --- Nearby Search Execution Logic ---
+
+            if (searchNearbyBtn) {
+                searchNearbyBtn.addEventListener('click', function() {
+                    if (!searchPinMarker) {
+                        showMessage(errorMessageElement, 'Please place a search pin on the map first.');
+                        return;
+                    }
+
+                    const position = searchPinMarker.getLatLng();
+                    const radius = searchRadiusInput.value || 20; // Default to 20 if input is empty
+                    const limitSelect = document.getElementById('assignItemsPerPage'); // Use existing items per page selector
+                    const limit = limitSelect ? limitSelect.value : 5; // Default to 5 if selector not found
+
+                    // Use position.lng instead of position.lon
+                    console.log(`Initiating nearby search: Lat=${position.lat}, Lng=${position.lng}, Radius=${radius}km, Limit=${limit}`);
+                    showLoading('Searching for nearby dispensaries...');
+
+                    // Clear previous results (table and map markers, except search pin)
+                    if (assignmentTableContainer) assignmentTableContainer.innerHTML = '<p>Searching...</p>';
+                    if (assignmentPaginationControls) assignmentPaginationControls.innerHTML = ''; // Clear pagination
+                    clearResultMarkers(false); // Clear only result markers, keep user and search pin
+
+                    // Replace google.script.run with fetch
+                    const fetchUrl = new URL(SCRIPT_URL);
+                    fetchUrl.searchParams.append('action', 'getNearbyDispensaries');
+                    fetchUrl.searchParams.append('latitude', position.lat);
+                    fetchUrl.searchParams.append('longitude', position.lng); // Use lng
+                    fetchUrl.searchParams.append('limit', limit);
+                    fetchUrl.searchParams.append('maxDistance', radius);
+
+                    fetch(fetchUrl)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`HTTP error! status: ${response.status}`);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            // Directly call the success handler logic
+                            handleNearbyResults(data);
+                        })
+                        .catch(error => {
+                            // Directly call the failure handler logic
+                            handleNearbyError(error);
+                        });
+                });
+            } else {
+                console.error("Search Nearby button not found.");
+            }
+
+            // Placeholder for error handler
+            function handleNearbyError(error) {
+                hideLoading();
+                console.error('Nearby Search Error:', error);
+                showMessage(errorMessageElement, 'Error searching for nearby dispensaries: ' + (error.message || error));
+                 if (assignmentTableContainer) assignmentTableContainer.innerHTML = '<p class="text-danger">Error performing nearby search.</p>';
+            }
+
+            // Function to clear result markers (modified to optionally keep search pin)
+            function clearResultMarkers(removeSearchPin = true) {
+                 if (!assignMap) return;
+                 console.log(`Clearing result markers. Remove search pin: ${removeSearchPin}`);
+                 Object.keys(assignMarkers).forEach(shopId => {
+                     if (assignMarkers[shopId]) {
+                         assignMap.removeLayer(assignMarkers[shopId]);
+                     }
+                 });
+                 assignMarkers = {}; // Reset result markers object
+
+                 // Optionally remove the search pin marker as well
+                 if (removeSearchPin && searchPinMarker) {
+                     assignMap.removeLayer(searchPinMarker);
+                     searchPinMarker = null;
+                     updateSearchButtonState(); // Disable search button if pin is removed
+                 }
+            }
+
+
+            // --- End Nearby Search Execution Logic ---
+
+
+            // --- Nearby Search Results Handling ---
+
+            function handleNearbyResults(response) {
+                hideLoading();
+                console.log("Received nearby search response:", response);
+
+                if (!response || !response.success) {
+                    handleNearbyError(response || { message: 'Invalid response from server.' });
+                    return;
+                }
+
+                let results = response.data || [];
+                const searchPoint = response.searchPoint; // Get search point coords if needed
+
+                // Filter based on checkbox state
+                if (unassignedOnlyCheckbox && unassignedOnlyCheckbox.checked) {
+                    console.log("Filtering results for Unassigned Only.");
+                    results = results.filter(shop => shop.source === 'Unassigned');
+                } else {
+                    console.log("Showing all results (CRM & Unassigned).");
+                }
+
+                if (results.length === 0) {
+                     if (assignmentTableContainer) assignmentTableContainer.innerHTML = '<p>No shops found matching the criteria near the selected point.</p>';
+                     // Optionally zoom map back to search pin or default view
+                     if (searchPinMarker) {
+                         assignMap.setView(searchPinMarker.getLatLng(), 14); // Zoom closer to pin
+                     }
+                     // Clear pagination if no results
+                     if (assignmentPaginationControls) assignmentPaginationControls.innerHTML = '';
+                     return;
+                }
+
+                // Populate table and map markers (passing true for isNearbySearch)
+                // Set flag *before* populating table, in case populate needs it (though currently it doesn't)
+                isNearbySearchActive = true;
+                populateAssignmentTable(results, true);
+
+                // Adjust map view to fit search pin and results
+                try {
+                    const markersToFit = [];
+                    if (searchPinMarker) {
+                        markersToFit.push(searchPinMarker);
+                    }
+                    // Add result markers (assuming assignMarkers is populated by populateAssignmentTable)
+                    Object.values(assignMarkers).forEach(marker => {
+                        if (marker) markersToFit.push(marker);
+                    });
+
+                    if (markersToFit.length > 0) {
+                        const group = new L.featureGroup(markersToFit);
+                        assignMap.fitBounds(group.getBounds().pad(0.1)); // Add padding
+                        console.log("Map bounds adjusted to fit search pin and results.");
+                    } else if (searchPinMarker) {
+                         assignMap.setView(searchPinMarker.getLatLng(), 14); // Zoom to pin if no results shown
+                    }
+                } catch (boundsError) {
+                    console.error("Error fitting map bounds:", boundsError);
+                    // Fallback zoom
+                    if (searchPinMarker) assignMap.setView(searchPinMarker.getLatLng(), 14);
+                }
+
+                 // Update pagination controls for nearby results: Show only items per page and result count
+                 if (assignmentPaginationControls) {
+                     // Build only the necessary HTML parts
+                     let paginationHTML = `
+                         <label for="assignItemsPerPage" class="sr-only">Items per page:</label>
+                         <select id="assignItemsPerPage" class="items-per-page-select">
+                             <option value="5" ${currentAssignItemsPerPage === 5 ? 'selected' : ''}>5</option>
+                             <option value="10" ${currentAssignItemsPerPage === 10 ? 'selected' : ''}>10</option>
+                             <option value="15" ${currentAssignItemsPerPage === 15 ? 'selected' : ''}>15</option>
+                             <option value="20" ${currentAssignItemsPerPage === 20 ? 'selected' : ''}>20</option>
+                         </select> items per page
+                         <span class="ml-2 text-muted">(${results.length} nearby results found)</span>`;
+                     assignmentPaginationControls.innerHTML = paginationHTML;
+                 }
+            }
+
+            // --- End Nearby Search Results Handling ---
 
             // Stage 6: Sales Pipeline View Listeners
             // Conditional fetch based on multi-select checkbox
@@ -1101,6 +1453,7 @@
                     return;
                 }
                 showLoading('Fetching unassigned shops...');
+                isNearbySearchActive = false; // Default fetch resets the nearby search state
                 currentAssignmentPage = page;
                 const province = filterAssignProvince.value;
                 const name = searchAssignName.value;
@@ -1171,8 +1524,48 @@
                 }
             }
 
+            // New function for source-specific highlighting
+            function highlightMapSelection(shopId, source) {
+                const table = assignmentTableContainer.querySelector('table');
+                if (!table) return;
 
-            function populateAssignmentTable(data) {
+                // Define highlight classes
+                const highlightClassCrm = 'table-row-highlight-crm'; // Darker blue
+                const highlightClassUnassigned = 'table-row-highlight-unassigned'; // Darker green
+
+                // Remove previous highlights of either type
+                table.querySelectorAll(`tr.${highlightClassCrm}, tr.${highlightClassUnassigned}`).forEach(row => {
+                    row.classList.remove(highlightClassCrm, highlightClassUnassigned);
+                });
+
+                // Find the target row using the ID we added
+                 const targetRow = table.querySelector(`#assign-row-${escapeHtml(shopId.replace(/\s+/g, '-'))}`);
+
+                 if (targetRow) {
+                     // Apply the correct highlight based on source
+                     if (source === 'CRM') {
+                         targetRow.classList.add(highlightClassCrm);
+                     } else { // Default to Unassigned highlight if source is 'Unassigned' or unknown
+                         targetRow.classList.add(highlightClassUnassigned);
+                     }
+                     // Scroll into view
+                     targetRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                     console.log(`Highlighted row for ${shopId} with source ${source}`); // DEBUG
+                 } else {
+                      console.warn(`Could not find row with ID assign-row-${escapeHtml(shopId.replace(/\s+/g, '-'))} to highlight.`);
+                 }
+            }
+
+
+            // Define icons globally or near the top of the DOMContentLoaded listener for reuse
+            const blueIconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png';
+            const greenIconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png';
+            const shadowUrl = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png';
+            const blueIcon = L.icon({ iconUrl: blueIconUrl, shadowUrl: shadowUrl, iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41] });
+            const greenIcon = L.icon({ iconUrl: greenIconUrl, shadowUrl: shadowUrl, iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41] });
+
+
+            function populateAssignmentTable(data, isNearbySearch = false) { // Add isNearbySearch flag
                  if (!assignmentTableContainer) return;
 
                  // Clear previous markers from the assignment map
@@ -1190,8 +1583,12 @@
 
                 let tableHTML = '<table class="table table-striped table-bordered table-sm"><thead><tr>';
                 tableHTML += '<th><input type="checkbox" id="selectAllAssignCheckbox" title="Select/Deselect All"></th>';
-                // Updated headers as per user request
+                // Add Distance and Source headers conditionally if needed, or adjust existing ones
+                // For simplicity, keeping original headers for now. Can add later if required.
                 tableHTML += '<th>Name</th><th>Google Maps</th><th>Line</th><th>Line URL</th><th>Phone#</th><th>Website</th><th>Website URL</th>';
+                 if (isNearbySearch) { // Add Source column for nearby search results
+                     tableHTML += '<th>Source</th><th>Distance (km)</th>';
+                 }
                 tableHTML += '</tr></thead><tbody>';
 
                 const bounds = L.latLngBounds(); // To fit map to markers
@@ -1203,13 +1600,15 @@
                         console.warn("Skipping shop with missing name:", shop);
                         return; // Use return inside forEach to skip iteration
                     }
+                    const source = shop.source || 'Unassigned'; // Default to Unassigned if source is missing
+                    const rowClass = isNearbySearch ? (source === 'CRM' ? 'source-crm' : 'source-unassigned') : '';
 
                     // Declare lat/lon once for this iteration
                     const lat = parseFloat(shop.latitude);
                     const lon = parseFloat(shop.longitude);
 
                     // Add row ID for easier selection
-                    tableHTML += `<tr id="assign-row-${escapeHtml(shopId.replace(/\s+/g, '-'))}">`;
+                    tableHTML += `<tr id="assign-row-${escapeHtml(shopId.replace(/\s+/g, '-'))}" class="${rowClass}" data-source="${source}">`; // Add class and data-source
                     tableHTML += `<td><input type="checkbox" class="assign-checkbox" data-shop-id="${escapeHtml(shopId)}"></td>`;
                     // Add data attributes for event delegation instead of inline onclick
                     let mapDataAttributes = '';
@@ -1238,6 +1637,10 @@
                     tableHTML += `<td>${escapeHtml(shop.website)}</td>`;
                     // Website URL Link
                     tableHTML += `<td>${shop.website_url ? `<a href="${escapeHtml(shop.website_url)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(shop.website_url)}">Link</a>` : ''}</td>`;
+                    if (isNearbySearch) { // Add Source and Distance cells for nearby search
+                        tableHTML += `<td>${escapeHtml(source)}</td>`;
+                        tableHTML += `<td>${shop.distance !== undefined ? shop.distance.toFixed(2) : 'N/A'}</td>`;
+                    }
                     // Status column removed
                     tableHTML += `</tr>`;
 
@@ -1245,19 +1648,45 @@
                     // Use the lat/lon declared earlier - remove duplicate declarations
                     // const lat = parseFloat(shop.latitude); // REMOVED
                     // const lon = parseFloat(shop.longitude); // REMOVED
+                    // Use the lat/lon declared earlier
                     if (assignMap && !isNaN(lat) && !isNaN(lon)) {
                         const coords = [lat, lon];
-                        const marker = L.marker(coords).addTo(assignMap);
-                        marker.bindPopup(`<b>${escapeHtml(shop.name)}</b>`);
-                        marker.on('click', () => {
-                            // When marker is clicked, highlight row and fit bounds to marker + user location
-                            const markerBounds = L.latLngBounds([coords]);
-                            if (assignMapUserCoords) {
-                                markerBounds.extend(assignMapUserCoords); // Include user location if available
+                        let markerIcon = greenIcon; // Default for unassigned/original view
+                        let popupContent = `<b>${escapeHtml(shop.name)}</b>`; // Default popup
+
+                        if (isNearbySearch) {
+                            if (source === 'CRM') {
+                                markerIcon = blueIcon;
+                                const assignedMember = shop.assignedMember || 'N/A';
+                                popupContent = `<b>${escapeHtml(shop.name)}</b><br>Assigned: ${escapeHtml(assignedMember)}<br>Source: CRM<br>Distance: ${shop.distance !== undefined ? shop.distance.toFixed(2) : 'N/A'} km`;
+                            } else { // Unassigned in nearby search
+                                markerIcon = greenIcon;
+                                popupContent = `<b>${escapeHtml(shop.name)}</b><br>Source: Unassigned<br>Distance: ${shop.distance !== undefined ? shop.distance.toFixed(2) : 'N/A'} km`;
                             }
-                            assignMap.fitBounds(markerBounds, { padding: [50, 50], maxZoom: 15 });
-                            highlightTableRow(shopId);
+                        }
+                        // No else needed for popupContent, default is already set for !isNearbySearch
+
+                        // Use default marker for CRM source, custom green for Unassigned
+                        let markerOptions = {};
+                        if (isNearbySearch && source === 'Unassigned') {
+                            markerOptions.icon = greenIcon;
+                        } else if (!isNearbySearch) { // Default view always uses green
+                             markerOptions.icon = greenIcon;
+                        }
+                        // If source is CRM, markerOptions remains empty, using Leaflet default blue
+
+                        const marker = L.marker(coords, markerOptions).addTo(assignMap);
+                        marker.bindPopup(popupContent);
+
+                        // Add click listener to marker for highlighting
+                        marker.on('click', () => {
+                            console.log(`Marker clicked: ${shopId}, Source: ${source}`); // DEBUG
+                            highlightMapSelection(shopId, source); // Call new highlight function
+
+                            // Optional: Center map on marker click? Or keep fitBounds after search?
+                            // assignMap.setView(coords, 16); // Example: Center map
                         });
+
                         assignMarkers[shopId] = marker; // Store marker reference
                         bounds.extend(coords); // Extend map bounds
                         markersAdded = true;
@@ -1269,12 +1698,16 @@
 
                 // Fit map to markers if any were added and valid
                 if (assignMap && markersAdded && bounds.isValid()) {
-                    // Include user location in bounds if available
-                    if (assignMapUserCoords) {
-                        bounds.extend(assignMapUserCoords);
+                    // Include user location in bounds if available (only for default view?)
+                    // For nearby search, we fit to search pin + results later in handleNearbyResults
+                    if (!isNearbySearch && assignMapUserCoords) {
+                         bounds.extend(assignMapUserCoords);
                     }
-                    assignMap.fitBounds(bounds, { padding: [50, 50] }); // Add some padding
-                } else if (assignMap && !assignMapUserCoords) { // Only reset if no user location either
+                    // Don't fit bounds here for nearby search, it's handled in handleNearbyResults
+                    if (!isNearbySearch) {
+                         assignMap.fitBounds(bounds, { padding: [50, 50] }); // Add some padding
+                    }
+                } else if (assignMap && !assignMapUserCoords && !isNearbySearch) { // Only reset if no user location either and not nearby search
                      assignMap.setView([13.7563, 100.5018], 6); // Reset view if no valid bounds
                 }
                 // Invalidate map size after adding markers and potentially changing bounds
@@ -1284,16 +1717,52 @@
                 // Add event listener for "Select All" checkbox AFTER table is in DOM
                 const selectAllCheckbox = document.getElementById('selectAllAssignCheckbox');
                 if (selectAllCheckbox) {
-                    selectAllCheckbox.replaceWith(selectAllCheckbox.cloneNode(true)); // Re-attach listener safely
-                    document.getElementById('selectAllAssignCheckbox').addEventListener('change', function() {
-                        document.querySelectorAll('.assign-checkbox').forEach(checkbox => {
-                            checkbox.checked = this.checked;
-                        });
+                    // Clear previous listener before adding new one
+                    const newSelectAllCheckbox = selectAllCheckbox.cloneNode(true);
+                    selectAllCheckbox.parentNode.replaceChild(newSelectAllCheckbox, selectAllCheckbox);
+
+                    newSelectAllCheckbox.addEventListener('change', function() {
+                        // Select only visible checkboxes in the current table context
+                        const currentTable = assignmentTableContainer.querySelector('table');
+                        if (currentTable) {
+                            currentTable.querySelectorAll('.assign-checkbox').forEach(checkbox => {
+                                checkbox.checked = this.checked;
+                            });
+                        }
                     });
                 } else {
                      console.error("Could not find selectAllAssignCheckbox element after table population");
                 }
-            }
+
+                // Add delegated listener for clicking table rows (for highlighting) AFTER table is in DOM
+                const currentTable = assignmentTableContainer.querySelector('table');
+                if (currentTable) {
+                     // Remove previous listener if any (simple approach)
+                     // A more robust approach would track the listener function, but this works for now
+                     const newTable = currentTable.cloneNode(true); // Clone to remove listeners
+                     currentTable.parentNode.replaceChild(newTable, currentTable);
+
+                     newTable.addEventListener('click', function(event) {
+                         // IMPORTANT: Do not trigger highlight if the click was on the checkbox itself or an interactive element like a link
+                         if (event.target.matches('.assign-checkbox') || event.target.closest('a')) {
+                             return;
+                         }
+
+                         const targetRow = event.target.closest('tr');
+                         // Ensure it's a data row (has a checkbox) and has a source attribute
+                         const shopIdInput = targetRow ? targetRow.querySelector('.assign-checkbox') : null;
+                         const source = targetRow ? targetRow.dataset.source : null;
+
+                         if (targetRow && shopIdInput && source) {
+                             const shopId = shopIdInput.dataset.shopId;
+                             if(shopId) {
+                                 console.log(`Table row clicked: ${shopId}, Source: ${source}`); // DEBUG
+                                 highlightMapSelection(shopId, source);
+                             }
+                         }
+                     });
+                }
+            } // End populateAssignmentTable
 
              function populateAssignmentPagination(currentPage, totalPages) {
                  if (!assignmentPaginationControls) return;
@@ -1301,38 +1770,43 @@
                  currentPage = parseInt(currentPage, 10);
                  totalPages = parseInt(totalPages, 10);
 
-                // Items per page dropdown
-                paginationHTML += `
-                    <label for="assignItemsPerPage" class="sr-only">Items per page:</label>
-                    <select id="assignItemsPerPage" class="items-per-page-select">
-                        <option value="5" ${currentAssignItemsPerPage === 5 ? 'selected' : ''}>5</option>
-                        <option value="10" ${currentAssignItemsPerPage === 10 ? 'selected' : ''}>10</option>
-                        <option value="15" ${currentAssignItemsPerPage === 15 ? 'selected' : ''}>15</option>
-                        <option value="20" ${currentAssignItemsPerPage === 20 ? 'selected' : ''}>20</option>
-                    </select> items per page`;
+                 // Items per page dropdown
+                 paginationHTML += `
+                     <label for="assignItemsPerPage" class="sr-only">Items per page:</label>
+                     <select id="assignItemsPerPage" class="items-per-page-select">
+                         <option value="5" ${currentAssignItemsPerPage === 5 ? 'selected' : ''}>5</option>
+                         <option value="10" ${currentAssignItemsPerPage === 10 ? 'selected' : ''}>10</option>
+                         <option value="15" ${currentAssignItemsPerPage === 15 ? 'selected' : ''}>15</option>
+                         <option value="20" ${currentAssignItemsPerPage === 20 ? 'selected' : ''}>20</option>
+                     </select> items per page`;
 
-                if (totalPages > 0) {
-                     // Previous Button
-                    if (currentPage > 1) {
-                        paginationHTML += `<button type="button" class="btn btn-sm btn-outline-secondary ml-2 mr-1 assign-page-btn" data-page="${currentPage - 1}">&laquo; Prev</button>`;
-                    } else {
-                         paginationHTML += `<button type="button" class="btn btn-sm btn-outline-secondary ml-2 mr-1" disabled>&laquo; Prev</button>`;
-                    }
+                 if (totalPages > 0) {
+                      // Previous Button
+                     if (currentPage > 1) {
+                         paginationHTML += `<button type="button" class="btn btn-sm btn-outline-secondary ml-2 mr-1 assign-page-btn" data-page="${currentPage - 1}">&laquo; Prev</button>`;
+                     } else {
+                          paginationHTML += `<button type="button" class="btn btn-sm btn-outline-secondary ml-2 mr-1" disabled>&laquo; Prev</button>`;
+                     }
 
-                    // Page Input
-                    paginationHTML += `<span class="page-input-container">Page <input type="number" class="page-input" id="assignPageInput" min="1" max="${totalPages}" value="${currentPage}"> of ${totalPages}</span>`;
+                     // Page Input
+                     paginationHTML += `<span class="page-input-container">Page <input type="number" class="page-input" id="assignPageInput" min="1" max="${totalPages}" value="${currentPage}"> of ${totalPages}</span>`;
 
-                    // Next Button
-                    if (currentPage < totalPages) {
-                        paginationHTML += `<button type="button" class="btn btn-sm btn-outline-secondary ml-1 assign-page-btn" data-page="${currentPage + 1}">Next &raquo;</button>`;
-                    } else {
-                         paginationHTML += `<button type="button" class="btn btn-sm btn-outline-secondary ml-1" disabled>Next &raquo;</button>`;
-                    }
-                } else {
-                     paginationHTML += '<span class="ml-2">No results found</span>';
-                }
-                assignmentPaginationControls.innerHTML = paginationHTML;
-            }
+                     // Next Button
+                     if (currentPage < totalPages) {
+                         paginationHTML += `<button type="button" class="btn btn-sm btn-outline-secondary ml-1 assign-page-btn" data-page="${currentPage + 1}">Next &raquo;</button>`;
+                     } else {
+                          paginationHTML += `<button type="button" class="btn btn-sm btn-outline-secondary ml-1" disabled>Next &raquo;</button>`;
+                     }
+                 } else {
+                      // Keep pagination controls but disable buttons if 0 pages (e.g., after search)
+                      // Or show "No results" message as done in handleNearbyResults
+                      // Let's keep the controls but disable them
+                       paginationHTML += `<button type="button" class="btn btn-sm btn-outline-secondary ml-2 mr-1" disabled>&laquo; Prev</button>`;
+                       paginationHTML += `<span class="page-input-container">Page <input type="number" class="page-input" id="assignPageInput" min="1" max="1" value="1" disabled> of 0</span>`;
+                       paginationHTML += `<button type="button" class="btn btn-sm btn-outline-secondary ml-1" disabled>Next &raquo;</button>`;
+                 }
+                 assignmentPaginationControls.innerHTML = paginationHTML;
+             }
 
             // --- Stage 2: Handler for Assign Button Click ---
             function handleAssignButtonClick() {
