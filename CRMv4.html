@@ -219,7 +219,7 @@
              <h1 class="text-center mb-0">Tiny CRM</h1>
              <div>
                  <!-- Initially hidden, shown by JS if user is manager -->
-                 <a href="?" id="managerViewLink" class="btn btn-sm btn-outline-secondary mr-2" title="Switch to Manager View" style="display: none;"><i class="fas fa-user-shield"></i> Manager View</a>
+                 <a href="https://tpowellness.com/CRMv4-M.html" id="managerViewLink" class="btn btn-sm btn-outline-secondary mr-2" title="Switch to Manager View" style="display: none;"><i class="fas fa-user-shield"></i> Manager View</a>
                  <button class="btn btn-sm btn-outline-primary" id="reloadDataBtn" title="Reload All Data"><i class="fas fa-sync-alt"></i> Reload All</button>
              </div>
          </div>
@@ -474,7 +474,8 @@
     <script>
         // --- Authentication Globals ---
         let authToken = null;
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby-eYRfKGrvmT-3r38eqU9mLMImLbrialbCyBNkT4V-yVMCMQL49JoyYPBv3cQsJQ8P/exec'; // Replace with your actual Script URL
+        // !!! IMPORTANT: Replace this with your actual DEPLOYED Apps Script /exec URL !!!
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzPXaOIX493ohnES_XPcCuKo5JdjRCtrLGmgLsC_RsH8MYUUBxkD6ZkJ-Ag_ZfxwbM/exec';
 
         // --- Authentication Check (Runs First) ---
         function checkAuthentication() {
@@ -500,7 +501,7 @@
 
             // Validate the token
             showLoading("Validating session...");
-            fetch(`${SCRIPT_URL}?action=validateToken&token=${authToken}`)
+            fetch(`${APPS_SCRIPT_URL}?action=validateToken&token=${authToken}`)
                 .then(response => response.json())
                 .then(result => {
                     hideLoading();
@@ -530,8 +531,9 @@
         }
 
         function redirectToLogin() {
-            // Redirect to the base URL, doGet will handle serving the Login page
-            window.top.location.href = SCRIPT_URL;
+            // Redirect to the Apps Script Login page, passing the current tpowellness.com URL
+            const currentTpoUrl = window.location.href;
+            window.top.location.href = `${APPS_SCRIPT_URL}?redirectUrl=${encodeURIComponent(currentTpoUrl)}`;
         }
 
         // --- Main Application Initialization ---
@@ -752,7 +754,7 @@
             function fetchFreshData(showLoadingIndicator = true) {
                 if(showLoadingIndicator) showLoading('Fetching dispensary data...');
                 // Add token to API call
-                fetch(`${SCRIPT_URL}?action=getAllDispensaryData&token=${authToken}`)
+                fetch(`${APPS_SCRIPT_URL}?action=getAllDispensaryData&token=${authToken}`)
                     .then(response => {
                         if (!response.ok) {
                             throw new Error(`HTTP error! status: ${response.status}`);
@@ -794,7 +796,7 @@
                 }
                 showLoading('Fetching setup data...');
                 // Add token to API call
-                fetch(`${SCRIPT_URL}?action=getSetupData&token=${authToken}`)
+                fetch(`${APPS_SCRIPT_URL}?action=getSetupData&token=${authToken}`)
                     .then(response => {
                          if (!response.ok) {
                             throw new Error(`HTTP error! status: ${response.status}`);
@@ -1140,7 +1142,7 @@
                          return;
                     }
 
-                    fetch(SCRIPT_URL, {
+                    fetch(APPS_SCRIPT_URL, { // Use APPS_SCRIPT_URL for POST as well
                         method: 'POST',
                         body: formData // Send FormData directly (token is now included)
                     })

@@ -321,7 +321,7 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
              <h1 class="text-center mb-0">Tiny CRM - Manager Tools</h1> <!-- Title Corrected -->
              <div>
-                 <a href="?view=rep" class="btn btn-sm btn-outline-secondary mr-2" title="Switch to Rep View"><i class="fas fa-user"></i> Rep View</a>
+                 <a href="https://tpowellness.com/CRMv4.html" class="btn btn-sm btn-outline-secondary mr-2" title="Switch to Rep View"><i class="fas fa-user"></i> Rep View</a>
                  <button class="btn btn-sm btn-outline-primary" id="reloadDataBtn" title="Reload All Data"><i class="fas fa-sync-alt"></i> Reload All</button>
              </div>
         </div>
@@ -495,7 +495,8 @@
     <script>
         // --- Authentication Globals ---
         let authToken = null;
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby-eYRfKGrvmT-3r38eqU9mLMImLbrialbCyBNkT4V-yVMCMQL49JoyYPBv3cQsJQ8P/exec'; // Replace with your actual Script URL
+        // !!! IMPORTANT: Replace this with your actual DEPLOYED Apps Script /exec URL !!!
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzPXaOIX493ohnES_XPcCuKo5JdjRCtrLGmgLsC_RsH8MYUUBxkD6ZkJ-Ag_ZfxwbM/exec';
 
         // --- Authentication Check (Runs First) ---
         function checkAuthentication() {
@@ -522,7 +523,7 @@
             // Validate the token
             showLoading("Validating session...");
             // Ensure fetch URL includes token for validation
-            fetch(`${SCRIPT_URL}?action=validateToken&token=${authToken}`)
+            fetch(`${APPS_SCRIPT_URL}?action=validateToken&token=${authToken}`)
                 .then(response => response.json())
                 .then(result => {
                     hideLoading();
@@ -552,8 +553,9 @@
         }
 
         function redirectToLogin() {
-            // Redirect to the base URL, doGet will handle serving the Login page
-            window.top.location.href = SCRIPT_URL;
+            // Redirect to the Apps Script Login page, passing the current tpowellness.com URL
+            const currentTpoUrl = window.location.href;
+            window.top.location.href = `${APPS_SCRIPT_URL}?redirectUrl=${encodeURIComponent(currentTpoUrl)}`;
         }
 
         // --- Main Application Initialization ---
@@ -753,7 +755,7 @@
                              if (assignmentTableContainer) assignmentTableContainer.innerHTML = '<p>Refreshing...</p>';
 
                              // Use fetch to call the backend
-                             const fetchUrl = new URL(SCRIPT_URL);
+                             const fetchUrl = new URL(APPS_SCRIPT_URL); // Use APPS_SCRIPT_URL
                              fetchUrl.searchParams.append('action', 'getNearbyDispensaries');
                              fetchUrl.searchParams.append('latitude', position.lat);
                              fetchUrl.searchParams.append('longitude', position.lng);
@@ -921,7 +923,7 @@
                     clearResultMarkers(false); // Clear only result markers, keep user and search pin
 
                     // Replace google.script.run with fetch, adding token
-                    const fetchUrl = new URL(SCRIPT_URL);
+                    const fetchUrl = new URL(APPS_SCRIPT_URL); // Use APPS_SCRIPT_URL
                     fetchUrl.searchParams.append('action', 'getNearbyDispensaries');
                     fetchUrl.searchParams.append('latitude', position.lat);
                     fetchUrl.searchParams.append('longitude', position.lng); // Use lng
@@ -1192,7 +1194,7 @@
                     return;
                 }
 
-                fetch(SCRIPT_URL, {
+                fetch(APPS_SCRIPT_URL, { // Use APPS_SCRIPT_URL for POST
                     method: 'POST',
                     body: payload
                 })
@@ -1343,7 +1345,7 @@
                 }
                 showLoading('Fetching setup data...');
                 // Add token to setup data fetch
-                fetch(`${SCRIPT_URL}?action=getSetupData&token=${authToken}`)
+                fetch(`${APPS_SCRIPT_URL}?action=getSetupData&token=${authToken}`)
                     .then(response => {
                          if (!response.ok) {
                             throw new Error(`HTTP error! status: ${response.status}`);
@@ -1542,7 +1544,7 @@
                 const name = searchAssignName.value;
                 const itemsPerPage = document.getElementById('assignItemsPerPage')?.value || currentAssignItemsPerPage; // Get selected items per page
 
-                const url = new URL(SCRIPT_URL);
+                const url = new URL(APPS_SCRIPT_URL); // Use APPS_SCRIPT_URL
                 url.searchParams.append('action', 'getUnassignedShops');
                 url.searchParams.append('province', province);
                 url.searchParams.append('name', name);
@@ -1937,7 +1939,7 @@ if (authToken) {
     return;
 }
 
-fetch(SCRIPT_URL, {
+fetch(APPS_SCRIPT_URL, { // Use APPS_SCRIPT_URL for POST
     method: 'POST',
     body: payload
 })
@@ -1980,7 +1982,7 @@ fetch(SCRIPT_URL, {
                 const endDateStr = endDateInput.value;
                 const itemsPerPage = document.getElementById('pipelineItemsPerPage')?.value || currentPipelineItemsPerPage; // Get selected items per page
 
-                const url = new URL(SCRIPT_URL);
+                const url = new URL(APPS_SCRIPT_URL); // Use APPS_SCRIPT_URL
                 url.searchParams.append('action', 'getPipelineData');
                 url.searchParams.append('member', member);
                 url.searchParams.append('pipelines', JSON.stringify(selectedPipelines)); // Pass JSON array string
@@ -1993,10 +1995,9 @@ fetch(SCRIPT_URL, {
                     url.searchParams.append('startDate', startDateStr);
                     url.searchParams.append('endDate', endDateStr);
                 }
-url.searchParams.append('token', authToken); // Add token
+                url.searchParams.append('token', authToken); // Add token
 
-fetch(url)
-                fetch(url)
+                fetch(url) // Already uses APPS_SCRIPT_URL defined above
                     .then(response => {
                         if (!response.ok) {
                             throw new Error(`HTTP error! status: ${response.status}`);
