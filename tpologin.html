@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
-  <title>TPO Wellness - Employee Login</title> <!-- Changed Title -->
+  <title>TPO Wellness - Employee Login</title>
   <meta content="" name="description">
   <meta content="" name="keywords">
 
@@ -23,15 +23,16 @@
   <!-- Main CSS File -->
   <link href="assets/css/style.css" rel="stylesheet">
 
-  <!-- Custom Styles for Login Page (Copied from Login.html) -->
+  <!-- Custom Styles for Login Page -->
   <style>
-    /* Keep specific login form styles, adjust as needed */
+    /* Styles for the login form section */
     .login-section {
-      padding: 60px 0;
+      padding: 60px 0; /* Padding for the section */
+      width: 100%; /* Section takes full width */
+      flex-grow: 1; /* Make the section fill the main area */
       display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: calc(100vh - 180px); /* Adjust based on header/footer height */
+      align-items: center; /* Center its content (the container div) vertically */
+      justify-content: center; /* Center its content horizontally */
     }
     .login-container {
       background-color: white;
@@ -63,7 +64,6 @@
       box-sizing: border-box;
       font-size: 16px;
     }
-    /* Use theme button style */
     .login-container button {
       width: 100%;
       padding: 12px;
@@ -86,18 +86,16 @@
     .login-container .error-message { color: #dc3545; margin-top: 15px; text-align: center; min-height: 1em; font-size: 14px; }
     .login-container .info-message { margin-top: 25px; text-align: center; color: #666; font-size: 14px; }
 
-    /* Body padding adjusted for theme header */
+    /* Make body a flex container to push footer down */
     body {
-        padding-top: 110px; /* Adjust if topbar+header height changes */
-    }
-    #header {
-        height: 70px; /* Ensure header height is consistent */
-    }
-    #topbar {
-        height: 40px; /* Ensure topbar height is consistent */
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh; /* Body takes full viewport height */
     }
     main {
-        padding-top: 0; /* Remove extra padding if login-section handles it */
+        flex-grow: 1; /* Main fills space between header/footer */
+        display: flex; /* Use flexbox to allow login-section to grow */
+        flex-direction: column; /* Stack children vertically */
     }
   </style>
 
@@ -105,7 +103,7 @@
 <body>
 
   <!-- ======= Top Bar ======= -->
-  <section id="topbar" class="d-flex align-items-center fixed-top"> <!-- Added fixed-top -->
+  <section id="topbar" class="d-flex align-items-center">
     <div class="container d-flex justify-content-center justify-content-md-between">
       <div class="contact-info d-flex align-items-center">
         <i class="bi bi-envelope d-flex align-items-center"><a href="mailto:info@tpo-wellness.com">info@tpo-wellness.com</a></i>
@@ -120,7 +118,7 @@
   </section>
 
   <!-- ======= Header ======= -->
-  <header id="header" class="d-flex align-items-center fixed-top"> <!-- Added fixed-top -->
+  <header id="header" class="d-flex align-items-center">
     <div class="container d-flex align-items-center justify-content-between">
       <h1 class="logo"><a href="index.html"><img src="./assets/img/TPOLogo.png" alt="TPO Wellness Logo" class="img-fluid"></a></h1>
       <nav id="navbar" class="navbar">
@@ -149,22 +147,25 @@
         <div class="row justify-content-center">
           <div class="col-lg-6 col-md-8">
             <div class="login-container">
-              <!-- Logo removed from here, it's in the header -->
-              <h1>Employee Login</h1> <!-- Changed Heading -->
+              <!-- Logo can be added here if desired -->
+              <!-- <div class="logo">
+                <img src="assets/img/TPOLogo.png" alt="TPO Wellness">
+              </div> -->
+              <h1>Employee Login</h1>
               <div id="login-form">
                 <div class="form-group">
                   <label for="email">Email</label>
-                  <input type="email" id="email" name="email" class="form-control" required> <!-- Added form-control class -->
+                  <input type="email" id="email" name="email" class="form-control" required>
                 </div>
                 <div class="form-group">
                   <label for="password">Password</label>
-                  <input type="password" id="password" name="password" class="form-control" required> <!-- Added form-control class -->
+                  <input type="password" id="password" name="password" class="form-control" required>
                 </div>
                 <button type="button" id="loginButton" onclick="login()">Login</button>
                 <div id="error-message" class="error-message"></div>
               </div>
               <div class="info-message">
-                <p>If you're having trouble logging in, please contact your administrator.</p>
+                <p>If you're having trouble logging in, please contact your administrator.</p> <!-- Keep admin message -->
               </div>
             </div>
           </div>
@@ -255,24 +256,30 @@
   <!-- Template Main JS File -->
   <script src="assets/js/main.js"></script> <!-- Needed for mobile nav toggle -->
 
-  <!-- Login Script (Adapted from original tpologin.html) -->
+  <!-- Login Script -->
   <script>
     // TODO: Replace with the NEW Google Apps Script URL for Employee/Customer Login (Stage 3)
     const APPS_SCRIPT_URL = 'PLACEHOLDER_NEW_APPS_SCRIPT_URL';
 
-    // Get error message from URL parameters (if any)
+    // Get redirect URL and error message from URL parameters
     const urlParams = new URLSearchParams(window.location.search);
     const errorParam = urlParams.get('error');
+    const redirectUrlParam = urlParams.get('redirectUrl'); // This is passed by Code.gs redirect
+    // Prioritize redirect URL from parameter, fallback to default CRM page
+    const redirectUrl = redirectUrlParam || "https://tpowellness.com/CRMv4.html";
 
     const errorDiv = document.getElementById('error-message');
     const loginButton = document.getElementById('loginButton');
+    const loginStatusSpan = document.getElementById('loginStatus'); // Added
+    const logoutButton = document.getElementById('logoutButton'); // Added
+    const userInfoDiv = document.querySelector('#topbar .user-info'); // Added
 
     // Function to disable/enable buttons
     function setButtonsDisabled(disabled) {
         if(loginButton) loginButton.disabled = disabled;
     }
 
-    // Login function for Employee/Customer
+    // Employee/Customer login (fetch logic pending Stage 3)
     function login() {
       const emailInput = document.getElementById('email');
       const passwordInput = document.getElementById('password');
@@ -309,7 +316,7 @@
        }, 1000);
 
       /*
-      // --- OLD CRM LOGIN LOGIC (Commented out) ---
+      // --- OLD CRM LOGIN LOGIC (Commented out for reference) ---
       const loginUrl = new URL(APPS_SCRIPT_URL); // This URL needs to be the NEW one
       loginUrl.searchParams.append('action', 'handleLogin'); // Action might be different for new script
       loginUrl.searchParams.append('email', email);
@@ -339,6 +346,18 @@
       */
     }
 
+    // Logout function (Not typically needed on basic login pages, keep CRM version commented)
+    /*
+    function logout() {
+        console.log("Logging out...");
+        localStorage.removeItem('tpoCrmToken');
+        localStorage.removeItem('tpoCrmUserEmail');
+        localStorage.removeItem('tpoCrmIsManager');
+        // Redirect to login page (this page) without any token/error
+        window.top.location.href = '/Login.html'; // Or maybe index.html?
+    }
+    */
+
     // Add event listener for Enter key in password field
     document.getElementById('password').addEventListener('keypress', function(e) {
       if (e.key === 'Enter') {
@@ -353,6 +372,7 @@
       if (errorParam) {
         errorDiv.textContent = decodeURIComponent(errorParam);
       }
+      // Removed login status check from basic login page
     });
   </script>
 
