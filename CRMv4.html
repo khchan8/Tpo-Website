@@ -1,1241 +1,1468 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta content="width=device-width, initial-scale=1.0" name="viewport">
-  <title>TPO Wellness - CRM (Rep View)</title> <!-- CRM Title -->
-  <meta content="" name="description">
-  <meta content="" name="keywords">
+    <base href=""> <!-- Consider removing or setting appropriately if needed -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TPO Wellness - CRM (Rep View)</title>
 
-  <!-- Favicons -->
-  <link href="assets/img/favicon.png" rel="icon">
-  <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+    <!-- Favicons -->
+    <link href="assets/img/favicon.png" rel="icon">
+    <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
 
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Raleway:300,300i,400,400i,500,500i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+    <!-- Google Fonts (from Login.html) -->
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Raleway:300,300i,400,400i,500,500i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
 
-  <!-- Vendor CSS Files (From Login.html Theme) -->
-  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet"> <!-- Bootstrap 5 -->
-  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
-  <link href="assets/vendor/boxicons/css/boxicons.min.css" rel="stylesheet">
+    <!-- Vendor CSS Files -->
+    <!-- Using Bootstrap 4.5.2 from original CRM, ensure compatibility or update if needed -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Added from Login.html -->
+    <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+    <link href="assets/vendor/boxicons/css/boxicons.min.css" rel="stylesheet"> <!-- Needed for footer icons -->
+    <!-- Font Awesome (from original CRM) -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+    <!-- Leaflet CSS (from original CRM) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <!-- Leaflet Fullscreen CSS (from original CRM) -->
+    <link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/leaflet.fullscreen.css' rel='stylesheet' />
 
-  <!-- CRM Specific Vendor CSS -->
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-  <link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/leaflet.fullscreen.css' rel='stylesheet' />
+    <!-- Main CSS File (from Login.html) - Load before inline styles -->
+    <link href="assets/css/style.css" rel="stylesheet">
 
-  <!-- Main Theme CSS File -->
-  <link href="assets/css/style.css" rel="stylesheet">
+    <!-- Inline Styles (Keep original CRM Content Styles) -->
+    <style>
+        /* Make body a flex container to push footer down (from Login.html) */
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh; /* Body takes full viewport height */
+            font-family: 'Arial', sans-serif; /* Keep original CRM font or use theme font */
+            background-color: #f8f9fa; /* Keep original CRM background or use theme */
+            color: #333;
+        }
+        main {
+            flex-grow: 1; /* Main fills space between header/footer */
+            /* Removed display: flex; flex-direction: column from Login.html's main as CRM content structure might not need it */
+            padding-top: 20px; /* Add some space below header */
+            padding-bottom: 40px; /* Add some space above footer */
+        }
 
-  <!-- Custom Styles for CRM Page (Merged & Adapted) -->
-  <style>
-    /* Body Flex Layout (from Login.html) */
-    body {
-        display: flex;
-        flex-direction: column;
-        min-height: 100vh; /* Body takes full viewport height */
-        /* Ensure padding for fixed header if style.css doesn't handle it */
-        /* padding-top: 110px; */ /* Might be needed if header/topbar are fixed */
-    }
-    main {
-        flex-grow: 1; /* Main fills space between header/footer */
-        display: flex; /* Use flexbox */
-        flex-direction: column; /* Stack children vertically */
-        /* Centering is not needed here as CRM content should fill */
-    }
+        /* Original CRM Container Styles (Adjust if needed due to style.css) */
+        .crm-container { /* Renamed from .container to avoid conflict with bootstrap/style.css */
+            max-width: 800px;
+            margin: 0 auto; /* Keep centered */
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        /* Allow container to expand on larger screens (Original CRM) */
+        @media (min-width: 992px) { /* Bootstrap lg breakpoint */
+            .crm-container {
+                max-width: none; /* Remove max-width constraint */
+                 /* Optionally add some horizontal padding if needed */
+                 padding-left: 40px;
+                 padding-right: 40px;
+            }
+        }
+        @media (max-width: 768px) {
+            .crm-container {
+                padding: 15px;
+            }
+        }
 
-    /* CRM Specific Styles (Adapted from original CRMv4.html) */
-    .crm-section { /* New wrapper section */
-        padding: 40px 0; /* Add padding */
-        width: 100%;
-        /* flex-grow: 1; Removed - Let content flow naturally */
-    }
-    /* Renamed original .container to avoid conflict with Bootstrap 5 */
-    .crm-content-wrapper {
-        background-color: #fff;
-        border-radius: 10px;
-        box-shadow: 0 0 20px rgba(0,0,0,0.1);
-        padding: 30px;
-        width: 100%; /* Fill the Bootstrap container */
-    }
-    .crm-content-wrapper h1 { /* Style for the H1 inside CRM content */
-        color: #1e56a0; /* Use theme blue */
-        margin-bottom: 30px;
-        font-size: 28px; /* Adjust size */
-    }
-    .form-group { margin-bottom: 1.5rem; }
-    /* label style from theme */
-    .required-indicator { color: red; font-weight: bold; margin-left: 2px; }
-    /* .btn-primary style from theme */
-    .qr-code-preview { max-width: 200px; max-height: 200px; margin-top: 10px; border: 1px solid #ddd; border-radius: 5px; margin-right: 5px; display: inline-block; }
-    .loading-overlay { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
-    .loading-content { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: #fff; padding: 20px 40px; border-radius: 5px; text-align: center; font-weight: bold; color: #495057; }
-    .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 0 auto 10px auto; }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    .message { display: none; margin-top: 1rem; padding: 0.75rem; border-radius: 0.25rem; font-weight: bold; }
-    .sent-message { background-color: #d4edda; color: #155724; }
-    .error-message { background-color: #f8d7da; color: #721c24; }
-    .collapsible-section { border: 1px solid #ddd; border-radius: 5px; margin-bottom: 1.5rem; overflow: hidden; }
-    .collapsible-header { padding: 12px 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ccc; }
-    .collapsible-header span { font-weight: bold; font-size: 1.15em; }
-    #filterSection .collapsible-header { background-color: #e9ecef; border-color: #ced4da;}
-    #dispensaryInfoSection .collapsible-header { background-color: #e2f0fb; border-color: #b8daff;}
-    #contactInfoSection .collapsible-header { background-color: #e2fbf5; border-color: #b1dfbb;}
-    #activityNotesSection .collapsible-header { background-color: #fff3cd; border-color: #ffeeba;}
-    #actionItemsSection .collapsible-header { background-color: #f8d7da; border-color: #f5c6cb;}
-    .collapsible-content { padding: 20px; display: none; background-color: #ffffff; }
-    .collapsible-icon { transition: transform 0.3s ease; }
-    .collapsible-section.active .collapsible-icon { transform: rotate(180deg); }
-    .collapsible-section.active .collapsible-content { display: block; }
-    #repMap { height: 350px; width: 100%; margin-bottom: 1rem; border: 1px solid #ccc; border-radius: 5px; }
-    .map-container { display: none; }
-    .map-container.visible { display: block; }
-    #repMap:-webkit-full-screen { width: 100% !important; height: 100% !important; z-index: 99999; }
-    #repMap:-ms-fullscreen { width: 100% !important; height: 100% !important; z-index: 99999; }
-    #repMap:fullscreen { width: 100% !important; height: 100% !important; z-index: 99999; }
-    .leaflet-pseudo-fullscreen { position: fixed !important; width: 100% !important; height: 100% !important; top: 0px !important; left: 0px !important; z-index: 99999; }
-    textarea[readonly] { background-color: #e9ecef; cursor: not-allowed; color: #495057; font-size: 0.9em; line-height: 1.4; white-space: pre-wrap; }
-    @media (max-width: 768px) {
-        .crm-content-wrapper { padding: 15px; }
-        #repMap { height: 300px; }
-        /* Keep form stacking if needed */
-        /* .crm-content-wrapper .form-row .col-md-6, ... { flex-basis: 100%; max-width: 100%; } */
-    }
-  </style>
+        /* Original CRM Content Specific Styles */
+        .crm-container h1 { /* Target h1 inside specific container */
+            color: #007bff; /* Original CRM color */
+            margin-bottom: 30px;
+            text-align: center; /* Keep centered */
+        }
+        .form-group { margin-bottom: 1.5rem; }
+        label { font-weight: bold; color: #555; }
+        .required-indicator { color: red; font-weight: bold; margin-left: 2px; }
+        .btn-primary { background-color: #007bff; border-color: #007bff; }
+        .btn-primary:hover { background-color: #0056b3; border-color: #0056b3; }
+        .qr-code-preview { max-width: 200px; max-height: 200px; margin-top: 10px; border: 1px solid #ddd; border-radius: 5px; margin-right: 5px; display: inline-block; }
+        .loading-overlay { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
+        .loading-content { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: #fff; padding: 20px 40px; border-radius: 5px; text-align: center; font-weight: bold; color: #495057; }
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 0 auto 10px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .message { display: none; margin-top: 1rem; padding: 0.75rem; border-radius: 0.25rem; font-weight: bold; }
+        .sent-message { background-color: #d4edda; color: #155724; }
+        .error-message { background-color: #f8d7da; color: #721c24; }
+        .collapsible-section { border: 1px solid #ddd; border-radius: 5px; margin-bottom: 1.5rem; overflow: hidden; }
+        .collapsible-header { padding: 12px 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ccc; }
+        .collapsible-header span { font-weight: bold; font-size: 1.15em; }
+        #filterSection .collapsible-header { background-color: #e9ecef; border-color: #ced4da;}
+        #dispensaryInfoSection .collapsible-header { background-color: #e2f0fb; border-color: #b8daff;}
+        #contactInfoSection .collapsible-header { background-color: #e2fbf5; border-color: #b1dfbb;}
+        #activityNotesSection .collapsible-header { background-color: #fff3cd; border-color: #ffeeba;}
+        #actionItemsSection .collapsible-header { background-color: #f8d7da; border-color: #f5c6cb;}
+        .collapsible-content { padding: 20px; display: none; background-color: #ffffff; }
+        .collapsible-icon { transition: transform 0.3s ease; }
+        .collapsible-section.active .collapsible-icon { transform: rotate(180deg); }
+        .collapsible-section.active .collapsible-content { display: block; }
+        #repMap { height: 350px; width: 100%; margin-bottom: 1rem; border: 1px solid #ccc; border-radius: 5px; }
+        .map-container { display: none; }
+        .map-container.visible { display: block; }
+        #repMap:-webkit-full-screen { width: 100% !important; height: 100% !important; z-index: 99999; }
+        #repMap:-ms-fullscreen { width: 100% !important; height: 100% !important; z-index: 99999; }
+        #repMap:fullscreen { width: 100% !important; height: 100% !important; z-index: 99999; }
+        .leaflet-pseudo-fullscreen { position: fixed !important; width: 100% !important; height: 100% !important; top: 0px !important; left: 0px !important; z-index: 99999; }
+        textarea[readonly] { background-color: #e9ecef; cursor: not-allowed; color: #495057; font-size: 0.9em; line-height: 1.4; white-space: pre-wrap; }
+        @media (max-width: 768px) {
+            #repMap { height: 300px; }
+            .form-row .col-md-6, .form-row .col-md-4, .form-row .col-md-2 { flex-basis: 100%; max-width: 100%; }
+        }
 
+        /* Style for logout button in top bar (can customize) */
+        #topbar .logout-btn {
+            background: #dc3545; /* Red color */
+            border: 0;
+            padding: 4px 15px;
+            color: #fff;
+            transition: 0.3s;
+            border-radius: 4px;
+            font-size: 13px;
+            margin-left: 15px;
+            cursor: pointer;
+        }
+        #topbar .logout-btn:hover {
+            background: #c82333; /* Darker red */
+        }
+        #topbar #loginStatus { /* Style for login status text */
+             font-size: 14px;
+             color: #fff; /* White text on dark top bar */
+        }
+
+    </style>
 </head>
 <body>
 
-  <!-- ======= Top Bar (from Login.html) ======= -->
-  <section id="topbar" class="d-flex align-items-center"> <!-- Consider fixed-top if needed -->
-    <div class="container d-flex justify-content-center justify-content-md-between">
-      <div class="contact-info d-flex align-items-center">
-        <i class="bi bi-envelope d-flex align-items-center"><a href="mailto:info@tpo-wellness.com">info@tpo-wellness.com</a></i>
-        <i class="bi bi-phone d-flex align-items-center ms-4"><span>+66 87 789 4950</span></i>
-      </div>
-      <div class="user-info d-flex align-items-center"> <!-- Populated by JS -->
-         <span id="loginStatus" style="margin-right: 15px;">Loading...</span>
-         <button id="logoutButton" class="logout-btn" onclick="logout()" style="display: none;">Logout</button>
-      </div>
-    </div>
-  </section>
-
-  <!-- ======= Header (from Login.html, modified nav) ======= -->
-  <header id="header" class="d-flex align-items-center"> <!-- Consider fixed-top if needed -->
-    <div class="container d-flex align-items-center justify-content-between">
-      <h1 class="logo"><a href="index.html"><img src="./assets/img/TPOLogo.png" alt="TPO Wellness Logo" class="img-fluid"></a></h1>
-      <nav id="navbar" class="navbar">
-        <ul>
-          <li><a class="nav-link scrollto" href="index.html">Home</a></li>
-          <li><a class="nav-link active" href="#">CRM</a></li> <!-- CRM Active -->
-          <!-- Add other relevant links if needed -->
-          <li><a class="nav-link" href="#" onclick="logout()">Logout</a></li>
-        </ul>
-        <i class="bi bi-list mobile-nav-toggle"></i>
-      </nav><!-- .navbar -->
-    </div>
-  </header><!-- End Header -->
-
-  <main id="main">
-    <!-- ======= CRM Section ======= -->
-    <section class="crm-section">
-        <div class="container"> <!-- Bootstrap 5 container for layout -->
-            <div class="crm-content-wrapper"> <!-- Original CRM content wrapper -->
-                <!-- Start of Original CRM Content (from line 218 of reverted file) -->
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h1 class="mb-0">Tiny CRM</h1> <!-- Removed text-center -->
-                    <div>
-                        <!-- Initially hidden, shown by JS if user is manager -->
-                        <a href="CRMv4-M.html" id="managerViewLink" class="btn btn-sm btn-outline-secondary mr-2" title="Switch to Manager View" style="display: none;"><i class="fas fa-user-shield"></i> Manager View</a>
-                        <button class="btn btn-sm btn-outline-primary" id="reloadDataBtn" title="Reload All Data"><i class="fas fa-sync-alt"></i> Reload All</button>
-                    </div>
-                </div>
-
-                <form id="dispensaryForm">
-                    <!-- Filter Section -->
-                    <div class="collapsible-section" id="filterSection">
-                        <div class="collapsible-header">
-                            <span>Filters</span>
-                            <i class="fas fa-chevron-down collapsible-icon"></i>
-                        </div>
-                        <div class="collapsible-content">
-                            <div class="row"> <!-- Use Bootstrap 5 row/col -->
-                                <div class="form-group col-md-6">
-                                    <label for="filterAssignedMember">Filter by Assigned Member</label>
-                                    <select id="filterAssignedMember" class="form-select"> <!-- Use form-select -->
-                                        <option value="">All Members</option>
-                                    </select>
-                                </div>
-                                <div class="form-group col-md-6">
-                                    <label for="searchDispensary">Filter Dispensary Name</label>
-                                    <input type="text" id="searchDispensary" class="form-control" placeholder="Type Dispensary Name...">
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="form-group col-md-6">
-                                    <label for="filterSalesPipeline">Filter Sales Pipeline</label>
-                                    <select id="filterSalesPipeline" class="form-select"> <!-- Use form-select -->
-                                        <option value="">All Stages</option>
-                                    </select>
-                                </div>
-                                <div class="form-group col-md-6">
-                                    <label for="filterDispensaryAddress">Filter Dispensary Address</label>
-                                    <input type="text" id="filterDispensaryAddress" class="form-control" placeholder="Type Address...">
-                                </div>
-                            </div>
-                             <div class="form-group">
-                                <label for="filterAdditional">Additional Filter (Searches All Fields)</label>
-                                <input type="text" id="filterAdditional" class="form-control" placeholder="Type to search across fields...">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Dispensary Info Section -->
-                    <div class="collapsible-section active" id="dispensaryInfoSection">
-                        <div class="collapsible-header">
-                            <span>Dispensary Information</span>
-                            <i class="fas fa-chevron-down collapsible-icon"></i>
-                        </div>
-                        <div class="collapsible-content">
-                            <div class="row">
-                                <div class="form-group col-md-6">
-                                    <label for="selectDispensary">Select Dispensary</label>
-                                    <select id="selectDispensary" class="form-select" name="selectDispensary" required>
-                                        <option value="">Select a dispensary</option>
-                                        <option value="new">New Dispensary</option>
-                                    </select>
-                                </div>
-                                 <div class="form-group col-md-6" id="newDispensaryNameGroup" style="display: none;">
-                                    <label for="newDispensaryName">New Dispensary Name</label>
-                                    <input type="text" id="newDispensaryName" class="form-control" name="newDispensaryName" placeholder="Enter new shop name">
-                                </div>
-                            </div>
-                             <div class="row">
-                                <div class="form-group col-md-6">
-                                    <label for="currentDistributor">Current Distributor</label>
-                                    <input type="text" id="currentDistributor" name="Current Distributor" class="form-control" list="distributorList" placeholder="Type or select distributor">
-                                    <datalist id="distributorList"></datalist>
-                                </div>
-                                 <div class="form-group col-md-6">
-                                    <label for="shopSize">Shop Size</label>
-                                    <select id="shopSize" name="Shop Size" class="form-select">
-                                        <option value="">Select Size</option>
-                                        <option value="Small">Small</option>
-                                        <option value="Medium">Medium</option>
-                                        <option value="Large">Large</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label for="dispensaryAddress">Dispensary Address</label>
-                                <input type="text" id="dispensaryAddress" class="form-control" name="Dispensary Address" required placeholder="Enter full address">
-                            </div>
-                             <!-- Lat/Lon and Map -->
-                            <div class="row align-items-end">
-                              <div class="form-group col-md-4"><label for="latitude">Latitude</label><input type="text" id="latitude" name="Latitude" class="form-control" placeholder="e.g., 13.7563"></div>
-                              <div class="form-group col-md-4"><label for="longitude">Longitude</label><input type="text" id="longitude" name="Longitude" class="form-control" placeholder="e.g., 100.5018"></div>
-                              <div class="form-group col-md-2"><button type="button" id="getLocationBtn" class="btn btn-sm btn-secondary w-100" title="Get Current GPS Location"><i class="fas fa-map-marker-alt"></i> Get</button></div>
-                              <div class="form-group col-md-2"><button type="button" id="showMyLocationBtn" class="btn btn-sm btn-info w-100" title="Show My Location on Map"><i class="fas fa-street-view"></i> Show Me</button></div>
-                            </div>
-                            <!-- Map Container -->
-                            <div id="repMapContainer" class="map-container">
-                                <div id="repMap"></div>
-                            </div>
-                            <!-- Other Fields -->
-                             <div class="row">
-                                <div class="form-group col-md-6"><label for="province">Province</label><input type="text" id="province" name="Province" class="form-control" placeholder="e.g., Bangkok"></div>
-                                <div class="form-group col-md-6"><label>Original Name (from Unassigned)</label><p id="originalNameDisplay" class="form-control-plaintext text-muted fst-italic"></p></div> <!-- Use form-control-plaintext -->
-                            </div>
-                             <div class="row">
-                                <div class="form-group col-md-6"><label>URL</label><div id="url_link_container"></div></div>
-                                <div class="form-group col-md-6"><label>Google Maps URL</label><div id="google_maps_url_link_container"></div></div>
-                            </div>
-                             <div class="row">
-                                <div class="form-group col-md-6"><label for="website">Website</label><input type="text" id="website" name="website" class="form-control" placeholder="e.g., www.example.com"></div>
-                                <div class="form-group col-md-6"><label>Website URL</label><div id="website_url_link_container"></div></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Contact Info Section -->
-                    <div class="collapsible-section active" id="contactInfoSection">
-                        <div class="collapsible-header">
-                            <span>Contact Information</span>
-                            <i class="fas fa-chevron-down collapsible-icon"></i>
-                        </div>
-                        <div class="collapsible-content">
-                             <div class="row">
-                                <div class="form-group col-md-6">
-                                    <label for="contactPersonName">Contact Person Name <span class="required-indicator">*</span></label>
-                                    <input type="text" id="contactPersonName" class="form-control" name="Contact Person Name" required placeholder="Enter contact name">
-                                </div>
-                                <div class="form-group col-md-6">
-                                    <label for="email">Email</label>
-                                    <input type="email" id="email" class="form-control" name="Email" placeholder="e.g., contact@example.com">
-                                </div>
-                            </div>
-                             <div class="row">
-                                 <div class="form-group col-md-6">
-                                    <label for="phone">Phone <span class="required-indicator">*</span></label>
-                                    <input type="tel" id="phone" class="form-control" name="Phone" required placeholder="Enter primary phone number">
-                                </div>
-                                 <div class="form-group col-md-6">
-                                    <label for="phoneHash">Phone # (Alternative)</label>
-                                    <input type="tel" id="phoneHash" name="phone#" class="form-control" placeholder="Enter alternative phone">
-                                </div>
-                            </div>
-                             <div class="row">
-                                <div class="form-group col-md-6">
-                                    <label for="lineContact">Line Contact</label>
-                                    <input type="text" id="lineContact" class="form-control" name="Line Contact" placeholder="Enter Line display name">
-                                </div>
-                                 <div class="form-group col-md-6">
-                                    <label for="line">Line ID</label>
-                                    <input type="text" id="line" name="line" class="form-control" placeholder="Enter Line ID (e.g., @example)">
-                                </div>
-                            </div>
-                             <div class="row">
-                                <div class="form-group col-md-6"><label>Line URL</label><div id="line_url_link_container"></div></div>
-                                <div class="form-group col-md-6"><label for="facebook">Facebook Name/Page</label><input type="text" id="facebook" name="facebook" class="form-control" placeholder="Enter Facebook name or page ID"></div>
-                            </div>
-                            <div class="form-group"><label>Facebook URL</label><div id="facebook_url_link_container"></div></div>
-                            <div class="form-group">
-                                <label for="qrCode" class="form-label">Line QR Code, Store/Product Images</label> <!-- Use form-label -->
-                                <div id="qrCodeContent"></div>
-                                <input type="file" id="qrCode" class="form-control" name="qrCode" accept="image/*" multiple> <!-- Use form-control -->
-                                <div id="qrCodePreviewContainer"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Activity Notes Section -->
-                    <div class="collapsible-section active" id="activityNotesSection">
-                        <div class="collapsible-header">
-                            <span>Activity and Notes</span>
-                            <i class="fas fa-chevron-down collapsible-icon"></i>
-                        </div>
-                        <div class="collapsible-content">
-                            <div class="form-group">
-                                <label for="activityLogging">Activity Logging</label>
-                                <textarea id="activityLogging" class="form-control" name="activityLogging" rows="4" placeholder="Log your visit details, calls, etc. here..."></textarea>
-                            </div>
-                            <div class="form-group">
-                                <label for="history">Notes & Communication History</label>
-                                <textarea id="history" class="form-control" name="Notes & Communication History" rows="6" readonly></textarea>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Action Items Section -->
-                    <div class="collapsible-section active" id="actionItemsSection">
-                        <div class="collapsible-header">
-                            <span>Action Items and Assignment</span>
-                            <i class="fas fa-chevron-down collapsible-icon"></i>
-                        </div>
-                        <div class="collapsible-content">
-                            <div class="row">
-                                <div class="form-group col-md-6">
-                                    <label for="nextActionItem">Next Action Item</label>
-                                    <select id="nextActionItem" class="form-select" name="Next Action Item">
-                                        <option value="">Select an action</option>
-                                        <option value="Follow up">Follow up</option>
-                                        <option value="Send proposal">Send proposal</option>
-                                        <option value="Schedule meeting">Schedule meeting</option>
-                                        <option value="Other">Other</option>
-                                    </select>
-                                </div>
-                                 <div class="form-group col-md-6">
-                                    <label for="dueDate">Due Date and Time</label>
-                                    <input type="datetime-local" id="dueDate" class="form-control" name="Due Date">
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label for="nextActionItemDetails">Next Action Item Details</label>
-                                <textarea id="nextActionItemDetails" class="form-control" name="nextActionItemDetails" rows="3" placeholder="Add details for the next action..."></textarea>
-                            </div>
-                             <div class="row">
-                                <div class="form-group col-md-6">
-                                    <label for="assignedMember">Assigned Member</label>
-                                    <select id="assignedMember" class="form-select" name="Assigned Member" required>
-                                        <option value="">Select a member</option>
-                                    </select>
-                                </div>
-                                <div class="form-group col-md-6">
-                                    <label for="salesPipeline">Sales Pipeline</label>
-                                    <select id="salesPipeline" class="form-select" name="Sales Pipeline" required>
-                                        <option value="">Select pipeline stage</option>
-                                    </select>
-                                </div>
-                            </div>
-                             <!-- Assignment Notes Display -->
-                             <div class="form-group">
-                                <label for="assignmentHistory">Assignment Notes and History (Read Only)</label>
-                                <textarea id="assignmentHistory" class="form-control" name="Assignment Notes and History" rows="4" readonly></textarea>
-                            </div>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary w-100">Submit</button> <!-- Use theme button, w-100 -->
-                </form>
-                <!-- Message Area -->
-                <div id="loadingOverlay" class="loading-overlay">
-                    <div class="loading-content">
-                        <div class="spinner"></div>
-                        <span id="loadingMessage">Loading...</span>
-                    </div>
-                </div>
-                <div class="message sent-message mt-3"></div>
-                <div class="message error-message mt-3"></div>
-                <!-- End of Original CRM Content -->
-            </div><!-- End .crm-content-wrapper -->
-        </div><!-- End .container -->
-    </section><!-- End CRM Section -->
-  </main><!-- End #main -->
-
-  <!-- ======= Footer (from Login.html) ======= -->
-  <footer id="footer">
-    <div class="footer-top">
-      <div class="container">
-        <div class="row">
-          <div class="col-lg-4 col-md-6">
-            <div class="footer-info">
-              <h3>TPO Wellness</h3>
-              <p>
-                TPO Wellness Ltd. (Head Office)<br>
-                No. 122/7 Moo5, Pakkret Sub-District, Pakkret District.<br>
-                Nonthaburi Province 11120<br><br>
-                <strong>Tel:</strong> +662-687-7811,+6694-7365518<br>
-                <strong>Email:</strong> info@tpo-wellness.com<br>
-              </p>
-              <div class="social-links mt-3">
-                 <a href="#" class="twitter"><i class="bx bxl-twitter"></i></a>
-                 <a href="#" class="facebook"><i class="bx bxl-facebook"></i></a>
-                 <a href="#" class="instagram"><i class="bx bxl-instagram"></i></a>
-                 <a href="#" class="linkedin"><i class="bx bxl-linkedin"></i></a>
-              </div>
-            </div>
-          </div>
-          <div class="col-lg-2 col-md-6 footer-links">
-            <h4>Useful Links</h4>
-            <ul>
-              <li><i class="bx bx-chevron-right"></i> <a href="index.html#hero">Home</a></li>
-              <li><i class="bx bx-chevron-right"></i> <a href="index.html#about">About us</a></li>
-              <li><i class="bx bx-chevron-right"></i> <a href="index.html#services">Services</a></li>
-              <li><i class="bx bx-chevron-right"></i> <a href="#">Terms of service</a></li>
-              <li><i class="bx bx-chevron-right"></i> <a href="#">Privacy policy</a></li>
-            </ul>
-          </div>
-          <div class="col-lg-2 col-md-6 footer-links">
-            <h4>Our Services</h4>
-             <ul>
-               <li><i class="bx bx-chevron-right"></i> <a href="#">Edibles Manufacturing</a></li>
-               <li><i class="bx bx-chevron-right"></i> <a href="#">Pre-Roll Production</a></li>
-               <li><i class="bx bx-chevron-right"></i> <a href="#">Cannabis Flower Packaging</a></li>
-               <li><i class="bx bx-chevron-right"></i> <a href="#">R&D Services</a></li>
-               <li><i class="bx bx-chevron-right"></i> <a href="#">Quality Control & Assurance</a></li>
-             </ul>
-          </div>
-          <div class="col-lg-4 col-md-6 footer-newsletter">
-            <h4>Our Newsletter</h4>
-            <p>Subscribe to our newsletter for the latest updates</p>
-            <form action="" method="post">
-              <input type="email" name="email" class="form-control"><input type="submit" value="Subscribe" class="btn btn-primary">
-            </form>
-          </div>
+    <!-- ======= Top Bar (from Login.html) ======= -->
+    <section id="topbar" class="d-flex align-items-center">
+        <div class="container d-flex justify-content-center justify-content-md-between">
+        <div class="contact-info d-flex align-items-center">
+            <i class="bi bi-envelope d-flex align-items-center"><a href="mailto:info@tpo-wellness.com">info@tpo-wellness.com</a></i>
+            <i class="bi bi-phone d-flex align-items-center ms-4"><span>+66 87 789 4950</span></i>
         </div>
-      </div>
-    </div>
-    <div class="container">
-      <div class="copyright">
-        &copy; Copyright <strong><span>TPO Wellness</span></strong>. All Rights Reserved
-      </div>
-      <div class="credits">
-        Designed by <a href="#">KH</a>
-      </div>
-    </div>
-  </footer><!-- End Footer -->
-
-  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
-  <!-- <div id="preloader"></div> -->
-
-  <!-- Vendor JS Files (Theme) -->
-  <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script> <!-- Includes Popper -->
-  <!-- Add other theme vendor JS if needed (aos, glightbox, isotope, swiper) -->
-
-  <!-- CRM Specific Vendor JS -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/Leaflet.fullscreen.min.js'></script>
-
-  <!-- Template Main JS File -->
-  <script src="assets/js/main.js"></script>
-
-  <!-- CRM Main Script (Adapted from original) -->
-  <script>
-      // --- Authentication Globals ---
-      let authToken = null;
-      const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzy2g7bfHvjArMWornli3GPodDw99P4ayMjALKanAU4waL29CjcfCjHl3wiJaxSRIIV/exec'; // Keep original URL
-
-      // --- DOM Elements (Declare globally or ensure they exist before use) ---
-      const loadingOverlay = document.getElementById('loadingOverlay');
-      const loadingMessage = document.getElementById('loadingMessage');
-      const sentMessageElement = document.querySelector('.sent-message');
-      const errorMessageElement = document.querySelector('.error-message');
-      const loginStatusSpan = document.getElementById('loginStatus');
-      const logoutButton = document.getElementById('logoutButton');
-      const managerViewLink = document.getElementById('managerViewLink');
-      // ... (Add other frequently used DOM elements)
-
-      // --- Messaging Functions ---
-      function showLoading(message = "Loading...") {
-          if (loadingMessage) loadingMessage.textContent = message;
-          if (loadingOverlay) loadingOverlay.style.display = 'block';
-          if (sentMessageElement) hideMessage(sentMessageElement);
-          if (errorMessageElement) hideMessage(errorMessageElement);
-      }
-      function hideLoading() {
-           if (loadingOverlay) loadingOverlay.style.display = 'none';
-      }
-      function showMessage(element, message) {
-          hideLoading(); // Hide loading when showing a message
-          if(element) {
-              element.textContent = message;
-              element.style.display = 'block';
-              // Auto-hide after a few seconds?
-              // setTimeout(() => hideMessage(element), 5000);
-          } else { console.warn("showMessage: Target element not found."); }
-      }
-      function hideMessage(element) {
-          if(element) element.style.display = 'none';
-      }
-
-      // --- Authentication Functions ---
-      function checkLoginStatus() {
-          console.log("Checking login status...");
-          authToken = localStorage.getItem('tpoCrmToken');
-          const userEmail = localStorage.getItem('tpoCrmUserEmail');
-          const isManager = localStorage.getItem('tpoCrmIsManager') === 'true'; // Convert string to boolean
-
-          // Check URL for token first (passed from login redirect)
-          const urlParams = new URLSearchParams(window.location.search);
-          const tokenFromUrl = urlParams.get('token');
-
-          if (tokenFromUrl) {
-              console.log("Token found in URL parameter.");
-              authToken = tokenFromUrl;
-              // Attempt to fetch user details with this token to verify and get email/role
-              fetchUserDetails(authToken);
-              // Clean the token from the URL
-              const cleanUrl = window.location.pathname + window.location.search.replace(/&?token=[^&]*/g, '').replace(/^\?$/, '');
-              window.history.replaceState({}, document.title, cleanUrl);
-          } else if (authToken && userEmail) {
-              console.log("Token found in localStorage.");
-              // Verify token is still valid? (Optional, depends on backend logic)
-              updateLoginUI(userEmail, isManager);
-              fetchInitialData(); // Fetch data only if logged in via localStorage
-          } else {
-              console.log("No valid token found. Redirecting to login.");
-              redirectToLogin();
-          }
-      }
-
-      function fetchUserDetails(token) {
-          showLoading("Verifying session...");
-          const url = new URL(APPS_SCRIPT_URL);
-          url.searchParams.append('action', 'getUserDetails');
-          url.searchParams.append('token', token);
-
-          fetch(url)
-              .then(response => response.json())
-              .then(data => {
-                  hideLoading();
-                  if (data && data.success && data.email) {
-                      console.log("User details fetched successfully:", data);
-                      localStorage.setItem('tpoCrmToken', token); // Store validated token
-                      localStorage.setItem('tpoCrmUserEmail', data.email);
-                      localStorage.setItem('tpoCrmIsManager', data.isManager);
-                      updateLoginUI(data.email, data.isManager);
-                      fetchInitialData(); // Fetch data now that user is confirmed
-                  } else {
-                      console.error("Failed to fetch user details or invalid token:", data.message);
-                      localStorage.removeItem('tpoCrmToken'); // Clear invalid token
-                      localStorage.removeItem('tpoCrmUserEmail');
-                      localStorage.removeItem('tpoCrmIsManager');
-                      redirectToLogin(data.message || "Session invalid. Please login again.");
-                  }
-              })
-              .catch(error => {
-                  hideLoading();
-                  console.error('Error fetching user details:', error);
-                  redirectToLogin("Error verifying session. Please login again.");
-              });
-      }
-
-
-      function updateLoginUI(email, isManager) {
-          if (loginStatusSpan) loginStatusSpan.textContent = `Logged in as: ${email}`;
-          if (logoutButton) logoutButton.style.display = 'inline-block';
-          if (isManager && managerViewLink) {
-              managerViewLink.style.display = 'inline-block';
-          } else if (managerViewLink) {
-              managerViewLink.style.display = 'none';
-          }
-      }
-
-      function logout() {
-          console.log("Logging out...");
-          // Optional: Call backend to invalidate token?
-          localStorage.removeItem('tpoCrmToken');
-          localStorage.removeItem('tpoCrmUserEmail');
-          localStorage.removeItem('tpoCrmIsManager');
-          // Redirect to the main CRM login page
-          window.location.href = 'Login.html'; // Redirect to CRM Login
-      }
-
-      function redirectToLogin(errorMessage = null) {
-          let loginUrl = 'Login.html'; // Redirect to CRM Login
-          if (errorMessage) {
-              loginUrl += '?error=' + encodeURIComponent(errorMessage);
-          }
-          // Add redirectUrl so login page knows where to come back
-          loginUrl += (loginUrl.includes('?') ? '&' : '?') + 'redirectUrl=' + encodeURIComponent(window.location.href.split('?')[0]); // Current page without params
-          window.location.href = loginUrl;
-      }
-
-      // --- Data Fetching & Handling ---
-      let allDispensaries = []; // Store all fetched data
-      let setupData = { members: [], pipelineStages: [], distributors: [] }; // Store setup data
-      let mapInstance = null; // Leaflet map instance
-      let userMarker = null; // Marker for user's location
-      let dispensaryMarkers = []; // Array for dispensary markers
-
-      function fetchInitialData() {
-          if (!authToken) {
-              console.error("Cannot fetch data: No auth token.");
-              redirectToLogin("Session expired. Please login.");
-              return;
-          }
-          showLoading("Loading initial data...");
-          const url = new URL(APPS_SCRIPT_URL);
-          url.searchParams.append('action', 'getRepData'); // Action for Rep view
-          url.searchParams.append('token', authToken);
-
-          fetch(url)
-              .then(response => {
-                  if (!response.ok) { throw new Error(`Network error: ${response.statusText}`); }
-                  return response.json();
-              })
-              .then(data => {
-                  hideLoading();
-                  if (data.error) {
-                      console.error("Error fetching data:", data.error);
-                      if (data.error.toLowerCase().includes("token") || data.error.toLowerCase().includes("auth")) {
-                          redirectToLogin("Session invalid. Please login again.");
-                      } else {
-                          showMessage(errorMessageElement, `Error loading data: ${data.error}`);
-                      }
-                      return;
-                  }
-                  console.log("Data received:", data);
-                  allDispensaries = data.dispensaries || [];
-                  setupData = data.setupData || { members: [], pipelineStages: [], distributors: [] };
-                  populateStaticDropdowns();
-                  populateFilters();
-                  populateDispensaryDropdown(); // Initial population
-                  initializeMap(); // Initialize map after getting data
-                  // displayDispensaries(); // Display initially unfiltered
-              })
-              .catch(error => {
-                  hideLoading();
-                  console.error('Error fetching initial data:', error);
-                  showMessage(errorMessageElement, `Failed to load initial data: ${error.message}`);
-                  // Consider redirecting to login on critical fetch errors
-                  // redirectToLogin("Failed to load data. Please login again.");
-              });
-      }
-
-      function populateStaticDropdowns() {
-          // Populate Assigned Member dropdowns (form and filter)
-          const assignedMemberSelect = document.getElementById('assignedMember');
-          const filterMemberSelect = document.getElementById('filterAssignedMember');
-          assignedMemberSelect.innerHTML = '<option value="">Select a member</option>'; // Clear existing
-          filterMemberSelect.innerHTML = '<option value="">All Members</option>'; // Clear existing
-          setupData.members.forEach(member => {
-              assignedMemberSelect.add(new Option(member, member));
-              filterMemberSelect.add(new Option(member, member));
-          });
-
-          // Populate Sales Pipeline dropdowns (form and filter)
-          const salesPipelineSelect = document.getElementById('salesPipeline');
-          const filterPipelineSelect = document.getElementById('filterSalesPipeline');
-          salesPipelineSelect.innerHTML = '<option value="">Select pipeline stage</option>'; // Clear existing
-          filterPipelineSelect.innerHTML = '<option value="">All Stages</option>'; // Clear existing
-          setupData.pipelineStages.forEach(stage => {
-              salesPipelineSelect.add(new Option(stage, stage));
-              filterPipelineSelect.add(new Option(stage, stage));
-          });
-
-          // Populate Distributor datalist
-          const distributorList = document.getElementById('distributorList');
-          distributorList.innerHTML = ''; // Clear existing
-          setupData.distributors.forEach(dist => {
-              const option = document.createElement('option');
-              option.value = dist;
-              distributorList.appendChild(option);
-          });
-      }
-
-      function populateFilters() {
-          // Filters are populated within populateStaticDropdowns now
-      }
-
-      function populateDispensaryDropdown(filteredDispensaries = null) {
-          const selectDispensary = document.getElementById('selectDispensary');
-          const currentSelection = selectDispensary.value; // Preserve selection if possible
-          selectDispensary.innerHTML = '<option value="">Select a dispensary</option><option value="new">New Dispensary</option>'; // Reset
-
-          const dispensariesToDisplay = filteredDispensaries || allDispensaries;
-
-          // Sort dispensaries alphabetically by name
-          dispensariesToDisplay.sort((a, b) => (a['Dispensary Name'] || '').localeCompare(b['Dispensary Name'] || ''));
-
-          dispensariesToDisplay.forEach((dispensary, index) => {
-              // Use 'Dispensary Name' and store the original index or a unique ID if available
-              const name = dispensary['Dispensary Name'] || `Unnamed Dispensary ${index}`;
-              const option = new Option(name, index); // Use index as value for now
-              selectDispensary.add(option);
-          });
-
-          // Try to restore selection
-          if (currentSelection && selectDispensary.querySelector(`option[value="${currentSelection}"]`)) {
-              selectDispensary.value = currentSelection;
-          } else if (currentSelection === 'new') {
-              selectDispensary.value = 'new'; // Keep 'new' selected if it was
-          }
-           updateMapMarkers(dispensariesToDisplay); // Update map markers based on dropdown
-      }
-
-      function applyFilters() {
-          const filterMember = document.getElementById('filterAssignedMember').value;
-          const searchName = document.getElementById('searchDispensary').value.toLowerCase();
-          const filterPipeline = document.getElementById('filterSalesPipeline').value;
-          const filterAddress = document.getElementById('filterDispensaryAddress').value.toLowerCase();
-          const filterAdditional = document.getElementById('filterAdditional').value.toLowerCase();
-
-          const filtered = allDispensaries.filter(d => {
-              const nameMatch = !searchName || (d['Dispensary Name'] && d['Dispensary Name'].toLowerCase().includes(searchName));
-              const memberMatch = !filterMember || (d['Assigned Member'] === filterMember);
-              const pipelineMatch = !filterPipeline || (d['Sales Pipeline'] === filterPipeline);
-              const addressMatch = !filterAddress || (d['Dispensary Address'] && d['Dispensary Address'].toLowerCase().includes(filterAddress));
-
-              // Additional filter: check all string values
-              let additionalMatch = true;
-              if (filterAdditional) {
-                  additionalMatch = Object.values(d).some(val =>
-                      typeof val === 'string' && val.toLowerCase().includes(filterAdditional)
-                  );
-              }
-
-              return nameMatch && memberMatch && pipelineMatch && addressMatch && additionalMatch;
-          });
-
-          populateDispensaryDropdown(filtered);
-          // If a dispensary was selected, clear the form if it's no longer in the filtered list
-          const selectDispensary = document.getElementById('selectDispensary');
-          if (selectDispensary.value !== "" && selectDispensary.value !== "new" && !filtered[selectDispensary.value]) {
-               resetForm();
-          } else if (selectDispensary.value !== "" && selectDispensary.value !== "new") {
-              // Re-select to potentially update map focus if needed
-              handleDispensarySelection();
-          } else {
-               updateMapMarkers(filtered); // Update map with filtered markers if no specific one is selected
-          }
-      }
-
-      // --- Form Handling ---
-      function handleDispensarySelection() {
-          const selectDispensary = document.getElementById('selectDispensary');
-          const selectedIndex = selectDispensary.value;
-          const newDispensaryGroup = document.getElementById('newDispensaryNameGroup');
-          const form = document.getElementById('dispensaryForm');
-
-          // Clear previous messages
-          hideMessage(sentMessageElement);
-          hideMessage(errorMessageElement);
-
-          if (selectedIndex === 'new') {
-              resetForm(false); // Reset form but keep filters
-              newDispensaryGroup.style.display = 'block';
-              document.getElementById('newDispensaryName').required = true;
-              // Set default assigned member to current user? Requires knowing current user.
-              // const currentUser = localStorage.getItem('tpoCrmUserEmail'); // Assuming email is identifier
-              // if (currentUser && setupData.members.includes(currentUser)) {
-              //    document.getElementById('assignedMember').value = currentUser;
-              // }
-              clearMapSelection(); // Clear any map highlight
-          } else if (selectedIndex !== '') {
-              newDispensaryGroup.style.display = 'none';
-              document.getElementById('newDispensaryName').required = false;
-              // Find the selected dispensary in the currently displayed list
-              const displayedDispensaries = getFilteredDispensaries(); // Get currently filtered list
-              const selectedDispensary = displayedDispensaries[selectedIndex]; // Use index as value
-
-              if (selectedDispensary) {
-                  populateForm(selectedDispensary);
-                  focusMapOnDispensary(selectedDispensary);
-              } else {
-                  console.warn("Selected dispensary not found in current filter set.");
-                  resetForm(false); // Reset if selection is somehow invalid
-              }
-          } else {
-              resetForm(false); // Reset form if "Select a dispensary" is chosen
-              newDispensaryGroup.style.display = 'none';
-              document.getElementById('newDispensaryName').required = false;
-              clearMapSelection();
-          }
-      }
-
-      function getFilteredDispensaries() {
-          // Re-apply filters to get the list currently shown in the dropdown
-          const filterMember = document.getElementById('filterAssignedMember').value;
-          const searchName = document.getElementById('searchDispensary').value.toLowerCase();
-          const filterPipeline = document.getElementById('filterSalesPipeline').value;
-          const filterAddress = document.getElementById('filterDispensaryAddress').value.toLowerCase();
-          const filterAdditional = document.getElementById('filterAdditional').value.toLowerCase();
-
-          return allDispensaries.filter(d => {
-              const nameMatch = !searchName || (d['Dispensary Name'] && d['Dispensary Name'].toLowerCase().includes(searchName));
-              const memberMatch = !filterMember || (d['Assigned Member'] === filterMember);
-              const pipelineMatch = !filterPipeline || (d['Sales Pipeline'] === filterPipeline);
-              const addressMatch = !filterAddress || (d['Dispensary Address'] && d['Dispensary Address'].toLowerCase().includes(filterAddress));
-              let additionalMatch = true;
-              if (filterAdditional) {
-                  additionalMatch = Object.values(d).some(val => typeof val === 'string' && val.toLowerCase().includes(filterAdditional));
-              }
-              return nameMatch && memberMatch && pipelineMatch && addressMatch && additionalMatch;
-          });
-      }
-
-
-      function populateForm(dispensary) {
-          // Populate standard fields by matching name attribute to dispensary object keys
-          const formElements = document.getElementById('dispensaryForm').elements;
-          for (let i = 0; i < formElements.length; i++) {
-              const element = formElements[i];
-              const name = element.name;
-              if (name && dispensary.hasOwnProperty(name)) {
-                  if (element.type === 'checkbox') {
-                      element.checked = dispensary[name]; // Handle checkboxes if any
-                  } else if (element.type === 'datetime-local') {
-                      // Format date if necessary (assuming stored as ISO string or similar)
-                      element.value = dispensary[name] ? new Date(dispensary[name]).toISOString().slice(0, 16) : '';
-                  }
-                   else {
-                      element.value = dispensary[name] || '';
-                  }
-              } else if (name === 'newDispensaryName') {
-                  element.value = ''; // Clear new name field
-              }
-          }
-
-          // Handle specific fields / display elements
-          document.getElementById('originalNameDisplay').textContent = dispensary['Original Name'] || 'N/A';
-          document.getElementById('history').value = dispensary['Notes & Communication History'] || '';
-          document.getElementById('assignmentHistory').value = dispensary['Assignment Notes and History'] || ''; // Populate assignment history
-
-          // Populate link containers
-          createLink('url_link_container', dispensary['URL']);
-          createLink('google_maps_url_link_container', dispensary['Google Maps URL']);
-          createLink('website_url_link_container', dispensary['website_url']); // Assuming key is 'website_url'
-          createLink('line_url_link_container', dispensary['line_url']);
-          createLink('facebook_url_link_container', dispensary['facebook_url']);
-
-          // Populate QR Code/Image previews
-          populateQrCodePreview(dispensary['QR Code']); // Assuming key is 'QR Code'
-      }
-
-      function createLink(containerId, url) {
-          const container = document.getElementById(containerId);
-          container.innerHTML = ''; // Clear previous
-          if (url) {
-              const link = document.createElement('a');
-              link.href = url;
-              link.textContent = url;
-              link.target = '_blank'; // Open in new tab
-              link.rel = 'noopener noreferrer';
-              container.appendChild(link);
-          } else {
-              container.textContent = 'N/A';
-          }
-      }
-
-       function populateQrCodePreview(qrCodeData) {
-          const previewContainer = document.getElementById('qrCodePreviewContainer');
-          previewContainer.innerHTML = ''; // Clear previous previews
-
-          if (qrCodeData) {
-              // Assuming qrCodeData is a comma-separated string of URLs or a single URL
-              const urls = typeof qrCodeData === 'string' ? qrCodeData.split(',').map(url => url.trim()).filter(url => url) : [];
-
-              urls.forEach(url => {
-                  const img = document.createElement('img');
-                  img.src = url;
-                  img.alt = 'Preview';
-                  img.classList.add('qr-code-preview'); // Use the style class
-                  img.onerror = () => { img.alt = 'Preview failed'; img.style.display='none'; }; // Handle broken links
-                  previewContainer.appendChild(img);
-              });
-          }
-      }
-
-      function resetForm(resetFilters = true) {
-          document.getElementById('dispensaryForm').reset();
-          document.getElementById('newDispensaryNameGroup').style.display = 'none';
-          document.getElementById('newDispensaryName').required = false;
-          document.getElementById('originalNameDisplay').textContent = '';
-          document.getElementById('history').value = '';
-          document.getElementById('assignmentHistory').value = '';
-          document.getElementById('qrCodePreviewContainer').innerHTML = '';
-          // Clear link containers
-          ['url_link_container', 'google_maps_url_link_container', 'website_url_link_container', 'line_url_link_container', 'facebook_url_link_container'].forEach(id => {
-              const container = document.getElementById(id);
-              if (container) container.innerHTML = 'N/A';
-          });
-
-          if (resetFilters) {
-              document.getElementById('filterAssignedMember').value = '';
-              document.getElementById('searchDispensary').value = '';
-              document.getElementById('filterSalesPipeline').value = '';
-              document.getElementById('filterDispensaryAddress').value = '';
-              document.getElementById('filterAdditional').value = '';
-              populateDispensaryDropdown(); // Repopulate with all
-          }
-          // Do not reset selectDispensary here, let the caller handle it or keep it ""
-          hideMessage(sentMessageElement);
-          hideMessage(errorMessageElement);
-      }
-
-      function handleFormSubmit(event) {
-          event.preventDefault(); // Prevent default form submission
-          if (!authToken) {
-              redirectToLogin("Session expired. Please login.");
-              return;
-          }
-
-          showLoading("Submitting data...");
-          const form = event.target;
-          const formData = new FormData(form);
-          const selectedIndex = document.getElementById('selectDispensary').value;
-
-          // Prepare data object
-          const submissionData = {};
-          formData.forEach((value, key) => {
-              // Skip the dropdown select itself, and empty file inputs
-              if (key !== 'selectDispensary' && !(form.elements[key] instanceof HTMLInputElement && form.elements[key].type === 'file' && value.size === 0)) {
-                 submissionData[key] = value;
-              }
-          });
-
-          // Add action and identify if it's a new entry
-          submissionData.action = 'updateDispensary'; // Or 'addDispensary'
-          submissionData.token = authToken; // Add token for authentication
-
-          if (selectedIndex === 'new') {
-              submissionData.action = 'addDispensary';
-              if (!submissionData.newDispensaryName) {
-                  hideLoading();
-                  showMessage(errorMessageElement, "Please enter a name for the new dispensary.");
-                  return;
-              }
-              submissionData['Dispensary Name'] = submissionData.newDispensaryName; // Use the new name
-              delete submissionData.newDispensaryName; // Remove temporary field
-          } else if (selectedIndex !== '') {
-              // Add identifier for existing dispensary (e.g., original index or a unique ID)
-              // We need to reliably get the original data row index or ID.
-              // Let's assume the original dispensary object had a unique ID or we can pass the name.
-              const displayedDispensaries = getFilteredDispensaries();
-              const originalDispensary = displayedDispensaries[selectedIndex];
-              if (originalDispensary && originalDispensary.UniqueID) { // Assuming a UniqueID column exists
-                 submissionData.identifier = originalDispensary.UniqueID;
-                 submissionData.identifierColumn = 'UniqueID'; // Tell script which column to use
-              } else if (originalDispensary && originalDispensary['Dispensary Name']) {
-                 // Fallback: Use name if no ID, less reliable if names change
-                 submissionData.identifier = originalDispensary['Dispensary Name'];
-                 submissionData.identifierColumn = 'Dispensary Name';
-              } else {
-                  hideLoading();
-                  showMessage(errorMessageElement, "Could not identify the dispensary to update.");
-                  return;
-              }
-          } else {
-              hideLoading();
-              showMessage(errorMessageElement, "Please select a dispensary or 'New Dispensary'.");
-              return;
-          }
-
-          // Handle file uploads (QR Code / Images) - Requires sending FormData
-          const fileInput = document.getElementById('qrCode');
-          if (fileInput.files.length > 0) {
-              // Append files to FormData - backend needs to handle multipart/form-data
-              for (let i = 0; i < fileInput.files.length; i++) {
-                  formData.append('file' + i, fileInput.files[i]);
-              }
-              // Append other data as well
-              Object.keys(submissionData).forEach(key => {
-                  if (key !== 'qrCode') { // Don't append the FileList object
-                     formData.append(key, submissionData[key]);
-                  }
-              });
-              // Remove the file input value from submissionData if it was added
-              delete submissionData.qrCode;
-          } else {
-              // If no files, send as JSON
-              formData = JSON.stringify(submissionData);
-          }
-
-
-          // Determine content type based on whether files are present
-          const fetchOptions = {
-              method: 'POST',
-              body: formData, // Will be FormData or JSON string
-              // headers: // Let browser set Content-Type for FormData, set manually for JSON
-          };
-          if (!(formData instanceof FormData)) {
-              fetchOptions.headers = { 'Content-Type': 'application/json' };
-          }
-
-
-          // Make the fetch request
-          fetch(APPS_SCRIPT_URL, fetchOptions)
-          .then(response => response.json())
-          .then(result => {
-              hideLoading();
-              if (result.success) {
-                  showMessage(sentMessageElement, result.message || "Data submitted successfully!");
-                  // Refresh data after successful submission
-                  fetchInitialData(); // Reload all data
-                  // Optionally reset form or re-select the entry
-                  resetForm(); // Reset completely for now
-              } else {
-                  showMessage(errorMessageElement, result.message || "Submission failed.");
-              }
-          })
-          .catch(error => {
-              hideLoading();
-              console.error('Error submitting form:', error);
-              showMessage(errorMessageElement, `Error submitting data: ${error.message}`);
-          });
-      }
-
-
-      // --- Map Functions ---
-      function initializeMap() {
-          if (mapInstance) return; // Already initialized
-
-          const mapContainer = document.getElementById('repMapContainer');
-          mapContainer.style.display = 'block'; // Show map container
-
-          // Default center (e.g., Bangkok)
-          let defaultCenter = [13.7563, 100.5018];
-
-          mapInstance = L.map('repMap', {
-              fullscreenControl: true, // Enable fullscreen button
-          }).setView(defaultCenter, 10); // Adjust default zoom level
-
-          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-              attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          }).addTo(mapInstance);
-
-          // Add markers for initial data
-          updateMapMarkers(allDispensaries);
-
-          // Add event listener for map clicks if needed (e.g., for dropping pins)
-          // mapInstance.on('click', function(e) { /* ... */ });
-      }
-
-      function updateMapMarkers(dispensaries) {
-          if (!mapInstance) return;
-
-          // Clear existing dispensary markers
-          dispensaryMarkers.forEach(marker => mapInstance.removeLayer(marker));
-          dispensaryMarkers = [];
-
-          dispensaries.forEach((dispensary, index) => {
-              const lat = parseFloat(dispensary.Latitude);
-              const lon = parseFloat(dispensary.Longitude);
-
-              if (!isNaN(lat) && !isNaN(lon)) {
-                  const marker = L.marker([lat, lon]).addTo(mapInstance);
-                  marker.bindPopup(`<b>${dispensary['Dispensary Name'] || 'Unnamed'}</b><br>${dispensary['Dispensary Address'] || ''}`);
-                  // Store index or ID with marker for linking
-                  marker.dispensaryIndex = index; // Store the index in the *filtered* array
-                  marker.on('click', () => {
-                      // Find the corresponding option in the dropdown and select it
-                      const selectDispensary = document.getElementById('selectDispensary');
-                      // Find the option whose value matches the marker's stored index
-                      const option = selectDispensary.querySelector(`option[value="${marker.dispensaryIndex}"]`);
-                      if (option) {
-                          selectDispensary.value = marker.dispensaryIndex;
-                          handleDispensarySelection(); // Trigger form population
-                      }
-                  });
-                  dispensaryMarkers.push(marker);
-              }
-          });
-           // Adjust map bounds to fit markers if needed (optional)
-           if (dispensaryMarkers.length > 0) {
-               const group = new L.featureGroup(dispensaryMarkers);
-               // mapInstance.fitBounds(group.getBounds().pad(0.1)); // Add padding
-           }
-      }
-
-      function focusMapOnDispensary(dispensary) {
-          if (!mapInstance) return;
-          const lat = parseFloat(dispensary.Latitude);
-          const lon = parseFloat(dispensary.Longitude);
-
-          if (!isNaN(lat) && !isNaN(lon)) {
-              mapInstance.setView([lat, lon], 15); // Zoom in closer when focusing
-
-              // Find the corresponding marker and open its popup
-              const marker = dispensaryMarkers.find(m =>
-                  m.getLatLng().lat === lat && m.getLatLng().lng === lon
-              );
-              if (marker) {
-                  marker.openPopup();
-              }
-          }
-      }
-
-       function clearMapSelection() {
-           if (mapInstance) {
-               mapInstance.closePopup();
-               // Optionally reset map view to default or fit all markers
-               if (dispensaryMarkers.length > 0) {
-                   const group = new L.featureGroup(dispensaryMarkers);
-                   // mapInstance.fitBounds(group.getBounds().pad(0.1));
-               } else {
-                   mapInstance.setView([13.7563, 100.5018], 10); // Reset to default
-               }
-           }
-       }
-
-
-      function getUserLocation() {
-          if (!navigator.geolocation) {
-              showMessage(errorMessageElement, "Geolocation is not supported by your browser.");
-              return;
-          }
-
-          showLoading("Getting your location...");
-          navigator.geolocation.getCurrentPosition(
-              (position) => {
-                  hideLoading();
-                  const lat = position.coords.latitude;
-                  const lon = position.coords.longitude;
-                  document.getElementById('latitude').value = lat.toFixed(6);
-                  document.getElementById('longitude').value = lon.toFixed(6);
-                  showMessage(sentMessageElement, "Location acquired!");
-
-                  // Update map if available
-                  if (mapInstance) {
-                      const userLatLng = [lat, lon];
-                      if (userMarker) {
-                          userMarker.setLatLng(userLatLng);
-                      } else {
-                          userMarker = L.marker(userLatLng, { icon: L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png', shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41] }) }).addTo(mapInstance);
-                          userMarker.bindPopup("Your Location").openPopup();
-                      }
-                      mapInstance.setView(userLatLng, 15); // Center map on user
-                  }
-              },
-              (error) => {
-                  hideLoading();
-                  console.error("Geolocation error:", error);
-                  showMessage(errorMessageElement, `Error getting location: ${error.message}`);
-              },
-              { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 } // Options
-          );
-      }
-
-      function showUserLocationOnMap() {
-           if (!navigator.geolocation) {
-              showMessage(errorMessageElement, "Geolocation is not supported by your browser.");
-              return;
-          }
-           if (!mapInstance) {
-               showMessage(errorMessageElement, "Map not initialized yet.");
-               return;
-           }
-
-          showLoading("Getting your location...");
-          navigator.geolocation.getCurrentPosition(
-              (position) => {
-                  hideLoading();
-                  const lat = position.coords.latitude;
-                  const lon = position.coords.longitude;
-                  const userLatLng = [lat, lon];
-
-                  if (userMarker) {
-                      userMarker.setLatLng(userLatLng);
-                  } else {
-                       userMarker = L.marker(userLatLng, { icon: L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png', shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41] }) }).addTo(mapInstance);
-                       userMarker.bindPopup("Your Location");
-                  }
-                  mapInstance.setView(userLatLng, 15); // Center map on user
-                  userMarker.openPopup();
-              },
-              (error) => {
-                  hideLoading();
-                  console.error("Geolocation error:", error);
-                  showMessage(errorMessageElement, `Error getting location: ${error.message}`);
-              },
-              { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-          );
-      }
-
-
-      // --- Collapsible Sections ---
-      function setupCollapsibleSections() {
-          document.querySelectorAll('.collapsible-header').forEach(header => {
-              header.addEventListener('click', () => {
-                  const section = header.closest('.collapsible-section');
-                  section.classList.toggle('active');
-              });
-          });
-      }
-
-      // --- Event Listeners ---
-      document.addEventListener('DOMContentLoaded', () => {
-          checkLoginStatus(); // Check login status first
-          // Don't fetch initial data here, wait for checkLoginStatus to confirm auth
-
-          setupCollapsibleSections();
-
-          // Form submission
-          const form = document.getElementById('dispensaryForm');
-          if(form) form.addEventListener('submit', handleFormSubmit);
-
-          // Dispensary selection change
-          const selectDispensary = document.getElementById('selectDispensary');
-          if(selectDispensary) selectDispensary.addEventListener('change', handleDispensarySelection);
-
-          // Filter triggers
-          document.getElementById('filterAssignedMember')?.addEventListener('change', applyFilters);
-          document.getElementById('searchDispensary')?.addEventListener('input', applyFilters);
-          document.getElementById('filterSalesPipeline')?.addEventListener('change', applyFilters);
-          document.getElementById('filterDispensaryAddress')?.addEventListener('input', applyFilters);
-          document.getElementById('filterAdditional')?.addEventListener('input', applyFilters);
-
-          // Geolocation buttons
-          document.getElementById('getLocationBtn')?.addEventListener('click', getUserLocation);
-          document.getElementById('showMyLocationBtn')?.addEventListener('click', showUserLocationOnMap);
-
-          // Reload button
-          document.getElementById('reloadDataBtn')?.addEventListener('click', fetchInitialData);
-
-      });
-
-  </script>
+        <div class="user-info d-none d-md-flex align-items-center">
+            <!-- Login status will be added dynamically by JS -->
+            <span id="loginStatus"></span>
+
+        </div>
+        </div>
+    </section>
+
+    <!-- ======= Header (from Login.html, modified nav) ======= -->
+    <header id="header" class="d-flex align-items-center">
+        <div class="container d-flex align-items-center justify-content-between">
+        <h1 class="logo"><a href="index.html"><img src="./assets/img/TPOLogo.png" alt="TPO Wellness Logo" class="img-fluid"></a></h1>
+        <nav id="navbar" class="navbar">
+            <ul>
+              <li><a class="nav-link scrollto" href="index.html">Home</a></li> <!-- Assuming index.html is home -->
+              <li><a class="nav-link scrollto active" href="#">CRM</a></li> <!-- Current page is active -->
+              <li><a id="headerManagerViewLink" class="nav-link scrollto" href="CRMv4-M.html" style="display: none;">Manager View</a></li> <!-- Initially hidden, controlled by JS -->
+              <li><a class="nav-link scrollto" href="#" onclick="logout()">Logout</a></li> <!-- Logout link -->
+            </ul>
+            <i class="bi bi-list mobile-nav-toggle"></i>
+        </nav><!-- .navbar -->
+        </div>
+    </header><!-- End Header -->
+
+    <!-- ======= Main Content Area ======= -->
+    <main id="main">
+        <div class="crm-container"> <!-- Use renamed class -->
+             <div class="d-flex justify-content-between align-items-center mb-4">
+                 <h1 class="mb-0">Tiny CRM</h1> <!-- Removed text-center to align with buttons -->
+                 <div>
+                     <!-- Manager view link within content (keep original ID) -->
+                     <a href="https://tpowellness.com/CRMv4-M.html" id="managerViewLink" class="btn btn-sm btn-outline-secondary mr-2" title="Switch to Manager View" style="display: none;"><i class="fas fa-user-shield"></i> Manager View</a>
+                     <button class="btn btn-sm btn-outline-primary" id="reloadDataBtn" title="Reload All Data"><i class="fas fa-sync-alt"></i> Reload All</button>
+                 </div>
+             </div>
+
+        <!-- Original CRM Form Structure Starts Here -->
+        <form id="dispensaryForm">
+            <!-- Filter Section -->
+            <div class="collapsible-section" id="filterSection">
+                <div class="collapsible-header">
+                    <span>Filters</span>
+                    <i class="fas fa-chevron-down collapsible-icon"></i>
+                </div>
+                <div class="collapsible-content">
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="filterAssignedMember">Filter by Assigned Member</label>
+                            <select id="filterAssignedMember" class="form-control">
+                                <option value="">All Members</option>
+                                <!-- Options will be populated by JavaScript -->
+                            </select>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="searchDispensary">Filter Dispensary Name</label>
+                            <input type="text" id="searchDispensary" class="form-control" placeholder="Type Dispensary Name...">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="filterSalesPipeline">Filter Sales Pipeline</label>
+                            <select id="filterSalesPipeline" class="form-control">
+                                <option value="">All Stages</option>
+                                <!-- Options will be populated by JavaScript -->
+                            </select>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="filterDispensaryAddress">Filter Dispensary Address</label>
+                            <input type="text" id="filterDispensaryAddress" class="form-control" placeholder="Type Address...">
+                        </div>
+                    </div>
+                     <div class="form-group">
+                        <label for="filterAdditional">Additional Filter (Searches All Fields)</label>
+                        <input type="text" id="filterAdditional" class="form-control" placeholder="Type to search across fields...">
+                    </div>
+                </div>
+            </div>
+            <!-- End Filter Section -->
+
+            <!-- Dispensary Info Section -->
+            <div class="collapsible-section active" id="dispensaryInfoSection">
+                <div class="collapsible-header">
+                    <span>Dispensary Information</span>
+                    <i class="fas fa-chevron-down collapsible-icon"></i>
+                </div>
+                <div class="collapsible-content">
+                   <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="selectDispensary">Select Dispensary</label>
+                            <select id="selectDispensary" class="form-control" name="selectDispensary" required>
+                                <option value="">Select a dispensary</option>
+                                <option value="new">New Dispensary</option>
+                            </select>
+                        </div>
+                         <div class="form-group col-md-6" id="newDispensaryNameGroup" style="display: none;">
+                            <label for="newDispensaryName">New Dispensary Name</label>
+                            <input type="text" id="newDispensaryName" class="form-control" name="newDispensaryName" placeholder="Enter new shop name">
+                        </div>
+                    </div>
+                     <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="currentDistributor">Current Distributor</label>
+                            <input type="text" id="currentDistributor" name="Current Distributor" class="form-control" list="distributorList" placeholder="Type or select distributor">
+                            <datalist id="distributorList">
+                                <!-- Options populated by JavaScript -->
+                            </datalist>
+                        </div>
+                         <div class="form-group col-md-6">
+                            <label for="shopSize">Shop Size</label>
+                            <select id="shopSize" name="Shop Size" class="form-control">
+                                <option value="">Select Size</option>
+                                <option value="Small">Small</option>
+                                <option value="Medium">Medium</option>
+                                <option value="Large">Large</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="dispensaryAddress">Dispensary Address</label>
+                        <input type="text" id="dispensaryAddress" class="form-control" name="Dispensary Address" required placeholder="Enter full address">
+                    </div>
+                     <!-- Lat/Lon and Map -->
+                    <div class="form-row align-items-end">
+                      <div class="form-group col-md-4"><label for="latitude">Latitude</label><input type="text" id="latitude" name="Latitude" class="form-control" placeholder="e.g., 13.7563"></div>
+                      <div class="form-group col-md-4"><label for="longitude">Longitude</label><input type="text" id="longitude" name="Longitude" class="form-control" placeholder="e.g., 100.5018"></div>
+                      <div class="form-group col-md-2"><button type="button" id="getLocationBtn" class="btn btn-sm btn-secondary btn-block" title="Get Current GPS Location"><i class="fas fa-map-marker-alt"></i> Get</button></div>
+                      <div class="form-group col-md-2"><button type="button" id="showMyLocationBtn" class="btn btn-sm btn-info btn-block" title="Show My Location on Map"><i class="fas fa-street-view"></i> Show Me</button></div>
+                    </div>
+                    <!-- Map Container -->
+                    <div id="repMapContainer" class="map-container">
+                        <div id="repMap"></div>
+                    </div>
+                    <!-- Other Fields -->
+                     <div class="form-row">
+                        <div class="form-group col-md-6"><label for="province">Province</label><input type="text" id="province" name="Province" class="form-control" placeholder="e.g., Bangkok"></div>
+                        <div class="form-group col-md-6"><label>Original Name (from Unassigned)</label><p id="originalNameDisplay" class="form-control-static font-italic text-muted"></p></div> <!-- Display only -->
+                    </div>
+                     <div class="form-row">
+                        <div class="form-group col-md-6"><label>URL</label><div id="url_link_container"></div></div>
+                        <div class="form-group col-md-6"><label>Google Maps URL</label><div id="google_maps_url_link_container"></div></div>
+                    </div>
+                     <div class="form-row">
+                        <div class="form-group col-md-6"><label for="website">Website</label><input type="text" id="website" name="website" class="form-control" placeholder="e.g., www.example.com"></div>
+                        <div class="form-group col-md-6"><label>Website URL</label><div id="website_url_link_container"></div></div>
+                    </div>
+                </div>
+            </div>
+            <!-- End Dispensary Info Section -->
+
+            <!-- Contact Info Section -->
+            <div class="collapsible-section active" id="contactInfoSection">
+                <div class="collapsible-header">
+                    <span>Contact Information</span>
+                    <i class="fas fa-chevron-down collapsible-icon"></i>
+                </div>
+                <div class="collapsible-content">
+                     <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="contactPersonName">Contact Person Name <span class="required-indicator">*</span></label>
+                            <input type="text" id="contactPersonName" class="form-control" name="Contact Person Name" required placeholder="Enter contact name">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" class="form-control" name="Email" placeholder="e.g., contact@example.com">
+                        </div>
+                    </div>
+                     <div class="form-row">
+                         <div class="form-group col-md-6">
+                            <label for="phone">Phone <span class="required-indicator">*</span></label>
+                            <input type="tel" id="phone" class="form-control" name="Phone" required placeholder="Enter primary phone number">
+                        </div>
+                         <div class="form-group col-md-6">
+                            <label for="phoneHash">Phone # (Alternative)</label>
+                            <input type="tel" id="phoneHash" name="phone#" class="form-control" placeholder="Enter alternative phone">
+                        </div>
+                    </div>
+                     <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="lineContact">Line Contact</label>
+                            <input type="text" id="lineContact" class="form-control" name="Line Contact" placeholder="Enter Line display name">
+                        </div>
+                         <div class="form-group col-md-6">
+                            <label for="line">Line ID</label>
+                            <input type="text" id="line" name="line" class="form-control" placeholder="Enter Line ID (e.g., @example)">
+                        </div>
+                    </div>
+                     <div class="form-row">
+                        <div class="form-group col-md-6"><label>Line URL</label><div id="line_url_link_container"></div></div>
+                        <div class="form-group col-md-6"><label for="facebook">Facebook Name/Page</label><input type="text" id="facebook" name="facebook" class="form-control" placeholder="Enter Facebook name or page ID"></div>
+                    </div>
+                    <div class="form-group"><label>Facebook URL</label><div id="facebook_url_link_container"></div></div>
+                    <div class="form-group">
+                        <label for="qrCode">Line QR Code, Store/Product Images</label>
+                        <div id="qrCodeContent"></div>
+                        <input type="file" id="qrCode" class="form-control-file" name="qrCode" accept="image/*" multiple>
+                        <div id="qrCodePreviewContainer"></div>
+                    </div>
+                </div>
+            </div>
+            <!-- End Contact Info Section -->
+
+            <!-- Activity Notes Section -->
+            <div class="collapsible-section active" id="activityNotesSection">
+                <div class="collapsible-header">
+                    <span>Activity and Notes</span>
+                    <i class="fas fa-chevron-down collapsible-icon"></i>
+                </div>
+                <div class="collapsible-content">
+                    <div class="form-group">
+                        <label for="activityLogging">Activity Logging</label>
+                        <textarea id="activityLogging" class="form-control" name="activityLogging" rows="4" placeholder="Log your visit details, calls, etc. here..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="history">Notes & Communication History</label>
+                        <textarea id="history" class="form-control" name="Notes & Communication History" rows="6" readonly></textarea> <!-- Increased rows -->
+                    </div>
+                </div>
+            </div>
+            <!-- End Activity Notes Section -->
+
+            <!-- Action Items Section -->
+            <div class="collapsible-section active" id="actionItemsSection">
+                <div class="collapsible-header">
+                    <span>Action Items and Assignment</span>
+                    <i class="fas fa-chevron-down collapsible-icon"></i>
+                </div>
+                <div class="collapsible-content">
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="nextActionItem">Next Action Item</label>
+                            <select id="nextActionItem" class="form-control" name="Next Action Item"> <!-- Name matches header -->
+                                <option value="">Select an action</option>
+                                <option value="Follow up">Follow up</option>
+                                <option value="Send proposal">Send proposal</option>
+                                <option value="Schedule meeting">Schedule meeting</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                         <div class="form-group col-md-6">
+                            <label for="dueDate">Due Date and Time</label>
+                            <input type="datetime-local" id="dueDate" class="form-control" name="Due Date"> <!-- Name matches header -->
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="nextActionItemDetails">Next Action Item Details</label>
+                        <textarea id="nextActionItemDetails" class="form-control" name="nextActionItemDetails" rows="3" placeholder="Add details for the next action..."></textarea>
+                    </div>
+                     <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="assignedMember">Assigned Member</label>
+                            <select id="assignedMember" class="form-control" name="Assigned Member" required> <!-- Name matches header -->
+                                <option value="">Select a member</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="salesPipeline">Sales Pipeline</label>
+                            <select id="salesPipeline" class="form-control" name="Sales Pipeline" required> <!-- Name matches header -->
+                                <option value="">Select pipeline stage</option>
+                            </select>
+                        </div>
+                    </div>
+                     <!-- NEW: Assignment Notes Display -->
+                     <div class="form-group">
+                        <label for="assignmentHistory">Assignment Notes and History (Read Only)</label>
+                        <textarea id="assignmentHistory" class="form-control" name="Assignment Notes and History" rows="4" readonly></textarea>
+                    </div>
+                </div>
+            </div>
+            <!-- End Action Items Section -->
+
+            <button type="submit" class="btn btn-primary btn-block">Submit</button>
+        </form>
+        <!-- Message Area -->
+        <div id="loadingOverlay" class="loading-overlay">
+            <div class="loading-content">
+                <div class="spinner"></div>
+                <span id="loadingMessage">Loading...</span>
+            </div>
+        </div>
+        <div class="message sent-message mt-3"></div>
+        <div class="message error-message mt-3"></div>
+        </div> <!-- End .crm-container -->
+    </main><!-- End #main -->
+
+    <!-- ======= Footer (from Login.html) ======= -->
+    <footer id="footer">
+        <div class="footer-top">
+        <div class="container">
+            <div class="row">
+
+            <div class="col-lg-4 col-md-6">
+                <div class="footer-info">
+                <h3>TPO Wellness</h3>
+                <p>
+                    TPO Wellness Ltd. (Head Office)<br>
+                    No. 122/7 Moo5, Pakkret Sub-District, Pakkret District.<br>
+                    Nonthaburi Province 11120<br><br>
+                    <strong>Tel:</strong> +662-687-7811,+6694-7365518<br>
+                    <strong>Email:</strong> info@tpo-wellness.com<br>
+                </p>
+                <div class="social-links mt-3">
+                    <a href="#" class="twitter"><i class="bx bxl-twitter"></i></a>
+                    <a href="#" class="facebook"><i class="bx bxl-facebook"></i></a>
+                    <a href="#" class="instagram"><i class="bx bxl-instagram"></i></a>
+                    <a href="#" class="linkedin"><i class="bx bxl-linkedin"></i></a>
+                </div>
+                </div>
+            </div>
+
+            <div class="col-lg-2 col-md-6 footer-links">
+                <h4>Useful Links</h4>
+                <ul>
+                <li><i class="bx bx-chevron-right"></i> <a href="index.html#hero">Home</a></li>
+                <li><i class="bx bx-chevron-right"></i> <a href="index.html#about">About us</a></li>
+                <li><i class="bx bx-chevron-right"></i> <a href="index.html#services">Services</a></li>
+                <li><i class="bx bx-chevron-right"></i> <a href="#">Terms of service</a></li>
+                <li><i class="bx bx-chevron-right"></i> <a href="#">Privacy policy</a></li>
+                </ul>
+            </div>
+
+            <div class="col-lg-2 col-md-6 footer-links">
+                <h4>Our Services</h4>
+                <ul>
+                <li><i class="bx bx-chevron-right"></i> <a href="#">Edibles Manufacturing</a></li>
+                <li><i class="bx bx-chevron-right"></i> <a href="#">Pre-Roll Production</a></li>
+                <li><i class="bx bx-chevron-right"></i> <a href="#">Cannabis Flower Packaging</a></li>
+                <li><i class="bx bx-chevron-right"></i> <a href="#">R&D Services</a></li>
+                <li><i class="bx bx-chevron-right"></i> <a href="#">Quality Control & Assurance</a></li>
+                </ul>
+            </div>
+
+            <div class="col-lg-4 col-md-6 footer-newsletter">
+                <h4>Our Newsletter</h4>
+                <p>Subscribe to our newsletter for the latest updates</p>
+                <form action="" method="post"> <!-- Add action/method if needed -->
+                <input type="email" name="email"><input type="submit" value="Subscribe">
+                </form>
+            </div>
+
+            </div>
+        </div>
+        </div>
+
+        <div class="container">
+        <div class="copyright">
+            © Copyright <strong><span>TPO Wellness</span></strong>. All Rights Reserved
+        </div>
+        <div class="credits">
+            Designed by <a href="#">KH</a>
+        </div>
+        </div>
+    </footer><!-- End Footer -->
+
+    <!-- Back to Top Button (from Login.html) -->
+    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+    <!-- Vendor JS Files -->
+    <!-- Using original CRM jQuery and Popper, ensure compatibility or use Bootstrap 5 bundle -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- Leaflet JS (from original CRM) -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <!-- Leaflet Fullscreen JS (from original CRM) -->
+    <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/Leaflet.fullscreen.min.js'></script>
+    <!-- Template Main JS File (from Login.html - for mobile nav etc.) -->
+    <script src="assets/js/main.js"></script>
+
+    <!-- Main CRM Script (with modifications for logout and user display) -->
+    <script>
+        // --- Authentication Globals ---
+        let authToken = null;
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzy2g7bfHvjArMWornli3GPodDw99P4ayMjALKanAU4waL29CjcfCjHl3wiJaxSRIIV/exec';
+
+        // --- NEW: Logout Function ---
+        function logout() {
+            console.log("Logging out...");
+            localStorage.removeItem('tpoCrmToken');
+            localStorage.removeItem('tpoCrmUserEmail');
+            localStorage.removeItem('tpoCrmIsManager');
+            authToken = null; // Clear in-memory token too
+            // Redirect to Login.html using a relative path
+            window.top.location.href = 'Login.html';
+        }
+
+        // --- Messaging Functions (Keep original CRM functions) ---
+        function showLoading(message = "Loading...") {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const loadingMessage = document.getElementById('loadingMessage');
+            const sentMessageElement = document.querySelector('.sent-message');
+            const errorMessageElement = document.querySelector('.error-message');
+
+            if (loadingMessage) loadingMessage.textContent = message;
+            if (loadingOverlay) loadingOverlay.style.display = 'block';
+            if (sentMessageElement) hideMessage(sentMessageElement);
+            if (errorMessageElement) hideMessage(errorMessageElement);
+        }
+
+        function hideLoading() {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            if (loadingOverlay) loadingOverlay.style.display = 'none';
+        }
+
+        function showMessage(element, message) {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const loadingMessage = document.getElementById('loadingMessage');
+
+            if(element === loadingOverlay || element === loadingMessage) {
+                showLoading(message);
+            } else {
+                hideLoading();
+                if(element) {
+                    element.textContent = message;
+                    element.style.display = 'block';
+                    // Auto-hide success messages after a delay
+                    if (element.classList.contains('sent-message')) {
+                        setTimeout(() => hideMessage(element), 5000); // Hide after 5 seconds
+                    }
+                } else {
+                    console.warn("showMessage: Target element not found.");
+                }
+            }
+        }
+
+        function hideMessage(element) {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const loadingMessage = document.getElementById('loadingMessage');
+
+            if(element === loadingOverlay || element === loadingMessage) {
+                hideLoading();
+            } else if (element) {
+                element.style.display = 'none';
+                element.textContent = '';
+            }
+        }
+
+        // --- Authentication Check (Keep original CRM function, adjusted redirect) ---
+        function checkAuthentication() {
+            console.log("Checking authentication...");
+            const urlParams = new URLSearchParams(window.location.search);
+            let tokenFromUrl = urlParams.get('token');
+            let tokenFromStorage = localStorage.getItem('tpoCrmToken');
+            let potentialAuthToken = null;
+
+            if (tokenFromUrl) {
+                console.log("Token found in URL.");
+                potentialAuthToken = tokenFromUrl;
+                localStorage.setItem('tpoCrmToken', potentialAuthToken);
+                window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
+            } else if (tokenFromStorage) {
+                console.log("Token found in localStorage.");
+                potentialAuthToken = tokenFromStorage;
+            }
+
+            if (potentialAuthToken) {
+                if (document.getElementById('loadingOverlay')) {
+                    showLoading("Validating session...");
+                } else {
+                    console.warn("DOM not ready for loading indicator during token validation.");
+                }
+                fetch(`${APPS_SCRIPT_URL}?action=validateToken&token=${potentialAuthToken}`)
+                    .then(response => response.json())
+                    .then(result => {
+                        hideLoading();
+                        if (result && result.valid) {
+                            console.log(`Token validated successfully for user: ${result.email}, Is Manager: ${result.isManager}`);
+                            authToken = potentialAuthToken;
+                            localStorage.setItem('tpoCrmUserEmail', result.email);
+                            localStorage.setItem('tpoCrmIsManager', String(result.isManager)); // Store as string
+                            initializeApp(); // Proceed
+                        } else {
+                            console.log("Token validation failed or token expired. Redirecting to login.");
+                            logout(); // Use logout function to clear storage and redirect
+                        }
+                    })
+                    .catch(error => {
+                        hideLoading();
+                        console.error('Error validating token:', error);
+                        showMessage(document.querySelector('.error-message'), 'Error validating session. Please try logging in again.');
+                        // Optionally redirect to login on validation error too
+                        // logout();
+                    });
+            } else {
+                console.log("No token found. Redirecting to login.");
+                redirectToLogin(); // Use specific redirect function if needed before logout is defined
+            }
+        }
+
+        function redirectToLogin() {
+            // Redirect to the static Login.html page using a relative path
+            const currentTpoUrl = window.location.href;
+            const staticLoginUrl = 'Login.html'; // Relative path
+            // Pass the current URL as the redirect target after login
+            window.top.location.href = `${staticLoginUrl}?redirectUrl=${encodeURIComponent(currentTpoUrl)}`;
+        }
+
+        // --- Main Application Initialization ---
+        function initializeApp() {
+            console.log("Authentication successful. Initializing application...");
+
+            // --- NEW: Update Top Bar and Header ---
+            const loggedInEmail = localStorage.getItem('tpoCrmUserEmail');
+            const loginStatusSpan = document.getElementById('loginStatus');
+            const logoutButton = document.getElementById('logoutButton');
+            if (loginStatusSpan && loggedInEmail) {
+                loginStatusSpan.textContent = `Logged in as: ${loggedInEmail}`;
+            }
+            if (logoutButton) {
+                logoutButton.style.display = 'inline-block'; // Show logout button
+            }
+
+            // Get manager view link elements (both in header and content)
+            const managerViewLinkContent = document.getElementById('managerViewLink'); // In content
+            const managerViewLinkHeader = document.getElementById('headerManagerViewLink'); // In header
+
+            // Show Manager View links if applicable
+            const isManager = localStorage.getItem('tpoCrmIsManager') === 'true';
+            if (isManager) {
+                 if (managerViewLinkContent) managerViewLinkContent.style.display = 'inline-block';
+                 if (managerViewLinkHeader) managerViewLinkHeader.style.display = 'list-item'; // Show header link
+            }
+            // --- End NEW ---
+
+
+            // Add JavaScript to toggle the collapsible sections (Original CRM)
+            document.querySelectorAll('.collapsible-header').forEach(header => {
+                header.addEventListener('click', () => {
+                    const section = header.parentElement;
+                    section.classList.toggle('active');
+                    // Adjust map size if it's within the toggled section and visible
+                     if (section.contains(repMapContainer) && section.classList.contains('active') && repMapContainer.classList.contains('visible')) {
+                         setTimeout(() => { if (repMap) repMap.invalidateSize() }, 310); // Delay slightly after animation
+                     }
+                });
+            });
+
+            // Set initial state: Keep Filter section closed initially (Original CRM)
+            document.querySelectorAll('.collapsible-section:not(#filterSection)').forEach(section => {
+                 section.classList.add('active');
+            });
+
+
+            // Utility functions for caching (Original CRM)
+            function cacheData(key, data) { /* ... keep original ... */ }
+            function getCachedData(key, maxAge = 5 * 60 * 1000) { /* ... keep original ... */ }
+            function escapeHtml(unsafe) { /* ... keep original ... */ }
+
+            // --- Original CRM DOMContentLoaded Logic Moved Here ---
+            const selectDispensary = document.getElementById('selectDispensary');
+            const newDispensaryNameGroup = document.getElementById('newDispensaryNameGroup');
+            const form = document.getElementById('dispensaryForm');
+            const qrCodeInput = document.getElementById('qrCode');
+            const qrCodePreviewContainer = document.getElementById('qrCodePreviewContainer');
+            const qrCodeContent = document.getElementById('qrCodeContent');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const loadingMessage = document.getElementById('loadingMessage');
+            const sentMessageElement = document.querySelector('.sent-message');
+            const errorMessageElement = document.querySelector('.error-message');
+            const assignedMember = document.getElementById('assignedMember');
+            const salesPipeline = document.getElementById('salesPipeline');
+            const historyTextarea = document.getElementById('history');
+            const assignmentHistoryTextarea = document.getElementById('assignmentHistory');
+            const latitudeInput = document.getElementById('latitude');
+            const longitudeInput = document.getElementById('longitude');
+            const getLocationBtn = document.getElementById('getLocationBtn');
+            const showMyLocationBtn = document.getElementById('showMyLocationBtn');
+            const provinceInput = document.getElementById('province');
+            const originalNameDisplay = document.getElementById('originalNameDisplay');
+            const urlLinkContainer = document.getElementById('url_link_container');
+            const googleMapsUrlContainer = document.getElementById('google_maps_url_link_container');
+            const websiteInput = document.getElementById('website');
+            const websiteUrlContainer = document.getElementById('website_url_link_container');
+            const shopSizeSelect = document.getElementById('shopSize');
+            const facebookInput = document.getElementById('facebook');
+            const facebookUrlLinkContainer = document.getElementById('facebook_url_link_container');
+            const lineInput = document.getElementById('line');
+            const lineUrlContainer = document.getElementById('line_url_link_container');
+            const phoneHashInput = document.getElementById('phoneHash');
+            const currentDistributorInput = document.getElementById('currentDistributor');
+            const distributorDatalist = document.getElementById('distributorList');
+            const repMapContainer = document.getElementById('repMapContainer');
+            const repMapElement = document.getElementById('repMap');
+
+            const filterAssignedMember = document.getElementById('filterAssignedMember');
+            const searchDispensary = document.getElementById('searchDispensary');
+            const filterSalesPipeline = document.getElementById('filterSalesPipeline');
+            const filterDispensaryAddress = document.getElementById('filterDispensaryAddress');
+            const filterAdditional = document.getElementById('filterAdditional');
+            const reloadDataBtn = document.getElementById('reloadDataBtn');
+
+            let dispensariesData = [];
+            let setupData = {};
+            let repMap = null;
+            let repMarker = null;
+            let userLocationMarker = null;
+
+            // --- Keep ALL original CRM functions here ---
+            // fetchAllDispensaryData, fetchFreshData, fetchSetupData,
+            // populateDispensarySelect, populateFormFields, clearFormFields,
+            // populateLink, populateAssignedMemberSelect, populateFilterAssignedMemberSelect,
+            // populateSalesPipelineSelect, populateFilterSalesPipelineSelect,
+            // populateDistributorDatalist, reloadAllData, submitForm,
+            // getCurrentLocation, initializeRepMap, updateRepMap, showMyLocationOnMap
+            // Debounce function
+            // ... (Include ALL the function definitions from the original CRMv4.html script)
+
+            // --- Example: Including a few key functions for context (YOU NEED TO INCLUDE ALL OF THEM) ---
+
+            function fetchAllDispensaryData() {
+                const cachedData = getCachedData('dispensaryData');
+                if (cachedData) {
+                    dispensariesData = cachedData;
+                    populateDispensarySelect();
+                    fetchFreshData(false); // Fetch fresh in background
+                } else {
+                    fetchFreshData(true); // Show loading for initial fetch
+                }
+            }
+
+            function fetchFreshData(showLoadingIndicator = true) {
+                if(showLoadingIndicator) showLoading('Fetching dispensary data...');
+                if (!authToken) { // Add check for token before fetching
+                    console.error("Cannot fetch data: Auth token missing.");
+                    hideLoading();
+                    showMessage(errorMessageElement, 'Authentication error. Please login again.');
+                    logout(); // Redirect to login if token is missing
+                    return;
+                }
+                fetch(`${APPS_SCRIPT_URL}?action=getAllDispensaryData&token=${authToken}`)
+                    .then(response => {
+                        if (response.status === 401) { // Unauthorized
+                           throw new Error('Unauthorized');
+                        }
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        hideLoading();
+                        if (data && data.success) {
+                            dispensariesData = data.data;
+                            cacheData('dispensaryData', data.data);
+                            populateDispensarySelect();
+                        } else {
+                            console.error('Error fetching dispensary data:', data ? data.message : 'Invalid response');
+                            showMessage(errorMessageElement, 'Error fetching dispensary list: ' + (data ? data.message : 'Invalid response'));
+                        }
+                    })
+                    .catch(error => {
+                        hideLoading();
+                        console.error('Fetch Error for getAllDispensaryData:', error);
+                         if (error.message === 'Unauthorized') {
+                            showMessage(errorMessageElement, 'Your session has expired. Please log in again.');
+                            logout(); // Redirect to login on unauthorized
+                        } else {
+                            showMessage(errorMessageElement, 'Network or server error fetching dispensary list: ' + error);
+                        }
+                    });
+            }
+
+            function fetchSetupData() {
+                const cachedSetup = getCachedData('setupData');
+                if (cachedSetup) {
+                    setupData = cachedSetup;
+                    populateAssignedMemberSelect();
+                    populateFilterAssignedMemberSelect();
+                    populateSalesPipelineSelect();
+                    populateFilterSalesPipelineSelect();
+                    populateDistributorDatalist();
+                    console.log("Using cached setup data.");
+                    return;
+                }
+                showLoading('Fetching setup data...');
+                 if (!authToken) { // Add check for token
+                    console.error("Cannot fetch setup data: Auth token missing.");
+                    hideLoading();
+                    showMessage(errorMessageElement, 'Authentication error. Please login again.');
+                    logout();
+                    return;
+                }
+                fetch(`${APPS_SCRIPT_URL}?action=getSetupData&token=${authToken}`)
+                    .then(response => {
+                         if (response.status === 401) throw new Error('Unauthorized'); // Check auth
+                         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                        return response.json();
+                    })
+                    .then(data => {
+                        hideLoading();
+                        if (data && data.success) {
+                            setupData = data.data;
+                            cacheData('setupData', data.data);
+                            populateAssignedMemberSelect();
+                            populateFilterAssignedMemberSelect();
+                            populateSalesPipelineSelect();
+                            populateFilterSalesPipelineSelect();
+                            populateDistributorDatalist();
+                        } else {
+                            console.error('Error fetching setup data:', data ? data.message : 'Invalid response');
+                            showMessage(errorMessageElement, 'Error fetching setup data: ' + (data ? data.message : 'Invalid response'));
+                        }
+                    })
+                    .catch(error => {
+                        hideLoading();
+                        console.error('Fetch Error for getSetupData:', error);
+                         if (error.message === 'Unauthorized') {
+                            showMessage(errorMessageElement, 'Your session has expired. Please log in again.');
+                            logout();
+                        } else {
+                            showMessage(errorMessageElement, 'Network or server error fetching setup data: ' + error);
+                        }
+                    });
+            }
+
+             function populateDispensarySelect() {
+                const currentSelectedValue = selectDispensary.value;
+                const nameFilter = searchDispensary.value.toLowerCase();
+                const memberFilter = filterAssignedMember.value;
+                const pipelineFilter = filterSalesPipeline.value;
+                const addressFilter = filterDispensaryAddress.value.toLowerCase();
+                const additionalFilter = filterAdditional.value.toLowerCase();
+
+                selectDispensary.innerHTML = '<option value="">Select a dispensary</option><option value="new">New Dispensary</option>';
+
+                if (Array.isArray(dispensariesData) && dispensariesData.length > 0) {
+                    dispensariesData.forEach(dispensary => {
+                        // Ensure keys used match the actual data keys (case-sensitive)
+                        const dispensaryName = String(dispensary['Dispensary Name'] || "").toLowerCase();
+                        const assignedMemberName = String(dispensary['Assigned Member'] || "");
+                        const salesPipelineStage = String(dispensary['Sales Pipeline'] || "");
+                        const dispensaryAddress = String(dispensary['Dispensary Address'] || "").toLowerCase();
+                        const contactPerson = String(dispensary['Contact Person Name'] || "").toLowerCase();
+                        const email = String(dispensary['Email'] || "").toLowerCase();
+                        const phone = String(dispensary['Phone'] || "").toLowerCase();
+                        const lineContact = String(dispensary['Line Contact'] || "").toLowerCase();
+                        const history = String(dispensary['Notes & Communication History'] || "").toLowerCase();
+                        const nextAction = String(dispensary['Next Action Item'] || "").toLowerCase();
+
+                        const nameMatches = dispensaryName.includes(nameFilter);
+                        const memberMatches = !memberFilter || assignedMemberName === memberFilter;
+                        const pipelineMatches = !pipelineFilter || salesPipelineStage === pipelineFilter;
+                        const addressMatches = dispensaryAddress.includes(addressFilter);
+
+                        let additionalMatches = true;
+                        if (additionalFilter) {
+                            additionalMatches = [dispensaryName, dispensaryAddress, contactPerson, email, phone, lineContact, history, nextAction, assignedMemberName, salesPipelineStage] // Added more fields to search
+                                                .some(field => String(field).toLowerCase().includes(additionalFilter));
+                        }
+
+                        if (nameMatches && memberMatches && pipelineMatches && addressMatches && additionalMatches) {
+                            const option = document.createElement('option');
+                            option.value = dispensary['Dispensary Name']; // Use original name for value
+                            option.textContent = dispensary['Dispensary Name']; // Display original name
+                            selectDispensary.appendChild(option);
+                        }
+                    });
+                    // Try to re-select the previously selected value
+                    if (selectDispensary.querySelector(`option[value="${escapeHtml(currentSelectedValue)}"]`)) {
+                         selectDispensary.value = currentSelectedValue;
+                         // If re-selecting, ensure form fields are populated
+                         if (currentSelectedValue && currentSelectedValue !== 'new') {
+                            populateFormFields(currentSelectedValue);
+                         } else if (!currentSelectedValue) {
+                            clearFormFields(); // Clear if "Select" was chosen
+                         }
+                    } else {
+                        // If the previous selection is no longer valid (filtered out), clear the form
+                        clearFormFields();
+                        selectDispensary.value = ''; // Ensure dropdown shows "Select"
+                    }
+                } else {
+                     // If no data, ensure form is clear
+                     clearFormFields();
+                }
+            }
+
+            function populateFormFields(dispensaryName) {
+                // Find the dispensary ensuring case-insensitive comparison if needed, but value should match exactly
+                const dispensary = dispensariesData.find(d => d['Dispensary Name'] === dispensaryName);
+                if (dispensary) {
+                    // Populate standard fields using header names as keys
+                    document.getElementById('dispensaryAddress').value = dispensary['Dispensary Address'] || '';
+                    document.getElementById('contactPersonName').value = dispensary['Contact Person Name'] || '';
+                    document.getElementById('email').value = dispensary['Email'] || '';
+                    document.getElementById('phone').value = dispensary['Phone'] || '';
+                    document.getElementById('lineContact').value = dispensary['Line Contact'] || '';
+                    historyTextarea.value = dispensary['Notes & Communication History'] || '';
+                    assignmentHistoryTextarea.value = dispensary['Assignment Notes and History'] || ''; // Populate Assignment History
+                    document.getElementById('nextActionItem').value = dispensary['Next Action Item'] || '';
+                    // Handle datetime-local format: YYYY-MM-DDTHH:mm
+                    document.getElementById('dueDate').value = dispensary['Due Date'] ? String(dispensary['Due Date']).substring(0, 16) : '';
+                    assignedMember.value = dispensary['Assigned Member'] || '';
+                    salesPipeline.value = dispensary['Sales Pipeline'] || '';
+                    if (shopSizeSelect) shopSizeSelect.value = dispensary['Shop Size'] || '';
+                    if (currentDistributorInput) currentDistributorInput.value = dispensary['Current Distributor'] || '';
+
+                    // Populate new fields
+                    const lat = parseFloat(dispensary['Latitude']);
+                    const lon = parseFloat(dispensary['Longitude']);
+                    if(latitudeInput) latitudeInput.value = dispensary['Latitude'] || '';
+                    if(longitudeInput) longitudeInput.value = dispensary['Longitude'] || '';
+                    if(provinceInput) provinceInput.value = dispensary['Province'] || '';
+                    if(originalNameDisplay) originalNameDisplay.textContent = dispensary['name'] || '(Not set)';
+                    populateLink(urlLinkContainer, dispensary.url, dispensary.url);
+                    if(websiteInput) websiteInput.value = dispensary['website'] || '';
+                    if(facebookInput) facebookInput.value = dispensary['facebook'] || '';
+                    populateLink(facebookUrlLinkContainer, dispensary.facebook_url, dispensary.facebook_url);
+                    if(lineInput) lineInput.value = dispensary['line'] || '';
+                    if(phoneHashInput) phoneHashInput.value = dispensary['phone#'] || '';
+
+                    // Populate Link Containers
+                    populateLink(googleMapsUrlContainer, dispensary.google_maps_url, 'Open Google Maps');
+                    populateLink(websiteUrlContainer, dispensary.website_url, dispensary.website_url);
+                    populateLink(lineUrlContainer, dispensary.line_url, 'Open Line URL');
+
+                    // Populate QR code/image links
+                    qrCodeContent.innerHTML = '';
+                    const qrUrls = dispensary['Line/Whatsapp QR Code'] ? String(dispensary['Line/Whatsapp QR Code']).split(/[\n\s]+/).filter(Boolean) : []; // Split by newline or space
+                    qrUrls.forEach(url => {
+                        // Basic URL validation (starts with http/https)
+                        if (url.startsWith('http://') || url.startsWith('https://')) {
+                            const link = document.createElement('a');
+                            link.href = url;
+                            // Attempt to get a filename or use a truncated URL
+                            try {
+                                const urlObj = new URL(url);
+                                const pathParts = urlObj.pathname.split('/');
+                                link.textContent = pathParts[pathParts.length - 1] || url.substring(0, 50) + '...';
+                            } catch (e) {
+                                link.textContent = url.substring(0, 50) + '...'; // Fallback for invalid URLs
+                            }
+                            link.target = '_blank';
+                            link.rel = 'noopener noreferrer';
+                            link.style.display = 'block'; // Ensure each link is on a new line
+                            link.style.marginBottom = '5px';
+                            qrCodeContent.appendChild(link);
+                        } else {
+                            console.warn("Skipping invalid URL in QR Code field:", url);
+                        }
+                    });
+                    qrCodePreviewContainer.innerHTML = ''; // Clear file previews when loading existing data
+
+                    // Update Map
+                    updateRepMap(lat, lon, dispensary);
+
+                } else {
+                    clearFormFields(); // Clear if dispensary not found
+                }
+            }
+
+            function clearFormFields() {
+                form.reset();
+                historyTextarea.value = '';
+                assignmentHistoryTextarea.value = '';
+                qrCodeContent.innerHTML = '';
+                qrCodePreviewContainer.innerHTML = '';
+                // selectDispensary.value = ''; // Keep the current filter selection
+                newDispensaryNameGroup.style.display = 'none';
+                if(latitudeInput) latitudeInput.value = '';
+                if(longitudeInput) longitudeInput.value = '';
+                if(provinceInput) provinceInput.value = '';
+                if(originalNameDisplay) originalNameDisplay.textContent = '';
+                if (urlLinkContainer) urlLinkContainer.innerHTML = '';
+                if(websiteInput) websiteInput.value = '';
+                if(shopSizeSelect) shopSizeSelect.value = '';
+                if(facebookInput) facebookInput.value = '';
+                if (facebookUrlLinkContainer) facebookUrlLinkContainer.innerHTML = '';
+                if(lineInput) lineInput.value = '';
+                if(phoneHashInput) phoneHashInput.value = '';
+                if (googleMapsUrlContainer) googleMapsUrlContainer.innerHTML = '';
+                if (websiteUrlContainer) websiteUrlContainer.innerHTML = '';
+                if (lineUrlContainer) lineUrlContainer.innerHTML = '';
+                if (currentDistributorInput) currentDistributorInput.value = '';
+                if (repMapContainer) repMapContainer.classList.remove('visible');
+                if (repMarker && repMap) { repMap.removeLayer(repMarker); repMarker = null; }
+                if (userLocationMarker && repMap) { repMap.removeLayer(userLocationMarker); userLocationMarker = null; }
+                // Reset dropdowns potentially set by populateFormFields
+                if (assignedMember) assignedMember.value = '';
+                if (salesPipeline) salesPipeline.value = '';
+                if (document.getElementById('nextActionItem')) document.getElementById('nextActionItem').value = '';
+                if (document.getElementById('dueDate')) document.getElementById('dueDate').value = '';
+            }
+
+            function populateLink(container, url, linkText) {
+                if (!container) return;
+                container.innerHTML = ''; // Clear previous
+                if (url && (url.startsWith('http://') || url.startsWith('https://'))) { // Basic URL check
+                    try {
+                        // Validate URL stricter
+                        new URL(url);
+                        const link = document.createElement('a');
+                        link.href = escapeHtml(url);
+                        link.textContent = escapeHtml(linkText || url);
+                        link.target = '_blank';
+                        link.rel = 'noopener noreferrer';
+                        const icon = document.createElement('i');
+                        icon.className = 'fas fa-external-link-alt fa-xs ml-1';
+                        link.appendChild(icon);
+                        container.appendChild(link);
+                    } catch (e) {
+                         container.innerHTML = '<span class="text-muted">Invalid URL</span>';
+                    }
+                } else if (url) {
+                    container.innerHTML = '<span class="text-muted">Invalid URL</span>';
+                }
+                 else {
+                    container.innerHTML = '<span class="text-muted">N/A</span>';
+                }
+            }
+
+            function populateAssignedMemberSelect() {
+                assignedMember.innerHTML = '<option value="">Select a member</option>';
+                if (setupData && setupData.members) {
+                    setupData.members.forEach(member => {
+                        const option = document.createElement('option');
+                        option.value = member;
+                        option.textContent = member;
+                        assignedMember.appendChild(option);
+                    });
+                }
+            }
+
+            function populateFilterAssignedMemberSelect() {
+                filterAssignedMember.innerHTML = '<option value="">All Members</option>';
+                if (setupData && setupData.members) {
+                    setupData.members.forEach(member => {
+                        const option = document.createElement('option');
+                        option.value = member;
+                        option.textContent = member;
+                        filterAssignedMember.appendChild(option);
+                    });
+                }
+            }
+
+             function populateSalesPipelineSelect() {
+                salesPipeline.innerHTML = '<option value="">Select pipeline stage</option>';
+                if (setupData && setupData.salesPipelines) {
+                    setupData.salesPipelines.forEach(stage => {
+                        const option = document.createElement('option');
+                        option.value = stage;
+                        option.textContent = stage;
+                        salesPipeline.appendChild(option);
+                    });
+                }
+            }
+
+            function populateFilterSalesPipelineSelect() {
+                filterSalesPipeline.innerHTML = '<option value="">All Stages</option>';
+                if (setupData && setupData.salesPipelines) {
+                    setupData.salesPipelines.forEach(stage => {
+                        const option = document.createElement('option');
+                        option.value = stage;
+                        option.textContent = stage;
+                        filterSalesPipeline.appendChild(option);
+                    });
+                }
+            }
+
+            function populateDistributorDatalist() {
+                if (!distributorDatalist) return;
+                distributorDatalist.innerHTML = '';
+                if (setupData && setupData.distributors && Array.isArray(setupData.distributors)) {
+                    setupData.distributors.forEach(distributor => {
+                        const option = document.createElement('option');
+                        option.value = distributor;
+                        distributorDatalist.appendChild(option);
+                    });
+                }
+            }
+
+            function reloadAllData() {
+                console.log("Reloading all data for Rep view...");
+                localStorage.removeItem('setupData');
+                localStorage.removeItem('dispensaryData');
+                // Clear current selections/form
+                clearFormFields();
+                selectDispensary.value = '';
+                filterAssignedMember.value = '';
+                filterSalesPipeline.value = '';
+                searchDispensary.value = '';
+                filterDispensaryAddress.value = '';
+                filterAdditional.value = '';
+                // Re-fetch
+                fetchAllDispensaryData();
+                fetchSetupData();
+            }
+
+            function submitForm() {
+                showLoading('Submitting...');
+                hideMessage(sentMessageElement);
+                hideMessage(errorMessageElement);
+
+                const formData = new FormData(form);
+
+                // Append action=submitData for the backend handler
+                 formData.append('action', 'submitData');
+
+                // Get selected dispensary name or new name
+                const selectedDispensaryValue = selectDispensary.value;
+                if (selectedDispensaryValue === 'new') {
+                    const newName = document.getElementById('newDispensaryName').value.trim();
+                    if (!newName) {
+                        showMessage(errorMessageElement, 'Please enter a name for the new dispensary.');
+                        hideLoading();
+                        return;
+                    }
+                    formData.append('selectedDispensary', 'new'); // Indicate new entry
+                    // formData.append('newDispensaryName', newName); // Already captured by FormData(form) if input has name attribute
+                } else if (!selectedDispensaryValue) {
+                     showMessage(errorMessageElement, 'Please select a dispensary or choose "New Dispensary".');
+                     hideLoading();
+                     return;
+                } else {
+                    // formData.append('selectedDispensary', selectedDispensaryValue); // Already captured by FormData(form)
+                }
+
+
+                const fileInput = document.getElementById('qrCode');
+                const files = fileInput.files;
+
+                const sendData = () => {
+                    if (!authToken) {
+                        showMessage(errorMessageElement, 'Authentication token missing. Please log in again.');
+                        hideLoading();
+                        logout();
+                        return;
+                    }
+                    formData.append('token', authToken); // Add token
+
+                    // Log FormData for debugging
+                    // for (let [key, value] of formData.entries()) {
+                    //     console.log(`${key}: ${value}`);
+                    // }
+
+
+                    fetch(APPS_SCRIPT_URL, {
+                        method: 'POST',
+                        body: formData // Send FormData directly
+                    })
+                    .then(response => {
+                         if (response.status === 401) throw new Error('Unauthorized');
+                         // Check for non-JSON success/error messages first if backend might send text
+                         // const contentType = response.headers.get("content-type");
+                         // if (contentType && contentType.indexOf("application/json") !== -1) {
+                         //     return response.json();
+                         // } else {
+                         //     return response.text().then(text => { throw new Error("Unexpected response: " + text); });
+                         // }
+                         return response.json(); // Assume JSON for now
+                    })
+                    .then(data => {
+                        hideLoading();
+                        if (data.success) {
+                            showMessage(sentMessageElement, data.message || 'Data submitted successfully!');
+                             // Clear form and refresh data
+                             const currentFilters = { // Store filters before reset
+                                member: filterAssignedMember.value,
+                                pipeline: filterSalesPipeline.value,
+                                name: searchDispensary.value,
+                                address: filterDispensaryAddress.value,
+                                additional: filterAdditional.value
+                             };
+                             clearFormFields(); // Clear form fields first
+                             selectDispensary.value = ''; // Reset dropdown
+                             form.reset(); // Reset again to be sure
+                             // Restore filters
+                             filterAssignedMember.value = currentFilters.member;
+                             filterSalesPipeline.value = currentFilters.pipeline;
+                             searchDispensary.value = currentFilters.name;
+                             filterDispensaryAddress.value = currentFilters.address;
+                             filterAdditional.value = currentFilters.additional;
+
+                             fetchAllDispensaryData(); // Refresh main list (will re-apply filters)
+                             // Optionally re-fetch setup data if submission might change it (e.g., new member added implicitly)
+                             // fetchSetupData();
+                        } else {
+                            showMessage(errorMessageElement, data.message || 'An error occurred during submission.');
+                        }
+                    })
+                    .catch(error => {
+                        hideLoading();
+                        console.error('Submit Error:', error);
+                        if (error.message === 'Unauthorized') {
+                            showMessage(errorMessageElement, 'Your session has expired. Please log in again.');
+                            logout();
+                        } else {
+                             showMessage(errorMessageElement, 'Network or server error during submission: ' + error);
+                        }
+                    });
+                };
+
+                if (files.length > 0) {
+                    let readFilePromises = [];
+                    // Append file details for backend processing
+                    for (let i = 0; i < files.length; i++) {
+                       formData.append(`fileName${i}`, files[i].name);
+                       formData.append(`mimeType${i}`, files[i].type);
+                       // Read file content as Base64
+                       readFilePromises.push(new Promise((resolve, reject) => {
+                            const reader = new FileReader();
+                            reader.onload = function(e) {
+                                // Append base64 data, removing the data URL prefix
+                                formData.append(`fileData${i}`, e.target.result.split(',')[1]);
+                                resolve();
+                            };
+                            reader.onerror = function(error) {
+                                 console.error("Error reading file:", error);
+                                 showMessage(errorMessageElement, 'Error reading file: ' + files[i].name);
+                                 reject(error); // Reject the promise on error
+                            };
+                            reader.readAsDataURL(files[i]); // Read as Data URL
+                        }));
+                    }
+                     // Wait for all files to be read before sending
+                    Promise.all(readFilePromises)
+                        .then(() => sendData())
+                        .catch((err) => {
+                             console.error("File reading failed:", err);
+                             hideLoading(); // Ensure loading is hidden if file reading fails
+                             // Message already shown in reader.onerror
+                        });
+                } else {
+                    // If no files, send data directly
+                    sendData();
+                }
+            }
+
+            function getCurrentLocation() {
+                if (!navigator.geolocation) {
+                    showMessage(errorMessageElement, 'Geolocation is not supported by your browser.');
+                    return;
+                }
+                showLoading('Getting location...');
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const latitude  = position.coords.latitude;
+                        const longitude = position.coords.longitude;
+                        if (latitudeInput) latitudeInput.value = latitude.toFixed(6);
+                        if (longitudeInput) longitudeInput.value = longitude.toFixed(6);
+                        hideLoading();
+                        showMessage(sentMessageElement, 'Location retrieved successfully.');
+                    },
+                    (err) => {
+                        hideLoading();
+                        let message = 'Unable to retrieve your location.';
+                        // ... (keep original error handling)
+                         switch(err.code) {
+                            case err.PERMISSION_DENIED: message = "Geolocation request denied."; break;
+                            case err.POSITION_UNAVAILABLE: message = "Location information is unavailable."; break;
+                            case err.TIMEOUT: message = "The request to get user location timed out."; break;
+                            case err.UNKNOWN_ERROR: message = "An unknown error occurred."; break;
+                        }
+                        console.warn(`Geolocation error (${err.code}): ${err.message}`);
+                        showMessage(errorMessageElement, message);
+                    },
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                );
+            }
+
+            function initializeRepMap() {
+                if (repMapElement && !repMap) {
+                    try {
+                        repMap = L.map('repMap', { fullscreenControl: true }).setView([13.7563, 100.5018], 10);
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(repMap);
+                        console.log("Rep map initialized.");
+                    } catch (e) {
+                        console.error("Error initializing Leaflet map:", e);
+                        if (repMapContainer) repMapContainer.innerHTML = '<p class="text-danger">Error loading map.</p>';
+                    }
+                }
+            }
+
+            function updateRepMap(lat, lon, dispensary) {
+                if (!repMap) { console.warn("Map not initialized yet."); return; }
+                if (lat && lon && !isNaN(lat) && !isNaN(lon)) {
+                    const coords = [lat, lon];
+                    if (repMapContainer) repMapContainer.classList.add('visible');
+                    if (repMarker) repMap.removeLayer(repMarker);
+                    repMarker = L.marker(coords).addTo(repMap);
+                    const popupContent = `<b>${escapeHtml(dispensary['Dispensary Name'])}</b><br>${escapeHtml(dispensary['Dispensary Address'] || '')}`;
+                    repMarker.bindPopup(popupContent);
+                    repMap.setView(coords, 15);
+                    setTimeout(() => { if (repMap) repMap.invalidateSize() }, 100); // Invalidate after showing
+                } else {
+                    if (repMapContainer) repMapContainer.classList.remove('visible');
+                    if (repMarker) { repMap.removeLayer(repMarker); repMarker = null; }
+                }
+            }
+
+             function showMyLocationOnMap() {
+                 if (!navigator.geolocation) { showMessage(errorMessageElement, 'Geolocation not supported.'); return; }
+                 if (!repMap) { showMessage(errorMessageElement, 'Map not initialized.'); return; }
+                 showLoading('Getting your location...');
+                 navigator.geolocation.getCurrentPosition(
+                     (position) => {
+                         const latitude  = position.coords.latitude;
+                         const longitude = position.coords.longitude;
+                         const userCoords = [latitude, longitude];
+                         hideLoading();
+                         showMessage(sentMessageElement, 'Your location found.');
+                         if (userLocationMarker) repMap.removeLayer(userLocationMarker);
+                         userLocationMarker = L.circleMarker(userCoords, { radius: 8, fillColor: "#3388ff", color: "#fff", weight: 2, opacity: 1, fillOpacity: 0.8 }).addTo(repMap);
+                         userLocationMarker.bindPopup("Your current location").openPopup(); // Open popup immediately
+                         repMap.setView(userCoords, 15);
+                         if (repMapContainer && !repMapContainer.classList.contains('visible')) {
+                              repMapContainer.classList.add('visible');
+                              setTimeout(() => { if (repMap) repMap.invalidateSize() }, 100);
+                         }
+                     },
+                     (err) => {
+                         hideLoading();
+                         let message = 'Unable to retrieve your location.';
+                         // ... (keep original error handling)
+                         switch(err.code) {
+                            case err.PERMISSION_DENIED: message = "Geolocation request denied."; break;
+                            case err.POSITION_UNAVAILABLE: message = "Location information is unavailable."; break;
+                            case err.TIMEOUT: message = "The request to get user location timed out."; break;
+                            case err.UNKNOWN_ERROR: message = "An unknown error occurred."; break;
+                        }
+                         console.warn(`Geolocation error (${err.code}): ${err.message}`);
+                         showMessage(errorMessageElement, message);
+                     },
+                     { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                 );
+             }
+
+            // Debounce function
+            function debounce(func, timeout = 300) {
+                let timer;
+                return (...args) => {
+                    clearTimeout(timer);
+                    timer = setTimeout(() => { func.apply(this, args); }, timeout);
+                };
+            }
+
+
+            // --- Initial Data Fetch and Event Listener Setup ---
+            fetchAllDispensaryData();
+            fetchSetupData();
+            initializeRepMap();
+
+            selectDispensary.addEventListener('change', function() {
+                const selectedDispensary = this.value;
+                qrCodeInput.value = ''; // Clear file input on selection change
+                qrCodePreviewContainer.innerHTML = ''; // Clear previews
+                if (selectedDispensary === 'new') {
+                    newDispensaryNameGroup.style.display = 'block';
+                    clearFormFields();
+                    this.value = 'new'; // Keep 'new' selected
+                    document.getElementById('newDispensaryName').focus(); // Focus on new name field
+                } else if (selectedDispensary) {
+                    newDispensaryNameGroup.style.display = 'none';
+                    document.getElementById('newDispensaryName').value = ''; // Clear new name field
+                    populateFormFields(selectedDispensary);
+                } else {
+                    newDispensaryNameGroup.style.display = 'none';
+                    document.getElementById('newDispensaryName').value = '';
+                    clearFormFields();
+                }
+            });
+
+            searchDispensary.addEventListener('input', debounce(populateDispensarySelect));
+            filterDispensaryAddress.addEventListener('input', debounce(populateDispensarySelect));
+            filterAdditional.addEventListener('input', debounce(populateDispensarySelect));
+            filterAssignedMember.addEventListener('change', populateDispensarySelect);
+            filterSalesPipeline.addEventListener('change', populateDispensarySelect);
+            if (reloadDataBtn) reloadDataBtn.addEventListener('click', reloadAllData);
+            if (getLocationBtn) getLocationBtn.addEventListener('click', getCurrentLocation);
+            if (showMyLocationBtn) showMyLocationBtn.addEventListener('click', showMyLocationOnMap);
+
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                submitForm();
+            });
+
+            qrCodeInput.addEventListener('change', function(event) {
+                qrCodePreviewContainer.innerHTML = '';
+                const files = event.target.files;
+                if (files.length > 5) { // Limit number of previews/uploads
+                    showMessage(errorMessageElement, "You can upload a maximum of 5 images at a time.");
+                    qrCodeInput.value = ''; // Clear selection
+                    return;
+                }
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                     // Check file type and size (example: limit to 2MB)
+                    if (!file.type.startsWith('image/')) {
+                        showMessage(errorMessageElement, `File "${file.name}" is not an image.`);
+                        continue; // Skip non-images
+                    }
+                    if (file.size > 2 * 1024 * 1024) { // 2MB limit
+                        showMessage(errorMessageElement, `Image "${file.name}" is too large (max 2MB).`);
+                        continue; // Skip large files
+                    }
+
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const img = document.createElement('img');
+                            img.src = e.target.result;
+                            img.className = 'qr-code-preview';
+                            img.title = file.name; // Show filename on hover
+                            qrCodePreviewContainer.appendChild(img);
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                }
+            });
+
+             // --- End Original DOMContentLoaded Logic ---
+
+        } // End of initializeApp function
+
+        // --- Start Authentication Check on Page Load ---
+        document.addEventListener('DOMContentLoaded', checkAuthentication);
+
+    </script>
 
 </body>
 </html>
