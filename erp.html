@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <!-- Updated Title -->
+  <title>TPO Wellness - ERP Links</title>
+  <meta content="TPO Wellness ERP & MES System Links" name="description">
+  <meta content="erp, mes, tpo wellness, links" name="keywords">
+
+  <!-- Favicons (from original erp.html) -->
+  <link href="assets/img/favicon.png" rel="icon">
+  <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+
+  <!-- Google Fonts (from tpologin.html) -->
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Raleway:300,300i,400,400i,500,500i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+
+  <!-- Vendor CSS Files (from tpologin.html) -->
+  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="assets/vendor/boxicons/css/boxicons.min.css" rel="stylesheet">
+
+  <!-- Main CSS File (from tpologin.html) -->
+  <link href="assets/css/style.css" rel="stylesheet">
+
+  <!-- Custom Styles specifically for ERP Link Buttons (from original erp.html) -->
+  <style>
+    /* Styles for the main content area of the ERP page */
+    .erp-content-section {
+      padding: 40px 0; /* Add padding */
+      width: 100%;
+      flex-grow: 1; /* Allow this section to fill space */
+      display: flex;
+      justify-content: center; /* Center the container horizontally */
+    }
+
+    /* Styles from the original erp.html <style> block */
+    .erp-container { /* Renamed from .container to avoid conflict with bootstrap */
+        max-width: 600px;
+        width: 100%;
+        /* Removed background-color, margin, padding, display flex as these are handled by parent/bootstrap */
+    }
+    .erp-header { /* Renamed from .header */
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .erp-logo { /* Renamed from .logo */
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-bottom: 10px; /* Added margin */
+    }
+    .erp-container h1 { /* Specific h1 style */
+        color: #333;
+        font-size: 24px;
+        margin: 10px 0;
+    }
+     .erp-container p { /* Style for the paragraph */
+        color: #555; /* Example color */
+        margin-bottom: 20px;
+     }
+    .section-title {
+        font-weight: bold;
+        margin-top: 20px;
+        margin-bottom: 10px;
+        color: #333; /* Added color */
+        font-size: 18px; /* Adjusted size */
+        border-bottom: 1px solid #eee; /* Added separator */
+        padding-bottom: 5px; /* Spacing for separator */
+    }
+    .erp-button { /* Renamed from .button to avoid conflict */
+        display: flex;
+        align-items: center;
+        background-color: #333; /* Dark background */
+        color: white;
+        padding: 10px 15px;
+        margin-bottom: 10px;
+        border-radius: 5px;
+        text-decoration: none;
+        transition: background-color 0.3s, transform 0.2s; /* Added transform transition */
+        font-size: 14px; /* Adjusted font size */
+        border: none; /* Ensure no default border */
+    }
+    .erp-button:hover {
+        background-color: #1e56a0; /* Use theme color on hover */
+        color: white; /* Ensure text stays white */
+        text-decoration: none; /* Ensure no underline */
+        transform: translateY(-2px); /* Slight lift effect */
+    }
+    .erp-button .icon { /* Style for emoji icons */
+        margin-right: 10px;
+        font-size: 20px; /* Keep icon size */
+        line-height: 1; /* Adjust line height */
+    }
+    /* Removed .icon-img style as it wasn't used in the provided erp.html */
+
+    /* Ensure body flex structure pushes footer down */
+    body {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+    }
+    main {
+        flex-grow: 1;
+        display: flex; /* Use flexbox */
+        flex-direction: column; /* Stack children vertically */
+    }
+  </style>
+
+</head>
+<body>
+
+  <!-- ======= Top Bar ======= -->
+  <section id="topbar" class="d-flex align-items-center">
+    <div class="container d-flex justify-content-center justify-content-md-between">
+      <div class="contact-info d-flex align-items-center">
+        <i class="bi bi-envelope d-flex align-items-center"><a href="mailto:info@tpo-wellness.com">info@tpo-wellness.com</a></i>
+        <i class="bi bi-phone d-flex align-items-center ms-4"><span>+66 87 789 4950</span></i>
+      </div>
+      <div class="user-info d-none d-md-flex align-items-center">
+         <!-- Placeholder for login status if needed later -->
+         <!-- <span id="loginStatus">Logged in as: example@email.com</span> -->
+         <!-- <button id="logoutButton" class="logout-btn" onclick="logout()">Logout</button> -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ======= Header ======= -->
+  <header id="header" class="d-flex align-items-center">
+    <div class="container d-flex align-items-center justify-content-between">
+      <h1 class="logo"><a href="index.html"><img src="./assets/img/TPOLogo.png" alt="TPO Wellness Logo" class="img-fluid"></a></h1>
+		<nav id="navbar" class="navbar">
+			<ul>
+			  <!-- Standard Links -->
+			  <li><a class="nav-link scrollto" href="index.html#hero">Home</a></li>
+			  <li><a class="nav-link scrollto" href="index.html#about">About</a></li>
+			  <li><a class="nav-link scrollto" href="index.html#contact">Contact</a></li>
+			  <!-- Added Links -->
+			  <li><a class="nav-link" href="AA-Sales-Tools.html">Sales Tools</a></li>
+			  <li><a class="nav-link" href="performance.html">Performance</a></li>
+			  <!-- Link to the current page, marked active -->
+			  <li><a class="nav-link active" href="erp.html">ERP</a></li>
+			  <!-- Login Dropdown -->
+			  <li class="dropdown"><a href="#"><span>Login</span> <i class="bi bi-chevron-down"></i></a>
+				<ul>
+				  <li><a href="tpologin.html">Employee Login</a></li>
+				  <li><a href="Login.html">CRM Login</a></li>
+				  <li><a href="customerlogin.html">Customer Login</a></li>
+				</ul>
+			  </li>
+			</ul>
+			<i class="bi bi-list mobile-nav-toggle"></i>
+		 </nav><!-- .navbar -->
+    </div>
+  </header><!-- End Header -->
+
+  <main id="main">
+    <!-- ======= ERP Links Section ======= -->
+    <section class="erp-content-section">
+      <div class="container"> <!-- Use Bootstrap container for general layout -->
+        <div class="row justify-content-center"> <!-- Center the content column -->
+           <div class="col-md-8 col-lg-6"> <!-- Define column width -->
+
+            <!-- Start Content from original erp.html -->
+            <div class="erp-container"> <!-- Use the renamed class for specific styles -->
+                <div class="erp-header"> <!-- Use the renamed class -->
+                    <!-- Make sure the image path is correct relative to this new file location -->
+                    <img src="assets/img/Link3/TPO_Logo.png" alt="TPO Logo" class="erp-logo"> <!-- Use the renamed class -->
+                    <h1>TPO Wellness ERP & MES System</h1>
+                    <p>TPO Wellness ERP Links</p>
+                </div>
+
+                <div class="section-title">ERP Main</div>
+                <a href="https://docs.google.com/spreadsheets/d/1afbeB_nOp-yuNfMxusa5VIn9KwMWUO_ekN3Dy0jxEnM" target="_blank" rel="noopener noreferrer" class="erp-button"><span class="icon">☀️</span>TPO Inventory</a>
+                <a href="https://docs.google.com/spreadsheets/d/1TUrvNgZH7wCP-SjnbzkaGQxQyVWzaCEoWd_EueKeKUk" target="_blank" rel="noopener noreferrer" class="erp-button"><span class="icon">☀️</span>TPO Inventory Analysis</a>
+                <a href="https://docs.google.com/spreadsheets/d/1rHsZwfSDdby6W5GZX71o79S9gy4_3FGuU905FThj0-8" target="_blank" rel="noopener noreferrer" class="erp-button"><span class="icon">☀️</span>TPO Inventory Entry Form</a>
+                <a href="https://docs.google.com/spreadsheets/d/1FlclqiEC8FFwDmwLMYUrz5D5zpQzrBRJzxsuTR-EgOM" target="_blank" rel="noopener noreferrer" class="erp-button"><span class="icon">📚</span>TPO Sales Management</a>
+                <a href="https://docs.google.com/spreadsheets/d/1h9ovE4yQQhRh0xegHTwRzYGYysv0i9gUBomgZPByBzc" target="_blank" rel="noopener noreferrer" class="erp-button"><span class="icon">💰</span>TPO Shipment Management</a>
+                <a href="https://docs.google.com/spreadsheets/d/1vZ7sX6oxnFwRWmCHYhsMPDpV6tT7mCePyBDnLyWZYbM" target="_blank" rel="noopener noreferrer" class="erp-button"><span class="icon">☀️</span>TPO Sales Order Management</a>
+                <a href="https://docs.google.com/spreadsheets/d/1cxtEsSM6HlV6PDpCBiT72YwaTD-C6DlCFzIY9xk1xo0" target="_blank" rel="noopener noreferrer" class="erp-button"><span class="icon">☀️</span>TPO Sales Order Management Fuzzies</a>
+                <a href="https://docs.google.com/spreadsheets/d/1kbn0HL0STM9-gkZRnKTfTqvy-TYBet59AeKSuqJKVxA" target="_blank" rel="noopener noreferrer" class="erp-button"><span class="icon">📚</span>Fuzzies Dashboard</a>
+                <a href="https://docs.google.com/spreadsheets/d/e/2PACX-1vRtEoRq705zjYqAffHCq3433cZJfxiZK3Yd7kPFz_cw58meMxPakDo_nMI8rwrJedYUIIeBjkhsrCs4/pubhtml?gid=202605662&single=true" target="_blank" rel="noopener noreferrer" class="erp-button"><span class="icon">📚</span>TPO Inventory HTML</a>
+
+                <div class="section-title">Sales Tools</div>
+                <a href="https://script.google.com/macros/s/AKfycbx-QyoPBPxm7rXH4xMx0gaVHsWDRsL29gr_zR8zgxvnAJndJAQppu296ffgGVltk9EH/exec" target="_blank" rel="noopener noreferrer" class="erp-button"><span class="icon">✅</span>TPO Event Calendar</a>
+                <a href="https://khchan8.github.io/Tpo-Website/CRM.html" target="_blank" rel="noopener noreferrer" class="erp-button"><span class="icon">✅</span>Tiny CRM</a>
+                <a href="https://forms.gle/uYPaMpv6nrSAiXu88" target="_blank" rel="noopener noreferrer" class="erp-button"><span class="icon">✅</span>TPO Customer Setup Form</a>
+                <a href="https://docs.google.com/spreadsheets/d/1H-xcyBvh-estXBW_qAApsa4j-9w5RoSGErVj-DSZfwI" target="_blank" rel="noopener noreferrer" class="erp-button"><span class="icon">✅</span>TPO Sales Order 2025</a>
+            </div>
+            <!-- End Content from original erp.html -->
+
+           </div>
+        </div>
+      </div>
+    </section><!-- End ERP Links Section -->
+  </main><!-- End #main -->
+
+  <!-- ======= Footer ======= -->
+  <footer id="footer">
+    <div class="footer-top">
+      <div class="container">
+        <div class="row">
+
+          <div class="col-lg-4 col-md-6">
+            <div class="footer-info">
+              <h3>TPO Wellness</h3>
+              <p>
+                TPO Wellness Ltd. (Head Office)<br>
+                No. 122/7 Moo5, Pakkret Sub-District, Pakkret District.<br>
+                Nonthaburi Province 11120<br><br>
+                <strong>Tel:</strong> +662-687-7811,+6694-7365518<br>
+                <strong>Email:</strong> info@tpo-wellness.com<br>
+              </p>
+              <div class="social-links mt-3">
+                <a href="#" class="twitter"><i class="bx bxl-twitter"></i></a>
+                <a href="#" class="facebook"><i class="bx bxl-facebook"></i></a>
+                <a href="#" class="instagram"><i class="bx bxl-instagram"></i></a>
+                <a href="#" class="linkedin"><i class="bx bxl-linkedin"></i></a>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-2 col-md-6 footer-links">
+            <h4>Useful Links</h4>
+            <ul>
+              <li><i class="bx bx-chevron-right"></i> <a href="index.html#hero">Home</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="index.html#about">About us</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="index.html#services">Services</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="#">Terms of service</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="#">Privacy policy</a></li>
+            </ul>
+          </div>
+
+          <div class="col-lg-2 col-md-6 footer-links">
+            <h4>Our Services</h4>
+             <ul>
+               <li><i class="bx bx-chevron-right"></i> <a href="#">Edibles Manufacturing</a></li>
+               <li><i class="bx bx-chevron-right"></i> <a href="#">Pre-Roll Production</a></li>
+               <li><i class="bx bx-chevron-right"></i> <a href="#">Cannabis Flower Packaging</a></li>
+               <li><i class="bx bx-chevron-right"></i> <a href="#">R&D Services</a></li>
+               <li><i class="bx bx-chevron-right"></i> <a href="#">Quality Control & Assurance</a></li>
+             </ul>
+          </div>
+
+          <div class="col-lg-4 col-md-6 footer-newsletter">
+            <h4>Our Newsletter</h4>
+            <p>Subscribe to our newsletter for the latest updates</p>
+            <form action="" method="post"> <!-- Add action/method if needed -->
+              <input type="email" name="email"><input type="submit" value="Subscribe">
+            </form>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="copyright">
+        © Copyright <strong><span>TPO Wellness</span></strong>. All Rights Reserved
+      </div>
+      <div class="credits">
+        Designed by <a href="#">KH</a>
+      </div>
+    </div>
+  </footer><!-- End Footer -->
+
+  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+  <!-- <div id="preloader"></div> --> <!-- Preloader usually not needed -->
+
+  <!-- Vendor JS Files (from tpologin.html) -->
+  <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <!-- Optional Vendor JS Files -->
+  <!-- <script src="assets/vendor/aos/aos.js"></script> -->
+  <!-- <script src="assets/vendor/glightbox/js/glightbox.min.js"></script> -->
+  <!-- <script src="assets/vendor/isotope-layout/isotope.pkgd.min.js"></script> -->
+  <!-- <script src="assets/vendor/swiper/swiper-bundle.min.js"></script> -->
+
+  <!-- Template Main JS File (from tpologin.html, needed for mobile nav toggle) -->
+  <script src="assets/js/main.js"></script>
+
+  <!-- No login-specific script needed for this page -->
+
+</body>
+</html>

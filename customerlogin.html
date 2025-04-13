@@ -258,33 +258,26 @@
 
   <!-- Login Script -->
   <script>
-    // TODO: Replace with the NEW Google Apps Script URL for Employee/Customer Login (Stage 3)
-    const APPS_SCRIPT_URL = 'PLACEHOLDER_NEW_APPS_SCRIPT_URL';
+    // Google Apps Script URL for Customer Login
+    // !!! IMPORTANT: This URL should point to your deployed NewCode.gs script !!!
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw71EnQxmnnx02ODmQ_yTCpt7f2Qb0ci1na3-6gnFexyeSf59DNkiJl3dWGMAfvubqTvw/exec';
 
-    // Get redirect URL and error message from URL parameters
+    // Get error message from URL parameters (if any)
     const urlParams = new URLSearchParams(window.location.search);
     const errorParam = urlParams.get('error');
-    const redirectUrlParam = urlParams.get('redirectUrl'); // This is passed by Code.gs redirect
-    // Prioritize redirect URL from parameter, fallback to default CRM page
-    const redirectUrl = redirectUrlParam || "https://tpowellness.com/CRMv4.html";
-
+    
     const errorDiv = document.getElementById('error-message');
     const loginButton = document.getElementById('loginButton');
-    const loginStatusSpan = document.getElementById('loginStatus'); // Added
-    const logoutButton = document.getElementById('logoutButton'); // Added
-    const userInfoDiv = document.querySelector('#topbar .user-info'); // Added
 
     // Function to disable/enable buttons
     function setButtonsDisabled(disabled) {
         if(loginButton) loginButton.disabled = disabled;
     }
 
-    // Customer login (fetch logic pending Stage 3)
+    // Customer login function (mimics Login.html flow)
     function login() {
-      const emailInput = document.getElementById('email');
-      const passwordInput = document.getElementById('password');
-      const email = emailInput.value;
-      const password = passwordInput.value;
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
 
       errorDiv.textContent = ''; // Clear previous errors
 
@@ -294,26 +287,48 @@
       }
 
       errorDiv.textContent = 'Logging in...';
-      setButtonsDisabled(true); // Disable buttons
+      setButtonsDisabled(true);
 
-      // TODO: Implement fetch logic for the NEW Apps Script (Stage 3)
-      // This script should return { success: true, linkedPage: 'some_url.html' } or { success: false, message: '...' }
-      console.log(`Attempting login for ${email} (Customer) - Fetch logic pending Stage 3.`);
+      const loginUrl = new URL(APPS_SCRIPT_URL);
+      loginUrl.searchParams.append('action', 'handleLogin');
+      loginUrl.searchParams.append('email', email);
+      loginUrl.searchParams.append('password', password);
+      loginUrl.searchParams.append('type', 'customer'); // Specify type
 
-      // Example placeholder for successful redirect (replace with actual fetch result handling)
-      // const fakeResult = { success: true, linkedPage: 'customer_dashboard.html' }; // Example for customer
-      // if (fakeResult.success) {
-      //    window.top.location.href = fakeResult.linkedPage;
-      // } else {
-      //    errorDiv.textContent = fakeResult.message || 'Login failed.';
-      //    setButtonsDisabled(false);
-      // }
-
-      // Placeholder to re-enable button for now
-       setTimeout(() => {
-           errorDiv.textContent = 'Login logic not yet implemented (Stage 3).';
-           setButtonsDisabled(false);
-       }, 1000);
+      fetch(loginUrl, { method: 'GET' })
+      .then(response => {
+        // Check if response is ok (status 200-299)
+        if (!response.ok) {
+          // Try to parse error from JSON response if possible
+          return response.json().then(errData => {
+            throw new Error(errData.message || `Network response was not ok (${response.status})`);
+          }).catch(() => {
+            // Fallback if response is not JSON or parsing fails
+            throw new Error(`Network response was not ok (${response.status})`);
+          });
+        }
+        return response.json(); // Parse successful JSON response
+      })
+      .then(result => {
+        setButtonsDisabled(false);
+        // Check the success flag and linkedPage from the JSON response
+        if (result && result.success === true && result.linkedPage) {
+          errorDiv.textContent = ''; // Clear any previous error message
+          console.log("Customer login success. Redirecting to:", result.linkedPage);
+          // Perform redirect client-side using the linkedPage from the script
+          window.top.location.href = result.linkedPage;
+        } else {
+          // Display the error message from the script's JSON response
+          errorDiv.textContent = result.message || 'Login failed. Please check your credentials.';
+          console.log("Customer login failed:", result.message || 'Unknown error');
+        }
+      })
+      .catch(error => {
+        // Handle fetch errors (network issues, CORS - though less likely now, parsing errors)
+        setButtonsDisabled(false);
+        console.error('Error during customer login fetch:', error);
+        errorDiv.textContent = 'An error occurred during login: ' + error.message;
+      });
 
       /*
       // --- OLD CRM LOGIN LOGIC (Commented out for reference) ---
