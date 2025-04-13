@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
-  <title>TPO Wellness CRM - Login</title>
+  <title>TPO Wellness - Employee Login</title> <!-- Changed Title -->
   <meta content="" name="description">
   <meta content="" name="keywords">
 
@@ -23,7 +23,7 @@
   <!-- Main CSS File -->
   <link href="assets/css/style.css" rel="stylesheet">
 
-  <!-- Custom Styles for Login Page -->
+  <!-- Custom Styles for Login Page (Copied from Login.html) -->
   <style>
     /* Keep specific login form styles, adjust as needed */
     .login-section {
@@ -63,6 +63,7 @@
       box-sizing: border-box;
       font-size: 16px;
     }
+    /* Use theme button style */
     .login-container button {
       width: 100%;
       padding: 12px;
@@ -86,13 +87,25 @@
     .login-container .info-message { margin-top: 25px; text-align: center; color: #666; font-size: 14px; }
 
     /* Body padding adjusted for theme header */
+    body {
+        padding-top: 110px; /* Adjust if topbar+header height changes */
+    }
+    #header {
+        height: 70px; /* Ensure header height is consistent */
+    }
+    #topbar {
+        height: 40px; /* Ensure topbar height is consistent */
+    }
+    main {
+        padding-top: 0; /* Remove extra padding if login-section handles it */
+    }
   </style>
 
 </head>
 <body>
 
   <!-- ======= Top Bar ======= -->
-  <section id="topbar" class="d-flex align-items-center">
+  <section id="topbar" class="d-flex align-items-center fixed-top"> <!-- Added fixed-top -->
     <div class="container d-flex justify-content-center justify-content-md-between">
       <div class="contact-info d-flex align-items-center">
         <i class="bi bi-envelope d-flex align-items-center"><a href="mailto:info@tpo-wellness.com">info@tpo-wellness.com</a></i>
@@ -107,7 +120,7 @@
   </section>
 
   <!-- ======= Header ======= -->
-  <header id="header" class="d-flex align-items-center">
+  <header id="header" class="d-flex align-items-center fixed-top"> <!-- Added fixed-top -->
     <div class="container d-flex align-items-center justify-content-between">
       <h1 class="logo"><a href="index.html"><img src="./assets/img/TPOLogo.png" alt="TPO Wellness Logo" class="img-fluid"></a></h1>
       <nav id="navbar" class="navbar">
@@ -118,7 +131,7 @@
           <li><a class="nav-link scrollto" href="index.html#contact">Contact</a></li>
           <li class="dropdown"><a href="#" class="active"><span>Login</span> <i class="bi bi-chevron-down"></i></a>
             <ul>
-              <li><a href="tpologin.html">Employee Login</a></li>
+              <li><a href="tpologin.html" class="active">Employee Login</a></li> <!-- Mark as active -->
               <li><a href="Login.html">CRM Login</a></li>
               <li><a href="customerlogin.html">Customer Login</a></li>
             </ul>
@@ -136,19 +149,16 @@
         <div class="row justify-content-center">
           <div class="col-lg-6 col-md-8">
             <div class="login-container">
-              <!-- Logo can be added here if desired -->
-              <!-- <div class="logo">
-                <img src="assets/img/TPOLogo.png" alt="TPO Wellness">
-              </div> -->
-              <h1>CRM Login</h1>
+              <!-- Logo removed from here, it's in the header -->
+              <h1>Employee Login</h1> <!-- Changed Heading -->
               <div id="login-form">
                 <div class="form-group">
                   <label for="email">Email</label>
-                  <input type="email" id="email" name="email" class="form-control" required>
+                  <input type="email" id="email" name="email" class="form-control" required> <!-- Added form-control class -->
                 </div>
                 <div class="form-group">
                   <label for="password">Password</label>
-                  <input type="password" id="password" name="password" class="form-control" required>
+                  <input type="password" id="password" name="password" class="form-control" required> <!-- Added form-control class -->
                 </div>
                 <button type="button" id="loginButton" onclick="login()">Login</button>
                 <div id="error-message" class="error-message"></div>
@@ -245,30 +255,24 @@
   <!-- Template Main JS File -->
   <script src="assets/js/main.js"></script> <!-- Needed for mobile nav toggle -->
 
-  <!-- Login Script -->
+  <!-- Login Script (Adapted from original tpologin.html) -->
   <script>
-    // Define the Apps Script URL (should match the one in CRM pages)
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzy2g7bfHvjArMWornli3GPodDw99P4ayMjALKanAU4waL29CjcfCjHl3wiJaxSRIIV/exec';
+    // TODO: Replace with the NEW Google Apps Script URL for Employee/Customer Login (Stage 3)
+    const APPS_SCRIPT_URL = 'PLACEHOLDER_NEW_APPS_SCRIPT_URL';
 
-    // Get redirect URL and error message from URL parameters
+    // Get error message from URL parameters (if any)
     const urlParams = new URLSearchParams(window.location.search);
     const errorParam = urlParams.get('error');
-    const redirectUrlParam = urlParams.get('redirectUrl'); // This is passed by Code.gs redirect
-    // Prioritize redirect URL from parameter, fallback to default CRM page
-    const redirectUrl = redirectUrlParam || "https://tpowellness.com/CRMv4.html";
 
     const errorDiv = document.getElementById('error-message');
     const loginButton = document.getElementById('loginButton');
-    const loginStatusSpan = document.getElementById('loginStatus'); // Added
-    const logoutButton = document.getElementById('logoutButton'); // Added
-    const userInfoDiv = document.querySelector('#topbar .user-info'); // Added
 
     // Function to disable/enable buttons
     function setButtonsDisabled(disabled) {
         if(loginButton) loginButton.disabled = disabled;
     }
 
-    // External user login (using fetch with GET)
+    // Login function for Employee/Customer
     function login() {
       const emailInput = document.getElementById('email');
       const passwordInput = document.getElementById('password');
@@ -285,11 +289,32 @@
       errorDiv.textContent = 'Logging in...';
       setButtonsDisabled(true); // Disable buttons
 
-      // *** MODIFIED: Use fetch with GET and query parameters ***
-      const loginUrl = new URL(APPS_SCRIPT_URL);
-      loginUrl.searchParams.append('action', 'handleExternalLogin');
+      // TODO: Implement fetch logic for the NEW Apps Script (Stage 3)
+      // This script should return { success: true, linkedPage: 'some_url.html' } or { success: false, message: '...' }
+      console.log(`Attempting login for ${email} (Employee) - Fetch logic pending Stage 3.`);
+
+      // Example placeholder for successful redirect (replace with actual fetch result handling)
+      // const fakeResult = { success: true, linkedPage: 'employee_portal.html' }; // Example for employee
+      // if (fakeResult.success) {
+      //    window.top.location.href = fakeResult.linkedPage;
+      // } else {
+      //    errorDiv.textContent = fakeResult.message || 'Login failed.';
+      //    setButtonsDisabled(false);
+      // }
+
+      // Placeholder to re-enable button for now
+       setTimeout(() => {
+           errorDiv.textContent = 'Login logic not yet implemented (Stage 3).';
+           setButtonsDisabled(false);
+       }, 1000);
+
+      /*
+      // --- OLD CRM LOGIN LOGIC (Commented out) ---
+      const loginUrl = new URL(APPS_SCRIPT_URL); // This URL needs to be the NEW one
+      loginUrl.searchParams.append('action', 'handleLogin'); // Action might be different for new script
       loginUrl.searchParams.append('email', email);
       loginUrl.searchParams.append('password', password);
+      loginUrl.searchParams.append('type', 'employee'); // Add type parameter
 
       fetch(loginUrl, { method: 'GET' })
       .then(response => {
@@ -298,22 +323,10 @@
       })
       .then(result => {
         setButtonsDisabled(false);
-        if (result && result.success && result.token) {
+        if (result && result.success && result.linkedPage) {
           errorDiv.textContent = '';
-          // Store token and user info
-          localStorage.setItem('tpoCrmToken', result.token);
-          localStorage.setItem('tpoCrmUserEmail', result.email); // Assuming script returns email
-          localStorage.setItem('tpoCrmIsManager', result.isManager);
-
-          // Use the redirectUrl determined from query params or the fallback
-          let targetUrl = redirectUrl;
-
-          // Append the token to the target URL
-          const separator = targetUrl.includes('?') ? '&' : '?';
-          targetUrl = targetUrl.replace(/&?token=[^&]*/g, ''); // Clean potential existing token
-          const redirectWithToken = targetUrl + separator + 'token=' + result.token;
-          console.log("External login success. Redirecting to:", redirectWithToken);
-          window.top.location.href = redirectWithToken; // Redirect WITH token
+          console.log("Login success. Redirecting to:", result.linkedPage);
+          window.top.location.href = result.linkedPage; // Redirect to linked page
         } else {
           errorDiv.textContent = result.message || 'Login failed. Please check your credentials.';
         }
@@ -323,16 +336,7 @@
         console.error('Error during login fetch:', error);
         errorDiv.textContent = 'An error occurred during login: ' + error.message;
       });
-    }
-
-    // Logout function (Added)
-    function logout() {
-        console.log("Logging out...");
-        localStorage.removeItem('tpoCrmToken');
-        localStorage.removeItem('tpoCrmUserEmail');
-        localStorage.removeItem('tpoCrmIsManager');
-        // Redirect to login page (this page) without any token/error
-        window.top.location.href = '/Login.html';
+      */
     }
 
     // Add event listener for Enter key in password field
@@ -344,26 +348,10 @@
       }
     });
 
-    // Display error message from URL parameter on load & Check login status
+    // Display error message from URL parameter on load
     document.addEventListener('DOMContentLoaded', function() {
       if (errorParam) {
         errorDiv.textContent = decodeURIComponent(errorParam);
-      }
-
-      // Check if user is already logged in (e.g., navigated back to login page)
-      const loggedInEmail = localStorage.getItem('tpoCrmUserEmail');
-      const token = localStorage.getItem('tpoCrmToken');
-
-      if (loggedInEmail && token && userInfoDiv) {
-          // If logged in, show status and logout button, hide login form? Or just show status?
-          // For now, just show status in top bar
-          userInfoDiv.innerHTML = `
-              <span id="loginStatus">Logged in as: ${loggedInEmail}</span>
-              <button id="logoutButton" class="logout-btn" onclick="logout()">Logout</button>
-          `;
-          // Optionally hide the main login form container
-          // const loginFormContainer = document.querySelector('.login-section .container');
-          // if (loginFormContainer) loginFormContainer.style.display = 'none';
       }
     });
   </script>

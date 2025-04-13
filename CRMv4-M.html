@@ -9,22 +9,33 @@
     <!-- Favicons -->
     <link href="assets/img/favicon.png" rel="icon">
     <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
-    <!-- Bootstrap -->
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Raleway:300,300i,400,400i,500,500i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+
+    <!-- Vendor CSS Files -->
+    <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet"> <!-- Bootstrap 5 for Theme -->
+    <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     <!-- Leaflet Fullscreen CSS -->
     <link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/leaflet.fullscreen.css' rel='stylesheet' />
+
+    <!-- Main CSS File -->
+    <link href="assets/css/style.css" rel="stylesheet">
+
     <style>
+        /* Keep existing CRM styles, adjust body padding */
         body {
-            font-family: 'Arial', sans-serif;
+            /* font-family: 'Arial', sans-serif; */ /* Use theme font */
             background-color: #f8f9fa;
             color: #333;
+            padding-top: 70px; /* Adjust for sticky header */
         }
-        /* Use container-fluid for full width */
-        .container-fluid {
+        /* Renamed original .container-fluid to avoid conflict */
+        .crm-content-wrapper {
             margin: 20px auto;
             background-color: #fff;
             border-radius: 10px;
@@ -163,7 +174,7 @@
 
 
         @media (max-width: 768px) {
-            .container-fluid { /* Target container-fluid */
+            .crm-content-wrapper { /* Target renamed class */
                 padding: 15px;
             }
              #assignMap {
@@ -172,7 +183,7 @@
         }
         /* Allow container-fluid to use more width */
         @media (min-width: 992px) { /* Bootstrap lg breakpoint */
-            .container-fluid {
+            .crm-content-wrapper {
                  padding-left: 30px; /* Add padding */
                  padding-right: 30px;
             }
@@ -314,9 +325,40 @@
              background-color: #a1e9c1 !important; /* Darker green */
              font-weight: bold; /* Optional: make text bold */
          }
-    </style>
+         /* Adjust main content padding */
+         main { padding-top: 20px; padding-bottom: 20px; }
+     </style>
 </head>
 <body>
+
+  <!-- ======= Top Bar ======= -->
+  <section id="topbar" class="d-flex align-items-center">
+    <div class="container d-flex justify-content-center justify-content-md-between">
+      <div class="contact-info d-flex align-items-center">
+        <i class="bi bi-envelope d-flex align-items-center"><a href="mailto:info@tpo-wellness.com">info@tpo-wellness.com</a></i>
+        <i class="bi bi-phone d-flex align-items-center ms-4"><span>+66 87 789 4950</span></i>
+      </div>
+      <div class="user-info d-flex align-items-center"> <!-- Populated by JS -->
+         <span id="loginStatus" style="margin-right: 15px;"></span>
+         <button id="logoutButton" class="logout-btn" onclick="logout()" style="display: none;">Logout</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======= Header ======= -->
+  <header id="header" class="d-flex align-items-center">
+    <div class="container d-flex align-items-center justify-content-between">
+      <h1 class="logo"><a href="index.html"><img src="./assets/img/TPOLogo.png" alt="TPO Wellness Logo" class="img-fluid"></a></h1>
+      <nav id="navbar" class="navbar">
+        <ul>
+          <li><a class="nav-link scrollto" href="index.html">Home</a></li>
+          <li><a class="nav-link active" href="#">CRM Manager</a></li>
+          <li><a class="nav-link" href="#" onclick="logout()">Logout</a></li>
+        </ul>
+        <i class="bi bi-list mobile-nav-toggle"></i>
+      </nav><!-- .navbar -->
+    </div>
+  </header><!-- End Header -->
     <div class="container-fluid">
         <div class="d-flex justify-content-between align-items-center mb-4">
              <h1 class="text-center mb-0">Tiny CRM - Manager Tools</h1> <!-- Title Corrected -->

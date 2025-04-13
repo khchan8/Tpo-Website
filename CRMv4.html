@@ -1,220 +1,148 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <base href="">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TPO Wellness - CRM (Rep View)</title> <!-- Changed Title -->
+    <title>TPO Wellness - CRM (Rep View)</title>
 
     <!-- Favicons -->
     <link href="assets/img/favicon.png" rel="icon">
     <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
-    <!-- Bootstrap -->
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Raleway:300,300i,400,400i,500,500i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+
+    <!-- Vendor CSS Files -->
+    <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet"> <!-- Bootstrap 5 for Theme -->
+    <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Main CSS File -->
+    <link href="assets/css/style.css" rel="stylesheet">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Raleway:300,300i,400,400i,500,500i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+
+    <!-- Vendor CSS Files -->
+    <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet"> <!-- Bootstrap 5 for Theme -->
+    <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+    <!-- Font Awesome (Keep for CRM Icons) -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
-    <!-- Leaflet CSS -->
+    <!-- Leaflet CSS (Keep for CRM Map) -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-    <!-- Leaflet Fullscreen CSS -->
+    <!-- Leaflet Fullscreen CSS (Keep for CRM Map) -->
     <link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/leaflet.fullscreen.css' rel='stylesheet' />
+
+    <!-- Main CSS File -->
+    <link href="assets/css/style.css" rel="stylesheet">
+
+    <!-- CRM Specific Styles (Keep) -->
     <style>
+        /* Keep existing CRM styles, adjust body padding */
         body {
-            font-family: 'Arial', sans-serif;
+            /* font-family: 'Arial', sans-serif; */ /* Use theme font */
             background-color: #f8f9fa;
             color: #333;
+            padding-top: 70px; /* Adjust for sticky header */
         }
-        .container {
-            max-width: 800px;
-            margin: 20px auto;
+        /* Renamed original .container to avoid conflict with theme's .container */
+        .crm-content-wrapper {
+            /* max-width: 800px; */ /* Let theme container handle width */
+            margin: 0; /* Remove margin, handled by theme container */
             background-color: #fff;
             border-radius: 10px;
             box-shadow: 0 0 20px rgba(0,0,0,0.1);
             padding: 30px;
         }
-        h1 {
-            color: #007bff;
+        .crm-container h1 { /* Style for the H1 inside CRM content */
+            color: #007bff; /* Keep CRM blue? Or theme blue? Keep CRM for now */
             margin-bottom: 30px;
+            font-size: 28px; /* Adjust size */
         }
         .form-group {
             margin-bottom: 1.5rem;
         }
-        label {
-            font-weight: bold;
-            color: #555;
-        }
-        .required-indicator { /* Style for red asterisk */
-            color: red;
-            font-weight: bold;
-            margin-left: 2px;
-        }
-        .btn-primary {
-            background-color: #007bff;
-            border-color: #007bff;
-        }
-        .btn-primary:hover {
-            background-color: #0056b3;
-            border-color: #0056b3;
-        }
-        .qr-code-preview {
-            max-width: 200px;
-            max-height: 200px;
-            margin-top: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            margin-right: 5px; /* Add spacing between previews */
-            display: inline-block; /* Allow multiple previews */
-        }
-        /* Enhanced Loading Indicator */
-        .loading-overlay {
-            display: none; /* Hidden by default */
-            position: fixed; /* Stay in place */
-            z-index: 9999; /* Sit on top */
-            left: 0;
-            top: 0;
-            width: 100%; /* Full width */
-            height: 100%; /* Full height */
-            overflow: auto; /* Enable scroll if needed */
-            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
-        }
-        .loading-content {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: #fff;
-            padding: 20px 40px;
-            border-radius: 5px;
-            text-align: center;
-            font-weight: bold;
-            color: #495057;
-        }
-        /* Simple spinner */
-        .spinner {
-            border: 4px solid #f3f3f3; /* Light grey */
-            border-top: 4px solid #3498db; /* Blue */
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 10px auto;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        /* Original message styles (can be removed if loading overlay replaces them) */
-        .message {
-            display: none;
-            margin-top: 1rem;
-            padding: 0.75rem;
-            border-radius: 0.25rem;
-            font-weight: bold;
-        }
-        .sent-message {
-            background-color: #d4edda;
-            color: #155724;
-        }
-        .error-message {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-        .collapsible-section {
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            margin-bottom: 1.5rem; /* Increased margin */
-            overflow: hidden; /* Ensure background color fills corners */
-        }
-        .collapsible-header {
-            /* background-color: #f8f9fa; */ /* Default removed */
-            padding: 12px 15px; /* Slightly more padding */
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid #ccc; /* Stronger border */
-        }
-        /* Style header titles */
-        .collapsible-header span {
-            font-weight: bold;
-            font-size: 1.15em; /* Slightly larger font */
-        }
-        /* Different background colors for headers */
+        /* label kept from theme.css */
+        .required-indicator { color: red; font-weight: bold; margin-left: 2px; }
+        /* .btn-primary kept from theme.css */
+        .qr-code-preview { max-width: 200px; max-height: 200px; margin-top: 10px; border: 1px solid #ddd; border-radius: 5px; margin-right: 5px; display: inline-block; }
+        .loading-overlay { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
+        .loading-content { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: #fff; padding: 20px 40px; border-radius: 5px; text-align: center; font-weight: bold; color: #495057; }
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 0 auto 10px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .message { display: none; margin-top: 1rem; padding: 0.75rem; border-radius: 0.25rem; font-weight: bold; }
+        .sent-message { background-color: #d4edda; color: #155724; }
+        .error-message { background-color: #f8d7da; color: #721c24; }
+        .collapsible-section { border: 1px solid #ddd; border-radius: 5px; margin-bottom: 1.5rem; overflow: hidden; }
+        .collapsible-header { padding: 12px 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ccc; }
+        .collapsible-header span { font-weight: bold; font-size: 1.15em; }
         #filterSection .collapsible-header { background-color: #e9ecef; border-color: #ced4da;}
         #dispensaryInfoSection .collapsible-header { background-color: #e2f0fb; border-color: #b8daff;}
         #contactInfoSection .collapsible-header { background-color: #e2fbf5; border-color: #b1dfbb;}
         #activityNotesSection .collapsible-header { background-color: #fff3cd; border-color: #ffeeba;}
         #actionItemsSection .collapsible-header { background-color: #f8d7da; border-color: #f5c6cb;}
-
-        .collapsible-content {
-            padding: 20px; /* Increased padding */
-            display: none; /* Collapsed by default */
-            background-color: #ffffff; /* Ensure content area is white */
-        }
-        .collapsible-icon {
-            transition: transform 0.3s ease;
-        }
-        .collapsible-section.active .collapsible-icon {
-            transform: rotate(180deg);
-        }
-        .collapsible-section.active .collapsible-content {
-             display: block; /* Show content when active */
-        }
-        /* Map Styling */
-        #repMap {
-             height: 350px; /* Adjust height as needed */
-             width: 100%;
-             margin-bottom: 1rem;
-             border: 1px solid #ccc;
-             border-radius: 5px;
-        }
-        .map-container {
-             display: none; /* Hide map initially */
-        }
-        .map-container.visible {
-             display: block; /* Show map when needed */
-        }
-        /* Make fullscreen map take up whole screen */
+        .collapsible-content { padding: 20px; display: none; background-color: #ffffff; }
+        .collapsible-icon { transition: transform 0.3s ease; }
+        .collapsible-section.active .collapsible-icon { transform: rotate(180deg); }
+        .collapsible-section.active .collapsible-content { display: block; }
+        #repMap { height: 350px; width: 100%; margin-bottom: 1rem; border: 1px solid #ccc; border-radius: 5px; }
+        .map-container { display: none; }
+        .map-container.visible { display: block; }
         #repMap:-webkit-full-screen { width: 100% !important; height: 100% !important; z-index: 99999; }
         #repMap:-ms-fullscreen { width: 100% !important; height: 100% !important; z-index: 99999; }
         #repMap:fullscreen { width: 100% !important; height: 100% !important; z-index: 99999; }
         .leaflet-pseudo-fullscreen { position: fixed !important; width: 100% !important; height: 100% !important; top: 0px !important; left: 0px !important; z-index: 99999; }
-
-        /* Read-only textarea styling */
-        textarea[readonly] {
-            background-color: #e9ecef; /* Light grey background */
-            cursor: not-allowed; /* Indicate non-editable */
-            color: #495057; /* Standard text color */
-            font-size: 0.9em; /* Slightly smaller font for history */
-            line-height: 1.4;
-            white-space: pre-wrap; /* Preserve line breaks */
-        }
-
-
+        textarea[readonly] { background-color: #e9ecef; cursor: not-allowed; color: #495057; font-size: 0.9em; line-height: 1.4; white-space: pre-wrap; }
         @media (max-width: 768px) {
-            .container {
-                padding: 15px;
-            }
-            #repMap {
-                height: 300px; /* Adjust height for smaller screens */
-            }
-            .form-row .col-md-6, .form-row .col-md-4, .form-row .col-md-2 { /* Stack columns on small screens */
-                flex-basis: 100%;
-                max-width: 100%;
-            }
+            .crm-container { padding: 15px; } /* Target renamed container */
+            #repMap { height: 300px; }
+            /* Keep form stacking */
+            .crm-container .form-row .col-md-6, .crm-container .form-row .col-md-4, .crm-container .form-row .col-md-2 { flex-basis: 100%; max-width: 100%; }
         }
-        /* Allow container to expand on larger screens */
-        @media (min-width: 992px) { /* Bootstrap lg breakpoint */
-            .container {
-                max-width: none; /* Remove max-width constraint */
-                /* Optionally add some horizontal padding if needed */
-                /* padding-left: 30px; */
-                /* padding-right: 30px; */
-            }
-        }
+        /* Use theme container width */
+        /* @media (min-width: 992px) {
+            .crm-container { max-width: none; }
+        } */
+        /* Adjust main content padding */
+        main { padding-top: 20px; padding-bottom: 20px; }
     </style>
 </head>
 <body>
-    <div class="container">
+
+  <!-- ======= Top Bar ======= -->
+  <section id="topbar" class="d-flex align-items-center">
+    <div class="container d-flex justify-content-center justify-content-md-between">
+      <div class="contact-info d-flex align-items-center">
+        <i class="bi bi-envelope d-flex align-items-center"><a href="mailto:info@tpo-wellness.com">info@tpo-wellness.com</a></i>
+        <i class="bi bi-phone d-flex align-items-center ms-4"><span>+66 87 789 4950</span></i>
+      </div>
+      <div class="user-info d-flex align-items-center"> <!-- Populated by JS -->
+         <span id="loginStatus" style="margin-right: 15px;"></span>
+         <button id="logoutButton" class="logout-btn" onclick="logout()" style="display: none;">Logout</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======= Header ======= -->
+  <header id="header" class="d-flex align-items-center">
+    <div class="container d-flex align-items-center justify-content-between">
+      <h1 class="logo"><a href="index.html"><img src="./assets/img/TPOLogo.png" alt="TPO Wellness Logo" class="img-fluid"></a></h1>
+      <nav id="navbar" class="navbar">
+        <ul>
+          <li><a class="nav-link scrollto" href="index.html">Home</a></li>
+          <li><a class="nav-link active" href="#">CRM</a></li>
+          <li><a class="nav-link" href="#" onclick="logout()">Logout</a></li>
+        </ul>
+        <i class="bi bi-list mobile-nav-toggle"></i>
+      </nav><!-- .navbar -->
+    </div>
+  </header><!-- End Header -->
+  <main id="main">
+    <!-- ======= CRM Section ======= -->
+    <section class="crm-section">
+        <!-- Use theme container for layout -->
+        <div class="container">
+            <!-- Renamed original container to crm-content-wrapper -->
+            <div class="crm-content-wrapper">
          <div class="d-flex justify-content-between align-items-center mb-4">
              <h1 class="text-center mb-0">Tiny CRM</h1>
              <div>
@@ -462,995 +390,361 @@
         </div>
         <div class="message sent-message mt-3"></div>
         <div class="message error-message mt-3"></div>
+            </div><!-- End .crm-content-wrapper -->
+        </div><!-- End .container -->
+    </section><!-- End CRM Section -->
+  </main><!-- End #main -->
+
+  <!-- ======= Footer ======= -->
+  <footer id="footer">
+    <div class="footer-top">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-4 col-md-6">
+            <div class="footer-info">
+              <h3>TPO Wellness</h3>
+              <p>
+                TPO Wellness Ltd. (Head Office)<br>
+                No. 122/7 Moo5, Pakkret Sub-District, Pakkret District.<br>
+                Nonthaburi Province 11120<br><br>
+                <strong>Tel:</strong> +662-687-7811,+6694-7365518<br>
+                <strong>Email:</strong> info@tpo-wellness.com<br>
+              </p>
+              <!-- Social links can be added back if needed -->
+            </div>
+          </div>
+          <div class="col-lg-2 col-md-6 footer-links">
+            <h4>Useful Links</h4>
+            <ul>
+              <li><i class="bi bi-chevron-right"></i> <a href="index.html#hero">Home</a></li>
+              <li><i class="bi bi-chevron-right"></i> <a href="index.html#about">About us</a></li>
+              <li><i class="bi bi-chevron-right"></i> <a href="index.html#services">Services</a></li>
+              <li><i class="bi bi-chevron-right"></i> <a href="#">Terms of service</a></li>
+              <li><i class="bi bi-chevron-right"></i> <a href="#">Privacy policy</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-2 col-md-6 footer-links">
+            <h4>Our Services</h4>
+             <ul>
+               <li><i class="bi bi-chevron-right"></i> <a href="#">Edibles Manufacturing</a></li>
+               <li><i class="bi bi-chevron-right"></i> <a href="#">Pre-Roll Production</a></li>
+               <li><i class="bi bi-chevron-right"></i> <a href="#">Cannabis Flower Packaging</a></li>
+               <li><i class="bi bi-chevron-right"></i> <a href="#">R&D Services</a></li>
+               <li><i class="bi bi-chevron-right"></i> <a href="#">Quality Control & Assurance</a></li>
+             </ul>
+          </div>
+          <div class="col-lg-4 col-md-6 footer-newsletter">
+            <h4>Our Newsletter</h4>
+            <p>Subscribe to our newsletter for the latest updates</p>
+            <form action="" method="post"> <!-- Add action/method if needed -->
+              <input type="email" name="email" class="form-control"><input type="submit" value="Subscribe" class="btn btn-primary"> <!-- Style submit -->
+            </form>
+          </div>
+        </div>
+      </div>
     </div>
-
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-    <!-- Leaflet Fullscreen JS -->
-    <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/Leaflet.fullscreen.min.js'></script>
-    <script>
-        // --- Authentication Globals ---
-        let authToken = null;
-        // !!! IMPORTANT: Replace this with your actual DEPLOYED Apps Script /exec URL !!!
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzy2g7bfHvjArMWornli3GPodDw99P4ayMjALKanAU4waL29CjcfCjHl3wiJaxSRIIV/exec';
-
-        // --- Messaging Functions (Defined Globally) ---
-        // NOTE: Need access to loadingOverlay, loadingMessage, sentMessageElement, errorMessageElement
-        // These should be declared globally as well if not already. Let's assume they are for now.
-        // If errors persist, we may need to pass these elements as arguments or query them inside the functions.
-        function showLoading(message = "Loading...") {
-            const loadingOverlay = document.getElementById('loadingOverlay');
-            const loadingMessage = document.getElementById('loadingMessage');
-            // Get message elements here as well, as hideMessage might be called
-            const sentMessageElement = document.querySelector('.sent-message');
-            const errorMessageElement = document.querySelector('.error-message');
-
-            // Check if elements exist before manipulating
-            if (loadingMessage) {
-                loadingMessage.textContent = message;
-            } else {
-                console.warn("showLoading: loadingMessage element not found.");
-            }
-            if (loadingOverlay) {
-                loadingOverlay.style.display = 'block';
-            } else {
-                 console.warn("showLoading: loadingOverlay element not found.");
-            }
-            // Ensure hideMessage is called only if elements exist
-            if (sentMessageElement) hideMessage(sentMessageElement);
-            if (errorMessageElement) hideMessage(errorMessageElement);
-        }
-
-        function hideLoading() {
-             const loadingOverlay = document.getElementById('loadingOverlay');
-             if (loadingOverlay) {
-                 loadingOverlay.style.display = 'none';
-             } else {
-                 console.warn("hideLoading: loadingOverlay element not found.");
-             }
-        }
-
-        function showMessage(element, message) {
-            // Use overlay for loading, specific elements for success/error
-            const loadingOverlay = document.getElementById('loadingOverlay');
-            const loadingMessage = document.getElementById('loadingMessage');
-
-            if(element === loadingOverlay || element === loadingMessage) {
-                showLoading(message);
-            } else {
-                hideLoading(); // Hide loading overlay when showing success/error
-                if(element) {
-                    element.textContent = message;
-                    element.style.display = 'block';
-                } else {
-                    console.warn("showMessage: Target element not found.");
-                }
-            }
-        }
-
-        function hideMessage(element) {
-             const loadingOverlay = document.getElementById('loadingOverlay');
-             const loadingMessage = document.getElementById('loadingMessage');
-
-             if(element === loadingOverlay || element === loadingMessage) {
-                hideLoading();
-            } else if (element) {
-                element.style.display = 'none';
-                element.textContent = '';
-            } else {
-                 // console.warn("hideMessage: Target element not found or not an element.");
-                 // This might be too noisy if called frequently for non-existent elements
-            }
-        }
-
-        // --- Authentication Check (Runs First) ---
-        // Simplified checkAuthentication - Token Only
-        function checkAuthentication() {
-            console.log("Checking authentication...");
-            const urlParams = new URLSearchParams(window.location.search);
-            let tokenFromUrl = urlParams.get('token');
-            let tokenFromStorage = localStorage.getItem('tpoCrmToken');
-            let potentialAuthToken = null;
-
-            if (tokenFromUrl) {
-                console.log("Token found in URL.");
-                potentialAuthToken = tokenFromUrl;
-                localStorage.setItem('tpoCrmToken', potentialAuthToken); // Store it immediately
-                 // Clean the URL
-                window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
-            } else if (tokenFromStorage) {
-                console.log("Token found in localStorage.");
-                potentialAuthToken = tokenFromStorage;
-            }
-
-            if (potentialAuthToken) {
-                // Validate the token if found
-                if (document.getElementById('loadingOverlay')) {
-                    showLoading("Validating session...");
-                } else {
-                    console.warn("DOM not ready for loading indicator during token validation.");
-                }
-                fetch(`${APPS_SCRIPT_URL}?action=validateToken&token=${potentialAuthToken}`)
-                    .then(response => response.json())
-                    .then(result => {
-                        hideLoading();
-                        if (result && result.valid) {
-                            console.log(`Token validated successfully for user: ${result.email}, Is Manager: ${result.isManager}`);
-                            authToken = potentialAuthToken; // Confirm the token
-                            localStorage.setItem('tpoCrmUserEmail', result.email);
-                            localStorage.setItem('tpoCrmIsManager', result.isManager);
-                            initializeApp(); // Proceed
-                        } else {
-                            // Token invalid or expired
-                            console.log("Token validation failed or token expired. Redirecting to login.");
-                            localStorage.removeItem('tpoCrmToken');
-                            localStorage.removeItem('tpoCrmUserEmail');
-                            localStorage.removeItem('tpoCrmIsManager');
-                            authToken = null;
-                            redirectToLogin(); // Redirect if token is invalid
-                        }
-                    })
-                    .catch(error => {
-                        // Network or other error during validation
-                        hideLoading();
-                        console.error('Error validating token:', error);
-                        showMessage(document.querySelector('.error-message'), 'Error validating session. Please try logging in again.');
-                        // Optionally redirect to login on validation error too
-                        // redirectToLogin();
-                    });
-            } else {
-                // No token found in URL or storage
-                console.log("No token found. Redirecting to login.");
-                redirectToLogin();
-            }
-        }
-
-        // checkGoogleSessionStatus function removed
-
-        function redirectToLogin() {
-            // *** MODIFIED BLOCK START ***
-            // Redirect to the static Login.html page on the same domain
-            const currentTpoUrl = window.location.href;
-            const staticLoginUrl = '/Login.html'; // Relative path to Login.html
-            window.top.location.href = `${staticLoginUrl}?redirectUrl=${encodeURIComponent(currentTpoUrl)}`;
-            // *** MODIFIED BLOCK END ***
-        }
-
-        // --- Main Application Initialization ---
-        function initializeApp() {
-            console.log("Authentication successful. Initializing application...");
-
-            // Get manager view link element
-            const managerViewLink = document.getElementById('managerViewLink');
-
-            // Show Manager View link if applicable
-            const isManager = localStorage.getItem('tpoCrmIsManager') === 'true';
-            if (isManager && managerViewLink) {
-                managerViewLink.style.display = 'inline-block'; // Show the link
-            }
-
-            // Add JavaScript to toggle the collapsible sections
-            document.querySelectorAll('.collapsible-header').forEach(header => {
-                header.addEventListener('click', () => {
-                    const section = header.parentElement;
-                    section.classList.toggle('active');
-                });
-            });
-
-            // Set initial state: Keep Filter section closed initially
-            document.querySelectorAll('.collapsible-section:not(#filterSection)').forEach(section => {
-                 section.classList.add('active');
-            });
-
-
-        // Utility functions for caching
-        function cacheData(key, data) {
-            try {
-                localStorage.setItem(key, JSON.stringify({
-                    timestamp: new Date().getTime(),
-                    data: data
-                }));
-            } catch (error) {
-                console.warn('Caching failed:', error);
-            }
-        }
-
-        function getCachedData(key, maxAge = 5 * 60 * 1000) { // 5 minutes default
-            try {
-                const cached = localStorage.getItem(key);
-                if (!cached) return null;
-
-                const { timestamp, data } = JSON.parse(cached);
-                if (Date.now() - timestamp > maxAge) return null;
-
-                return data;
-            } catch (error) {
-                console.warn('Cache retrieval failed:', error);
-                return null;
-            }
-        }
-
-        // Utility function to escape HTML for security
-        function escapeHtml(unsafe) {
-            if (typeof unsafe !== 'string') {
-                return unsafe === null || typeof unsafe === 'undefined' ? '' : String(unsafe);
-            }
-            return unsafe
-                 .replace(/&/g, "&amp;")
-                 .replace(/</g, '<')
-                 .replace(/>/g, '>')
-                 .replace(/"/g, '"')
-                 .replace(/'/g, '&#039;');
-        }
-
-            // --- Original DOMContentLoaded Logic Moved Here ---
-            const selectDispensary = document.getElementById('selectDispensary');
-            const newDispensaryNameGroup = document.getElementById('newDispensaryNameGroup');
-            const form = document.getElementById('dispensaryForm');
-            const qrCodeInput = document.getElementById('qrCode');
-            const qrCodePreviewContainer = document.getElementById('qrCodePreviewContainer');
-            const qrCodeContent = document.getElementById('qrCodeContent');
-            // Message Elements
-            const loadingOverlay = document.getElementById('loadingOverlay');
-            const loadingMessage = document.getElementById('loadingMessage');
-            const sentMessageElement = document.querySelector('.sent-message');
-            const errorMessageElement = document.querySelector('.error-message');
-            // Form Fields (Main CRM)
-            const assignedMember = document.getElementById('assignedMember');
-            const salesPipeline = document.getElementById('salesPipeline');
-            const historyTextarea = document.getElementById('history');
-            const assignmentHistoryTextarea = document.getElementById('assignmentHistory'); // NEW: Assignment History textarea
-            // New CRM Fields
-            const latitudeInput = document.getElementById('latitude');
-            const longitudeInput = document.getElementById('longitude');
-            const getLocationBtn = document.getElementById('getLocationBtn');
-            const showMyLocationBtn = document.getElementById('showMyLocationBtn'); // NEW: Show My Location button
-            const provinceInput = document.getElementById('province');
-            const originalNameDisplay = document.getElementById('originalNameDisplay');
-            const urlLinkContainer = document.getElementById('url_link_container'); // New container ID
-            const googleMapsUrlContainer = document.getElementById('google_maps_url_link_container'); // New container ID
-            const websiteInput = document.getElementById('website');
-            const websiteUrlContainer = document.getElementById('website_url_link_container'); // New container ID
-            const shopSizeSelect = document.getElementById('shopSize');
-            const facebookInput = document.getElementById('facebook');
-            const facebookUrlLinkContainer = document.getElementById('facebook_url_link_container'); // NEW: Facebook URL container
-            const lineInput = document.getElementById('line');
-            const lineUrlContainer = document.getElementById('line_url_link_container'); // New container ID
-            const phoneHashInput = document.getElementById('phoneHash');
-            const currentDistributorInput = document.getElementById('currentDistributor'); // NEW
-            const distributorDatalist = document.getElementById('distributorList'); // NEW
-            const repMapContainer = document.getElementById('repMapContainer'); // Map container div
-            const repMapElement = document.getElementById('repMap'); // Map element
-
-
-            // Filter Elements
-            const filterAssignedMember = document.getElementById('filterAssignedMember');
-            const searchDispensary = document.getElementById('searchDispensary');
-            const filterSalesPipeline = document.getElementById('filterSalesPipeline');
-            const filterDispensaryAddress = document.getElementById('filterDispensaryAddress');
-            const filterAdditional = document.getElementById('filterAdditional');
-            const reloadDataBtn = document.getElementById('reloadDataBtn'); // NEW
-
-            // --- Assignment Tab Elements Removed ---
-
-            let dispensariesData = [];
-            let setupData = {};
-            let repMap = null; // Leaflet map instance
-            let repMarker = null; // Leaflet marker instance for dispensary
-            let userLocationMarker = null; // Leaflet marker instance for user location
-
-            // Fetch initial data
-            fetchAllDispensaryData();
-            fetchSetupData();
-            initializeRepMap(); // Initialize map on load
-            // fetchUnassignedData(); // Removed initial fetch for Rep view
-
-            // --- Event Listeners ---
-
-            // Main form dispensary selection
-            selectDispensary.addEventListener('change', function() {
-                const selectedDispensary = this.value;
-                if (selectedDispensary === 'new') {
-                    newDispensaryNameGroup.style.display = 'block';
-                    clearFormFields();
-                    this.value = 'new';
-                } else if (selectedDispensary) {
-                    newDispensaryNameGroup.style.display = 'none';
-                    populateFormFields(selectedDispensary);
-                } else {
-                    newDispensaryNameGroup.style.display = 'none';
-                    clearFormFields();
-                }
-            });
-
-            // Debounce function
-            function debounce(func, timeout = 300) {
-                let timer;
-                return (...args) => {
-                    clearTimeout(timer);
-                    timer = setTimeout(() => { func.apply(this, args); }, timeout);
-                };
-            }
-
-            // Main form filters
-            searchDispensary.addEventListener('input', debounce(populateDispensarySelect));
-            filterDispensaryAddress.addEventListener('input', debounce(populateDispensarySelect));
-            filterAdditional.addEventListener('input', debounce(populateDispensarySelect));
-            filterAssignedMember.addEventListener('change', populateDispensarySelect);
-            filterSalesPipeline.addEventListener('change', populateDispensarySelect);
-
-            // Reload All button listener
-            if (reloadDataBtn) reloadDataBtn.addEventListener('click', reloadAllData); // NEW
-
-            // Get Location button listener
-            if (getLocationBtn) {
-                getLocationBtn.addEventListener('click', getCurrentLocation);
-            }
-            // Show My Location button listener
-            if (showMyLocationBtn) {
-                showMyLocationBtn.addEventListener('click', showMyLocationOnMap);
-            }
-
-            // --- Assignment Tab Listeners Removed ---
-
-            // Main form submission
-            form.addEventListener('submit', function(e) {
-                e.preventDefault();
-                submitForm();
-            });
-
-            // QR code preview
-            qrCodeInput.addEventListener('change', function(event) {
-                qrCodePreviewContainer.innerHTML = '';
-                const files = event.target.files;
-                for (let i = 0; i < files.length; i++) {
-                    const file = files[i];
-                    if (file) {
-                        const reader = new FileReader();
-                        reader.onload = function(e) {
-                            const img = document.createElement('img');
-                            img.src = e.target.result;
-                            img.className = 'qr-code-preview';
-                            qrCodePreviewContainer.appendChild(img);
-                        };
-                        reader.readAsDataURL(file);
-                    }
-                }
-            });
-
-            // --- Data Fetching Functions ---
-
-            function fetchAllDispensaryData() {
-                const cachedData = getCachedData('dispensaryData');
-                if (cachedData) {
-                    dispensariesData = cachedData;
-                    populateDispensarySelect();
-                    fetchFreshData(false); // Fetch fresh in background
-                } else {
-                    fetchFreshData(true); // Show loading for initial fetch
-                }
-            }
-
-            function fetchFreshData(showLoadingIndicator = true) {
-                if(showLoadingIndicator) showLoading('Fetching dispensary data...');
-                // Add token to API call
-                fetch(`${APPS_SCRIPT_URL}?action=getAllDispensaryData&token=${authToken}`)
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error(`HTTP error! status: ${response.status}`);
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        // Directly call the handler logic
-                        hideLoading();
-                        if (data && data.success) {
-                            dispensariesData = data.data;
-                            cacheData('dispensaryData', data.data);
-                            populateDispensarySelect();
-                        } else {
-                            console.error('Error fetching dispensary data:', data ? data.message : 'Invalid response');
-                            showMessage(errorMessageElement, 'Error fetching dispensary list: ' + (data ? data.message : 'Invalid response'));
-                        }
-                    })
-                    .catch(error => {
-                        hideLoading();
-                        console.error('Fetch Error for getAllDispensaryData:', error);
-                        showMessage(errorMessageElement, 'Network or server error fetching dispensary list: ' + error);
-                    });
-            }
-
-            function fetchSetupData() {
-                const cachedSetup = getCachedData('setupData'); // Check cache first
-                if (cachedSetup) {
-                    // Directly handle cached data
-                    setupData = cachedSetup;
-                    populateAssignedMemberSelect();
-                    populateFilterAssignedMemberSelect();
-                    populateSalesPipelineSelect();
-                    populateFilterSalesPipelineSelect();
-                    populateDistributorDatalist(); // NEW: Populate distributor list
-                    // populateAssignProvinceFilter(); // Not needed in Rep view
-                    console.log("Using cached setup data.");
-                    return; // Don't fetch if cache is valid
-                }
-                showLoading('Fetching setup data...');
-                // Add token to API call
-                fetch(`${APPS_SCRIPT_URL}?action=getSetupData&token=${authToken}`)
-                    .then(response => {
-                         if (!response.ok) {
-                            throw new Error(`HTTP error! status: ${response.status}`);
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        // Directly call the handler logic
-                        hideLoading();
-                        if (data && data.success) {
-                            setupData = data.data;
-                            cacheData('setupData', data.data); // Cache the fetched setup data
-                            populateAssignedMemberSelect();
-                            populateFilterAssignedMemberSelect();
-                            populateSalesPipelineSelect();
-                            populateFilterSalesPipelineSelect();
-                            populateDistributorDatalist(); // NEW: Populate distributor list
-                            // populateAssignProvinceFilter(); // Not needed in Rep view
-                        } else {
-                            console.error('Error fetching setup data:', data ? data.message : 'Invalid response');
-                            showMessage(errorMessageElement, 'Error fetching setup data: ' + (data ? data.message : 'Invalid response'));
-                        }
-                    })
-                    .catch(error => {
-                        hideLoading();
-                        console.error('Fetch Error for getSetupData:', error);
-                        showMessage(errorMessageElement, 'Network or server error fetching setup data: ' + error);
-                    });
-            }
-
-            // --- Global Callbacks Removed (logic moved into fetch .then blocks) ---
-
-             // --- UI Population Functions ---
-
-            function populateDispensarySelect() {
-                const currentSelectedValue = selectDispensary.value;
-                const nameFilter = searchDispensary.value.toLowerCase();
-                const memberFilter = filterAssignedMember.value;
-                const pipelineFilter = filterSalesPipeline.value;
-                const addressFilter = filterDispensaryAddress.value.toLowerCase();
-                const additionalFilter = filterAdditional.value.toLowerCase();
-
-                selectDispensary.innerHTML = '<option value="">Select a dispensary</option><option value="new">New Dispensary</option>';
-
-                if (Array.isArray(dispensariesData) && dispensariesData.length > 0) {
-                    dispensariesData.forEach(dispensary => {
-                        // Use header names directly as keys
-                        const dispensaryName = String(dispensary['Dispensary Name'] || "").toLowerCase();
-                        const assignedMemberName = String(dispensary['Assigned Member'] || "");
-                        const salesPipelineStage = String(dispensary['Sales Pipeline'] || "");
-                        const dispensaryAddress = String(dispensary['Dispensary Address'] || "").toLowerCase();
-                        const contactPerson = String(dispensary['Contact Person Name'] || "").toLowerCase();
-                        const email = String(dispensary['Email'] || "").toLowerCase();
-                        const phone = String(dispensary['Phone'] || "").toLowerCase();
-                        const lineContact = String(dispensary['Line Contact'] || "").toLowerCase();
-                        const history = String(dispensary['Notes & Communication History'] || "").toLowerCase();
-                        const nextAction = String(dispensary['Next Action Item'] || "").toLowerCase();
-
-                        const nameMatches = dispensaryName.includes(nameFilter);
-                        const memberMatches = !memberFilter || assignedMemberName === memberFilter;
-                        const pipelineMatches = !pipelineFilter || salesPipelineStage === pipelineFilter;
-                        const addressMatches = dispensaryAddress.includes(addressFilter);
-
-                        let additionalMatches = true;
-                        if (additionalFilter) {
-                            additionalMatches = [dispensaryName, dispensaryAddress, contactPerson, email, phone, lineContact, history, nextAction]
-                                                .some(field => field.includes(additionalFilter));
-                        }
-
-                        if (nameMatches && memberMatches && pipelineMatches && addressMatches && additionalMatches) {
-                            const option = document.createElement('option');
-                            option.value = dispensary['Dispensary Name'];
-                            option.textContent = dispensary['Dispensary Name'];
-                            selectDispensary.appendChild(option);
-                        }
-                    });
-                    if (selectDispensary.querySelector(`option[value="${currentSelectedValue}"]`)) {
-                        selectDispensary.value = currentSelectedValue;
-                    } else {
-                        clearFormFields();
-                    }
-                }
-            }
-
-            function populateFormFields(dispensaryName) {
-                const dispensary = dispensariesData.find(d => d['Dispensary Name'] === dispensaryName);
-                if (dispensary) {
-                    // Populate standard fields using header names as keys
-                    document.getElementById('dispensaryAddress').value = dispensary['Dispensary Address'] || '';
-                    document.getElementById('contactPersonName').value = dispensary['Contact Person Name'] || '';
-                    document.getElementById('email').value = dispensary['Email'] || '';
-                    document.getElementById('phone').value = dispensary['Phone'] || '';
-                    document.getElementById('lineContact').value = dispensary['Line Contact'] || '';
-                    historyTextarea.value = dispensary['Notes & Communication History'] || '';
-                    assignmentHistoryTextarea.value = dispensary['Assignment Notes and History'] || ''; // Populate Assignment History
-                    document.getElementById('nextActionItem').value = dispensary['Next Action Item'] || '';
-                    document.getElementById('dueDate').value = dispensary['Due Date'] ? dispensary['Due Date'].substring(0, 16) : '';
-                    assignedMember.value = dispensary['Assigned Member'] || '';
-                    salesPipeline.value = dispensary['Sales Pipeline'] || '';
-                    if (shopSizeSelect) shopSizeSelect.value = dispensary['Shop Size'] || '';
-                    if (currentDistributorInput) currentDistributorInput.value = dispensary['Current Distributor'] || ''; // NEW
-
-                    // Populate new fields
-                    const lat = parseFloat(dispensary['Latitude']);
-                    const lon = parseFloat(dispensary['Longitude']);
-                    if(latitudeInput) latitudeInput.value = dispensary['Latitude'] || '';
-                    if(longitudeInput) longitudeInput.value = dispensary['Longitude'] || '';
-                    if(provinceInput) provinceInput.value = dispensary['Province'] || '';
-                    if(originalNameDisplay) originalNameDisplay.textContent = dispensary['name'] || '(Not set)'; // Display original name (Col H)
-                    // if(urlInput) urlInput.value = dispensary['url'] || ''; // Removed
-                    populateLink(urlLinkContainer, dispensary.url, dispensary.url); // Populate link container
-                    // if(googleMapsUrlInput) googleMapsUrlInput.value = dispensary['google_maps_url'] || ''; // Removed
-                    if(websiteInput) websiteInput.value = dispensary['website'] || '';
-                    // if(websiteUrlInput) websiteUrlInput.value = dispensary['website_url'] || ''; // Removed
-                    if(facebookInput) facebookInput.value = dispensary['facebook'] || '';
-                    // if(facebookUrlInput) facebookUrlInput.value = dispensary['facebook_url'] || ''; // Removed
-                    populateLink(facebookUrlLinkContainer, dispensary.facebook_url, dispensary.facebook_url); // Populate FB link container
-                    if(lineInput) lineInput.value = dispensary['line'] || '';
-                    // if(lineUrlInput) lineUrlInput.value = dispensary['line_url'] || ''; // Removed
-                    if(phoneHashInput) phoneHashInput.value = dispensary['phone#'] || ''; // This corresponds to Col O in new structure
-
-                    // Populate Link Containers
-                    populateLink(googleMapsUrlContainer, dispensary.google_maps_url, 'Open Google Maps');
-                    populateLink(websiteUrlContainer, dispensary.website_url, dispensary.website_url); // Use URL as text if available
-                    populateLink(lineUrlContainer, dispensary.line_url, 'Open Line URL');
-
-                    // Populate QR code/image links
-                    qrCodeContent.innerHTML = '';
-                    const qrUrls = dispensary['Line/Whatsapp QR Code'] ? String(dispensary['Line/Whatsapp QR Code']).split('\n').filter(Boolean) : [];
-                    qrUrls.forEach(url => {
-                        const link = document.createElement('a');
-                        link.href = url;
-                        link.textContent = url.substring(url.lastIndexOf('/') + 1) || url;
-                        link.target = '_blank';
-                        link.rel = 'noopener noreferrer';
-                        qrCodeContent.appendChild(link);
-                        qrCodeContent.appendChild(document.createElement('br'));
-                    });
-
-                    // Update Map
-                    updateRepMap(lat, lon, dispensary);
-
-                } else {
-                    clearFormFields(); // Clear if dispensary not found
-                }
-            }
-
-            function clearFormFields() {
-                form.reset();
-                historyTextarea.value = '';
-                assignmentHistoryTextarea.value = ''; // Clear Assignment History
-                qrCodeContent.innerHTML = '';
-                qrCodePreviewContainer.innerHTML = '';
-                selectDispensary.value = '';
-                newDispensaryNameGroup.style.display = 'none';
-                // Clear new fields
-                if(latitudeInput) latitudeInput.value = '';
-                if(longitudeInput) longitudeInput.value = '';
-                if(provinceInput) provinceInput.value = '';
-                if(originalNameDisplay) originalNameDisplay.textContent = '';
-                // if(urlInput) urlInput.value = ''; // Removed
-                if (urlLinkContainer) urlLinkContainer.innerHTML = ''; // Clear link container
-                // if(googleMapsUrlInput) googleMapsUrlInput.value = ''; // Removed
-                if(websiteInput) websiteInput.value = '';
-                // if(websiteUrlInput) websiteUrlInput.value = ''; // Removed
-                if(shopSizeSelect) shopSizeSelect.value = '';
-                if(facebookInput) facebookInput.value = '';
-                // if(facebookUrlInput) facebookUrlInput.value = ''; // Removed
-                if (facebookUrlLinkContainer) facebookUrlLinkContainer.innerHTML = ''; // Clear FB link container
-                if(lineInput) lineInput.value = '';
-                // if(lineUrlInput) lineUrlInput.value = ''; // Removed
-                if(phoneHashInput) phoneHashInput.value = '';
-                // Clear link containers
-                if (googleMapsUrlContainer) googleMapsUrlContainer.innerHTML = '';
-                if (websiteUrlContainer) websiteUrlContainer.innerHTML = '';
-                if (lineUrlContainer) lineUrlContainer.innerHTML = '';
-                if (currentDistributorInput) currentDistributorInput.value = ''; // NEW
-                if (lineUrlContainer) lineUrlContainer.innerHTML = '';
-                // Hide map
-                if (repMapContainer) repMapContainer.classList.remove('visible');
-                if (repMarker) {
-                    repMap.removeLayer(repMarker);
-                    repMarker = null;
-                }
-                // Also remove user location marker if present
-                if (userLocationMarker) {
-                    repMap.removeLayer(userLocationMarker);
-                    userLocationMarker = null;
-                }
-            }
-
-            // Helper function to populate link containers
-            function populateLink(container, url, linkText) {
-                if (!container) return;
-                container.innerHTML = ''; // Clear previous
-                if (url) {
-                    const link = document.createElement('a');
-                    link.href = escapeHtml(url);
-                    link.textContent = escapeHtml(linkText || url); // Use URL as text if no specific text provided
-                    link.target = '_blank'; // Open in new tab
-                    link.rel = 'noopener noreferrer';
-                    // Add icon for external link
-                    const icon = document.createElement('i');
-                    icon.className = 'fas fa-external-link-alt fa-xs ml-1'; // Font Awesome icon
-                    link.appendChild(icon);
-                    container.appendChild(link);
-                } else {
-                    container.innerHTML = '<span class="text-muted">N/A</span>'; // Indicate if no URL
-                }
-            }
-
-            // --- Messaging Functions Moved Outside initializeApp ---
-
-            // --- Dropdown Population Functions ---
-
-            function populateAssignedMemberSelect() {
-                assignedMember.innerHTML = '<option value="">Select a member</option>';
-                if (setupData && setupData.members) {
-                    setupData.members.forEach(member => {
-                        const option = document.createElement('option');
-                        option.value = member;
-                        option.textContent = member;
-                        assignedMember.appendChild(option);
-                    });
-                }
-            }
-
-            // Removed populateAssignToMemberSelect for Rep view
-
-            function populateFilterAssignedMemberSelect() {
-                filterAssignedMember.innerHTML = '<option value="">All Members</option>';
-                if (setupData && setupData.members) {
-                    setupData.members.forEach(member => {
-                        const option = document.createElement('option');
-                        option.value = member;
-                        option.textContent = member;
-                        filterAssignedMember.appendChild(option);
-                    });
-                }
-            }
-
-            // Removed populateAssignProvinceFilter for Rep view
-
-            function populateSalesPipelineSelect() {
-                salesPipeline.innerHTML = '<option value="">Select pipeline stage</option>';
-                if (setupData && setupData.salesPipelines) {
-                    setupData.salesPipelines.forEach(stage => {
-                        const option = document.createElement('option');
-                        option.value = stage;
-                        option.textContent = stage;
-                        salesPipeline.appendChild(option);
-                    });
-                }
-            }
-
-            function populateFilterSalesPipelineSelect() {
-                filterSalesPipeline.innerHTML = '<option value="">All Stages</option>';
-                if (setupData && setupData.salesPipelines) {
-                    setupData.salesPipelines.forEach(stage => {
-                        const option = document.createElement('option');
-                        option.value = stage;
-                        option.textContent = stage;
-                        filterSalesPipeline.appendChild(option);
-                    });
-                }
-            }
-
-            // NEW: Populate Distributor Datalist
-            function populateDistributorDatalist() {
-                if (!distributorDatalist) return;
-                distributorDatalist.innerHTML = ''; // Clear existing options
-                if (setupData && setupData.distributors && Array.isArray(setupData.distributors)) {
-                    setupData.distributors.forEach(distributor => {
-                        const option = document.createElement('option');
-                        option.value = distributor;
-                        distributorDatalist.appendChild(option);
-                    });
-                }
-            }
-
-            // NEW: Function to reload all data
-            function reloadAllData() {
-                console.log("Reloading all data for Rep view...");
-                localStorage.removeItem('setupData'); // Clear setup cache
-                localStorage.removeItem('dispensaryData'); // Clear dispensary cache
-                // Re-run initial fetches
-                fetchAllDispensaryData(); // Fetch dispensaries (will show loading)
-                fetchSetupData(); // Fetch setup data (will show loading if not cached)
-            }
-
-            // --- Form Submission Functions ---
-
-            function submitForm() {
-                showLoading('Submitting...');
-
-                const formData = new FormData(form);
-                // Ensure input names match headers expected by backend's dynamic mapping
-                // (Already done by setting input 'name' attributes correctly)
-
-                const fileInput = document.getElementById('qrCode');
-                const files = fileInput.files;
-
-                const sendData = () => {
-                    // Add token to FormData before sending
-                    if (authToken) {
-                        formData.append('token', authToken);
-                    } else {
-                         showMessage(errorMessageElement, 'Authentication token missing. Please log in again.');
-                         hideLoading();
-                         redirectToLogin(); // Redirect if token is missing
-                         return;
-                    }
-
-                    fetch(APPS_SCRIPT_URL, { // Use APPS_SCRIPT_URL for POST as well
-                        method: 'POST',
-                        body: formData // Send FormData directly (token is now included)
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        hideLoading();
-                        if (data.success) {
-                            showMessage(sentMessageElement, data.message || 'Data submitted successfully!');
-                            form.reset();
-                            clearFormFields();
-                            fetchAllDispensaryData(); // Refresh main list
-                        } else {
-                            showMessage(errorMessageElement, data.message || 'An error occurred.');
-                        }
-                    })
-                    .catch(error => {
-                        hideLoading();
-                        console.error('Submit Error:', error);
-                        showMessage(errorMessageElement, 'Network or server error during submission: ' + error);
-                    });
-                };
-
-                if (files.length > 0) {
-                    let readFilePromises = [];
-                    for (let i = 0; i < files.length; i++) {
-                        readFilePromises.push(new Promise((resolve, reject) => {
-                            const reader = new FileReader();
-                            reader.onload = function(e) {
-                                formData.append('qrCode', e.target.result.split(',')[1]);
-                                formData.append('qrCodeMimeType', files[i].type);
-                                resolve();
-                            };
-                            reader.onerror = function(error) {
-                                 console.error("Error reading file:", error);
-                                 showMessage(errorMessageElement, 'Error reading file: ' + files[i].name);
-                                 reject(error);
-                            };
-                            reader.readAsDataURL(files[i]);
-                        }));
-                    }
-                    Promise.all(readFilePromises)
-                        .then(() => sendData())
-                        .catch(() => hideLoading());
-                } else {
-            // Helper function to populate link containers
-            function populateLink(container, url, linkText) {
-                if (!container) return;
-                container.innerHTML = ''; // Clear previous
-                if (url) {
-                    const link = document.createElement('a');
-                    link.href = escapeHtml(url);
-                    link.textContent = escapeHtml(linkText || url); // Use URL as text if no specific text provided
-                    link.target = '_blank'; // Open in new tab
-                    link.rel = 'noopener noreferrer';
-                    // Add icon for external link
-                    const icon = document.createElement('i');
-                    icon.className = 'fas fa-external-link-alt fa-xs ml-1'; // Font Awesome icon
-                    link.appendChild(icon);
-                    container.appendChild(link);
-                } else {
-                    container.innerHTML = '<span class="text-muted">N/A</span>'; // Indicate if no URL
-                }
-            }
-                    sendData();
-                }
-            }
-
-            // --- Geolocation Function ---
-            function getCurrentLocation() {
-                if (!navigator.geolocation) {
-                    showMessage(errorMessageElement, 'Geolocation is not supported by your browser.');
-                    return;
-                }
-
-                showLoading('Getting location...');
-
-                function success(position) {
-                    const latitude  = position.coords.latitude;
-                    const longitude = position.coords.longitude;
-
-                    if (latitudeInput) latitudeInput.value = latitude.toFixed(6); // Limit precision
-                    if (longitudeInput) longitudeInput.value = longitude.toFixed(6); // Limit precision
-
-                    hideLoading();
-                    showMessage(sentMessageElement, 'Location retrieved successfully.');
-                }
-
-                function error(err) {
-                    hideLoading();
-                    let message = 'Unable to retrieve your location.';
-                    switch(err.code) {
-                        case err.PERMISSION_DENIED:
-                            message = "Geolocation request denied. Please allow location access in your browser settings.";
-                            break;
-                        case err.POSITION_UNAVAILABLE:
-                            message = "Location information is unavailable.";
-                            break;
-                        case err.TIMEOUT:
-                            message = "The request to get user location timed out.";
-                            break;
-                        case err.UNKNOWN_ERROR:
-                            message = "An unknown error occurred while getting location.";
-                            break;
-                    }
-                    console.warn(`Geolocation error (${err.code}): ${err.message}`);
-                    showMessage(errorMessageElement, message);
-                }
-
-                // Options: enableHighAccuracy for better results on mobile, timeout
-                const options = {
-                    enableHighAccuracy: true,
-                    timeout: 10000, // 10 seconds
-                    maximumAge: 0 // Don't use cached location
-                };
-
-                navigator.geolocation.getCurrentPosition(success, error, options);
-            }
-
-            // --- Leaflet Map Functions ---
-            function initializeRepMap() {
-                if (repMapElement && !repMap) { // Initialize only once
-                    try {
-                        repMap = L.map('repMap', {
-                            fullscreenControl: true // Add fullscreen control
-                        }).setView([13.7563, 100.5018], 10); // Default view (e.g., Bangkok)
-
-                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                            maxZoom: 19,
-                            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                        }).addTo(repMap);
-                        console.log("Rep map initialized.");
-                    } catch (e) {
-                        console.error("Error initializing Leaflet map:", e);
-                        if (repMapContainer) repMapContainer.innerHTML = '<p class="text-danger">Error loading map.</p>';
-                    }
-                }
-            }
-
-            function updateRepMap(lat, lon, dispensary) {
-                if (!repMap) {
-                    console.warn("Map not initialized yet.");
-                    return;
-                }
-
-                if (lat && lon && !isNaN(lat) && !isNaN(lon)) {
-                    const coords = [lat, lon];
-                    if (repMapContainer) repMapContainer.classList.add('visible'); // Show map container
-
-                    // Remove previous dispensary marker if it exists
-                    if (repMarker) {
-                        repMap.removeLayer(repMarker);
-                    }
-
-                    // Add new dispensary marker
-                    repMarker = L.marker(coords).addTo(repMap);
-                    const popupContent = `<b>${escapeHtml(dispensary['Dispensary Name'])}</b><br>${escapeHtml(dispensary['Dispensary Address'] || '')}`;
-                    repMarker.bindPopup(popupContent);
-
-                    // Set map view
-                    repMap.setView(coords, 15); // Zoom level 15
-
-                    // Invalidate size after showing container to ensure tiles load correctly
-                    setTimeout(() => { if (repMap) repMap.invalidateSize() }, 100);
-
-                } else {
-                    // Hide map and remove marker if coords are invalid
-                    if (repMapContainer) repMapContainer.classList.remove('visible');
-                    if (repMarker) {
-                        repMap.removeLayer(repMarker);
-                        repMarker = null;
-                    }
-                }
-            }
-
-            // --- Show My Location Function ---
-            function showMyLocationOnMap() {
-                 if (!navigator.geolocation) {
-                    showMessage(errorMessageElement, 'Geolocation is not supported by your browser.');
-                    return;
-                }
-                 if (!repMap) {
-                    showMessage(errorMessageElement, 'Map is not initialized yet.');
-                    return;
-                }
-
-                showLoading('Getting your location...');
-
-                function success(position) {
-                    const latitude  = position.coords.latitude;
-                    const longitude = position.coords.longitude;
-                    const userCoords = [latitude, longitude];
-
-                    hideLoading();
-                    showMessage(sentMessageElement, 'Your location found.');
-
-                    // Remove previous user location marker if it exists
-                    if (userLocationMarker) {
-                        repMap.removeLayer(userLocationMarker);
-                    }
-
-                    // Add new user location marker (e.g., with a different icon or color)
-                    // Example using a simple circle marker
-                    userLocationMarker = L.circleMarker(userCoords, {
-                        radius: 8,
-                        fillColor: "#3388ff", // Blue
-                        color: "#fff",
-                        weight: 2,
-                        opacity: 1,
-                        fillOpacity: 0.8
-                    }).addTo(repMap);
-
-                    userLocationMarker.bindPopup("Your current location");
-
-                    // Optionally pan the map to the user's location
-                    repMap.setView(userCoords, 15); // Zoom level 15
-
-                     // Ensure map container is visible if hidden
-                    if (repMapContainer && !repMapContainer.classList.contains('visible')) {
-                         repMapContainer.classList.add('visible');
-                         setTimeout(() => { if (repMap) repMap.invalidateSize() }, 100); // Invalidate size after showing
-                    }
-                }
-
-                function error(err) {
-                    hideLoading();
-                    let message = 'Unable to retrieve your location.';
-                     // Use the same error handling as getCurrentLocation
-                    switch(err.code) {
-                        case err.PERMISSION_DENIED:
-                            message = "Geolocation request denied. Please allow location access in your browser settings.";
-                            break;
-                        case err.POSITION_UNAVAILABLE:
-                            message = "Location information is unavailable.";
-                            break;
-                        case err.TIMEOUT:
-                            message = "The request to get user location timed out.";
-                            break;
-                        case err.UNKNOWN_ERROR:
-                            message = "An unknown error occurred while getting location.";
-                            break;
-                    }
-                    console.warn(`Geolocation error (${err.code}): ${err.message}`);
-                    showMessage(errorMessageElement, message);
-                }
-
-                navigator.geolocation.getCurrentPosition(success, error, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
-            }
-
-
-            // --- Assignment Tab Functions Removed ---
-    // --- End Original DOMContentLoaded Logic ---
-} // End of initializeApp function
-
-// --- Start Authentication Check on Page Load ---
-document.addEventListener('DOMContentLoaded', checkAuthentication);
-
-</script>
+    <div class="container">
+      <div class="copyright">
+        &copy; Copyright <strong><span>TPO Wellness</span></strong>. All Rights Reserved
+      </div>
+      <div class="credits">
+        Designed by <a href="#">KH</a>
+      </div>
+    </div>
+  </footer><!-- End Footer -->
+
+  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+  <!-- <div id="preloader"></div> -->
+
+  <!-- Vendor JS Files -->
+  <!-- Bootstrap 5 Bundle (For Theme Components like Navbar Toggle) -->
+  <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <!-- Leaflet JS (Keep for CRM Map) -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <!-- Leaflet Fullscreen JS (Keep for CRM Map) -->
+  <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/Leaflet.fullscreen.min.js'></script>
+
+  <!-- Template Main JS File (For Theme Components like Navbar Toggle) -->
+  <script src="assets/js/main.js"></script>
+  <!-- Existing CRM Script (with modifications for login status/logout) -->
+  <script>
+      // --- Authentication Globals ---
+      let authToken = null;
+      const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzy2g7bfHvjArMWornli3GPodDw99P4ayMjALKanAU4waL29CjcfCjHl3wiJaxSRIIV/exec';
+
+      // --- Messaging Functions ---
+      function showLoading(message = "Loading...") {
+          const loadingOverlay = document.getElementById('loadingOverlay');
+          const loadingMessage = document.getElementById('loadingMessage');
+          const sentMessageElement = document.querySelector('.sent-message');
+          const errorMessageElement = document.querySelector('.error-message');
+          if (loadingMessage) loadingMessage.textContent = message;
+          if (loadingOverlay) loadingOverlay.style.display = 'block';
+          if (sentMessageElement) hideMessage(sentMessageElement);
+          if (errorMessageElement) hideMessage(errorMessageElement);
+      }
+      function hideLoading() {
+           const loadingOverlay = document.getElementById('loadingOverlay');
+           if (loadingOverlay) loadingOverlay.style.display = 'none';
+      }
+      function showMessage(element, message) {
+          const loadingOverlay = document.getElementById('loadingOverlay');
+          const loadingMessage = document.getElementById('loadingMessage');
+          if(element === loadingOverlay || element === loadingMessage) {
+              showLoading(message);
+          } else {
+              hideLoading();
+              if(element) {
+                  element.textContent = message;
+                  element.style.display = 'block';
+              } else { console.warn("showMessage: Target element not found."); }
+          }
+      }
+      function hideMessage(element) {
+           const loadingOverlay = document.getElementById('loadingOverlay');
+           const loadingMessage = document.getElementById('loadingMessage');
+           if(element === loadingOverlay || element === loadingMessage) {
+              hideLoading();
+          } else if (element) {
+              element.style.display = 'none';
+              element.textContent = '';
+          }
+      }
+
+      // --- Logout Function ---
+      function logout() {
+          console.log("Logging out...");
+          localStorage.removeItem('tpoCrmToken');
+          localStorage.removeItem('tpoCrmUserEmail');
+          localStorage.removeItem('tpoCrmIsManager');
+          window.top.location.href = '/Login.html'; // Redirect to login page
+      }
+
+      // --- Authentication Check ---
+      function checkAuthentication() {
+          console.log("Checking authentication...");
+          const urlParams = new URLSearchParams(window.location.search);
+          let tokenFromUrl = urlParams.get('token');
+          let tokenFromStorage = localStorage.getItem('tpoCrmToken');
+          let potentialAuthToken = null;
+          const loginStatusSpan = document.getElementById('loginStatus');
+          const logoutButton = document.getElementById('logoutButton');
+
+          if (tokenFromUrl) {
+              console.log("Token found in URL.");
+              potentialAuthToken = tokenFromUrl;
+              localStorage.setItem('tpoCrmToken', potentialAuthToken);
+              window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
+          } else if (tokenFromStorage) {
+              console.log("Token found in localStorage.");
+              potentialAuthToken = tokenFromStorage;
+          }
+
+          if (potentialAuthToken) {
+              if (document.getElementById('loadingOverlay')) showLoading("Validating session...");
+              fetch(`${APPS_SCRIPT_URL}?action=validateToken&token=${potentialAuthToken}`)
+                  .then(response => response.json())
+                  .then(result => {
+                      hideLoading();
+                      if (result && result.valid) {
+                          console.log(`Token validated successfully for user: ${result.email}, Is Manager: ${result.isManager}`);
+                          authToken = potentialAuthToken;
+                          localStorage.setItem('tpoCrmUserEmail', result.email);
+                          localStorage.setItem('tpoCrmIsManager', result.isManager);
+
+                          // Update Top Bar
+                          if (loginStatusSpan) loginStatusSpan.textContent = `Logged in as: ${result.email}`;
+                          if (logoutButton) logoutButton.style.display = 'inline-block';
+
+                          initializeApp(); // Proceed with CRM initialization
+                      } else {
+                          console.log("Token validation failed or token expired. Redirecting to login.");
+                          logout(); // Use logout function to clear storage and redirect
+                      }
+                  })
+                  .catch(error => {
+                      hideLoading();
+                      console.error('Error validating token:', error);
+                      showMessage(document.querySelector('.error-message'), 'Error validating session. Please try logging in again.');
+                      // Consider redirecting on error too
+                      // redirectToLogin();
+                  });
+          } else {
+              console.log("No token found. Redirecting to login.");
+              redirectToLogin();
+          }
+      }
+
+      function redirectToLogin() {
+          const currentTpoUrl = window.location.href;
+          // Ensure Login.html is at the root or adjust path
+          const staticLoginUrl = '/Login.html';
+          window.top.location.href = `${staticLoginUrl}?redirectUrl=${encodeURIComponent(currentTpoUrl)}`;
+      }
+
+      // --- Main Application Initialization ---
+      function initializeApp() {
+          console.log("Authentication successful. Initializing CRM application...");
+          const managerViewLink = document.getElementById('managerViewLink');
+          const isManager = localStorage.getItem('tpoCrmIsManager') === 'true';
+          if (isManager && managerViewLink) {
+              managerViewLink.style.display = 'inline-block';
+          }
+
+          // Add JavaScript to toggle the collapsible sections
+          document.querySelectorAll('.collapsible-header').forEach(header => {
+              header.addEventListener('click', () => {
+                  const section = header.parentElement;
+                  section.classList.toggle('active');
+                  // Invalidate map size if it becomes visible
+                  if (section.id === 'dispensaryInfoSection' && section.classList.contains('active') && typeof repMap !== 'undefined' && repMap) {
+                       setTimeout(() => { if (repMap) repMap.invalidateSize() }, 350); // Delay for transition
+                  }
+              });
+          });
+
+          // Set initial state: Keep Filter section closed initially
+          document.querySelectorAll('.collapsible-section:not(#filterSection)').forEach(section => {
+               section.classList.add('active');
+          });
+
+          // Utility functions
+          function cacheData(key, data) { try { localStorage.setItem(key, JSON.stringify({ timestamp: new Date().getTime(), data: data })); } catch (error) { console.warn('Caching failed:', error); } }
+          function getCachedData(key, maxAge = 5 * 60 * 1000) { try { const cached = localStorage.getItem(key); if (!cached) return null; const { timestamp, data } = JSON.parse(cached); if (Date.now() - timestamp > maxAge) return null; return data; } catch (error) { console.warn('Cache retrieval failed:', error); return null; } }
+          function escapeHtml(unsafe) { if (typeof unsafe !== 'string') { return unsafe === null || typeof unsafe === 'undefined' ? '' : String(unsafe); } return unsafe.replace(/&/g, "&amp;").replace(/</g, '<').replace(/>/g, '>').replace(/"/g, '"').replace(/'/g, '&#039;'); }
+
+          // Element Selections
+          const selectDispensary = document.getElementById('selectDispensary');
+          const newDispensaryNameGroup = document.getElementById('newDispensaryNameGroup');
+          const form = document.getElementById('dispensaryForm');
+          const qrCodeInput = document.getElementById('qrCode');
+          const qrCodePreviewContainer = document.getElementById('qrCodePreviewContainer');
+          const qrCodeContent = document.getElementById('qrCodeContent');
+          // const loadingOverlay = document.getElementById('loadingOverlay'); // Already defined globally
+          // const loadingMessage = document.getElementById('loadingMessage'); // Already defined globally
+          const sentMessageElement = document.querySelector('.sent-message');
+          const errorMessageElement = document.querySelector('.error-message');
+          const assignedMember = document.getElementById('assignedMember');
+          const salesPipeline = document.getElementById('salesPipeline');
+          const historyTextarea = document.getElementById('history');
+          const assignmentHistoryTextarea = document.getElementById('assignmentHistory');
+          const latitudeInput = document.getElementById('latitude');
+          const longitudeInput = document.getElementById('longitude');
+          const getLocationBtn = document.getElementById('getLocationBtn');
+          const showMyLocationBtn = document.getElementById('showMyLocationBtn');
+          const provinceInput = document.getElementById('province');
+          const originalNameDisplay = document.getElementById('originalNameDisplay');
+          const urlLinkContainer = document.getElementById('url_link_container');
+          const googleMapsUrlContainer = document.getElementById('google_maps_url_link_container');
+          const websiteInput = document.getElementById('website');
+          const websiteUrlContainer = document.getElementById('website_url_link_container');
+          const shopSizeSelect = document.getElementById('shopSize');
+          const facebookInput = document.getElementById('facebook');
+          const facebookUrlLinkContainer = document.getElementById('facebook_url_link_container');
+          const lineInput = document.getElementById('line');
+          const lineUrlContainer = document.getElementById('line_url_link_container');
+          const phoneHashInput = document.getElementById('phoneHash');
+          const currentDistributorInput = document.getElementById('currentDistributor');
+          const distributorDatalist = document.getElementById('distributorList');
+          const repMapContainer = document.getElementById('repMapContainer');
+          const repMapElement = document.getElementById('repMap');
+          const filterAssignedMember = document.getElementById('filterAssignedMember');
+          const searchDispensary = document.getElementById('searchDispensary');
+          const filterSalesPipeline = document.getElementById('filterSalesPipeline');
+          const filterDispensaryAddress = document.getElementById('filterDispensaryAddress');
+          const filterAdditional = document.getElementById('filterAdditional');
+          const reloadDataBtn = document.getElementById('reloadDataBtn');
+
+          let dispensariesData = [];
+          let setupData = {};
+          let repMap = null;
+          let repMarker = null;
+          let userLocationMarker = null;
+
+          // Fetch initial data
+          fetchAllDispensaryData();
+          fetchSetupData();
+          initializeRepMap();
+
+          // Event Listeners
+          selectDispensary.addEventListener('change', function() {
+              const selectedDispensary = this.value;
+              if (selectedDispensary === 'new') {
+                  newDispensaryNameGroup.style.display = 'block'; // Use block for col-md-6
+                  clearFormFields();
+                  document.getElementById('newDispensaryName').focus(); // Focus new name field
+                  // Keep 'new' selected? Or reset? Let's reset for now.
+                  // this.value = 'new';
+              } else if (selectedDispensary) {
+                  newDispensaryNameGroup.style.display = 'none';
+                  populateFormFields(selectedDispensary);
+              } else {
+                  newDispensaryNameGroup.style.display = 'none';
+                  clearFormFields();
+              }
+          });
+          function debounce(func, timeout = 300) { let timer; return (...args) => { clearTimeout(timer); timer = setTimeout(() => { func.apply(this, args); }, timeout); }; }
+          searchDispensary.addEventListener('input', debounce(populateDispensarySelect, 500)); // Increased debounce
+          filterDispensaryAddress.addEventListener('input', debounce(populateDispensarySelect, 500));
+          filterAdditional.addEventListener('input', debounce(populateDispensarySelect, 500));
+          filterAssignedMember.addEventListener('change', populateDispensarySelect);
+          filterSalesPipeline.addEventListener('change', populateDispensarySelect);
+          if (reloadDataBtn) reloadDataBtn.addEventListener('click', reloadAllData);
+          if (getLocationBtn) getLocationBtn.addEventListener('click', getCurrentLocation);
+          if (showMyLocationBtn) showMyLocationBtn.addEventListener('click', showMyLocationOnMap);
+          form.addEventListener('submit', function(e) { e.preventDefault(); submitForm(); });
+          qrCodeInput.addEventListener('change', function(event) {
+              qrCodePreviewContainer.innerHTML = '';
+              const files = event.target.files;
+              for (let i = 0; i < files.length; i++) {
+                  const file = files[i];
+                  if (file && file.type.startsWith('image/')) { // Basic type check
+                      const reader = new FileReader();
+                      reader.onload = function(e) {
+                          const img = document.createElement('img');
+                          img.src = e.target.result;
+                          img.className = 'qr-code-preview img-thumbnail'; // Added BS class
+                          qrCodePreviewContainer.appendChild(img);
+                      };
+                      reader.readAsDataURL(file);
+                  }
+              }
+          });
+
+          // Data Fetching Functions
+          function fetchAllDispensaryData() { const cachedData = getCachedData('dispensaryData'); if (cachedData) { dispensariesData = cachedData; populateDispensarySelect(); fetchFreshData(false); } else { fetchFreshData(true); } }
+          function fetchFreshData(showLoadingIndicator = true) { if(showLoadingIndicator) showLoading('Fetching dispensary data...'); fetch(`${APPS_SCRIPT_URL}?action=getAllDispensaryData&token=${authToken}`).then(response => { if (!response.ok) { throw new Error(`HTTP error! status: ${response.status}`); } return response.json(); }).then(data => { hideLoading(); if (data && data.success) { dispensariesData = data.data; cacheData('dispensaryData', data.data); populateDispensarySelect(); } else { console.error('Error fetching dispensary data:', data ? data.message : 'Invalid response'); showMessage(errorMessageElement, 'Error fetching dispensary list: ' + (data ? data.message : 'Invalid response')); } }).catch(error => { hideLoading(); console.error('Fetch Error for getAllDispensaryData:', error); showMessage(errorMessageElement, 'Network or server error fetching dispensary list: ' + error); }); }
+          function fetchSetupData() { const cachedSetup = getCachedData('setupData'); if (cachedSetup) { setupData = cachedSetup; populateAssignedMemberSelect(); populateFilterAssignedMemberSelect(); populateSalesPipelineSelect(); populateFilterSalesPipelineSelect(); populateDistributorDatalist(); console.log("Using cached setup data."); return; } showLoading('Fetching setup data...'); fetch(`${APPS_SCRIPT_URL}?action=getSetupData&token=${authToken}`).then(response => { if (!response.ok) { throw new Error(`HTTP error! status: ${response.status}`); } return response.json(); }).then(data => { hideLoading(); if (data && data.success) { setupData = data.data; cacheData('setupData', data.data); populateAssignedMemberSelect(); populateFilterAssignedMemberSelect(); populateSalesPipelineSelect(); populateFilterSalesPipelineSelect(); populateDistributorDatalist(); } else { console.error('Error fetching setup data:', data ? data.message : 'Invalid response'); showMessage(errorMessageElement, 'Error fetching setup data: ' + (data ? data.message : 'Invalid response')); } }).catch(error => { hideLoading(); console.error('Fetch Error for getSetupData:', error); showMessage(errorMessageElement, 'Network or server error fetching setup data: ' + error); }); }
+
+          // UI Population Functions
+          function populateDispensarySelect() { const currentSelectedValue = selectDispensary.value; const nameFilter = searchDispensary.value.toLowerCase(); const memberFilter = filterAssignedMember.value; const pipelineFilter = filterSalesPipeline.value; const addressFilter = filterDispensaryAddress.value.toLowerCase(); const additionalFilter = filterAdditional.value.toLowerCase(); selectDispensary.innerHTML = '<option value="">Select a dispensary</option><option value="new">New Dispensary</option>'; if (Array.isArray(dispensariesData) && dispensariesData.length > 0) { dispensariesData.forEach(dispensary => { const dispensaryName = String(dispensary['Dispensary Name'] || "").toLowerCase(); const assignedMemberName = String(dispensary['Assigned Member'] || ""); const salesPipelineStage = String(dispensary['Sales Pipeline'] || ""); const dispensaryAddress = String(dispensary['Dispensary Address'] || "").toLowerCase(); const contactPerson = String(dispensary['Contact Person Name'] || "").toLowerCase(); const email = String(dispensary['Email'] || "").toLowerCase(); const phone = String(dispensary['Phone'] || "").toLowerCase(); const lineContact = String(dispensary['Line Contact'] || "").toLowerCase(); const history = String(dispensary['Notes & Communication History'] || "").toLowerCase(); const nextAction = String(dispensary['Next Action Item'] || "").toLowerCase(); const nameMatches = dispensaryName.includes(nameFilter); const memberMatches = !memberFilter || assignedMemberName === memberFilter; const pipelineMatches = !pipelineFilter || salesPipelineStage === pipelineFilter; const addressMatches = dispensaryAddress.includes(addressFilter); let additionalMatches = true; if (additionalFilter) { additionalMatches = [dispensaryName, dispensaryAddress, contactPerson, email, phone, lineContact, history, nextAction].some(field => field.includes(additionalFilter)); } if (nameMatches && memberMatches && pipelineMatches && addressMatches && additionalMatches) { const option = document.createElement('option'); option.value = dispensary['Dispensary Name']; option.textContent = dispensary['Dispensary Name']; selectDispensary.appendChild(option); } }); if (selectDispensary.querySelector(`option[value="${currentSelectedValue}"]`)) { selectDispensary.value = currentSelectedValue; } else { clearFormFields(); } } }
+          function populateFormFields(dispensaryName) { const dispensary = dispensariesData.find(d => d['Dispensary Name'] === dispensaryName); if (dispensary) { document.getElementById('dispensaryAddress').value = dispensary['Dispensary Address'] || ''; document.getElementById('contactPersonName').value = dispensary['Contact Person Name'] || ''; document.getElementById('email').value = dispensary['Email'] || ''; document.getElementById('phone').value = dispensary['Phone'] || ''; document.getElementById('lineContact').value = dispensary['Line Contact'] || ''; historyTextarea.value = dispensary['Notes & Communication History'] || ''; assignmentHistoryTextarea.value = dispensary['Assignment Notes and History'] || ''; document.getElementById('nextActionItem').value = dispensary['Next Action Item'] || ''; document.getElementById('dueDate').value = dispensary['Due Date'] ? dispensary['Due Date'].substring(0, 16) : ''; assignedMember.value = dispensary['Assigned Member'] || ''; salesPipeline.value = dispensary['Sales Pipeline'] || ''; if (shopSizeSelect) shopSizeSelect.value = dispensary['Shop Size'] || ''; if (currentDistributorInput) currentDistributorInput.value = dispensary['Current Distributor'] || ''; const lat = parseFloat(dispensary['Latitude']); const lon = parseFloat(dispensary['Longitude']); if(latitudeInput) latitudeInput.value = dispensary['Latitude'] || ''; if(longitudeInput) longitudeInput.value = dispensary['Longitude'] || ''; if(provinceInput) provinceInput.value = dispensary['Province'] || ''; if(originalNameDisplay) originalNameDisplay.textContent = dispensary['name'] || '(Not set)'; populateLink(urlLinkContainer, dispensary.url, dispensary.url); if(websiteInput) websiteInput.value = dispensary['website'] || ''; if(facebookInput) facebookInput.value = dispensary['facebook'] || ''; populateLink(facebookUrlLinkContainer, dispensary.facebook_url, dispensary.facebook_url); if(lineInput) lineInput.value = dispensary['line'] || ''; if(phoneHashInput) phoneHashInput.value = dispensary['phone#'] || ''; populateLink(googleMapsUrlContainer, dispensary.google_maps_url, 'Open Google Maps'); populateLink(websiteUrlContainer, dispensary.website_url, dispensary.website_url); populateLink(lineUrlContainer, dispensary.line_url, 'Open Line URL'); qrCodeContent.innerHTML = ''; const qrUrls = dispensary['Line/Whatsapp QR Code'] ? String(dispensary['Line/Whatsapp QR Code']).split('\n').filter(Boolean) : []; qrUrls.forEach(url => { const link = document.createElement('a'); link.href = url; link.textContent = url.substring(url.lastIndexOf('/') + 1) || url; link.target = '_blank'; link.rel = 'noopener noreferrer'; qrCodeContent.appendChild(link); qrCodeContent.appendChild(document.createElement('br')); }); updateRepMap(lat, lon, dispensary); } else { clearFormFields(); } }
+          function clearFormFields() { form.reset(); historyTextarea.value = ''; assignmentHistoryTextarea.value = ''; qrCodeContent.innerHTML = ''; qrCodePreviewContainer.innerHTML = ''; selectDispensary.value = ''; newDispensaryNameGroup.style.display = 'none'; if(latitudeInput) latitudeInput.value = ''; if(longitudeInput) longitudeInput.value = ''; if(provinceInput) provinceInput.value = ''; if(originalNameDisplay) originalNameDisplay.textContent = ''; if (urlLinkContainer) urlLinkContainer.innerHTML = ''; if(websiteInput) websiteInput.value = ''; if(shopSizeSelect) shopSizeSelect.value = ''; if(facebookInput) facebookInput.value = ''; if (facebookUrlLinkContainer) facebookUrlLinkContainer.innerHTML = ''; if(lineInput) lineInput.value = ''; if(phoneHashInput) phoneHashInput.value = ''; if (googleMapsUrlContainer) googleMapsUrlContainer.innerHTML = ''; if (websiteUrlContainer) websiteUrlContainer.innerHTML = ''; if (lineUrlContainer) lineUrlContainer.innerHTML = ''; if (currentDistributorInput) currentDistributorInput.value = ''; if (repMapContainer) repMapContainer.classList.remove('visible'); if (repMarker && repMap) { repMap.removeLayer(repMarker); repMarker = null; } if (userLocationMarker && repMap) { repMap.removeLayer(userLocationMarker); userLocationMarker = null; } }
+          function populateLink(container, url, linkText) { if (!container) return; container.innerHTML = ''; if (url) { const link = document.createElement('a'); link.href = escapeHtml(url); link.textContent = escapeHtml(linkText || url); link.target = '_blank'; link.rel = 'noopener noreferrer'; const icon = document.createElement('i'); icon.className = 'fas fa-external-link-alt fa-xs ms-1'; link.appendChild(icon); container.appendChild(link); } else { container.innerHTML = '<span class="text-muted">N/A</span>'; } }
+          function populateAssignedMemberSelect() { assignedMember.innerHTML = '<option value="">Select a member</option>'; if (setupData && setupData.members) { setupData.members.forEach(member => { const option = document.createElement('option'); option.value = member; option.textContent = member; assignedMember.appendChild(option); }); } }
+          function populateFilterAssignedMemberSelect() { filterAssignedMember.innerHTML = '<option value="">All Members</option>'; if (setupData && setupData.members) { setupData.members.forEach(member => { const option = document.createElement('option'); option.value = member; option.textContent = member; filterAssignedMember.appendChild(option); }); } }
+          function populateSalesPipelineSelect() { salesPipeline.innerHTML = '<option value="">Select pipeline stage</option>'; if (setupData && setupData.salesPipelines) { setupData.salesPipelines.forEach(stage => { const option = document.createElement('option'); option.value = stage; option.textContent = stage; salesPipeline.appendChild(option); }); } }
+          function populateFilterSalesPipelineSelect() { filterSalesPipeline.innerHTML = '<option value="">All Stages</option>'; if (setupData && setupData.salesPipelines) { setupData.salesPipelines.forEach(stage => { const option = document.createElement('option'); option.value = stage; option.textContent = stage; filterSalesPipeline.appendChild(option); }); } }
+          function populateDistributorDatalist() { if (!distributorDatalist) return; distributorDatalist.innerHTML = ''; if (setupData && setupData.distributors && Array.isArray(setupData.distributors)) { setupData.distributors.forEach(distributor => { const option = document.createElement('option'); option.value = distributor; distributorDatalist.appendChild(option); }); } }
+          function reloadAllData() { console.log("Reloading all data for Rep view..."); localStorage.removeItem('setupData'); localStorage.removeItem('dispensaryData'); fetchAllDispensaryData(); fetchSetupData(); }
+
+          // Form Submission
+          function submitForm() { showLoading('Submitting...'); const formData = new FormData(form); const fileInput = document.getElementById('qrCode'); const files = fileInput.files; const sendData = () => { if (!authToken) { showMessage(errorMessageElement, 'Authentication token missing. Please log in again.'); hideLoading(); redirectToLogin(); return; } formData.append('token', authToken); fetch(APPS_SCRIPT_URL, { method: 'POST', body: formData }).then(response => response.json()).then(data => { hideLoading(); if (data.success) { showMessage(sentMessageElement, data.message || 'Data submitted successfully!'); form.reset(); clearFormFields(); fetchAllDispensaryData(); } else { showMessage(errorMessageElement, data.message || 'An error occurred.'); } }).catch(error => { hideLoading(); console.error('Submit Error:', error); showMessage(errorMessageElement, 'Network or server error during submission: ' + error); }); }; if (files.length > 0) { let readFilePromises = []; for (let i = 0; i < files.length; i++) { readFilePromises.push(new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = function(e) { formData.append('qrCode', e.target.result.split(',')[1]); formData.append('qrCodeMimeType', files[i].type); resolve(); }; reader.onerror = function(error) { console.error("Error reading file:", error); showMessage(errorMessageElement, 'Error reading file: ' + files[i].name); reject(error); }; reader.readAsDataURL(files[i]); })); } Promise.all(readFilePromises).then(() => sendData()).catch(() => hideLoading()); } else { sendData(); } }
+
+          // Geolocation
+          function getCurrentLocation() { if (!navigator.geolocation) { showMessage(errorMessageElement, 'Geolocation is not supported.'); return; } showLoading('Getting location...'); function success(position) { const latitude  = position.coords.latitude; const longitude = position.coords.longitude; if (latitudeInput) latitudeInput.value = latitude.toFixed(6); if (longitudeInput) longitudeInput.value = longitude.toFixed(6); hideLoading(); showMessage(sentMessageElement, 'Location retrieved successfully.'); } function error(err) { hideLoading(); let message = 'Unable to retrieve your location.'; switch(err.code) { case err.PERMISSION_DENIED: message = "Geolocation request denied."; break; case err.POSITION_UNAVAILABLE: message = "Location information is unavailable."; break; case err.TIMEOUT: message = "The request timed out."; break; default: message = "An unknown error occurred."; break; } console.warn(`Geolocation error (${err.code}): ${err.message}`); showMessage(errorMessageElement, message); } navigator.geolocation.getCurrentPosition(success, error, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }); }
+
+          // Leaflet Map
+          function initializeRepMap() { if (repMapElement && !repMap) { try { repMap = L.map('repMap', { fullscreenControl: true }).setView([13.7563, 100.5018], 10); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>' }).addTo(repMap); console.log("Rep map initialized."); } catch (e) { console.error("Error initializing Leaflet map:", e); if (repMapContainer) repMapContainer.innerHTML = '<p class="text-danger">Error loading map.</p>'; } } }
+          function updateRepMap(lat, lon, dispensary) { if (!repMap) return; if (lat && lon && !isNaN(lat) && !isNaN(lon)) { const coords = [lat, lon]; if (repMapContainer) repMapContainer.classList.add('visible'); if (repMarker) repMap.removeLayer(repMarker); repMarker = L.marker(coords).addTo(repMap); const popupContent = `<b>${escapeHtml(dispensary['Dispensary Name'])}</b><br>${escapeHtml(dispensary['Dispensary Address'] || '')}`; repMarker.bindPopup(popupContent); repMap.setView(coords, 15); setTimeout(() => { if (repMap) repMap.invalidateSize() }, 100); } else { if (repMapContainer) repMapContainer.classList.remove('visible'); if (repMarker) { repMap.removeLayer(repMarker); repMarker = null; } } }
+          function showMyLocationOnMap() { if (!navigator.geolocation || !repMap) return; showLoading('Getting your location...'); function success(position) { const userCoords = [position.coords.latitude, position.coords.longitude]; hideLoading(); showMessage(sentMessageElement, 'Your location found.'); if (userLocationMarker) repMap.removeLayer(userLocationMarker); userLocationMarker = L.circleMarker(userCoords, { radius: 8, fillColor: "#3388ff", color: "#fff", weight: 2, opacity: 1, fillOpacity: 0.8 }).addTo(repMap); userLocationMarker.bindPopup("Your current location"); repMap.setView(userCoords, 15); if (repMapContainer && !repMapContainer.classList.contains('visible')) { repMapContainer.classList.add('visible'); setTimeout(() => { if (repMap) repMap.invalidateSize() }, 100); } } function error(err) { hideLoading(); let message = 'Unable to retrieve your location.'; switch(err.code) { case err.PERMISSION_DENIED: message = "Geolocation request denied."; break; case err.POSITION_UNAVAILABLE: message = "Location information is unavailable."; break; case err.TIMEOUT: message = "The request timed out."; break; default: message = "An unknown error occurred."; break; } console.warn(`Geolocation error (${err.code}): ${err.message}`); showMessage(errorMessageElement, message); } navigator.geolocation.getCurrentPosition(success, error, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }); }
+
+      } // End of initializeApp function
+
+      // --- Start Authentication Check on Page Load ---
+      document.addEventListener('DOMContentLoaded', checkAuthentication);
+
+  </script>
     </script>
 </body>
 </html>
