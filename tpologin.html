@@ -260,7 +260,7 @@
   <script>
     // Google Apps Script URL for Employee Login
     // !!! IMPORTANT: This URL should point to your deployed NewCode.gs script !!!
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw71EnQxmnnx02ODmQ_yTCpt7f2Qb0ci1na3-6gnFexyeSf59DNkiJl3dWGMAfvubqTvw/exec';
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwnFHH9uzkzrTNX7kfUd3LQmNdNCu3yuc12N8lzIanUrPDFeW5By0aT5nDYN5AogtLw7w/exec';
 
     // Get error message from URL parameters (if any)
     const urlParams = new URLSearchParams(window.location.search);
@@ -311,12 +311,15 @@
       })
       .then(result => {
         setButtonsDisabled(false);
-        // Check the success flag and linkedPage from the JSON response
-        if (result && result.success === true && result.linkedPage) {
+        // Check the success flag and token from the JSON response
+        if (result && result.success === true && result.token && result.email) {
           errorDiv.textContent = ''; // Clear any previous error message
-          console.log("Employee login success. Redirecting to:", result.linkedPage);
-          // Perform redirect client-side using the linkedPage from the script
-          window.top.location.href = result.linkedPage;
+          console.log("Employee login success. Storing token and redirecting...");
+          // Store token and email in localStorage
+          localStorage.setItem('tpoEmployeeToken', result.token);
+          localStorage.setItem('tpoEmployeeEmail', result.email);
+          // Redirect to the default employee page (erp.html)
+          window.top.location.href = 'erp.html'; // Redirect to erp.html
         } else {
           // Display the error message from the script's JSON response
           errorDiv.textContent = result.message || 'Login failed. Please check your credentials.';

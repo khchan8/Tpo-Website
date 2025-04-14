@@ -106,6 +106,27 @@
         display: flex; /* Use flexbox */
         flex-direction: column; /* Stack children vertically */
     }
+    /* Style for logout button in top bar (similar to CRMv4) */
+    #topbar .logout-btn {
+        background: #dc3545; /* Red color */
+        border: 0;
+        padding: 4px 15px;
+        color: #fff;
+        transition: 0.3s;
+        border-radius: 4px;
+        font-size: 13px;
+        margin-left: 15px;
+        cursor: pointer;
+        display: none; /* Initially hidden */
+    }
+    #topbar .logout-btn:hover {
+        background: #c82333; /* Darker red */
+    }
+    #topbar #loginStatus { /* Style for login status text */
+         font-size: 14px;
+         color: #fff; /* White text on dark top bar */
+         margin-right: 15px;
+    }
   </style>
 
 </head>
@@ -119,10 +140,10 @@
         <i class="bi bi-phone d-flex align-items-center ms-4"><span>+66 87 789 4950</span></i>
       </div>
       <div class="user-info d-none d-md-flex align-items-center">
-         <!-- Placeholder for login status if needed later -->
-         <!-- <span id="loginStatus">Logged in as: example@email.com</span> -->
-         <!-- <button id="logoutButton" class="logout-btn" onclick="logout()">Logout</button> -->
-      </div>
+         <!-- Login status and logout button will be added dynamically by JS -->
+         <span id="loginStatus"></span>
+         <button id="logoutButton" class="logout-btn" onclick="logout()">Logout</button>
+       </div>
     </div>
   </section>
 
@@ -149,9 +170,10 @@
 				  <li><a href="customerlogin.html">Customer Login</a></li>
 				</ul>
 			  </li>
+			           <li><a class="nav-link" href="#" onclick="logout()">Logout</a></li> <!-- Logout link -->
 			</ul>
 			<i class="bi bi-list mobile-nav-toggle"></i>
-		 </nav><!-- .navbar -->
+			</nav><!-- .navbar -->
     </div>
   </header><!-- End Header -->
 
@@ -280,6 +302,84 @@
   <script src="assets/js/main.js"></script>
 
   <!-- No login-specific script needed for this page -->
+
+  <!-- Employee Authentication Check -->
+  <script>
+    // --- Global Variables ---
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwnFHH9uzkzrTNX7kfUd3LQmNdNCu3yuc12N8lzIanUrPDFeW5By0aT5nDYN5AogtLw7w/exec';
+    const loginPage = 'tpologin.html'; // Redirect target
+
+    // --- Logout Function ---
+    function logout() {
+        console.log("Logging out employee...");
+        localStorage.removeItem('tpoEmployeeToken');
+        localStorage.removeItem('tpoEmployeeEmail');
+        window.top.location.href = loginPage; // Redirect to login page
+    }
+
+    // --- Authentication Check Function ---
+    function checkAuthentication() {
+      const token = localStorage.getItem('tpoEmployeeToken');
+      const userEmail = localStorage.getItem('tpoEmployeeEmail'); // Get email for display
+
+      function redirectToLogin(reason) {
+        console.log(`Redirecting to login: ${reason}`);
+        localStorage.removeItem('tpoEmployeeToken'); // Clear invalid/missing token
+        localStorage.removeItem('tpoEmployeeEmail'); // Clear associated email
+        window.top.location.href = `${loginPage}?error=${encodeURIComponent(reason)}`;
+      }
+
+      if (!token) {
+        redirectToLogin('Session not found. Please login.');
+        return; // Stop script execution
+      }
+
+      // If token exists, validate it with the backend
+      console.log("Token found, validating...");
+      const validationUrl = new URL(APPS_SCRIPT_URL);
+      validationUrl.searchParams.append('action', 'validateToken');
+      validationUrl.searchParams.append('token', token);
+
+      fetch(validationUrl, { method: 'GET' })
+        .then(response => {
+          if (!response.ok) {
+            return response.json().then(errData => {
+               throw new Error(errData.message || `Validation request failed (${response.status})`);
+            }).catch(() => {
+               throw new Error(`Validation request failed (${response.status})`);
+            });
+          }
+          return response.json();
+        })
+        .then(result => {
+          if (result && result.valid === true) {
+            console.log(`Token validated successfully for user: ${result.email}`);
+            // Update UI with user info
+            const loginStatusSpan = document.getElementById('loginStatus');
+            const logoutButton = document.getElementById('logoutButton');
+            const displayEmail = userEmail || result.email; // Use stored email first, fallback to validated email
+
+            if (loginStatusSpan && displayEmail) {
+                 loginStatusSpan.textContent = `Logged in as: ${displayEmail}`;
+            }
+            if (logoutButton) {
+                logoutButton.style.display = 'inline-block'; // Show logout button
+            }
+          } else {
+            // Token is invalid or expired according to the backend
+            redirectToLogin('Invalid or expired session. Please login again.');
+          }
+        })
+        .catch(error => {
+          console.error('Error validating token:', error);
+          redirectToLogin('Error validating session. Please login again.');
+        });
+    }
+
+    // --- Run Authentication Check on Page Load ---
+    document.addEventListener('DOMContentLoaded', checkAuthentication);
+
+  </script>
 
 </body>
 </html>
