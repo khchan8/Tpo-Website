@@ -270,6 +270,83 @@
              font-weight: bold; /* Optional: make text bold */
          }
 
+
+        /* === Styles from performance.html (for Sales Performance Section) === */
+        .dashboard-section {
+          padding: 60px 0;
+          overflow: hidden;
+        }
+
+        .dashboard-container {
+          background: #fff;
+          padding: 30px;
+          border-radius: 5px;
+          box-shadow: 0px 0 30px rgba(21, 21, 21, 0.08);
+          margin-bottom: 30px;
+        }
+
+        .dashboard-title {
+          font-size: 20px;
+          font-weight: 700;
+          padding: 0 0 20px 0;
+          margin: 0;
+          color: #151515;
+        }
+
+        .submenu-container {
+          margin-bottom: 40px;
+        }
+
+        .submenu-nav {
+          padding: 0;
+          margin: 0 0 20px 0;
+          list-style: none;
+          background: #f9f9f9;
+          border-radius: 5px;
+          overflow: hidden;
+        }
+
+        .submenu-nav li {
+          display: inline-block;
+          margin: 0;
+          padding: 10px 15px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+
+        .submenu-nav li:hover, .submenu-nav li.active {
+          background: #e03a3c; /* TPO Red */
+          color: #fff;
+        }
+
+        .submenu-content {
+          display: none;
+        }
+
+        .submenu-content.active {
+          display: block;
+        }
+
+        .iframe-container {
+          position: relative;
+          overflow: hidden;
+          width: 100%;
+          padding-top: 56.25%; /* 16:9 Aspect Ratio */
+        }
+
+        .responsive-iframe {
+          position: absolute;
+          top: 0;
+          left: 0;
+          bottom: 0;
+          right: 0;
+          width: 100%;
+          height: 100%;
+          border: none;
+        }
+
+        /* Loader CSS removed */
+        /* === End Styles from performance.html === */
     </style>
 </head>
 <body>
@@ -461,6 +538,94 @@
                 </div>
             </div>
             <!-- End Sales Pipeline View Section -->
+
+            <!-- ======= Sales Performance Section (from performance.html) ======= -->
+            <section id="sales-performance" class="dashboard-section">
+              <div data-aos="fade-up"> <!-- Removed container to allow full width -->
+                <div class="section-title">
+                  <span>Sales Performance</span>
+                  <h2>Sales Performance</h2>
+                  <p>Detailed analytics of our sales performance across different dimensions</p>
+                </div>
+
+                <div class="submenu-container">
+                  <ul class="submenu-nav" id="sales-submenu">
+                    <li class="active" data-target="monthly-by-agent">Sales by Months</li>
+                    <li data-target="sales-by-agent">Sales By Agent</li>
+                    <li data-target="sales-customer">Sales By Customer</li>
+                    <li data-target="current-month">Current Month by Agent</li>
+                    <li data-target="duenow-sales">Due Now By Month</li>
+                    <li data-target="consignment-sales">Consignment By Month</li>
+                  </ul>
+
+                  <!-- Sales by Month by Agent -->
+                  <div class="submenu-content active" id="monthly-by-agent">
+                    <div class="dashboard-container">
+                      <h3 class="dashboard-title">Sales Performance by Month by Agent</h3>
+                      <div class="iframe-container">
+                        <!-- Loader div removed -->
+                        <iframe id="monthly-by-agent-iframe" class="responsive-iframe" src="about:blank" data-src="https://lookerstudio.google.com/embed/reporting/d382249f-dd45-4e7d-9acd-da577f5036d1/page/KqU3E" frameborder="0" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Sales By Agent -->
+                  <div class="submenu-content" id="sales-by-agent">
+                    <div class="dashboard-container">
+                      <h3 class="dashboard-title">Sales by Agent All</h3>
+                      <div class="iframe-container">
+                        <!-- Loader div removed -->
+                        <iframe id="sales-agent-iframe" class="responsive-iframe" src="about:blank" data-src="https://lookerstudio.google.com/embed/reporting/0f2be493-16d7-4e74-b0d2-243153ddfb1e/page/J7j3E" frameborder="0" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"></iframe>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Sales By Customer -->
+                  <div class="submenu-content" id="sales-customer">
+                    <div class="dashboard-container">
+                      <h3 class="dashboard-title">Previous Months by Agents</h3>
+                      <div class="iframe-container">
+                        <!-- Loader div removed -->
+                        <iframe id="sales-customer-iframe" class="responsive-iframe" src="about:blank" data-src="https://lookerstudio.google.com/embed/reporting/8a5e6282-1475-4228-82a0-758ea951c0ae/page/KqU3E" frameborder="0" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"></iframe>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Current Month by Agent -->
+                  <div class="submenu-content" id="current-month">
+                    <div class="dashboard-container">
+                      <h3 class="dashboard-title">Sales by Agent for Current Month</h3>
+                      <div class="iframe-container">
+                        <!-- Loader div removed -->
+                        <iframe id="current-month-iframe" class="responsive-iframe" src="about:blank" data-src="https://lookerstudio.google.com/embed/reporting/c4399438-677b-44c0-8258-023242e8e48b/page/1wv3E" frameborder="0" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"></iframe>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Due Now Now -->
+                  <div class="submenu-content" id="duenow-sales">
+                    <div class="dashboard-container">
+                      <h3 class="dashboard-title">Due Now Sales Order by Month</h3>
+                      <div class="iframe-container">
+                        <!-- Loader div removed -->
+                        <iframe id="duenow-sales-iframe" class="responsive-iframe" src="about:blank" data-src="https://lookerstudio.google.com/embed/reporting/77f10391-b8f2-473a-85d0-88a824af1377/page/kRx3E" frameborder="0" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"></iframe>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- Consignment Sales -->
+                  <div class="submenu-content" id="consignment-sales">
+                    <div class="dashboard-container">
+                      <h3 class="dashboard-title">Consignment Sales Order by Month</h3>
+                      <div class="iframe-container">
+                        <!-- Loader div removed -->
+                        <iframe id="consignment-sales-iframe" class="responsive-iframe" src="about:blank" data-src="https://lookerstudio.google.com/embed/reporting/a2e80547-caf4-4554-abfb-0306cf2d3086/page/YXy3E" frameborder="0" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"></iframe>
+                      </div>
+                    </div>
+                  </div>
+                </div> <!-- End submenu-container -->
+              </div> <!-- End data-aos -->
+            </section><!-- End Sales Performance Section -->
+
 
         <!-- Main CRM Form Removed -->
         <!-- Message Area -->
@@ -2447,6 +2612,87 @@ fetch(APPS_SCRIPT_URL, { // Use APPS_SCRIPT_URL for POST
       </div>
     </div>
   </footer><!-- End Footer -->
+
+    <!-- Vendor JS Files (Keep existing ones, add jQuery) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <!-- Leaflet Fullscreen JS -->
+    <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/Leaflet.fullscreen.min.js'></script>
+    <!-- QR Code Generator -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator/qrcode.js"></script>
+
+    <!-- Main CRM-M JS File -->
+    <script src="CRMv4-M.js"></script> <!-- Assuming JS logic is in this file -->
+
+    <!-- Inline Script for Sales Performance Submenu (from performance.html) -->
+    <script>
+      $(document).ready(function() {
+        // Function to handle iframe loading and loader display
+        // Updated function to only handle iframe source loading
+        function loadIframeContent(iframeId) {
+          var iframe = $('#' + iframeId);
+
+          if (iframe.length) {
+            // Set the iframe src from data-src attribute only if it hasn't been loaded yet
+            // This prevents reloading the iframe every time the tab is clicked
+            if (iframe.attr('src') === 'about:blank' || !iframe.attr('src')) {
+              iframe.attr('src', iframe.data('src'));
+            }
+          }
+        }
+
+        // Submenu navigation functionality (Targeting only #sales-submenu)
+        $('#sales-submenu li').click(function() {
+          var targetId = $(this).data('target');
+          var parentContainer = $(this).closest('.submenu-container');
+
+          // Update active class on nav items within this submenu
+          $(this).siblings().removeClass('active');
+          $(this).addClass('active');
+
+          // Show the target content and hide others within this submenu container
+          parentContainer.find('.submenu-content').removeClass('active');
+          parentContainer.find('#' + targetId).addClass('active');
+
+          // Handle iframe loading for Looker Studio reports
+          var iframeId = targetId + '-iframe';
+          // var loaderId = targetId + '-loader'; // Loader ID removed
+
+          // Special case for sales-by-agent which might have a different ID pattern
+          if (targetId === 'sales-by-agent') {
+            iframeId = 'sales-agent-iframe';
+            // loaderId = 'sales-agent-loader'; // Loader ID removed
+          }
+
+          loadIframeContent(iframeId); // Pass only iframeId
+        });
+
+        // Load the initial active tab's iframe within the sales performance section
+        function loadInitialSalesTab() {
+          var activeTab = $('#sales-submenu li.active');
+          if (activeTab.length) {
+            var targetId = activeTab.data('target');
+            var iframeId = targetId + '-iframe';
+            // var loaderId = targetId + '-loader'; // Loader ID removed
+
+            if (targetId === 'sales-by-agent') {
+              iframeId = 'sales-agent-iframe';
+              // loaderId = 'sales-agent-loader'; // Loader ID removed
+            }
+            loadIframeContent(iframeId); // Pass only iframeId
+          }
+        }
+
+        // Load initial sales tab when document is ready
+        loadInitialSalesTab();
+
+        // Note: Removed the URL hash check as it might conflict with other page logic
+        // if (window.location.hash) { ... }
+      });
+    </script>
 
 </body>
 </html>
