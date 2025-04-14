@@ -1197,26 +1197,26 @@
   <!-- Employee Authentication Check -->
   <script>
     // --- Global Variables ---
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwnFHH9uzkzrTNX7kfUd3LQmNdNCu3yuc12N8lzIanUrPDFeW5By0aT5nDYN5AogtLw7w/exec';
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwvqSbiZ9KSNkgpbf47nl9TZK1AgTrcbDTJ7I72OyUej7p_KPPeLwyUz0Xd0-QV90lViA/exec';
     const loginPage = 'tpologin.html'; // Redirect target
 
     // --- Logout Function ---
     function logout() {
         console.log("Logging out employee...");
-        localStorage.removeItem('tpoEmployeeToken');
-        localStorage.removeItem('tpoEmployeeEmail');
+        localStorage.removeItem('tpoEmployeeToken'); // Use specific token name for this page
+        localStorage.removeItem('tpoUserEmail'); // Use generic email key
         window.top.location.href = loginPage; // Redirect to login page
     }
 
     // --- Authentication Check Function ---
     function checkAuthentication() {
-      const token = localStorage.getItem('tpoEmployeeToken');
-      const userEmail = localStorage.getItem('tpoEmployeeEmail'); // Get email for display
+      const token = localStorage.getItem('tpoEmployeeToken'); // Use specific token name for this page
+      const userEmail = localStorage.getItem('tpoUserEmail'); // Use generic email key
 
       function redirectToLogin(reason) {
         console.log(`Redirecting to login: ${reason}`);
-        localStorage.removeItem('tpoEmployeeToken'); // Clear invalid/missing token
-        localStorage.removeItem('tpoEmployeeEmail'); // Clear associated email
+        localStorage.removeItem('tpoEmployeeToken'); // Clear specific token name for this page
+        localStorage.removeItem('tpoUserEmail'); // Clear generic email key
         window.top.location.href = `${loginPage}?error=${encodeURIComponent(reason)}`;
       }
 

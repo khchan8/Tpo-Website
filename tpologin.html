@@ -260,7 +260,7 @@
   <script>
     // Google Apps Script URL for Employee Login
     // !!! IMPORTANT: This URL should point to your deployed NewCode.gs script !!!
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwnFHH9uzkzrTNX7kfUd3LQmNdNCu3yuc12N8lzIanUrPDFeW5By0aT5nDYN5AogtLw7w/exec';
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwvqSbiZ9KSNkgpbf47nl9TZK1AgTrcbDTJ7I72OyUej7p_KPPeLwyUz0Xd0-QV90lViA/exec';
 
     // Get error message from URL parameters (if any)
     const urlParams = new URLSearchParams(window.location.search);
@@ -293,7 +293,7 @@
       loginUrl.searchParams.append('action', 'handleLogin');
       loginUrl.searchParams.append('email', email);
       loginUrl.searchParams.append('password', password);
-      loginUrl.searchParams.append('type', 'employee'); // Specify type
+      // 'type' parameter is no longer needed for handleLogin
 
       fetch(loginUrl, { method: 'GET' })
       .then(response => {
@@ -311,19 +311,20 @@
       })
       .then(result => {
         setButtonsDisabled(false);
-        // Check the success flag and token from the JSON response
-        if (result && result.success === true && result.token && result.email) {
+        // Check the success flag and necessary fields from the JSON response
+        if (result && result.success === true && result.token && result.email && result.tokenName && result.linkedPage) {
           errorDiv.textContent = ''; // Clear any previous error message
-          console.log("Employee login success. Storing token and redirecting...");
-          // Store token and email in localStorage
-          localStorage.setItem('tpoEmployeeToken', result.token);
-          localStorage.setItem('tpoEmployeeEmail', result.email);
-          // Redirect to the default employee page (erp.html)
-          window.top.location.href = 'erp.html'; // Redirect to erp.html
+          console.log(`Login success for ${result.email}. Storing token (${result.tokenName}) and redirecting to ${result.linkedPage}...`);
+          // Store token value using the dynamic tokenName as the key
+          localStorage.setItem(result.tokenName, result.token);
+          // Store email using a generic key
+          localStorage.setItem('tpoUserEmail', result.email);
+          // Redirect to the linked page provided by the script
+          window.top.location.href = result.linkedPage;
         } else {
           // Display the error message from the script's JSON response
-          errorDiv.textContent = result.message || 'Login failed. Please check your credentials.';
-          console.log("Employee login failed:", result.message || 'Unknown error');
+          errorDiv.textContent = result.message || 'Login failed. Please check your credentials or configuration.';
+          console.log("Login failed:", result.message || 'Unknown error or missing data in response');
         }
       })
       .catch(error => {
