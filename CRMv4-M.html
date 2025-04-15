@@ -679,10 +679,11 @@
     <script src="assets/js/main.js"></script>
 
     <script>
-        // --- Authentication Globals ---
-        let authToken = null;
-        // !!! IMPORTANT: Replace this with your actual DEPLOYED Apps Script /exec URL !!!
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzy2g7bfHvjArMWornli3GPodDw99P4ayMjALKanAU4waL29CjcfCjHl3wiJaxSRIIV/exec';
+        // --- Authentication & API URLs ---
+        const AUTH_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyo2QuCUiPwUlByCgmR5zp6kymmvLbQPSjDHbaJ9yZD5rqF8M8RalXwqdda8VZnEL2hkQ/exec'; // NewCode.gs for Auth (Corrected URL)
+        const CRM_API_URL = 'https://script.google.com/macros/s/AKfycbzP3YLRMS98mrxrkYlSDUtTrZCf7QOPY50bTOXjS6cgtPDY0OW_yvyKLKBGvSVPh3mP/exec'; // Code.gs for CRM data operations (Keep Old)
+        const loginPage = 'tpologin.html'; // Corrected Login Page
+        const requiredToken = 'tpoCRMManagerToken'; // Correct Token for Manager View
 
         // --- Messaging Functions (Defined Globally) ---
         function showLoading(message = "Loading...") {
@@ -749,105 +750,112 @@
             }
         }
 
-        // --- Logout Function ---
+        // --- Logout Function (Updated for New Tokens) ---
         function logout() {
             console.log("Logging out...");
-            localStorage.removeItem('tpoCrmToken');
-            localStorage.removeItem('tpoCrmUserEmail');
-            localStorage.removeItem('tpoCrmIsManager');
-            authToken = null;
-            // Redirect to login page
-            redirectToLogin();
+            // Clear all relevant new tokens
+            localStorage.removeItem('tpoSessionToken');
+            localStorage.removeItem('tpoGrantedTokens');
+            localStorage.removeItem('tpoCrmApiToken');
+            // Redirect to new login page without error/redirectUrl
+            window.top.location.href = loginPage;
         }
 
-        // --- Authentication Check (Runs First) ---
+        // --- Helper: Redirect to Login (New Standard) ---
+        function redirectToLogin(reason) {
+          console.log(`Redirecting to login: ${reason}`);
+          // Clear all relevant tokens
+          localStorage.removeItem('tpoSessionToken');
+          localStorage.removeItem('tpoGrantedTokens');
+          localStorage.removeItem('tpoCrmApiToken');
+          // Construct redirect URL, including the current page for post-login redirect
+          const redirectUrl = `${loginPage}?redirectUrl=${encodeURIComponent(window.location.pathname + window.location.search)}&error=${encodeURIComponent(reason)}`;
+          window.top.location.href = redirectUrl;
+        }
+        // --- Authorization Check (New Standard - Runs after successful authentication) ---
+        function checkAuthorization(grantedTokens, userEmail) {
+            console.log("Checking authorization for:", requiredToken);
+            // Ensure grantedTokens is an array before checking includes()
+            const tokensArray = Array.isArray(grantedTokens) ? grantedTokens : [];
+
+            if (!tokensArray.includes(requiredToken)) {
+                redirectToLogin(`Access denied. Required permission (${requiredToken}) not found.`);
+                return false; // Indicate authorization failed
+            }
+
+            console.log("Authorization successful based on granted tokens."); // Updated log message
+
+            // Update UI with user info
+            const loginStatusSpan = document.getElementById('loginStatus');
+            // Logout button is handled by header link, no need to show/hide a button element
+            if (loginStatusSpan && userEmail) {
+                 loginStatusSpan.textContent = `Logged in as: ${userEmail}`;
+            }
+
+            // Manager view is the current view, no need to show/hide links like in Rep view
+
+            return true; // Indicate authorization succeeded
+        }
+
+
+        // --- Authentication Check Function (New Standard - Runs on Load) ---
         function checkAuthentication() {
-            console.log("Checking authentication...");
-            const urlParams = new URLSearchParams(window.location.search);
-            let tokenFromUrl = urlParams.get('token');
-            let tokenFromStorage = localStorage.getItem('tpoCrmToken');
-            let potentialAuthToken = null;
+          // Get sessionToken ONLY from localStorage
+          const sessionToken = localStorage.getItem('tpoSessionToken');
+          const userEmail = localStorage.getItem('tpoUserEmail'); // Get email for display later
 
-            if (tokenFromUrl) {
-                console.log("Token found in URL.");
-                potentialAuthToken = tokenFromUrl;
-                localStorage.setItem('tpoCrmToken', potentialAuthToken); // Store it immediately
-                 // Clean the URL
-                window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
-            } else if (tokenFromStorage) {
-                console.log("Token found in localStorage.");
-                potentialAuthToken = tokenFromStorage;
-            }
+          if (!sessionToken) {
+            redirectToLogin('Session not found. Please login.');
+            return; // Stop script execution
+          }
 
-            if (potentialAuthToken) {
-                // Validate the token if found
-                // Only show loading if elements are ready
-                if (document.getElementById('loadingOverlay')) {
-                    showLoading("Validating session...");
-                } else {
-                    console.warn("DOM not ready for loading indicator during token validation.");
+          console.log(`Session token found in localStorage, validating...`);
+          showLoading("Validating session..."); // Show loading indicator
+
+          const validationUrl = new URL(AUTH_SCRIPT_URL); // Use NewCode.gs URL for validation
+          validationUrl.searchParams.append('action', 'validateSessionToken');
+          validationUrl.searchParams.append('sessionToken', sessionToken); // Send the token value
+
+          fetch(validationUrl, { method: 'GET' })
+            .then(response => {
+              if (!response.ok) {
+                // Attempt to parse error from backend response
+                return response.json().then(errData => {
+                   throw new Error(errData.message || `Validation request failed (${response.status})`);
+                }).catch(() => {
+                   // Fallback if backend response isn't JSON
+                   throw new Error(`Validation request failed (${response.status})`);
+                });
+              }
+              return response.json();
+            })
+            .then(result => {
+              hideLoading(); // Hide loading indicator
+              if (result && result.valid === true && result.email && result.tokens) {
+                console.log(`Session token validated successfully for user: ${result.email}`);
+
+                // Store/update granted tokens in localStorage (still useful for other potential checks)
+                localStorage.setItem('tpoGrantedTokens', JSON.stringify(result.tokens));
+                console.log('Updated granted tokens in localStorage:', JSON.stringify(result.tokens));
+
+                // Proceed to Authorization Check, passing the retrieved tokens and email
+                // Use the email from the validation result primarily, fallback to localStorage email
+                if (checkAuthorization(result.tokens, result.email || userEmail)) {
+                    // If authorization passes, initialize the CRM app
+                    initializeApp();
                 }
-                fetch(`${APPS_SCRIPT_URL}?action=validateToken&token=${potentialAuthToken}`)
-                    .then(response => response.json())
-                    .then(result => {
-                        hideLoading();
-                        if (result && result.valid) {
-                            console.log(`Token validated successfully for user: ${result.email}, Is Manager: ${result.isManager}`);
-                            authToken = potentialAuthToken; // Confirm the token
-                            localStorage.setItem('tpoCrmUserEmail', result.email);
-                            localStorage.setItem('tpoCrmIsManager', result.isManager);
+                // If authorization fails, redirectToLogin is called within checkAuthorization
 
-                            // Update Login Status Display
-                            const loginStatusElement = document.getElementById('loginStatus');
-                            if (loginStatusElement) {
-                                loginStatusElement.textContent = `Logged in as: ${result.email}`;
-                            }
-
-                            // --- Manager Check ---
-                            if (!result.isManager) {
-                                console.log("User is not a manager. Redirecting to Rep View.");
-                                // Redirect to Rep view (CRMv4.html), keeping the token
-                                const repViewUrl = "CRMv4.html"; // Use relative path
-                                const separator = repViewUrl.includes('?') ? '&' : '?';
-                                // Ensure potentialAuthToken is valid before using
-                                const redirectTarget = potentialAuthToken ? (repViewUrl + separator + 'token=' + potentialAuthToken) : repViewUrl;
-                                window.top.location.href = redirectTarget;
-                                return; // Stop execution for non-managers
-                            }
-                            // --- End Manager Check ---
-
-                            initializeApp(); // Proceed only if manager
-                        } else {
-                            // Token invalid or expired
-                            console.log("Token validation failed or token expired. Redirecting to login.");
-                            localStorage.removeItem('tpoCrmToken');
-                            localStorage.removeItem('tpoCrmUserEmail');
-                            localStorage.removeItem('tpoCrmIsManager');
-                            authToken = null;
-                            redirectToLogin(); // Redirect if token is invalid
-                        }
-                    })
-                    .catch(error => {
-                        // Network or other error during validation
-                        hideLoading();
-                        console.error('Error validating token:', error);
-                        showMessage(document.querySelector('.error-message'), 'Error validating session. Please try logging in again.');
-                        // Optionally redirect to login on validation error too
-                        // redirectToLogin();
-                    });
-            } else {
-                // No token found in URL or storage
-                console.log("No token found. Redirecting to login.");
-                redirectToLogin();
-            }
-        }
-
-        function redirectToLogin() {
-            // Redirect to the static Login.html page on the same domain
-            const currentUrl = window.location.href; // Get current full URL
-            const baseUrl = window.location.origin + window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/')); // Get base path
-            const staticLoginUrl = baseUrl + '/Login.html'; // Construct absolute URL to Login.html
-            window.top.location.href = `${staticLoginUrl}?redirectUrl=${encodeURIComponent(currentUrl)}`;
+              } else {
+                // Token is invalid or expired according to the backend
+                redirectToLogin(result.message || 'Invalid or expired session. Please login again.');
+              }
+            })
+            .catch(error => {
+              hideLoading(); // Hide loading indicator
+              console.error('Error validating session token:', error);
+              redirectToLogin('Error validating session: ' + error.message + '. Please login again.');
+            });
         }
 
 
@@ -1047,21 +1055,34 @@
                              clearResultMarkers(false); // Clear old markers, keep search pin
                              if (assignmentTableContainer) assignmentTableContainer.innerHTML = '<p>Refreshing...</p>';
 
-                             // Use fetch to call the backend
-                             const fetchUrl = new URL(APPS_SCRIPT_URL); // Use APPS_SCRIPT_URL
+                             const fetchUrl = new URL(CRM_API_URL); // Use CRM_API_URL
                              fetchUrl.searchParams.append('action', 'getNearbyDispensaries');
                              fetchUrl.searchParams.append('latitude', position.lat);
                              fetchUrl.searchParams.append('longitude', position.lng);
-                             fetchUrl.searchParams.append('limit', newLimit); // Use new limit
+                             fetchUrl.searchParams.append('limit', newLimit);
                              fetchUrl.searchParams.append('maxDistance', radius);
-
-                             // Add token to nearby search fetch
-                             fetchUrl.searchParams.append('token', authToken);
+                             const sessionToken = localStorage.getItem('tpoSessionToken'); // Use Session token
+                             if (!sessionToken) {
+                                 handleNearbyError(new Error('Authentication error. Please login again.'));
+                                 logout();
+                                 return;
+                             }
+                             fetchUrl.searchParams.append('token', sessionToken); // Add Session token
                              fetch(fetchUrl)
-                                 .then(response => response.json())
-                                 .then(handleNearbyResults) // Reuse the results handler
-                                 .catch(handleNearbyError); // Reuse the error handler
-
+                                 .then(response => {
+                                     if (response.status === 401) throw new Error('Unauthorized'); // Check auth
+                                     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                                     return response.json();
+                                 })
+                                 .then(handleNearbyResults)
+                                 .catch(error => {
+                                     if (error.message === 'Unauthorized') {
+                                         handleNearbyError(new Error('Your session has expired. Please log in again.'));
+                                         logout();
+                                     } else {
+                                         handleNearbyError(error);
+                                     }
+                                 });
                          } else {
                              // Default behavior: Fetch unassigned data for page 1
                              console.log(`Items per page changed (default view). Fetching page 1 with limit: ${newLimit}`);
@@ -1215,30 +1236,35 @@
                     if (assignmentPaginationControls) assignmentPaginationControls.innerHTML = ''; // Clear pagination
                     clearResultMarkers(false); // Clear only result markers, keep user and search pin
 
-                    // Replace google.script.run with fetch, adding token
-                    const fetchUrl = new URL(APPS_SCRIPT_URL); // Use APPS_SCRIPT_URL
+                    const fetchUrl = new URL(CRM_API_URL); // Use CRM_API_URL
                     fetchUrl.searchParams.append('action', 'getNearbyDispensaries');
                     fetchUrl.searchParams.append('latitude', position.lat);
-                    fetchUrl.searchParams.append('longitude', position.lng); // Use lng
+                    fetchUrl.searchParams.append('longitude', position.lng);
                     fetchUrl.searchParams.append('limit', limit);
                     fetchUrl.searchParams.append('maxDistance', radius);
-                    fetchUrl.searchParams.append('token', authToken); // Add token
+                    const sessionToken = localStorage.getItem('tpoSessionToken'); // Use Session token
+                    if (!sessionToken) {
+                        handleNearbyError(new Error('Authentication error. Please login again.'));
+                        logout();
+                        return;
+                    }
+                    fetchUrl.searchParams.append('token', sessionToken); // Add Session token
 
                     fetch(fetchUrl)
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error(`HTTP error! status: ${response.status}`);
-                            }
-                            return response.json();
-                        })
-                        .then(data => {
-                            // Directly call the success handler logic
-                            handleNearbyResults(data);
-                        })
+                         .then(response => {
+                             if (response.status === 401) throw new Error('Unauthorized'); // Check auth
+                             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                             return response.json();
+                         })
+                        .then(handleNearbyResults)
                         .catch(error => {
-                            // Directly call the failure handler logic
-                            handleNearbyError(error);
-                        });
+                             if (error.message === 'Unauthorized') {
+                                 handleNearbyError(new Error('Your session has expired. Please log in again.'));
+                                 logout();
+                             } else {
+                                 handleNearbyError(error);
+                             }
+                         });
                 });
             } else {
                 console.error("Search Nearby button not found.");
@@ -1477,17 +1503,16 @@
                 payload.append('shopName', shopName);
                 payload.append('commentText', commentText);
 
-                // Add token to comment submission
-                if (authToken) {
-                    payload.append('token', authToken);
-                } else {
-                    showMessage(errorMessageElement, 'Authentication token missing. Please log in again.');
+                const sessionToken = localStorage.getItem('tpoSessionToken'); // Use Session token
+                if (!sessionToken) {
+                    showMessage(errorMessageElement, 'Authentication error. Please log in again.');
                     hideLoading();
-                    redirectToLogin();
+                    logout(); // Use new logout
                     return;
                 }
+                payload.append('token', sessionToken); // Add Session token
 
-                fetch(APPS_SCRIPT_URL, { // Use APPS_SCRIPT_URL for POST
+                fetch(CRM_API_URL, { // Use CRM_API_URL for POST (Correct URL already applied)
                     method: 'POST',
                     body: payload
                 })
@@ -1506,7 +1531,12 @@
                 .catch(error => {
                     hideLoading();
                     console.error('Error sending comment:', error);
-                    showMessage(errorMessageElement, 'Network or server error sending comment: ' + error);
+                     if (error.message && error.message.includes('Unauthorized') || (error.response && error.response.status === 401)) { // Check for 401/Unauthorized
+                        showMessage(errorMessageElement, 'Your session has expired. Please log in again.');
+                        logout(); // Call new logout
+                    } else {
+                        showMessage(errorMessageElement, 'Network or server error sending comment: ' + error);
+                    }
                 });
             }
             // Add delegated listener for comment buttons - MOVED INSIDE populatePipelineTable
@@ -1637,8 +1667,15 @@
                     return; // Don't fetch if cache is valid
                 }
                 showLoading('Fetching setup data...');
-                // Add token to setup data fetch
-                fetch(`${APPS_SCRIPT_URL}?action=getSetupData&token=${authToken}`)
+                const sessionToken = localStorage.getItem('tpoSessionToken'); // Get Session token
+                if (!sessionToken) {
+                    console.error("Cannot fetch setup data: Session token missing.");
+                    hideLoading();
+                    showMessage(errorMessageElement, 'Authentication error. Please login again.');
+                    logout(); // Use the new logout function
+                    return;
+                }
+                fetch(`${CRM_API_URL}?action=getSetupData&token=${sessionToken}`) // Use CRM_API_URL and sessionToken
                     .then(response => {
                          if (!response.ok) {
                             throw new Error(`HTTP error! status: ${response.status}`);
@@ -1669,7 +1706,12 @@
                     .catch(error => {
                         hideLoading();
                         console.error('Fetch Error for getSetupData:', error);
-                        showMessage(errorMessageElement, 'Network or server error fetching setup data: ' + error);
+                         if (error.message && error.message.includes('Unauthorized') || (error.response && error.response.status === 401)) { // Check for 401/Unauthorized
+                            showMessage(errorMessageElement, 'Your session has expired. Please log in again.');
+                            logout(); // Call new logout
+                        } else {
+                            showMessage(errorMessageElement, 'Network or server error fetching setup data: ' + error);
+                        }
                     });
             }
 
@@ -1805,13 +1847,21 @@
                 const name = searchAssignName.value;
                 const itemsPerPage = document.getElementById('assignItemsPerPage')?.value || currentAssignItemsPerPage; // Get selected items per page
 
-                const url = new URL(APPS_SCRIPT_URL); // Use APPS_SCRIPT_URL
+                const url = new URL(CRM_API_URL); // Use CRM_API_URL
                 url.searchParams.append('action', 'getUnassignedShops');
                 url.searchParams.append('province', province);
                 url.searchParams.append('name', name);
                 url.searchParams.append('page', page);
-                url.searchParams.append('itemsPerPage', itemsPerPage); // Add itemsPerPage param
-                url.searchParams.append('token', authToken); // Add token
+                url.searchParams.append('itemsPerPage', itemsPerPage);
+                const sessionToken = localStorage.getItem('tpoSessionToken'); // Get Session token
+                if (!sessionToken) {
+                    console.error("Cannot fetch unassigned data: Session token missing.");
+                    hideLoading();
+                    showMessage(errorMessageElement, 'Authentication error. Please login again.');
+                    logout(); // Use new logout
+                    return;
+                }
+                url.searchParams.append('token', sessionToken); // Add Session token
 
                 fetch(url)
                     .then(response => {
@@ -1837,7 +1887,12 @@
                     .catch(error => {
                         hideLoading();
                         console.error('Fetch Error for getUnassignedShops:', error);
-                        showMessage(errorMessageElement, 'Network or server error fetching unassigned shops: ' + error);
+                         if (error.message && error.message.includes('Unauthorized') || (error.response && error.response.status === 401)) { // Check for 401/Unauthorized
+                            showMessage(errorMessageElement, 'Your session has expired. Please log in again.');
+                            logout(); // Call new logout
+                        } else {
+                            showMessage(errorMessageElement, 'Network or server error fetching unassigned shops: ' + error);
+                        }
                     });
             }
 
@@ -2190,17 +2245,16 @@
                 payload.append('shopIds', JSON.stringify(shopIdsToAssign));
                 payload.append('assignedMember', selectedMember);
                 payload.append('assignmentNotes', notes);
-// Add token to assignment submission
-if (authToken) {
-    payload.append('token', authToken);
-} else {
-    showMessage(errorMessageElement, 'Authentication token missing. Please log in again.');
-    hideLoading();
-    redirectToLogin();
-    return;
-}
+                const sessionToken = localStorage.getItem('tpoSessionToken'); // Use Session token
+                if (!sessionToken) {
+                    showMessage(errorMessageElement, 'Authentication error. Please log in again.');
+                    hideLoading();
+                    logout(); // Use new logout
+                    return;
+                }
+                payload.append('token', sessionToken); // Add Session token
 
-fetch(APPS_SCRIPT_URL, { // Use APPS_SCRIPT_URL for POST
+fetch(CRM_API_URL, { // Use CRM_API_URL for POST
     method: 'POST',
     body: payload
 })
@@ -2218,7 +2272,12 @@ fetch(APPS_SCRIPT_URL, { // Use APPS_SCRIPT_URL for POST
                 .catch(error => {
                     hideLoading();
                     console.error('Error assigning shops:', error);
-                    showMessage(errorMessageElement, 'Network or server error during assignment: ' + error);
+                     if (error.message && error.message.includes('Unauthorized') || (error.response && error.response.status === 401)) { // Check for 401/Unauthorized
+                        showMessage(errorMessageElement, 'Your session has expired. Please log in again.');
+                        logout(); // Call new logout
+                    } else {
+                        showMessage(errorMessageElement, 'Network or server error during assignment: ' + error);
+                    }
                 });
             } // End of handleAssignButtonClick
 
@@ -2243,7 +2302,7 @@ fetch(APPS_SCRIPT_URL, { // Use APPS_SCRIPT_URL for POST
                 const endDateStr = endDateInput.value;
                 const itemsPerPage = document.getElementById('pipelineItemsPerPage')?.value || currentPipelineItemsPerPage; // Get selected items per page
 
-                const url = new URL(APPS_SCRIPT_URL); // Use APPS_SCRIPT_URL
+                const url = new URL(CRM_API_URL); // Use CRM_API_URL
                 url.searchParams.append('action', 'getPipelineData');
                 url.searchParams.append('member', member);
                 url.searchParams.append('pipelines', JSON.stringify(selectedPipelines)); // Pass JSON array string
@@ -2256,7 +2315,15 @@ fetch(APPS_SCRIPT_URL, { // Use APPS_SCRIPT_URL for POST
                     url.searchParams.append('startDate', startDateStr);
                     url.searchParams.append('endDate', endDateStr);
                 }
-                url.searchParams.append('token', authToken); // Add token
+                const sessionToken = localStorage.getItem('tpoSessionToken'); // Use Session token
+                if (!sessionToken) {
+                    console.error("Cannot fetch pipeline data: Session token missing.");
+                    hideLoading();
+                    showMessage(errorMessageElement, 'Authentication error. Please login again.');
+                    logout();
+                    return;
+                }
+                url.searchParams.append('token', sessionToken); // Add Session token
 
                 fetch(url) // Already uses APPS_SCRIPT_URL defined above
                     .then(response => {
@@ -2280,8 +2347,13 @@ fetch(APPS_SCRIPT_URL, { // Use APPS_SCRIPT_URL for POST
                     })
                     .catch(error => {
                         hideLoading();
-                        console.error('Fetch Error for getPipelineData:', error); // Update message
-                        showMessage(errorMessageElement, 'Network or server error fetching pipeline data: ' + error); // Update message
+                        console.error('Fetch Error for getPipelineData:', error);
+                         if (error.message && error.message.includes('Unauthorized') || (error.response && error.response.status === 401)) { // Check for 401/Unauthorized
+                            showMessage(errorMessageElement, 'Your session has expired. Please log in again.');
+                            logout(); // Call new logout
+                        } else {
+                            showMessage(errorMessageElement, 'Network or server error fetching pipeline data: ' + error);
+                        }
                     });
             }
 

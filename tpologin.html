@@ -127,13 +127,6 @@
           <li><a class="nav-link scrollto" href="index.html#hero">Home</a></li>
           <li><a class="nav-link scrollto" href="index.html#about">About</a></li>
           <li><a class="nav-link scrollto" href="index.html#contact">Contact</a></li>
-          <li class="dropdown"><a href="#" class="active"><span>Login</span> <i class="bi bi-chevron-down"></i></a>
-            <ul>
-              <li><a href="tpologin.html" class="active">Employee Login</a></li> <!-- Mark as active -->
-              <li><a href="Login.html">CRM Login</a></li>
-              <li><a href="customerlogin.html">Customer Login</a></li>
-            </ul>
-          </li>
         </ul>
         <i class="bi bi-list mobile-nav-toggle"></i>
       </nav><!-- .navbar -->
@@ -260,7 +253,7 @@
   <script>
     // Google Apps Script URL for Employee Login
     // !!! IMPORTANT: This URL should point to your deployed NewCode.gs script !!!
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwvqSbiZ9KSNkgpbf47nl9TZK1AgTrcbDTJ7I72OyUej7p_KPPeLwyUz0Xd0-QV90lViA/exec';
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyo2QuCUiPwUlByCgmR5zp6kymmvLbQPSjDHbaJ9yZD5rqF8M8RalXwqdda8VZnEL2hkQ/exec';
 
     // Get error message from URL parameters (if any)
     const urlParams = new URLSearchParams(window.location.search);
@@ -311,27 +304,58 @@
       })
       .then(result => {
         setButtonsDisabled(false);
-        // Check the success flag and necessary fields from the JSON response
-        if (result && result.success === true && result.token && result.email && result.tokenName && result.linkedPage) {
+        // Check the new success flag and necessary fields from the JSON response
+        if (result && result.success === true && result.sessionToken && result.grantedTokens && result.linkedPage) {
           errorDiv.textContent = ''; // Clear any previous error message
-          console.log(`Login success for ${result.email}. Storing token (${result.tokenName}) and redirecting to ${result.linkedPage}...`);
-          // Store token value using the dynamic tokenName as the key
-          localStorage.setItem(result.tokenName, result.token);
-          // Store email using a generic key
+          console.log(`Login success. Storing tokens and redirecting to ${result.linkedPage}...`);
+
+          // Store session token
+          localStorage.setItem('tpoSessionToken', result.sessionToken);
+          console.log('Stored tpoSessionToken:', result.sessionToken);
+
+          // Store granted tokens as a JSON string
+          localStorage.setItem('tpoGrantedTokens', JSON.stringify(result.grantedTokens));
+          console.log('Stored tpoGrantedTokens:', JSON.stringify(result.grantedTokens));
+
+          // Store CRM API token if it exists
+          if (result.crmApiToken) {
+            localStorage.setItem('tpoCrmApiToken', result.crmApiToken);
+            console.log('Stored tpoCrmApiToken:', result.crmApiToken);
+          } else {
+            // Ensure any old CRM token is cleared if not provided this time
+            localStorage.removeItem('tpoCrmApiToken');
+            console.log('No crmApiToken received, cleared any existing tpoCrmApiToken.');
+          }
+
+          // Store user email for display purposes
           localStorage.setItem('tpoUserEmail', result.email);
-          // Redirect to the linked page provided by the script
-          window.top.location.href = result.linkedPage;
+          console.log('Stored tpoUserEmail:', result.email);
+
+          // Clear old/potentially conflicting storage items (keep this)
+          // localStorage.removeItem('tpoEmployeeToken'); // Example if this was used before
+
+          // Redirect to the linked page. Browser handles relative paths correctly.
+          window.top.location.href = result.linkedPage; // <-- Simpler and works for file:///
+
         } else {
           // Display the error message from the script's JSON response
           errorDiv.textContent = result.message || 'Login failed. Please check your credentials or configuration.';
-          console.log("Login failed:", result.message || 'Unknown error or missing data in response');
+          console.log("Login failed:", result.message || 'Unknown error or missing data in response', result);
+          // Clear any potentially partially stored tokens on failure
+          localStorage.removeItem('tpoSessionToken');
+          localStorage.removeItem('tpoGrantedTokens');
+          localStorage.removeItem('tpoCrmApiToken');
         }
       })
       .catch(error => {
-        // Handle fetch errors (network issues, CORS - though less likely now, parsing errors)
+        // Handle fetch errors (network issues, CORS, parsing errors)
         setButtonsDisabled(false);
-        console.error('Error during employee login fetch:', error);
+        console.error('Error during login fetch:', error);
         errorDiv.textContent = 'An error occurred during login: ' + error.message;
+        // Clear any potentially partially stored tokens on fetch error
+        localStorage.removeItem('tpoSessionToken');
+        localStorage.removeItem('tpoGrantedTokens');
+        localStorage.removeItem('tpoCrmApiToken');
       });
 
       /*

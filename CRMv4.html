@@ -515,21 +515,13 @@
     <script src="assets/js/main.js"></script>
 
     <!-- Main CRM Script (with modifications for logout and user display) -->
+    <!-- Main CRM Script -->
     <script>
-        // --- Authentication Globals ---
-        let authToken = null;
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzy2g7bfHvjArMWornli3GPodDw99P4ayMjALKanAU4waL29CjcfCjHl3wiJaxSRIIV/exec';
-
-        // --- NEW: Logout Function ---
-        function logout() {
-            console.log("Logging out...");
-            localStorage.removeItem('tpoCrmToken');
-            localStorage.removeItem('tpoCrmUserEmail');
-            localStorage.removeItem('tpoCrmIsManager');
-            authToken = null; // Clear in-memory token too
-            // Redirect to Login.html using a relative path
-            window.top.location.href = 'Login.html';
-        }
+        // --- Authentication & API URLs ---
+        const AUTH_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyo2QuCUiPwUlByCgmR5zp6kymmvLbQPSjDHbaJ9yZD5rqF8M8RalXwqdda8VZnEL2hkQ/exec'; // NewCode.gs for Auth
+        const CRM_API_URL = 'https://script.google.com/macros/s/AKfycbzP3YLRMS98mrxrkYlSDUtTrZCf7QOPY50bTOXjS6cgtPDY0OW_yvyKLKBGvSVPh3mP/exec'; // Code.gs for CRM data operations
+        const loginPage = 'tpologin.html';
+        const requiredToken = 'tpoCRMToken'; // Specific token needed for this page
 
         // --- Messaging Functions (Keep original CRM functions) ---
         function showLoading(message = "Loading...") {
@@ -582,92 +574,134 @@
             }
         }
 
-        // --- Authentication Check (Keep original CRM function, adjusted redirect) ---
-        function checkAuthentication() {
-            console.log("Checking authentication...");
-            const urlParams = new URLSearchParams(window.location.search);
-            let tokenFromUrl = urlParams.get('token');
-            let tokenFromStorage = localStorage.getItem('tpoCrmToken');
-            let potentialAuthToken = null;
-
-            if (tokenFromUrl) {
-                console.log("Token found in URL.");
-                potentialAuthToken = tokenFromUrl;
-                localStorage.setItem('tpoCrmToken', potentialAuthToken);
-                window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
-            } else if (tokenFromStorage) {
-                console.log("Token found in localStorage.");
-                potentialAuthToken = tokenFromStorage;
-            }
-
-            if (potentialAuthToken) {
-                if (document.getElementById('loadingOverlay')) {
-                    showLoading("Validating session...");
-                } else {
-                    console.warn("DOM not ready for loading indicator during token validation.");
-                }
-                fetch(`${APPS_SCRIPT_URL}?action=validateToken&token=${potentialAuthToken}`)
-                    .then(response => response.json())
-                    .then(result => {
-                        hideLoading();
-                        if (result && result.valid) {
-                            console.log(`Token validated successfully for user: ${result.email}, Is Manager: ${result.isManager}`);
-                            authToken = potentialAuthToken;
-                            localStorage.setItem('tpoCrmUserEmail', result.email);
-                            localStorage.setItem('tpoCrmIsManager', String(result.isManager)); // Store as string
-                            initializeApp(); // Proceed
-                        } else {
-                            console.log("Token validation failed or token expired. Redirecting to login.");
-                            logout(); // Use logout function to clear storage and redirect
-                        }
-                    })
-                    .catch(error => {
-                        hideLoading();
-                        console.error('Error validating token:', error);
-                        showMessage(document.querySelector('.error-message'), 'Error validating session. Please try logging in again.');
-                        // Optionally redirect to login on validation error too
-                        // logout();
-                    });
-            } else {
-                console.log("No token found. Redirecting to login.");
-                redirectToLogin(); // Use specific redirect function if needed before logout is defined
-            }
+        // --- Logout Function (Updated for New Tokens) ---
+        function logout() {
+            console.log("Logging out...");
+            // Clear ALL relevant tokens
+            localStorage.removeItem('tpoSessionToken');
+            localStorage.removeItem('tpoGrantedTokens');
+            localStorage.removeItem('tpoCrmApiToken');
+            localStorage.removeItem('tpoUserEmail'); // Clear email too
+            // Redirect to new login page without error/redirectUrl
+            window.top.location.href = loginPage;
         }
 
-        function redirectToLogin() {
-            // Redirect to the static Login.html page using a relative path
-            const currentTpoUrl = window.location.href;
-            const staticLoginUrl = 'Login.html'; // Relative path
-            // Pass the current URL as the redirect target after login
-            window.top.location.href = `${staticLoginUrl}?redirectUrl=${encodeURIComponent(currentTpoUrl)}`;
+        // --- Helper: Redirect to Login (New Standard) ---
+        function redirectToLogin(reason) {
+          console.log(`Redirecting to login: ${reason}`);
+          // Clear ALL relevant tokens
+          localStorage.removeItem('tpoSessionToken');
+          localStorage.removeItem('tpoGrantedTokens');
+          localStorage.removeItem('tpoCrmApiToken');
+          localStorage.removeItem('tpoUserEmail');
+          // Construct redirect URL, including the current page for post-login redirect
+          const redirectUrl = `${loginPage}?redirectUrl=${encodeURIComponent(window.location.pathname + window.location.search)}&error=${encodeURIComponent(reason)}`;
+          window.top.location.href = redirectUrl;
+        }
+
+        // --- Authorization Check (New Standard - Runs after successful authentication) ---
+        function checkAuthorization(grantedTokens, userEmail) {
+            console.log("Checking authorization for:", requiredToken);
+            // Ensure grantedTokens is an array before checking includes()
+            const tokensArray = Array.isArray(grantedTokens) ? grantedTokens : [];
+
+            if (!tokensArray.includes(requiredToken)) {
+                redirectToLogin(`Access denied. Required permission (${requiredToken}) not found.`);
+                return false; // Indicate authorization failed
+            }
+
+            // tpoCrmApiToken check removed as per Clean_Auth_Migration_Plan.md
+            console.log("Authorization successful based on granted tokens.");
+
+            // Update UI with user info
+            const loginStatusSpan = document.getElementById('loginStatus');
+            // Logout button is handled by header link, no need to show/hide a button element
+            if (loginStatusSpan && userEmail) {
+                 loginStatusSpan.textContent = `Logged in as: ${userEmail}`;
+            }
+
+            // Show Manager View links if applicable (check granted tokens)
+            const isManager = tokensArray.includes('tpoCRMManagerToken');
+            const managerViewLinkContent = document.getElementById('managerViewLink'); // In content
+            const managerViewLinkHeader = document.getElementById('headerManagerViewLink'); // In header
+            if (isManager) {
+                 if (managerViewLinkContent) managerViewLinkContent.style.display = 'inline-block';
+                 if (managerViewLinkHeader) managerViewLinkHeader.style.display = 'list-item'; // Show header link
+                 console.log("Manager access granted.");
+            } else {
+                 if (managerViewLinkContent) managerViewLinkContent.style.display = 'none';
+                 if (managerViewLinkHeader) managerViewLinkHeader.style.display = 'none';
+                 console.log("Standard CRM access granted.");
+            }
+
+            return true; // Indicate authorization succeeded
+        }
+
+        // --- Authentication Check Function (New Standard - Runs on Load) ---
+        function checkAuthentication() {
+          // Get sessionToken ONLY from localStorage
+          const sessionToken = localStorage.getItem('tpoSessionToken');
+          const userEmail = localStorage.getItem('tpoUserEmail'); // Get email for display later
+
+          if (!sessionToken) {
+            redirectToLogin('Session not found. Please login.');
+            return; // Stop script execution
+          }
+
+          console.log(`Session token found in localStorage, validating...`);
+          showLoading("Validating session..."); // Show loading indicator
+
+          const validationUrl = new URL(AUTH_SCRIPT_URL); // Use NewCode.gs URL for validation
+          validationUrl.searchParams.append('action', 'validateSessionToken');
+          validationUrl.searchParams.append('sessionToken', sessionToken); // Send the token value
+
+          fetch(validationUrl, { method: 'GET' })
+            .then(response => {
+              if (!response.ok) {
+                // Attempt to parse error from backend response
+                return response.json().then(errData => {
+                   throw new Error(errData.message || `Validation request failed (${response.status})`);
+                }).catch(() => {
+                   // Fallback if backend response isn't JSON
+                   throw new Error(`Validation request failed (${response.status})`);
+                });
+              }
+              return response.json();
+            })
+            .then(result => {
+              hideLoading(); // Hide loading indicator
+              if (result && result.valid === true && result.email && result.tokens) {
+                console.log(`Session token validated successfully for user: ${result.email}`);
+
+                // Store/update granted tokens in localStorage (still useful for other potential checks)
+                localStorage.setItem('tpoGrantedTokens', JSON.stringify(result.tokens));
+                console.log('Updated granted tokens in localStorage:', JSON.stringify(result.tokens));
+
+                // Proceed to Authorization Check, passing the retrieved tokens and email
+                // Use the email from the validation result primarily, fallback to localStorage email
+                if (checkAuthorization(result.tokens, result.email || userEmail)) {
+                    // If authorization passes, initialize the CRM app
+                    initializeApp();
+                }
+                // If authorization fails, redirectToLogin is called within checkAuthorization
+
+              } else {
+                // Token is invalid or expired according to the backend
+                redirectToLogin(result.message || 'Invalid or expired session. Please login again.');
+              }
+            })
+            .catch(error => {
+              hideLoading(); // Hide loading indicator
+              console.error('Error validating session token:', error);
+              redirectToLogin('Error validating session: ' + error.message + '. Please login again.');
+            });
         }
 
         // --- Main Application Initialization ---
         function initializeApp() {
             console.log("Authentication successful. Initializing application...");
 
-            // --- NEW: Update Top Bar and Header ---
-            const loggedInEmail = localStorage.getItem('tpoCrmUserEmail');
-            const loginStatusSpan = document.getElementById('loginStatus');
-            const logoutButton = document.getElementById('logoutButton');
-            if (loginStatusSpan && loggedInEmail) {
-                loginStatusSpan.textContent = `Logged in as: ${loggedInEmail}`;
-            }
-            if (logoutButton) {
-                logoutButton.style.display = 'inline-block'; // Show logout button
-            }
-
-            // Get manager view link elements (both in header and content)
-            const managerViewLinkContent = document.getElementById('managerViewLink'); // In content
-            const managerViewLinkHeader = document.getElementById('headerManagerViewLink'); // In header
-
-            // Show Manager View links if applicable
-            const isManager = localStorage.getItem('tpoCrmIsManager') === 'true';
-            if (isManager) {
-                 if (managerViewLinkContent) managerViewLinkContent.style.display = 'inline-block';
-                 if (managerViewLinkHeader) managerViewLinkHeader.style.display = 'list-item'; // Show header link
-            }
-            // --- End NEW ---
+            // UI updates (login status, manager link) are now handled in checkAuthorization
 
 
             // Add JavaScript to toggle the collapsible sections (Original CRM)
@@ -767,14 +801,15 @@
 
             function fetchFreshData(showLoadingIndicator = true) {
                 if(showLoadingIndicator) showLoading('Fetching dispensary data...');
-                if (!authToken) { // Add check for token before fetching
-                    console.error("Cannot fetch data: Auth token missing.");
+                const sessionToken = localStorage.getItem('tpoSessionToken'); // Use Session token
+                if (!sessionToken) {
+                    console.error("Cannot fetch data: Session token missing.");
                     hideLoading();
                     showMessage(errorMessageElement, 'Authentication error. Please login again.');
-                    logout(); // Redirect to login if token is missing
+                    logout(); // Use the new logout function
                     return;
                 }
-                fetch(`${APPS_SCRIPT_URL}?action=getAllDispensaryData&token=${authToken}`)
+                fetch(`${CRM_API_URL}?action=getAllDispensaryData&token=${sessionToken}`) // Use CRM_API_URL and sessionToken
                     .then(response => {
                         if (response.status === 401) { // Unauthorized
                            throw new Error('Unauthorized');
@@ -820,14 +855,15 @@
                     return;
                 }
                 showLoading('Fetching setup data...');
-                 if (!authToken) { // Add check for token
-                    console.error("Cannot fetch setup data: Auth token missing.");
+                const sessionToken = localStorage.getItem('tpoSessionToken'); // Use Session token
+                 if (!sessionToken) {
+                    console.error("Cannot fetch setup data: Session token missing.");
                     hideLoading();
                     showMessage(errorMessageElement, 'Authentication error. Please login again.');
-                    logout();
+                    logout(); // Use the new logout function
                     return;
                 }
-                fetch(`${APPS_SCRIPT_URL}?action=getSetupData&token=${authToken}`)
+                fetch(`${CRM_API_URL}?action=getSetupData&token=${sessionToken}`) // Use CRM_API_URL and sessionToken
                     .then(response => {
                          if (response.status === 401) throw new Error('Unauthorized'); // Check auth
                          if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -861,10 +897,15 @@
             }
 
              function populateDispensarySelect() {
-                const currentSelectedValue = selectDispensary.value;
+                // Store current filter values
+                const currentSelectedDispensary = selectDispensary.value;
+                const currentMemberFilter = filterAssignedMember.value;
+                const currentPipelineFilter = filterSalesPipeline.value;
+
+                // Get filter values for processing
                 const nameFilter = searchDispensary.value.toLowerCase();
-                const memberFilter = filterAssignedMember.value;
-                const pipelineFilter = filterSalesPipeline.value;
+                const memberFilter = currentMemberFilter; // Use stored value for filtering logic
+                const pipelineFilter = currentPipelineFilter; // Use stored value for filtering logic
                 const addressFilter = filterDispensaryAddress.value.toLowerCase();
                 const additionalFilter = filterAdditional.value.toLowerCase();
 
@@ -902,13 +943,13 @@
                             selectDispensary.appendChild(option);
                         }
                     });
-                    // Try to re-select the previously selected value
-                    if (selectDispensary.querySelector(`option[value="${escapeHtml(currentSelectedValue)}"]`)) {
-                         selectDispensary.value = currentSelectedValue;
+                    // Try to re-select the previously selected dispensary value
+                    if (selectDispensary.querySelector(`option[value="${escapeHtml(currentSelectedDispensary)}"]`)) {
+                         selectDispensary.value = currentSelectedDispensary;
                          // If re-selecting, ensure form fields are populated
-                         if (currentSelectedValue && currentSelectedValue !== 'new') {
-                            populateFormFields(currentSelectedValue);
-                         } else if (!currentSelectedValue) {
+                         if (currentSelectedDispensary && currentSelectedDispensary !== 'new') {
+                            populateFormFields(currentSelectedDispensary);
+                         } else if (!currentSelectedDispensary) {
                             clearFormFields(); // Clear if "Select" was chosen
                          }
                     } else {
@@ -920,6 +961,10 @@
                      // If no data, ensure form is clear
                      clearFormFields();
                 }
+
+                // Restore filter dropdown selections
+                filterAssignedMember.value = currentMemberFilter;
+                filterSalesPipeline.value = currentPipelineFilter;
             }
 
             function populateFormFields(dispensaryName) {
@@ -1167,13 +1212,14 @@
                 const files = fileInput.files;
 
                 const sendData = () => {
-                    if (!authToken) {
-                        showMessage(errorMessageElement, 'Authentication token missing. Please log in again.');
+                    const sessionToken = localStorage.getItem('tpoSessionToken'); // Use Session token
+                    if (!sessionToken) {
+                        showMessage(errorMessageElement, 'Authentication error. Please log in again.');
                         hideLoading();
-                        logout();
+                        logout(); // Use the new logout function
                         return;
                     }
-                    formData.append('token', authToken); // Add token
+                    formData.append('token', sessionToken); // Add Session token
 
                     // Log FormData for debugging
                     // for (let [key, value] of formData.entries()) {
@@ -1181,7 +1227,7 @@
                     // }
 
 
-                    fetch(APPS_SCRIPT_URL, {
+                    fetch(CRM_API_URL, { // Use CRM_API_URL for submission
                         method: 'POST',
                         body: formData // Send FormData directly
                     })
