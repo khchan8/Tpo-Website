@@ -171,6 +171,7 @@
         <ul>
           <li><a class="nav-link scrollto" href="index.html">Home</a></li>
           <li><a class="nav-link scrollto active" href="#fuzzies-data">Fuzzies Data</a></li>
+          <li><a class="nav-link" href="CRMv4.html">CRM</a></li> <!-- Added CRM Link -->
           <li><a class="nav-link" href="#" onclick="logout()">Logout</a></li> <!-- Logout link -->
         </ul>
         <i class="bi bi-list mobile-nav-toggle"></i>
@@ -690,7 +691,7 @@
     }
     // Set login page based on device
     const loginPage = isMobileDevice() ? 'tpologin-m.html' : 'tpologin.html';
-    const requiredToken = 'tpoEmployeeToken'; // Adjust if a different token is needed for Fuzzies
+    const requiredToken = 'tpoFuzziesToken'; // Changed required token for Fuzzies page
 
     // --- Helper: Redirect to Login ---
     function redirectToLogin(reason) {
