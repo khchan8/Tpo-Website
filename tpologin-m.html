@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>TPO Wellness - Employee Login</title>
+  <meta content="" name="description">
+  <meta content="" name="keywords">
+
+  <!-- Favicons -->
+  <link href="assets/img/favicon.png" rel="icon">
+  <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Raleway:300,300i,400,400i,500,500i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="assets/vendor/boxicons/css/boxicons.min.css" rel="stylesheet"> <!-- Needed for footer icons -->
+  <!-- <link href="assets/vendor/aos/aos.css" rel="stylesheet"> --> <!-- Optional, if needed -->
+
+  <!-- Main CSS File -->
+  <link href="assets/css/style.css" rel="stylesheet">
+
+  <!-- Custom Styles for Login Page -->
+  <style>
+    /* Styles for the login form section */
+    .login-section {
+      padding: 60px 0; /* Padding for the section */
+      width: 100%; /* Section takes full width */
+      flex-grow: 1; /* Make the section fill the main area */
+      display: flex;
+      align-items: center; /* Center its content (the container div) vertically */
+      justify-content: center; /* Center its content horizontally */
+    }
+    .login-container {
+      background-color: white;
+      padding: 40px; /* Increased padding */
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 450px; /* Slightly wider */
+      margin-top: 20px; /* Add some space from header */
+      margin-bottom: 20px; /* Add some space from footer */
+    }
+    .login-container h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 25px;
+      font-size: 24px; /* Adjusted size */
+      font-weight: 600;
+    }
+     .login-container .logo { text-align: center; margin-bottom: 20px; } /* Keep logo style if needed */
+     .login-container .logo img { max-width: 180px; } /* Adjusted size */
+    .login-container .form-group { margin-bottom: 20px; } /* Increased spacing */
+    .login-container label { display: block; margin-bottom: 8px; font-weight: bold; color: #555; font-size: 14px; }
+    .login-container input[type="email"],
+    .login-container input[type="password"] {
+      width: 100%;
+      padding: 12px 15px; /* Increased padding */
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+      font-size: 16px;
+    }
+    .login-container button {
+      width: 100%;
+      padding: 12px;
+      background-color: #1e56a0; /* Theme color */
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      transition: background-color 0.3s;
+    }
+    .login-container button:hover {
+      background-color: #1f1cd4; /* Theme hover color */
+    }
+    .login-container button:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+    }
+    .login-container .error-message { color: #dc3545; margin-top: 15px; text-align: center; min-height: 1em; font-size: 14px; }
+    .login-container .info-message { margin-top: 25px; text-align: center; color: #666; font-size: 14px; }
+
+    /* Make body a flex container to push footer down */
+    body {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh; /* Body takes full viewport height */
+    }
+    main {
+        flex-grow: 1; /* Main fills space between header/footer */
+        display: flex; /* Use flexbox to allow login-section to grow */
+        flex-direction: column; /* Stack children vertically */
+    }
+  </style>
+
+</head>
+<body>
+
+  <!-- ======= Top Bar ======= -->
+  <section id="topbar" class="d-flex align-items-center">
+    <div class="container d-flex justify-content-center justify-content-md-between">
+      <div class="contact-info d-flex align-items-center">
+        <i class="bi bi-envelope d-flex align-items-center"><a href="mailto:info@tpo-wellness.com">info@tpo-wellness.com</a></i>
+        <i class="bi bi-phone d-flex align-items-center ms-4"><span>+66 87 789 4950</span></i>
+      </div>
+      <div class="user-info d-none d-md-flex align-items-center"> <!-- Placeholder for login status -->
+         <!-- Login status will be added dynamically if user is logged in -->
+         <!-- <span id="loginStatus">Logged in as: example@email.com</span> -->
+         <!-- <button id="logoutButton" class="logout-btn" onclick="logout()">Logout</button> -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ======= Header ======= -->
+  <header id="header" class="d-flex align-items-center">
+    <div class="container d-flex align-items-center justify-content-between">
+      <h1 class="logo"><a href="index.html"><img src="./assets/img/TPOLogo.png" alt="TPO Wellness Logo" class="img-fluid"></a></h1>
+      <nav id="navbar" class="navbar">
+        <ul>
+          <!-- Simplified Nav for Login Page -->
+          <li><a class="nav-link scrollto" href="index.html#hero">Home</a></li>
+          <li><a class="nav-link scrollto" href="index.html#about">About</a></li>
+          <li><a class="nav-link scrollto" href="index.html#contact">Contact</a></li>
+          <li class="dropdown"><a href="#" class="active"><span>Login</span> <i class="bi bi-chevron-down"></i></a>
+            <ul>
+              <li><a href="tpologin.html" class="active">Employee Login</a></li> <!-- Mark as active -->
+              <li><a href="Login.html">CRM Login</a></li>
+              <li><a href="customerlogin.html">Customer Login</a></li>
+            </ul>
+          </li>
+        </ul>
+        <i class="bi bi-list mobile-nav-toggle"></i>
+      </nav><!-- .navbar -->
+    </div>
+  </header><!-- End Header -->
+
+  <main id="main">
+    <!-- ======= Login Section ======= -->
+    <section class="login-section">
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-lg-6 col-md-8">
+            <div class="login-container">
+              <!-- Logo can be added here if desired -->
+              <!-- <div class="logo">
+                <img src="assets/img/TPOLogo.png" alt="TPO Wellness">
+              </div> -->
+              <h1>Employee Login</h1>
+              <div id="login-form">
+                <div class="form-group">
+                  <label for="email">Email</label>
+                  <input type="email" id="email" name="email" class="form-control" required>
+                </div>
+                <div class="form-group">
+                  <label for="password">Password</label>
+                  <input type="password" id="password" name="password" class="form-control" required>
+                </div>
+                <button type="button" id="loginButton" onclick="login()">Login</button>
+                <div id="error-message" class="error-message"></div>
+              </div>
+              <div class="info-message">
+                <p>If you're having trouble logging in, please contact your administrator.</p> <!-- Keep admin message -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section><!-- End Login Section -->
+  </main><!-- End #main -->
+
+  <!-- ======= Footer ======= -->
+  <footer id="footer">
+    <div class="footer-top">
+      <div class="container">
+        <div class="row">
+
+          <div class="col-lg-4 col-md-6">
+            <div class="footer-info">
+              <h3>TPO Wellness</h3>
+              <p>
+                TPO Wellness Ltd. (Head Office)<br>
+                No. 122/7 Moo5, Pakkret Sub-District, Pakkret District.<br>
+                Nonthaburi Province 11120<br><br>
+                <strong>Tel:</strong> +662-687-7811,+6694-7365518<br>
+                <strong>Email:</strong> info@tpo-wellness.com<br>
+              </p>
+              <div class="social-links mt-3">
+                <a href="#" class="twitter"><i class="bx bxl-twitter"></i></a>
+                <a href="#" class="facebook"><i class="bx bxl-facebook"></i></a>
+                <a href="#" class="instagram"><i class="bx bxl-instagram"></i></a>
+                <a href="#" class="linkedin"><i class="bx bxl-linkedin"></i></a>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-2 col-md-6 footer-links">
+            <h4>Useful Links</h4>
+            <ul>
+              <li><i class="bx bx-chevron-right"></i> <a href="index.html#hero">Home</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="index.html#about">About us</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="index.html#services">Services</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="#">Terms of service</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="#">Privacy policy</a></li>
+            </ul>
+          </div>
+
+          <div class="col-lg-2 col-md-6 footer-links">
+            <h4>Our Services</h4>
+             <ul>
+               <li><i class="bx bx-chevron-right"></i> <a href="#">Edibles Manufacturing</a></li>
+               <li><i class="bx bx-chevron-right"></i> <a href="#">Pre-Roll Production</a></li>
+               <li><i class="bx bx-chevron-right"></i> <a href="#">Cannabis Flower Packaging</a></li>
+               <li><i class="bx bx-chevron-right"></i> <a href="#">R&D Services</a></li>
+               <li><i class="bx bx-chevron-right"></i> <a href="#">Quality Control & Assurance</a></li>
+             </ul>
+          </div>
+
+          <div class="col-lg-4 col-md-6 footer-newsletter">
+            <h4>Our Newsletter</h4>
+            <p>Subscribe to our newsletter for the latest updates</p>
+            <form action="" method="post"> <!-- Add action/method if needed -->
+              <input type="email" name="email"><input type="submit" value="Subscribe">
+            </form>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="copyright">
+        &copy; Copyright <strong><span>TPO Wellness</span></strong>. All Rights Reserved
+      </div>
+      <div class="credits">
+        Designed by <a href="#">KH</a>
+      </div>
+    </div>
+  </footer><!-- End Footer -->
+
+  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+  <!-- <div id="preloader"></div> --> <!-- Preloader might not be needed for login page -->
+
+  <!-- Vendor JS Files -->
+  <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <!-- <script src="assets/vendor/aos/aos.js"></script> --> <!-- Optional -->
+  <!-- <script src="assets/vendor/glightbox/js/glightbox.min.js"></script> --> <!-- Optional -->
+  <!-- <script src="assets/vendor/isotope-layout/isotope.pkgd.min.js"></script> --> <!-- Optional -->
+  <!-- <script src="assets/vendor/swiper/swiper-bundle.min.js"></script> --> <!-- Optional -->
+
+  <!-- Template Main JS File -->
+  <script src="assets/js/main.js"></script> <!-- Needed for mobile nav toggle -->
+
+  <!-- Login Script -->
+  <script>
+    // Google Apps Script URL for Employee Login
+    // !!! IMPORTANT: This URL should point to your deployed NewCode.gs script !!!
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyo2QuCUiPwUlByCgmR5zp6kymmvLbQPSjDHbaJ9yZD5rqF8M8RalXwqdda8VZnEL2hkQ/exec';
+
+    // Get error message from URL parameters (if any)
+    const urlParams = new URLSearchParams(window.location.search);
+    const errorParam = urlParams.get('error');
+    
+    const errorDiv = document.getElementById('error-message');
+    const loginButton = document.getElementById('loginButton');
+
+    // Function to disable/enable buttons
+    function setButtonsDisabled(disabled) {
+        if(loginButton) loginButton.disabled = disabled;
+    }
+
+    // Employee login function (mimics Login.html flow)
+    function login() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      errorDiv.textContent = ''; // Clear previous errors
+
+      if (!email || !password) {
+        errorDiv.textContent = 'Please enter both email and password';
+        return;
+      }
+
+      errorDiv.textContent = 'Logging in...';
+      setButtonsDisabled(true);
+
+      const loginUrl = new URL(APPS_SCRIPT_URL);
+      loginUrl.searchParams.append('action', 'handleLogin');
+      loginUrl.searchParams.append('email', email);
+      loginUrl.searchParams.append('password', password);
+      // 'type' parameter is no longer needed for handleLogin
+
+      fetch(loginUrl, { method: 'GET' })
+      .then(response => {
+        // Check if response is ok (status 200-299)
+        if (!response.ok) {
+          // Try to parse error from JSON response if possible
+          return response.json().then(errData => {
+            throw new Error(errData.message || `Network response was not ok (${response.status})`);
+          }).catch(() => {
+            // Fallback if response is not JSON or parsing fails
+            throw new Error(`Network response was not ok (${response.status})`);
+          });
+        }
+        return response.json(); // Parse successful JSON response
+      })
+      .then(result => {
+        setButtonsDisabled(false);
+        // Check the new success flag and necessary fields from the JSON response
+        if (result && result.success === true && result.sessionToken && result.grantedTokens && result.linkedPage) {
+          errorDiv.textContent = ''; // Clear any previous error message
+          console.log(`Login success. Storing tokens and redirecting to ${result.linkedPage}...`);
+
+          // Store session token
+          localStorage.setItem('tpoSessionToken', result.sessionToken);
+          console.log('Stored tpoSessionToken:', result.sessionToken);
+
+          // Store granted tokens as a JSON string
+          localStorage.setItem('tpoGrantedTokens', JSON.stringify(result.grantedTokens));
+          console.log('Stored tpoGrantedTokens:', JSON.stringify(result.grantedTokens));
+
+          // Store CRM API token if it exists
+          if (result.crmApiToken) {
+            localStorage.setItem('tpoCrmApiToken', result.crmApiToken);
+            console.log('Stored tpoCrmApiToken:', result.crmApiToken);
+          } else {
+            // Ensure any old CRM token is cleared if not provided this time
+            localStorage.removeItem('tpoCrmApiToken');
+            console.log('No crmApiToken received, cleared any existing tpoCrmApiToken.');
+          }
+
+          // Store user email for display purposes
+          localStorage.setItem('tpoUserEmail', result.email);
+          console.log('Stored tpoUserEmail:', result.email);
+
+          // Clear old/potentially conflicting storage items (keep this)
+          // localStorage.removeItem('tpoEmployeeToken'); // Example if this was used before
+
+          // Redirect to the linked page. Browser handles relative paths correctly.
+          window.top.location.href = result.linkedPage; // <-- Simpler and works for file:///
+
+        } else {
+          // Display the error message from the script's JSON response
+          errorDiv.textContent = result.message || 'Login failed. Please check your credentials or configuration.';
+          console.log("Login failed:", result.message || 'Unknown error or missing data in response', result);
+          // Clear any potentially partially stored tokens on failure
+          localStorage.removeItem('tpoSessionToken');
+          localStorage.removeItem('tpoGrantedTokens');
+          localStorage.removeItem('tpoCrmApiToken');
+        }
+      })
+      .catch(error => {
+        // Handle fetch errors (network issues, CORS, parsing errors)
+        setButtonsDisabled(false);
+        console.error('Error during login fetch:', error);
+        errorDiv.textContent = 'An error occurred during login: ' + error.message;
+        // Clear any potentially partially stored tokens on fetch error
+        localStorage.removeItem('tpoSessionToken');
+        localStorage.removeItem('tpoGrantedTokens');
+        localStorage.removeItem('tpoCrmApiToken');
+      });
+
+      /*
+      // --- OLD CRM LOGIN LOGIC (Commented out for reference) ---
+      const loginUrl = new URL(APPS_SCRIPT_URL); // This URL needs to be the NEW one
+      loginUrl.searchParams.append('action', 'handleLogin'); // Action might be different for new script
+      loginUrl.searchParams.append('email', email);
+      loginUrl.searchParams.append('password', password);
+      loginUrl.searchParams.append('type', 'employee'); // Add type parameter
+
+      fetch(loginUrl, { method: 'GET' })
+      .then(response => {
+        if (!response.ok) { throw new Error(`Network response was not ok (${response.status})`); }
+        return response.json();
+      })
+      .then(result => {
+        setButtonsDisabled(false);
+        if (result && result.success && result.linkedPage) {
+          errorDiv.textContent = '';
+          console.log("Login success. Redirecting to:", result.linkedPage);
+          window.top.location.href = result.linkedPage; // Redirect to linked page
+        } else {
+          errorDiv.textContent = result.message || 'Login failed. Please check your credentials.';
+        }
+      })
+      .catch(error => {
+        setButtonsDisabled(false);
+        console.error('Error during login fetch:', error);
+        errorDiv.textContent = 'An error occurred during login: ' + error.message;
+      });
+      */
+    }
+
+    // Logout function (Not typically needed on basic login pages, keep CRM version commented)
+    /*
+    function logout() {
+        console.log("Logging out...");
+        localStorage.removeItem('tpoCrmToken');
+        localStorage.removeItem('tpoCrmUserEmail');
+        localStorage.removeItem('tpoCrmIsManager');
+        // Redirect to login page (this page) without any token/error
+        window.top.location.href = '/Login.html'; // Or maybe index.html?
+    }
+    */
+
+    // Add event listener for Enter key in password field
+    document.getElementById('password').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+         if (!loginButton || !loginButton.disabled) {
+            login();
+         }
+      }
+    });
+
+    // Display error message from URL parameter on load
+    document.addEventListener('DOMContentLoaded', function() {
+      if (errorParam) {
+        errorDiv.textContent = decodeURIComponent(errorParam);
+      }
+      // Removed login status check from basic login page
+    });
+  </script>
+
+</body>
+</html>
