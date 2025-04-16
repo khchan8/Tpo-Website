@@ -520,7 +520,12 @@
         // --- Authentication & API URLs ---
         const AUTH_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyIDeCYmpl5qzXQJoDmdaC2t7suZaky8Ug5y_cpPV56CHkI8Bu2i1_tJiHXP2-9Tc_Txw/exec'; // NewCode.gs for Auth
         const CRM_API_URL = 'https://script.google.com/macros/s/AKfycbzRENMEZ5uXIxU-RYAwSTsi19ytLMtXgc0JgNnwkHaXkmBFuopiL89b9um5CQiFvZ8x/exec'; // Code.gs for CRM data operations
-        const loginPage = 'tpologin.html';
+        // Function to detect mobile devices
+        function isMobileDevice() {
+          return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        }
+        // Set login page based on device
+        const loginPage = isMobileDevice() ? 'tpologin-m.html' : 'tpologin.html';
         const requiredToken = 'tpoCRMToken'; // Specific token needed for this page
 
         // --- Messaging Functions (Keep original CRM functions) ---

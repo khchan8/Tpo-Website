@@ -850,6 +850,29 @@
 	
 	    }); // End window.onload
 	    </script>
+
+	     <!-- Script for Mobile Login Link -->
+	     <script>
+	       function isMobileDevice() {
+	         // Basic check for common mobile user agent strings
+	         return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+	       }
+
+	       document.addEventListener('DOMContentLoaded', function() {
+	         if (isMobileDevice()) {
+	           console.log("Mobile device detected, updating login links.");
+	           // Find all links pointing to tpologin.html
+	           const loginLinks = document.querySelectorAll('a[href="tpologin.html"]');
+	           loginLinks.forEach(link => {
+	             console.log("Updating link:", link);
+	             link.href = 'tpologin-m.html';
+	           });
+	         } else {
+	           console.log("Desktop device detected, login links remain unchanged.");
+	         }
+	       });
+	     </script>
+
 	</body>
 </body>
 
