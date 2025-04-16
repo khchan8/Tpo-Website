@@ -424,15 +424,28 @@ function handleChangePassword(requestData) {
 
 // --- doOptions (Ensure this is correct for Preflight Testing) ---
 function doOptions(e) {
-  // --- Simplified for Debugging ---
-  // Just try to log that this function was entered at all.
+  // Handle CORS preflight requests.
+  // Respond with headers that allow the actual request (GET/POST) from any origin.
+  logToSheet('--- doOptions EXECUTED ---'); // Log execution
+  Logger.log('--- doOptions EXECUTED ---');
+
   try {
-     logToSheet('--- MINIMAL doOptions EXECUTED ---');
-     Logger.log('--- MINIMAL doOptions EXECUTED ---');
-  } catch (logErr) {
-     // If even logging fails, something is very wrong early on.
-     // We can't easily log this failure itself.
+    const output = ContentService.createTextOutput(); // Create an empty text output
+    // Set essential CORS headers for preflight
+    output.setHeaders({
+      'Access-Control-Allow-Origin': '*', // Allow requests from any origin
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS', // Allow these methods
+      'Access-Control-Allow-Headers': 'Content-Type', // Allow this header in the actual request
+      'Access-Control-Max-Age': '86400' // Cache preflight response for 1 day (optional)
+    });
+    logToSheet('doOptions: Set CORS headers successfully.');
+    return output;
+  } catch (headerError) {
+    // Log if setting headers fails, but still try to return something minimal
+    logToSheet('doOptions CRITICAL HEADER ERROR: ' + headerError + '. Stack: ' + headerError.stack);
+    Logger.log('doOptions CRITICAL HEADER ERROR: ' + headerError);
+    // Fallback: Return a simple response without headers if ContentService fails badly
+    // This likely won't satisfy the preflight, but it's better than throwing an error here.
+    return ContentService.createTextOutput('');
   }
-  // Return a minimal response, though it won't have correct headers if ContentService fails.
-  return ContentService.createTextOutput('');
 }
