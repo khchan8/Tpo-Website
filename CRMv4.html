@@ -599,143 +599,91 @@
           window.top.location.href = redirectUrl;
         }
 
-        // --- Authorization Check (New Standard - Runs after successful authentication) ---
-        function checkAuthorization(grantedTokens, userEmail) {
-            console.log("Checking authorization for:", requiredToken);
-            // Ensure grantedTokens is an array before checking includes()
-            const tokensArray = Array.isArray(grantedTokens) ? grantedTokens : [];
+        // --- Authorization Check (New Standard - Relies on localStorage) ---
+        function checkAuthorization() { // No parameters needed
+            console.log("Checking authorization for required token:", requiredToken);
 
-            if (!tokensArray.includes(requiredToken)) {
-                redirectToLogin(`Access denied. Required permission (${requiredToken}) not found.`);
+            // --- Retrieve data from localStorage ---
+            const sessionToken = localStorage.getItem('tpoSessionToken');
+            const userEmail = localStorage.getItem('tpoUserEmail');
+            const grantedTokensString = localStorage.getItem('tpoGrantedTokens');
+            let grantedTokens = []; // Default to empty array
+
+            // 1. Check if session token exists at all
+            if (!sessionToken) {
+                 console.log("Authorization failed: Session token missing in localStorage.");
+                 redirectToLogin('Session token missing.'); // Redirect if no token
+                 return false; // Indicate authorization failed
+            }
+
+            // 2. Parse granted tokens if they exist
+            if (grantedTokensString) {
+                try {
+                    const parsedTokens = JSON.parse(grantedTokensString);
+                    // Ensure the parsed result is actually an array
+                    if (Array.isArray(parsedTokens)) {
+                         grantedTokens = parsedTokens;
+                    } else {
+                         console.warn("Parsed granted tokens from localStorage is not an array:", parsedTokens);
+                    }
+                } catch (e) {
+                    console.error("Error parsing granted tokens from localStorage:", e);
+                    // Keep grantedTokens as empty array if parsing fails
+                }
+            }
+            console.log("Retrieved from localStorage - Email:", userEmail, "Granted Tokens:", grantedTokens);
+
+            // 3. Check if the required token is present in the granted tokens
+            if (!grantedTokens.includes(requiredToken)) {
+                console.log("Authorization failed: Required token not found in granted tokens.");
+                // Use the retrieved email for the message if available
+                redirectToLogin(`Access denied for ${userEmail || 'user'}. Required permission (${requiredToken}) not found.`);
                 return false; // Indicate authorization failed
             }
 
-            // tpoCrmApiToken check removed as per Clean_Auth_Migration_Plan.md
-            console.log("Authorization successful based on granted tokens.");
+            // 4. If checks pass, update UI and return true
+            console.log("Authorization successful based on localStorage tokens.");
 
-            // Update UI with user info
+            // Update UI with user info (using retrieved email)
             const loginStatusSpan = document.getElementById('loginStatus');
-            // Logout button is handled by header link, no need to show/hide a button element
             if (loginStatusSpan && userEmail) {
                  loginStatusSpan.textContent = `Logged in as: ${userEmail}`;
+            } else if (loginStatusSpan) {
+                 loginStatusSpan.textContent = `Logged in (email not found)`; // Fallback
             }
 
-            // Show Manager View links if applicable (check granted tokens)
-            const isManager = tokensArray.includes('tpoCRMManagerToken');
-            const managerViewLinkContent = document.getElementById('managerViewLink'); // In content
-            const managerViewLinkHeader = document.getElementById('headerManagerViewLink'); // In header
-            if (isManager) {
-                 if (managerViewLinkContent) managerViewLinkContent.style.display = 'inline-block';
-                 if (managerViewLinkHeader) managerViewLinkHeader.style.display = 'list-item'; // Show header link
-                 console.log("Manager access granted.");
-            } else {
-                 if (managerViewLinkContent) managerViewLinkContent.style.display = 'none';
-                 if (managerViewLinkHeader) managerViewLinkHeader.style.display = 'none';
-                 console.log("Standard CRM access granted.");
+            // Show/Hide Manager links based on retrieved tokens (example for CRMv4.html)
+            // This logic might differ slightly between CRMv4.html and CRMv4-M.html
+            const isManager = grantedTokens.includes('tpoCRMManagerToken');
+            const managerViewLinkContent = document.getElementById('managerViewLink'); // Link within page content
+            const managerViewLinkHeader = document.getElementById('headerManagerViewLink'); // Link in header nav
+
+            if (managerViewLinkContent) {
+                managerViewLinkContent.style.display = isManager ? 'inline-block' : 'none';
+            }
+            if (managerViewLinkHeader) {
+                // Use 'list-item' for display if it's an <li> element, otherwise 'inline' or 'block'
+                managerViewLinkHeader.style.display = isManager ? 'list-item' : 'none';
             }
 
             return true; // Indicate authorization succeeded
         }
 
-        // --- Authentication Check Function (Runs on Load - Uses JSONP) ---
-        function checkAuthentication() {
-          // Get sessionToken ONLY from localStorage
-          const sessionToken = localStorage.getItem('tpoSessionToken');
-          const userEmail = localStorage.getItem('tpoUserEmail'); // Get email for display later
-
-          if (!sessionToken) {
-            redirectToLogin('Session not found. Please login.');
-            return; // Stop script execution
-          }
-
-          console.log('Session token found in localStorage, validating via JSONP...');
-          showLoading("Validating session..."); // Show loading indicator
-
-          // --- JSONP for Validation ---
-          const callbackName = 'handleCrmValidationResponse'; // Unique callback name for this page
-          const scriptId = 'jsonp-' + callbackName + '-' + Date.now();
-          let script = null;
-          let timeoutId = null;
-
-          // Define global callback
-          window[callbackName] = function(result) {
-              console.log('Validation response (JSONP):', result);
-              hideLoading(); // Hide loading indicator
-
-              // Cleanup
-              if (script && script.parentNode) {
-                try { script.parentNode.removeChild(script); } catch (e) { console.warn("Error removing JSONP script tag:", e); }
-              }
-              try { delete window[callbackName]; } catch (e) { console.warn("Error deleting JSONP callback:", e); }
-              if (timeoutId) clearTimeout(timeoutId);
-
-              // Process result
-              try {
-                  if (result && result.valid === true && result.email && result.tokens) {
-                    console.log('Session token validated successfully for user: ' + result.email);
-
-                    // Store/update granted tokens in localStorage
-                    localStorage.setItem('tpoGrantedTokens', JSON.stringify(result.tokens));
-                    console.log('Updated granted tokens in localStorage:', JSON.stringify(result.tokens));
-
-                    // Proceed to Authorization Check
-                    // Use the email from the validation result primarily, fallback to localStorage email
-                    if (checkAuthorization(result.tokens, result.email || userEmail)) {
-                        // If authorization passes, initialize the CRM app
-                        initializeApp();
-                    }
-                    // If authorization fails, redirectToLogin is called within checkAuthorization
-
-                  } else {
-                    // Token is invalid or expired
-                    redirectToLogin(result.message || 'Invalid or expired session. Please login again.');
-                  }
-              } catch (error) {
-                  console.error('Error processing validation response:', error);
-                  redirectToLogin('Error processing validation: ' + error.message + '. Please login again.');
-              }
-          };
-
-          // Timeout
-          timeoutId = setTimeout(() => {
-              console.error('Validation JSONP request timed out.');
-              hideLoading(); // Hide loading indicator on timeout
-              // Cleanup on timeout
-              if (script && script.parentNode) {
-                try { script.parentNode.removeChild(script); } catch (e) { console.warn("Error removing JSONP script tag on timeout:", e); }
-              }
-              try { delete window[callbackName]; } catch (e) { console.warn("Error deleting JSONP callback on timeout:", e); }
-              // Redirect after cleanup
-              redirectToLogin('Session validation timed out. Please login again.');
-          }, 15000); // 15 seconds
-
-          // Construct URL and make request
-          const validationUrl = new URL(AUTH_SCRIPT_URL);
-          validationUrl.searchParams.append('action', 'validateSessionToken');
-          validationUrl.searchParams.append('sessionToken', sessionToken);
-          validationUrl.searchParams.append('callback', callbackName);
-
-          script = document.createElement('script');
-          script.id = scriptId;
-          script.src = validationUrl.toString();
-          // Add error handling for script loading itself
-          script.onerror = () => {
-              console.error('Failed to load validation script:', script.src);
-              hideLoading();
-              clearTimeout(timeoutId); // Clear timeout as it's a load error, not a response timeout
-              try { delete window[callbackName]; } catch (e) { /* ignore */ }
-              redirectToLogin('Failed to contact authentication service. Please try again.');
-          };
-          console.log('Requesting Validation JSONP URL:', script.src);
-          document.head.appendChild(script);
-        }
+        // --- Authentication Check Function REMOVED ---
+        // function checkAuthentication() { ... } // REMOVED
 
         // --- Main Application Initialization ---
         function initializeApp() {
-            console.log("Authentication successful. Initializing application...");
+            // Call authorization check first.
+            // checkAuthorization now retrieves data from localStorage and returns true/false.
+            if (!checkAuthorization()) {
+                 console.log("Authorization failed in initializeApp. Stopping initialization.");
+                 return; // Stop if authorization fails
+            }
 
-            // UI updates (login status, manager link) are now handled in checkAuthorization
+            console.log("Authentication/Authorization successful. Initializing application...");
 
+            // Existing initializeApp logic continues here...
 
             // Add JavaScript to toggle the collapsible sections (Original CRM)
             document.querySelectorAll('.collapsible-header').forEach(header => {
@@ -1538,8 +1486,8 @@
 
         } // End of initializeApp function
 
-        // --- Start Authentication Check on Page Load ---
-        document.addEventListener('DOMContentLoaded', checkAuthentication);
+        // --- Start Initialization on Page Load ---
+        document.addEventListener('DOMContentLoaded', initializeApp); // Call initializeApp directly
 
     </script>
 
