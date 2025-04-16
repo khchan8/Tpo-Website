@@ -282,7 +282,7 @@
   <script>
     // Google Apps Script URL for Employee Login
     // !!! IMPORTANT: This URL should point to your deployed NewCode.gs script !!!
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyIDeCYmpl5qzXQJoDmdaC2t7suZaky8Ug5y_cpPV56CHkI8Bu2i1_tJiHXP2-9Tc_Txw/exec';
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwO7uZWWAL2UrbN7Adqlz8Y3ypskh96Ls2qaPaEdTHRL6RI1v2ctCAB9Iw2FeaNQn9BCQ/exec';
 
     // Get error message from URL parameters (if any)
     const urlParams = new URLSearchParams(window.location.search);
@@ -361,73 +361,73 @@
         changeErrorDiv.textContent = 'Updating password...';
         setButtonsDisabled(true);
 
-        // --- JSONP Implementation for Password Change ---
-        const callbackName = 'handleChangePasswordResponse';
-        const scriptId = 'jsonp-' + callbackName + '-' + Date.now();
-        let script = null;
-        let timeoutId = null;
+        const payload = {
+            action: "handleChangePassword",
+            email: email,
+            currentPassword: currentPassword,
+            newPassword: newPassword
+        };
 
-        // Define the global callback function
-        window[callbackName] = function(data) {
-            console.log('Password change response data (JSONP):', data);
-
-            // Cleanup
-            if (script && script.parentNode) {
-              script.parentNode.removeChild(script);
+        fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            // We need to bypass CORS for POST requests to Apps Script web apps
+            // The standard way is 'no-cors', but this prevents reading the response.
+            // The alternative is to have the Apps Script return JSONP or handle CORS correctly.
+            // For now, let's assume the Apps Script handles CORS via headers.
+            // mode: 'cors', // Default, requires CORS headers from server
+            headers: {
+                // Apps Script usually expects 'application/x-www-form-urlencoded' or 'text/plain'
+                // If doPost expects JSON, this is correct. Adjust if doPost parses differently.
+                 'Content-Type': 'application/json'
+                // 'Content-Type': 'text/plain;charset=utf-8', // Use if doPost parses e.postData.contents directly
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(response => {
+            // Check if response is ok (status 200-299)
+            if (!response.ok) {
+                // Try to parse error from JSON response if possible
+                return response.json().then(errData => {
+                    throw new Error(errData.message || `Network response was not ok (${response.status})`);
+                }).catch(() => {
+                    // Fallback if response is not JSON or parsing fails
+                    throw new Error(`Network response was not ok (${response.status})`);
+                });
             }
-            delete window[callbackName];
-            if (timeoutId) clearTimeout(timeoutId);
-
-            // Process response
+            // Apps Script POST often returns text/plain even if content is JSON
+            // Try parsing as JSON, fallback to text if needed
+            return response.json().catch(() => response.text());
+        })
+        .then(result => {
             setButtonsDisabled(false);
-            try {
-                if (data && data.success === true) {
-                    changeErrorDiv.textContent = data.message || "Password updated successfully.";
+            // Check if result is an object (parsed JSON) and has success property
+            if (typeof result === 'object' && result !== null && result.success !== undefined) {
+                if (result.success === true) {
+                    changeErrorDiv.textContent = result.message || "Password updated successfully.";
                     // Optionally clear fields and return to login after a short delay
                     setTimeout(() => {
                         showLoginForm(); // Go back to login view
                     }, 2000); // 2 second delay
                 } else {
-                    throw new Error(data.message || 'Failed to update password.');
+                    changeErrorDiv.textContent = result.message || 'Failed to update password.';
                 }
-            } catch (error) {
-                console.error('Error processing password change response:', error);
-                changeErrorDiv.textContent = 'An error occurred: ' + error.message;
+            } else {
+                 // Handle cases where response might not be the expected JSON format
+                 console.warn("Received non-standard response:", result);
+                 changeErrorDiv.textContent = 'Received an unexpected response from the server.';
             }
-        };
-
-        // Timeout for JSONP error handling
-        timeoutId = setTimeout(() => {
-            console.error('Password change JSONP request timed out.');
-            changeErrorDiv.textContent = 'Error: Password change request timed out. Please try again.';
-            if (script && script.parentNode) {
-              script.parentNode.removeChild(script);
-            }
-            delete window[callbackName];
+        })
+        .catch(error => {
             setButtonsDisabled(false);
-        }, 15000); // 15 seconds timeout
-
-        // Construct the JSONP URL (using GET)
-        const changePwdUrl = new URL(APPS_SCRIPT_URL);
-        changePwdUrl.searchParams.append('action', 'handleChangePassword');
-        changePwdUrl.searchParams.append('email', email); // Assuming email is available in this scope
-        changePwdUrl.searchParams.append('currentPassword', currentPassword);
-        changePwdUrl.searchParams.append('newPassword', newPassword);
-        changePwdUrl.searchParams.append('callback', callbackName);
-
-        // Create and append the script tag
-        script = document.createElement('script');
-        script.id = scriptId;
-        script.src = changePwdUrl.toString();
-        console.log('Requesting Password Change JSONP URL:', script.src);
-        document.head.appendChild(script);
+            console.error('Error during password change fetch:', error);
+            changeErrorDiv.textContent = 'An error occurred: ' + error.message;
+        });
     }
 
     // --- Employee login function (existing) ---
     function login() {
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
-      const errorDiv = document.getElementById('error-message'); // Corrected ID
 
       errorDiv.textContent = ''; // Clear previous errors
 
@@ -439,102 +439,84 @@
       errorDiv.textContent = 'Logging in...';
       setButtonsDisabled(true);
 
-      // --- JSONP Implementation ---
-      const callbackName = 'handleLoginResponse'; // Define callback function name
-      const scriptId = 'jsonp-' + callbackName + '-' + Date.now(); // Unique ID for the script tag
-      let script = null; // Variable to hold the script element
-      let timeoutId = null; // Variable for the timeout
-
-      // Define the global callback function
-      window[callbackName] = function(data) {
-        console.log('Login response data (JSONP):', data); // Log the received data
-
-        // Cleanup: Remove the script tag and the global callback function
-        if (script && script.parentNode) {
-          script.parentNode.removeChild(script);
-        }
-        delete window[callbackName];
-        if (timeoutId) clearTimeout(timeoutId); // Clear the error timeout
-
-        // Process the response data (similar to fetch .then block)
-        setButtonsDisabled(false); // Re-enable buttons now
-        try {
-          // Check the new success flag and necessary fields from the JSON response
-          if (data && data.success === true && data.sessionToken && data.grantedTokens && data.linkedPage) {
-            errorDiv.textContent = ''; // Clear any previous error message
-            console.log('Login success. Storing tokens and redirecting to ' + data.linkedPage + '...'); // Use concatenation
-
-            // Store session token
-            localStorage.setItem('tpoSessionToken', data.sessionToken);
-            console.log('Stored tpoSessionToken:', data.sessionToken);
-
-            // Store granted tokens as a JSON string
-            localStorage.setItem('tpoGrantedTokens', JSON.stringify(data.grantedTokens));
-            console.log('Stored tpoGrantedTokens:', JSON.stringify(data.grantedTokens));
-
-            // Store CRM API token if it exists (assuming it might be returned)
-            if (data.crmApiToken) {
-              localStorage.setItem('tpoCrmApiToken', data.crmApiToken);
-              console.log('Stored tpoCrmApiToken:', data.crmApiToken);
-            } else {
-              // Ensure any old CRM token is cleared if not provided this time
-              localStorage.removeItem('tpoCrmApiToken');
-              console.log('No crmApiToken received, cleared any existing tpoCrmApiToken.');
-            }
-
-            // Store user email for display purposes
-            localStorage.setItem('tpoUserEmail', data.email);
-            console.log('Stored tpoUserEmail:', data.email);
-
-            // Redirect to the linked page. Browser handles relative paths correctly.
-            window.top.location.href = data.linkedPage; // <-- Simpler and works for file:///
-
-          } else {
-            // Display the error message from the script's JSON response
-            errorDiv.textContent = data.message || 'Login failed. Please check your credentials or configuration.';
-            console.log("Login failed:", data.message || 'Unknown error or missing data in response', data);
-            // Clear any potentially partially stored tokens on failure
-            localStorage.removeItem('tpoSessionToken');
-            localStorage.removeItem('tpoGrantedTokens');
-            localStorage.removeItem('tpoCrmApiToken');
-          }
-        } catch (error) {
-           console.error('Error processing login response:', error);
-           errorDiv.textContent = 'Error processing login response: ' + error.message;
-           // Clear tokens on processing error too
-           localStorage.removeItem('tpoSessionToken');
-           localStorage.removeItem('tpoGrantedTokens');
-           localStorage.removeItem('tpoCrmApiToken');
-        }
-      };
-
-      // Timeout for JSONP error handling (e.g., 15 seconds)
-      timeoutId = setTimeout(() => {
-        console.error('JSONP request timed out.');
-        errorDiv.textContent = 'Error: Login request timed out. Please try again.';
-        if (script && script.parentNode) {
-          script.parentNode.removeChild(script); // Cleanup script tag on timeout
-        }
-        delete window[callbackName]; // Cleanup callback function on timeout
-        setButtonsDisabled(false); // Re-enable buttons
-      }, 15000); // 15 seconds timeout
-
-      // Construct the JSONP URL
       const loginUrl = new URL(APPS_SCRIPT_URL);
       loginUrl.searchParams.append('action', 'handleLogin');
       loginUrl.searchParams.append('email', email);
       loginUrl.searchParams.append('password', password);
-      loginUrl.searchParams.append('callback', callbackName); // Add the callback parameter
+      // 'type' parameter is no longer needed for handleLogin
 
-      // Create and append the script tag
-      script = document.createElement('script');
-      script.id = scriptId;
-      script.src = loginUrl.toString();
-      console.log('Requesting JSONP URL:', script.src); // Log the request URL
-      document.head.appendChild(script); // Append to head to trigger request
+      fetch(loginUrl, { method: 'GET' })
+      .then(response => {
+        // Check if response is ok (status 200-299)
+        if (!response.ok) {
+          // Try to parse error from JSON response if possible
+          return response.json().then(errData => {
+            throw new Error(errData.message || `Network response was not ok (${response.status})`);
+          }).catch(() => {
+            // Fallback if response is not JSON or parsing fails
+            throw new Error(`Network response was not ok (${response.status})`);
+          });
+        }
+        return response.json(); // Parse successful JSON response
+      })
+      .then(result => {
+        setButtonsDisabled(false);
+        // Check the new success flag and necessary fields from the JSON response
+        if (result && result.success === true && result.sessionToken && result.grantedTokens && result.linkedPage) {
+          errorDiv.textContent = ''; // Clear any previous error message
+          console.log(`Login success. Storing tokens and redirecting to ${result.linkedPage}...`);
+
+          // Store session token
+          localStorage.setItem('tpoSessionToken', result.sessionToken);
+          console.log('Stored tpoSessionToken:', result.sessionToken);
+
+          // Store granted tokens as a JSON string
+          localStorage.setItem('tpoGrantedTokens', JSON.stringify(result.grantedTokens));
+          console.log('Stored tpoGrantedTokens:', JSON.stringify(result.grantedTokens));
+
+          // Store CRM API token if it exists
+          if (result.crmApiToken) {
+            localStorage.setItem('tpoCrmApiToken', result.crmApiToken);
+            console.log('Stored tpoCrmApiToken:', result.crmApiToken);
+          } else {
+            // Ensure any old CRM token is cleared if not provided this time
+            localStorage.removeItem('tpoCrmApiToken');
+            console.log('No crmApiToken received, cleared any existing tpoCrmApiToken.');
+          }
+
+          // Store user email for display purposes
+          localStorage.setItem('tpoUserEmail', result.email);
+          console.log('Stored tpoUserEmail:', result.email);
+
+          // Clear old/potentially conflicting storage items (keep this)
+          // localStorage.removeItem('tpoEmployeeToken'); // Example if this was used before
+
+          // Redirect to the linked page. Browser handles relative paths correctly.
+          window.top.location.href = result.linkedPage; // <-- Simpler and works for file:///
+
+        } else {
+          // Display the error message from the script's JSON response
+          errorDiv.textContent = result.message || 'Login failed. Please check your credentials or configuration.';
+          console.log("Login failed:", result.message || 'Unknown error or missing data in response', result);
+          // Clear any potentially partially stored tokens on failure
+          localStorage.removeItem('tpoSessionToken');
+          localStorage.removeItem('tpoGrantedTokens');
+          localStorage.removeItem('tpoCrmApiToken');
+        }
+      })
+      .catch(error => {
+        // Handle fetch errors (network issues, CORS, parsing errors)
+        setButtonsDisabled(false);
+        console.error('Error during login fetch:', error);
+        errorDiv.textContent = 'An error occurred during login: ' + error.message;
+        // Clear any potentially partially stored tokens on fetch error
+        localStorage.removeItem('tpoSessionToken');
+        localStorage.removeItem('tpoGrantedTokens');
+        localStorage.removeItem('tpoCrmApiToken');
+      });
 
       /*
-      // --- OLD FETCH LOGIC (Commented out) ---
+      // --- OLD CRM LOGIN LOGIC (Commented out for reference) ---
       const loginUrl = new URL(APPS_SCRIPT_URL); // This URL needs to be the NEW one
       loginUrl.searchParams.append('action', 'handleLogin'); // Action might be different for new script
       loginUrl.searchParams.append('email', email);

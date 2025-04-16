@@ -680,8 +680,8 @@
 
     <script>
         // --- Authentication & API URLs ---
-        const AUTH_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyo2QuCUiPwUlByCgmR5zp6kymmvLbQPSjDHbaJ9yZD5rqF8M8RalXwqdda8VZnEL2hkQ/exec'; // NewCode.gs for Auth (Corrected URL)
-        const CRM_API_URL = 'https://script.google.com/macros/s/AKfycbzP3YLRMS98mrxrkYlSDUtTrZCf7QOPY50bTOXjS6cgtPDY0OW_yvyKLKBGvSVPh3mP/exec'; // Code.gs for CRM data operations (Keep Old)
+        const AUTH_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyIDeCYmpl5qzXQJoDmdaC2t7suZaky8Ug5y_cpPV56CHkI8Bu2i1_tJiHXP2-9Tc_Txw/exec'; // NewCode.gs for Auth (Corrected URL)
+        const CRM_API_URL = 'https://script.google.com/macros/s/AKfycbzRENMEZ5uXIxU-RYAwSTsi19ytLMtXgc0JgNnwkHaXkmBFuopiL89b9um5CQiFvZ8x/exec'; // Code.gs for CRM data operations (Keep Old)
         const loginPage = 'tpologin.html'; // Corrected Login Page
         const requiredToken = 'tpoCRMManagerToken'; // Correct Token for Manager View
 
@@ -798,7 +798,7 @@
         }
 
 
-        // --- Authentication Check Function (New Standard - Runs on Load) ---
+        // --- Authentication Check Function (Runs on Load - Uses JSONP) ---
         function checkAuthentication() {
           // Get sessionToken ONLY from localStorage
           const sessionToken = localStorage.getItem('tpoSessionToken');
@@ -809,53 +809,86 @@
             return; // Stop script execution
           }
 
-          console.log(`Session token found in localStorage, validating...`);
+          console.log('Session token found in localStorage, validating via JSONP...');
           showLoading("Validating session..."); // Show loading indicator
 
-          const validationUrl = new URL(AUTH_SCRIPT_URL); // Use NewCode.gs URL for validation
+          // --- JSONP for Validation ---
+          const callbackName = 'handleCrmMValidationResponse'; // Unique callback name for this page
+          const scriptId = 'jsonp-' + callbackName + '-' + Date.now();
+          let script = null;
+          let timeoutId = null;
+
+          // Define global callback
+          window[callbackName] = function(result) {
+              console.log('Validation response (JSONP):', result);
+              hideLoading(); // Hide loading indicator
+
+              // Cleanup
+              if (script && script.parentNode) {
+                try { script.parentNode.removeChild(script); } catch (e) { console.warn("Error removing JSONP script tag:", e); }
+              }
+              try { delete window[callbackName]; } catch (e) { console.warn("Error deleting JSONP callback:", e); }
+              if (timeoutId) clearTimeout(timeoutId);
+
+              // Process result
+              try {
+                  if (result && result.valid === true && result.email && result.tokens) {
+                    console.log('Session token validated successfully for user: ' + result.email);
+
+                    // Store/update granted tokens in localStorage
+                    localStorage.setItem('tpoGrantedTokens', JSON.stringify(result.tokens));
+                    console.log('Updated granted tokens in localStorage:', JSON.stringify(result.tokens));
+
+                    // Proceed to Authorization Check
+                    // Use the email from the validation result primarily, fallback to localStorage email
+                    if (checkAuthorization(result.tokens, result.email || userEmail)) {
+                        // If authorization passes, initialize the CRM app
+                        initializeApp();
+                    }
+                    // If authorization fails, redirectToLogin is called within checkAuthorization
+
+                  } else {
+                    // Token is invalid or expired
+                    redirectToLogin(result.message || 'Invalid or expired session. Please login again.');
+                  }
+              } catch (error) {
+                  console.error('Error processing validation response:', error);
+                  redirectToLogin('Error processing validation: ' + error.message + '. Please login again.');
+              }
+          };
+
+          // Timeout
+          timeoutId = setTimeout(() => {
+              console.error('Validation JSONP request timed out.');
+              hideLoading(); // Hide loading indicator on timeout
+              // Cleanup on timeout
+              if (script && script.parentNode) {
+                try { script.parentNode.removeChild(script); } catch (e) { console.warn("Error removing JSONP script tag on timeout:", e); }
+              }
+              try { delete window[callbackName]; } catch (e) { console.warn("Error deleting JSONP callback on timeout:", e); }
+              // Redirect after cleanup
+              redirectToLogin('Session validation timed out. Please login again.');
+          }, 15000); // 15 seconds
+
+          // Construct URL and make request
+          const validationUrl = new URL(AUTH_SCRIPT_URL);
           validationUrl.searchParams.append('action', 'validateSessionToken');
-          validationUrl.searchParams.append('sessionToken', sessionToken); // Send the token value
+          validationUrl.searchParams.append('sessionToken', sessionToken);
+          validationUrl.searchParams.append('callback', callbackName);
 
-          fetch(validationUrl, { method: 'GET' })
-            .then(response => {
-              if (!response.ok) {
-                // Attempt to parse error from backend response
-                return response.json().then(errData => {
-                   throw new Error(errData.message || `Validation request failed (${response.status})`);
-                }).catch(() => {
-                   // Fallback if backend response isn't JSON
-                   throw new Error(`Validation request failed (${response.status})`);
-                });
-              }
-              return response.json();
-            })
-            .then(result => {
-              hideLoading(); // Hide loading indicator
-              if (result && result.valid === true && result.email && result.tokens) {
-                console.log(`Session token validated successfully for user: ${result.email}`);
-
-                // Store/update granted tokens in localStorage (still useful for other potential checks)
-                localStorage.setItem('tpoGrantedTokens', JSON.stringify(result.tokens));
-                console.log('Updated granted tokens in localStorage:', JSON.stringify(result.tokens));
-
-                // Proceed to Authorization Check, passing the retrieved tokens and email
-                // Use the email from the validation result primarily, fallback to localStorage email
-                if (checkAuthorization(result.tokens, result.email || userEmail)) {
-                    // If authorization passes, initialize the CRM app
-                    initializeApp();
-                }
-                // If authorization fails, redirectToLogin is called within checkAuthorization
-
-              } else {
-                // Token is invalid or expired according to the backend
-                redirectToLogin(result.message || 'Invalid or expired session. Please login again.');
-              }
-            })
-            .catch(error => {
-              hideLoading(); // Hide loading indicator
-              console.error('Error validating session token:', error);
-              redirectToLogin('Error validating session: ' + error.message + '. Please login again.');
-            });
+          script = document.createElement('script');
+          script.id = scriptId;
+          script.src = validationUrl.toString();
+          // Add error handling for script loading itself
+          script.onerror = () => {
+              console.error('Failed to load validation script:', script.src);
+              hideLoading();
+              clearTimeout(timeoutId); // Clear timeout as it's a load error, not a response timeout
+              try { delete window[callbackName]; } catch (e) { /* ignore */ }
+              redirectToLogin('Failed to contact authentication service. Please try again.');
+          };
+          console.log('Requesting Validation JSONP URL:', script.src);
+          document.head.appendChild(script);
         }
 
 
@@ -2765,6 +2798,7 @@ fetch(CRM_API_URL, { // Use CRM_API_URL for POST
         // if (window.location.hash) { ... }
       });
     </script>
+
 
 </body>
 </html>

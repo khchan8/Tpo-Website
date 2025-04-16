@@ -680,117 +680,93 @@
     });
   </script>
 
-  <!-- Corrected Authentication & Authorization Script -->
+  <!-- Authentication & Authorization Script (LOCAL STORAGE ONLY) -->
   <script>
     // --- Global Variables ---
-    const AUTH_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyo2QuCUiPwUlByCgmR5zp6kymmvLbQPSjDHbaJ9yZD5rqF8M8RalXwqdda8VZnEL2hkQ/exec'; // NewCode.gs URL
+    const AUTH_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyIDeCYmpl5qzXQJoDmdaC2t7suZaky8Ug5y_cpPV56CHkI8Bu2i1_tJiHXP2-9Tc_Txw/exec'; // Keep for reference if needed later, but not used for validation
     const loginPage = 'tpologin.html';
-    const requiredToken = 'tpoFuzziesToken'; // Specific token needed for this page
+    const requiredToken = 'tpoEmployeeToken'; // Adjust if a different token is needed for Fuzzies
 
     // --- Helper: Redirect to Login ---
     function redirectToLogin(reason) {
-      console.log(`Redirecting to login: ${reason}`);
-      // Clear ALL relevant tokens
+      console.log('Redirecting to login: ' + reason);
       localStorage.removeItem('tpoSessionToken');
       localStorage.removeItem('tpoGrantedTokens');
       localStorage.removeItem('tpoCrmApiToken');
-      localStorage.removeItem('tpoUserEmail'); // Clear email too
-      // Construct redirect URL, including the current page for post-login redirect
-      const redirectUrl = `${loginPage}?redirectUrl=${encodeURIComponent(window.location.pathname + window.location.search)}&error=${encodeURIComponent(reason)}`;
+      localStorage.removeItem('tpoUserEmail');
+      const redirectUrl = loginPage + '?redirectUrl=' + encodeURIComponent(window.location.pathname + window.location.search) + '&error=' + encodeURIComponent(reason);
       window.top.location.href = redirectUrl;
     }
 
     // --- Logout Function ---
     function logout() {
-        console.log("Logging out Fuzzies user...");
-        // Clear ALL relevant tokens
+        console.log("Logging out...");
         localStorage.removeItem('tpoSessionToken');
         localStorage.removeItem('tpoGrantedTokens');
-        localStorage.removeItem('tpoCrmApiToken'); // If used
-        localStorage.removeItem('tpoUserEmail'); // Clear email too
-        window.top.location.href = loginPage; // Redirect to login page
+        localStorage.removeItem('tpoCrmApiToken');
+        localStorage.removeItem('tpoUserEmail');
+        window.top.location.href = loginPage;
     }
 
     // --- Authorization Check (Runs after successful authentication) ---
     function checkAuthorization(grantedTokens, userEmail) {
         console.log("Checking authorization for:", requiredToken);
-        // Ensure grantedTokens is an array before checking includes()
         const tokensArray = Array.isArray(grantedTokens) ? grantedTokens : [];
 
         if (!tokensArray.includes(requiredToken)) {
-            redirectToLogin(`Access denied. Required permission (${requiredToken}) not found.`);
-            return false; // Indicate authorization failed
+            redirectToLogin('Access denied. Required permission (' + requiredToken + ') not found.');
+            return false;
         }
         console.log("Authorization successful.");
 
-        // Update UI with user info
+        // Update UI
         const loginStatusSpan = document.getElementById('loginStatus');
         const logoutButton = document.getElementById('logoutButton');
         if (loginStatusSpan && userEmail) {
-             loginStatusSpan.textContent = `Logged in as: ${userEmail}`;
+             loginStatusSpan.textContent = 'Logged in as: ' + userEmail;
         }
         if (logoutButton) {
-            logoutButton.style.display = 'inline-block'; // Show logout button
+            logoutButton.style.display = 'inline-block';
         }
-        return true; // Indicate authorization succeeded
+        return true;
     }
 
-    // --- Authentication Check Function (Runs on Load) ---
+     // --- Authentication Check Function (Runs on Load - LOCAL STORAGE ONLY) ---
     function checkAuthentication() {
-      // Get sessionToken ONLY from localStorage
       const sessionToken = localStorage.getItem('tpoSessionToken');
-      const userEmail = localStorage.getItem('tpoUserEmail'); // Get email for display later
+      const userEmail = localStorage.getItem('tpoUserEmail');
+      const grantedTokensString = localStorage.getItem('tpoGrantedTokens');
 
-      if (!sessionToken) {
-        redirectToLogin('Session not found. Please login.');
-        return; // Stop script execution
+      console.log('Checking local authentication for Fuzzies page...');
+
+      if (!sessionToken || !grantedTokensString) {
+        redirectToLogin('Session or permissions not found locally. Please login.');
+        return;
       }
 
-      console.log(`Session token found in localStorage, validating...`);
+      console.log('Session token and granted tokens found locally.');
 
-      const validationUrl = new URL(AUTH_SCRIPT_URL);
-      validationUrl.searchParams.append('action', 'validateSessionToken'); // Use the correct action
-      validationUrl.searchParams.append('sessionToken', sessionToken); // Send the token *value* for validation
+      let grantedTokens = [];
+      try {
+        grantedTokens = JSON.parse(grantedTokensString);
+         if (!Array.isArray(grantedTokens)) {
+           // If parsing succeeds but it's not an array, treat as invalid
+           console.error('Parsed grantedTokens is not an array:', grantedTokensString);
+           redirectToLogin('Invalid local permissions format. Please login again.');
+           return;
+        }
+      } catch (e) {
+        console.error('Error parsing granted tokens from localStorage:', e);
+        redirectToLogin('Error reading local permissions. Please login again.');
+        return;
+      }
 
-      fetch(validationUrl, { method: 'GET' })
-        .then(response => {
-          if (!response.ok) {
-            // Attempt to parse error from backend response
-            return response.json().then(errData => {
-               throw new Error(errData.message || `Validation request failed (${response.status})`);
-            }).catch(() => {
-               // Fallback if backend response isn't JSON
-               throw new Error(`Validation request failed (${response.status})`);
-            });
-          }
-          return response.json();
-        })
-        .then(result => {
-          if (result && result.valid === true && result.email && result.tokens) {
-            console.log(`Session token validated successfully for user: ${result.email}`);
-
-            // Store/update granted tokens in localStorage (still useful for other potential checks)
-            localStorage.setItem('tpoGrantedTokens', JSON.stringify(result.tokens));
-            console.log('Updated granted tokens in localStorage:', JSON.stringify(result.tokens));
-
-            // Proceed to Authorization Check, passing the retrieved tokens and email
-            // Use the email from the validation result primarily, fallback to localStorage email
-            checkAuthorization(result.tokens, result.email || userEmail);
-
-          } else {
-            // Token is invalid or expired according to the backend
-            redirectToLogin(result.message || 'Invalid or expired session. Please login again.');
-          }
-        })
-        .catch(error => {
-          console.error('Error validating session token:', error);
-          redirectToLogin('Error validating session: ' + error.message + '. Please login again.');
-        });
+      // Proceed directly to Authorization Check
+      checkAuthorization(grantedTokens, userEmail);
     }
 
     // --- Run Authentication Check on Page Load ---
     document.addEventListener('DOMContentLoaded', checkAuthentication);
-
   </script>
 
 </body>

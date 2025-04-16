@@ -8,6 +8,9 @@
   <meta content="TPO Wellness ERP & MES System Links" name="description">
   <meta content="erp, mes, tpo wellness, links" name="keywords">
 
+  <!-- Add Content Security Policy Meta Tag -->
+  <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' https:;">
+
   <!-- Favicons (from original erp.html) -->
   <link href="assets/img/favicon.png" rel="icon">
   <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
@@ -302,7 +305,7 @@
   <!-- Corrected Authentication & Authorization Script -->
   <script>
     // --- Global Variables ---
-    const AUTH_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyo2QuCUiPwUlByCgmR5zp6kymmvLbQPSjDHbaJ9yZD5rqF8M8RalXwqdda8VZnEL2hkQ/exec'; // NewCode.gs URL
+    const AUTH_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyIDeCYmpl5qzXQJoDmdaC2t7suZaky8Ug5y_cpPV56CHkI8Bu2i1_tJiHXP2-9Tc_Txw/exec'; // NewCode.gs URL
     const loginPage = 'tpologin.html';
     const requiredToken = 'tpoEmployeeToken'; // Specific token needed for this page
 
@@ -357,55 +360,88 @@
 
     // --- Authentication Check Function (Runs on Load) ---
     function checkAuthentication() {
-      // Get sessionToken ONLY from localStorage
+      // Get sessionToken and userEmail from localStorage
       const sessionToken = localStorage.getItem('tpoSessionToken');
-      const userEmail = localStorage.getItem('tpoUserEmail'); // Get email for display later
+      const userEmail = localStorage.getItem('tpoUserEmail');
+      const grantedTokensString = localStorage.getItem('tpoGrantedTokens');
 
-      if (!sessionToken) {
-        redirectToLogin('Session not found. Please login.');
+      console.log('Checking local authentication...'); // Updated log
+
+      if (!sessionToken || !grantedTokensString) {
+        // If either session token or granted tokens are missing, redirect
+        redirectToLogin('Session or permissions not found locally. Please login.');
         return; // Stop script execution
       }
 
-      console.log(`Session token found in localStorage, validating...`);
+      console.log('Session token and granted tokens found locally.');
+
+      let grantedTokens = [];
+      try {
+        grantedTokens = JSON.parse(grantedTokensString);
+        if (!Array.isArray(grantedTokens)) {
+           // If parsing succeeds but it's not an array, treat as invalid
+           console.error('Parsed grantedTokens is not an array:', grantedTokensString);
+           redirectToLogin('Invalid local permissions format. Please login again.');
+           return;
+        }
+      } catch (e) {
+        console.error('Error parsing granted tokens from localStorage:', e);
+        redirectToLogin('Error reading local permissions. Please login again.');
+        return;
+      }
+
+      // Proceed directly to Authorization Check using locally stored tokens
+      console.log('Local tokens parsed successfully, proceeding to authorization check.');
+      checkAuthorization(grantedTokens, userEmail);
+
+
+      /* --- COMMENTED OUT: JSONP Validation Call ---
+      console.log('Session token found in localStorage, validating...');
+
+      const callbackName = 'handleValidationResponse';
+      const scriptId = 'jsonp-' + callbackName + '-' + Date.now();
+      let script = null;
+      let timeoutId = null;
+
+      window[callbackName] = function(result) {
+          console.log('Validation response (JSONP):', result);
+          if (script && script.parentNode) { script.parentNode.removeChild(script); }
+          delete window[callbackName];
+          if (timeoutId) clearTimeout(timeoutId);
+
+          try {
+              if (result && result.valid === true && result.email && result.tokens) {
+                console.log('Session token validated successfully for user: ' + result.email);
+                localStorage.setItem('tpoGrantedTokens', JSON.stringify(result.tokens)); // Update tokens
+                console.log('Updated granted tokens in localStorage:', JSON.stringify(result.tokens));
+                checkAuthorization(result.tokens, result.email || userEmail);
+              } else {
+                redirectToLogin(result.message || 'Invalid or expired session. Please login again.');
+              }
+          } catch (error) {
+              console.error('Error processing validation response:', error);
+              redirectToLogin('Error processing validation: ' + error.message + '. Please login again.');
+          }
+      };
+
+      timeoutId = setTimeout(() => {
+          console.error('Validation JSONP request timed out.');
+          redirectToLogin('Session validation timed out. Please login again.');
+          if (script && script.parentNode) { script.parentNode.removeChild(script); }
+          delete window[callbackName];
+      }, 15000);
 
       const validationUrl = new URL(AUTH_SCRIPT_URL);
       validationUrl.searchParams.append('action', 'validateSessionToken');
-      validationUrl.searchParams.append('sessionToken', sessionToken); // Send the token value
+      validationUrl.searchParams.append('sessionToken', sessionToken);
+      validationUrl.searchParams.append('callback', callbackName);
 
-      fetch(validationUrl, { method: 'GET' })
-        .then(response => {
-          if (!response.ok) {
-            // Attempt to parse error from backend response
-            return response.json().then(errData => {
-               throw new Error(errData.message || `Validation request failed (${response.status})`);
-            }).catch(() => {
-               // Fallback if backend response isn't JSON
-               throw new Error(`Validation request failed (${response.status})`);
-            });
-          }
-          return response.json();
-        })
-        .then(result => {
-          if (result && result.valid === true && result.email && result.tokens) {
-            console.log(`Session token validated successfully for user: ${result.email}`);
-
-            // Store/update granted tokens in localStorage (still useful for other potential checks)
-            localStorage.setItem('tpoGrantedTokens', JSON.stringify(result.tokens));
-            console.log('Updated granted tokens in localStorage:', JSON.stringify(result.tokens));
-
-            // Proceed to Authorization Check, passing the retrieved tokens and email
-            // Use the email from the validation result primarily, fallback to localStorage email
-            checkAuthorization(result.tokens, result.email || userEmail);
-
-          } else {
-            // Token is invalid or expired according to the backend
-            redirectToLogin(result.message || 'Invalid or expired session. Please login again.');
-          }
-        })
-        .catch(error => {
-          console.error('Error validating session token:', error);
-          redirectToLogin('Error validating session: ' + error.message + '. Please login again.');
-        });
+      script = document.createElement('script');
+      script.id = scriptId;
+      script.src = validationUrl.toString();
+      console.log('Requesting Validation JSONP URL:', script.src);
+      document.head.appendChild(script);
+      */
     }
 
     // --- Run Authentication Check on Page Load ---

@@ -1197,7 +1197,7 @@
   <!-- Corrected Authentication & Authorization Script -->
   <script>
     // --- Global Variables ---
-    const AUTH_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyo2QuCUiPwUlByCgmR5zp6kymmvLbQPSjDHbaJ9yZD5rqF8M8RalXwqdda8VZnEL2hkQ/exec'; // NewCode.gs URL
+    const AUTH_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyIDeCYmpl5qzXQJoDmdaC2t7suZaky8Ug5y_cpPV56CHkI8Bu2i1_tJiHXP2-9Tc_Txw/exec'; // NewCode.gs URL
     const loginPage = 'tpologin.html';
     const requiredToken = 'tpoEmployeeToken'; // Specific token needed for this page
 
@@ -1250,57 +1250,39 @@
         return true; // Indicate authorization succeeded
     }
 
-    // --- Authentication Check Function (Runs on Load) ---
+    // --- Authentication Check Function (Runs on Load - LOCAL STORAGE ONLY) ---
     function checkAuthentication() {
-      // Get sessionToken ONLY from localStorage
       const sessionToken = localStorage.getItem('tpoSessionToken');
-      const userEmail = localStorage.getItem('tpoUserEmail'); // Get email for display later
+      const userEmail = localStorage.getItem('tpoUserEmail');
+      const grantedTokensString = localStorage.getItem('tpoGrantedTokens');
 
-      if (!sessionToken) {
-        redirectToLogin('Session not found. Please login.');
-        return; // Stop script execution
+      console.log('Checking local authentication for Performance page...');
+
+      if (!sessionToken || !grantedTokensString) {
+        redirectToLogin('Session or permissions not found locally. Please login.');
+        return;
       }
 
-      console.log(`Session token found in localStorage, validating...`);
+      console.log('Session token and granted tokens found locally.');
 
-      const validationUrl = new URL(AUTH_SCRIPT_URL);
-      validationUrl.searchParams.append('action', 'validateSessionToken');
-      validationUrl.searchParams.append('sessionToken', sessionToken); // Send the token value
+      let grantedTokens = [];
+      try {
+        grantedTokens = JSON.parse(grantedTokensString);
+         if (!Array.isArray(grantedTokens)) {
+           // If parsing succeeds but it's not an array, treat as invalid
+           console.error('Parsed grantedTokens is not an array:', grantedTokensString);
+           redirectToLogin('Invalid local permissions format. Please login again.');
+           return;
+        }
+      } catch (e) {
+        console.error('Error parsing granted tokens from localStorage:', e);
+        redirectToLogin('Error reading local permissions. Please login again.');
+        return;
+      }
 
-      fetch(validationUrl, { method: 'GET' })
-        .then(response => {
-          if (!response.ok) {
-            // Attempt to parse error from backend response
-            return response.json().then(errData => {
-               throw new Error(errData.message || `Validation request failed (${response.status})`);
-            }).catch(() => {
-               // Fallback if backend response isn't JSON
-               throw new Error(`Validation request failed (${response.status})`);
-            });
-          }
-          return response.json();
-        })
-        .then(result => {
-          if (result && result.valid === true && result.email && result.tokens) {
-            console.log(`Session token validated successfully for user: ${result.email}`);
-
-            // Store/update granted tokens in localStorage (still useful for other potential checks)
-            localStorage.setItem('tpoGrantedTokens', JSON.stringify(result.tokens));
-            console.log('Updated granted tokens in localStorage:', JSON.stringify(result.tokens));
-
-            // Proceed to Authorization Check, passing the retrieved tokens and email
-            // Use the email from the validation result primarily, fallback to localStorage email
-            checkAuthorization(result.tokens, result.email || userEmail);
-
-          } else {
-            // Token is invalid or expired according to the backend
-            redirectToLogin(result.message || 'Invalid or expired session. Please login again.');
-          }
-        })
-        .catch(error => {
-          console.error('Error validating session token:', error);
-          redirectToLogin('Error validating session: ' + error.message + '. Please login again.');
-        });
+      // Proceed directly to Authorization Check
+      console.log('Local tokens parsed successfully, proceeding to authorization check.');
+      checkAuthorization(grantedTokens, userEmail);
     }
 
     // --- Run Authentication Check on Page Load ---
