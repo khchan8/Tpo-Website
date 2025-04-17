@@ -313,14 +313,21 @@
         url.searchParams.append('callback', uniqueCallbackName);
         script.src = url.toString();
 
-        // Timeout for error handling (e.g., 10 seconds)
+        // Timeout for error handling (e.g., 20 seconds for mobile)
+        const timeoutDuration = 20000; // Increased to 20 seconds
         const timeoutId = setTimeout(() => {
-            console.error(`JSONP request timed out for ${uniqueCallbackName}`);
+            console.error(`JSONP request timed out after ${timeoutDuration}ms for ${uniqueCallbackName}. URL: ${script.src}`);
             // Call the callback with an error object
             if (window[uniqueCallbackName]) {
-                window[uniqueCallbackName]({ success: false, message: 'Request timed out.' });
+                // Check if the callback was already called (race condition)
+                if (!activeScripts[uniqueCallbackName] || !activeScripts[uniqueCallbackName].called) {
+                     window[uniqueCallbackName]({ success: false, message: 'Request timed out.' });
+                } else {
+                    console.log(`Timeout occurred for ${uniqueCallbackName}, but callback was already invoked.`);
+                }
             } else {
                 // If callback doesn't exist, handle error appropriately (e.g., show generic error)
+                 console.error(`Timeout occurred for ${uniqueCallbackName}, but the callback function was not found.`);
                 if (callbackName === 'handleLoginResponse') {
                     errorDiv.textContent = 'Login request timed out.';
                     hideLoading('login');
@@ -329,15 +336,23 @@
                     hideLoading('changePassword');
                 }
             }
-            // Cleanup is handled within the callback itself now
-        }, 10000); // 10 seconds timeout
+            // Cleanup is handled within the callback itself or by onerror
+        }, timeoutDuration);
 
-        // Store script info for cleanup
-        activeScripts[uniqueCallbackName] = { scriptElement: script, timeoutId: timeoutId };
+        // Store script info for cleanup and state tracking
+        activeScripts[uniqueCallbackName] = { scriptElement: script, timeoutId: timeoutId, called: false };
 
         // Define the actual global callback function dynamically
         window[uniqueCallbackName] = function(result) {
+             // Check if script info exists before proceeding
+            if (!activeScripts[uniqueCallbackName]) {
+                console.warn(`Callback ${uniqueCallbackName} invoked, but script info not found (possibly due to timeout/error).`);
+                return; // Avoid processing if already cleaned up
+            }
+            // Mark as called to prevent timeout handler from showing error
+            activeScripts[uniqueCallbackName].called = true;
             console.log(`JSONP response received for ${uniqueCallbackName}:`, result);
+
             // Call the intended handler (handleLoginResponse or handleChangePasswordResponse)
             if (callbackName === 'handleLoginResponse') {
                 handleLoginResponse(result);
@@ -348,12 +363,27 @@
             cleanupJsonpScript(uniqueCallbackName);
         };
 
-        script.onerror = function() {
-            console.error(`JSONP script load error for ${uniqueCallbackName}`);
-            // Call the callback with an error object
-             if (window[uniqueCallbackName]) {
-                window[uniqueCallbackName]({ success: false, message: 'Script load error.' });
-            } else {
+        script.onerror = function(event) {
+            // Log more details if available
+            let errorDetails = `JSONP script load error for ${uniqueCallbackName}. URL: ${script.src}`;
+            if (event) {
+                errorDetails += ` | Type: ${event.type}`;
+                // Note: Specific error messages are often not available for cross-origin script errors due to security reasons.
+            }
+            console.error(errorDetails, event);
+
+             // Check if script info exists before proceeding
+            if (!activeScripts[uniqueCallbackName]) {
+                console.warn(`onerror invoked for ${uniqueCallbackName}, but script info not found (possibly due to timeout/callback).`);
+                return; // Avoid processing if already cleaned up
+            }
+
+            // Call the callback with an error object only if it hasn't been called yet
+             if (window[uniqueCallbackName] && !activeScripts[uniqueCallbackName].called) {
+                 activeScripts[uniqueCallbackName].called = true; // Mark as called
+                 window[uniqueCallbackName]({ success: false, message: 'Script load error.' });
+            } else if (!window[uniqueCallbackName]) {
+                 console.error(`onerror occurred for ${uniqueCallbackName}, but the callback function was not found.`);
                  if (callbackName === 'handleLoginResponse') {
                     errorDiv.textContent = 'Error loading login script.';
                     hideLoading('login');
@@ -362,7 +392,8 @@
                     hideLoading('changePassword');
                 }
             }
-            // Cleanup is handled within the callback itself now
+            // Cleanup is handled within the callback itself now, but ensure cleanup happens on error too
+            cleanupJsonpScript(uniqueCallbackName);
         };
 
         console.log(`Initiating JSONP request: ${script.src}`);
