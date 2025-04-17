@@ -3,7 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
-  <title>TPO Wellness - Employee Login</title>
+  <!-- V87: Added Password Change -->
+  <title>TPO Wellness - Employee Login V87</title>
   <meta content="" name="description">
   <meta content="" name="keywords">
 
@@ -17,13 +18,12 @@
   <!-- Vendor CSS Files -->
   <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
   <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
-  <link href="assets/vendor/boxicons/css/boxicons.min.css" rel="stylesheet"> <!-- Needed for footer icons -->
-  <!-- <link href="assets/vendor/aos/aos.css" rel="stylesheet"> --> <!-- Optional, if needed -->
+  <link href="assets/vendor/boxicons/css/boxicons.min.css" rel="stylesheet">
 
   <!-- Main CSS File -->
   <link href="assets/css/style.css" rel="stylesheet">
 
-  <!-- Custom Styles for Login Page -->
+  <!-- Custom Styles for Login Page (from V85) -->
   <style>
     /* Styles for the login form section */
     .login-section {
@@ -56,7 +56,9 @@
     .login-container .form-group { margin-bottom: 20px; } /* Increased spacing */
     .login-container label { display: block; margin-bottom: 8px; font-weight: bold; color: #555; font-size: 14px; }
     .login-container input[type="email"],
-    .login-container input[type="password"] {
+    .login-container input[type="password"],
+    .login-container input[type="text"] /* Added for consistency if needed */
+     {
       width: 100%;
       padding: 12px 15px; /* Increased padding */
       border: 1px solid #ddd;
@@ -75,6 +77,7 @@
       font-size: 16px;
       font-weight: bold;
       transition: background-color 0.3s;
+      margin-top: 10px; /* Added margin for spacing */
     }
     .login-container button:hover {
       background-color: #1f1cd4; /* Theme hover color */
@@ -83,11 +86,38 @@
       background-color: #cccccc;
       cursor: not-allowed;
     }
-    .login-container .error-message { color: #dc3545; margin-top: 15px; text-align: center; min-height: 1em; font-size: 14px; }
-    .login-container .change-password-link { margin-top: 15px; text-align: center; font-size: 14px; }
-    .login-container .change-password-link a { color: #1e56a0; text-decoration: none; cursor: pointer; }
-    .login-container .change-password-link a:hover { text-decoration: underline; }
+    .login-container .error-message,
+    .login-container .change-password-message /* V87: Added */
+    {
+        color: #dc3545;
+        margin-top: 15px;
+        text-align: center;
+        min-height: 1em;
+        font-size: 14px;
+        font-weight: bold; /* Make messages stand out */
+    }
+    .login-container .change-password-message.success /* V87: Added */
+    {
+        color: #198754; /* Bootstrap success green */
+    }
     .login-container .info-message { margin-top: 25px; text-align: center; color: #666; font-size: 14px; }
+    .login-container .change-password-toggle { /* V87: Added */
+        display: block;
+        text-align: center;
+        margin-top: 20px;
+        font-size: 14px;
+    }
+     #change-password-section { /* V87: Added */
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid #eee;
+     }
+     #change-password-section h2 { /* V87: Added */
+        font-size: 18px;
+        text-align: center;
+        margin-bottom: 20px;
+        color: #444;
+     }
 
     /* Make body a flex container to push footer down */
     body {
@@ -112,10 +142,8 @@
         <i class="bi bi-envelope d-flex align-items-center"><a href="mailto:info@tpo-wellness.com">info@tpo-wellness.com</a></i>
         <i class="bi bi-phone d-flex align-items-center ms-4"><span>+66 87 789 4950</span></i>
       </div>
-      <div class="user-info d-none d-md-flex align-items-center"> <!-- Placeholder for login status -->
-         <!-- Login status will be added dynamically if user is logged in -->
-         <!-- <span id="loginStatus">Logged in as: example@email.com</span> -->
-         <!-- <button id="logoutButton" class="logout-btn" onclick="logout()">Logout</button> -->
+      <div class="user-info d-none d-md-flex align-items-center">
+         <!-- Login status placeholder -->
       </div>
     </div>
   </section>
@@ -126,10 +154,16 @@
       <h1 class="logo"><a href="index.html"><img src="./assets/img/TPOLogo.png" alt="TPO Wellness Logo" class="img-fluid"></a></h1>
       <nav id="navbar" class="navbar">
         <ul>
-          <!-- Simplified Nav for Login Page -->
           <li><a class="nav-link scrollto" href="index.html#hero">Home</a></li>
           <li><a class="nav-link scrollto" href="index.html#about">About</a></li>
           <li><a class="nav-link scrollto" href="index.html#contact">Contact</a></li>
+          <li class="dropdown"><a href="#" class="active"><span>Login</span> <i class="bi bi-chevron-down"></i></a>
+            <ul>
+              <li><a href="V87-tpologin.html" class="active">Employee Login</a></li> <!-- V87: Updated link -->
+              <li><a href="Login.html">CRM Login</a></li>
+              <li><a href="customerlogin.html">Customer Login</a></li>
+            </ul>
+          </li>
         </ul>
         <i class="bi bi-list mobile-nav-toggle"></i>
       </nav><!-- .navbar -->
@@ -143,11 +177,7 @@
         <div class="row justify-content-center">
           <div class="col-lg-6 col-md-8">
             <div class="login-container">
-              <!-- Logo can be added here if desired -->
-              <!-- <div class="logo">
-                <img src="assets/img/TPOLogo.png" alt="TPO Wellness">
-              </div> -->
-              <h1 id="form-title">Employee Login</h1>
+              <h1>Employee Login</h1>
               <div id="login-form">
                 <div class="form-group">
                   <label for="email">Email</label>
@@ -159,35 +189,33 @@
                 </div>
                 <button type="button" id="loginButton" onclick="login()">Login</button>
                 <div id="error-message" class="error-message"></div>
-                <div class="change-password-link">
-                  <a id="changePasswordLink">Change Password?</a>
-                </div>
               </div>
 
-              <!-- Change Password Section (Initially Hidden) -->
-              <div id="changePasswordSection" style="display: none;">
+              <!-- V87: Change Password Toggle Link -->
+              <a href="#" id="toggleChangePassword" class="change-password-toggle">Change Password</a>
+
+              <!-- V87: Change Password Section (Initially Hidden) -->
+              <div id="change-password-section" style="display: none;">
+                <h2>Change Your Password</h2>
                 <div class="form-group">
-                  <label for="currentPassword">Current Password</label>
-                  <input type="password" id="currentPassword" name="currentPassword" class="form-control" required>
+                  <label for="oldPassword">Old Password</label>
+                  <input type="password" id="oldPassword" name="oldPassword" class="form-control" required>
                 </div>
                 <div class="form-group">
                   <label for="newPassword">New Password</label>
                   <input type="password" id="newPassword" name="newPassword" class="form-control" required>
                 </div>
                 <div class="form-group">
-                  <label for="confirmNewPassword">Confirm New Password</label>
-                  <input type="password" id="confirmNewPassword" name="confirmNewPassword" class="form-control" required>
+                  <label for="confirmPassword">Confirm New Password</label>
+                  <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" required>
                 </div>
-                <button type="button" id="submitChangeButton" onclick="changePassword()">Submit Change</button>
-                <div id="change-error-message" class="error-message"></div> <!-- Separate error message for change form -->
-                <div class="change-password-link">
-                  <a id="cancelChangeLink">Cancel Change</a>
-                </div>
+                <button type="button" id="changePasswordButton" onclick="changePassword()">Submit Change</button>
+                <div id="change-password-message" class="change-password-message"></div>
               </div>
-              <!-- End Change Password Section -->
+              <!-- End V87 Change Password Section -->
 
               <div class="info-message">
-                <p>If you're having trouble logging in, please contact your administrator.</p> <!-- Keep admin message -->
+                <p>If you're having trouble logging in, please contact your administrator.</p>
               </div>
             </div>
           </div>
@@ -198,413 +226,295 @@
 
   <!-- ======= Footer ======= -->
   <footer id="footer">
-    <div class="footer-top">
-      <div class="container">
-        <div class="row">
-
-          <div class="col-lg-4 col-md-6">
-            <div class="footer-info">
-              <h3>TPO Wellness</h3>
-              <p>
-                TPO Wellness Ltd. (Head Office)<br>
-                No. 122/7 Moo5, Pakkret Sub-District, Pakkret District.<br>
-                Nonthaburi Province 11120<br><br>
-                <strong>Tel:</strong> +662-687-7811,+6694-7365518<br>
-                <strong>Email:</strong> info@tpo-wellness.com<br>
-              </p>
-              <div class="social-links mt-3">
-                <a href="#" class="twitter"><i class="bx bxl-twitter"></i></a>
-                <a href="#" class="facebook"><i class="bx bxl-facebook"></i></a>
-                <a href="#" class="instagram"><i class="bx bxl-instagram"></i></a>
-                <a href="#" class="linkedin"><i class="bx bxl-linkedin"></i></a>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-lg-2 col-md-6 footer-links">
-            <h4>Useful Links</h4>
-            <ul>
-              <li><i class="bx bx-chevron-right"></i> <a href="index.html#hero">Home</a></li>
-              <li><i class="bx bx-chevron-right"></i> <a href="index.html#about">About us</a></li>
-              <li><i class="bx bx-chevron-right"></i> <a href="index.html#services">Services</a></li>
-              <li><i class="bx bx-chevron-right"></i> <a href="#">Terms of service</a></li>
-              <li><i class="bx bx-chevron-right"></i> <a href="#">Privacy policy</a></li>
-            </ul>
-          </div>
-
-          <div class="col-lg-2 col-md-6 footer-links">
-            <h4>Our Services</h4>
-             <ul>
-               <li><i class="bx bx-chevron-right"></i> <a href="#">Edibles Manufacturing</a></li>
-               <li><i class="bx bx-chevron-right"></i> <a href="#">Pre-Roll Production</a></li>
-               <li><i class="bx bx-chevron-right"></i> <a href="#">Cannabis Flower Packaging</a></li>
-               <li><i class="bx bx-chevron-right"></i> <a href="#">R&D Services</a></li>
-               <li><i class="bx bx-chevron-right"></i> <a href="#">Quality Control & Assurance</a></li>
-             </ul>
-          </div>
-
-          <div class="col-lg-4 col-md-6 footer-newsletter">
-            <h4>Our Newsletter</h4>
-            <p>Subscribe to our newsletter for the latest updates</p>
-            <form action="" method="post"> <!-- Add action/method if needed -->
-              <input type="email" name="email"><input type="submit" value="Subscribe">
-            </form>
-          </div>
-
-        </div>
-      </div>
-    </div>
-
-    <div class="container">
-      <div class="copyright">
-        &copy; Copyright <strong><span>TPO Wellness</span></strong>. All Rights Reserved
-      </div>
-      <div class="credits">
-        Designed by <a href="#">KH</a>
-      </div>
-    </div>
+      <!-- Footer content from V85 -->
+      <div class="footer-top"> <div class="container"> <div class="row"> <div class="col-lg-4 col-md-6"> <div class="footer-info"> <h3>TPO Wellness</h3> <p> TPO Wellness Ltd. (Head Office)<br> No. 122/7 Moo5, Pakkret Sub-District, Pakkret District.<br> Nonthaburi Province 11120<br><br> <strong>Tel:</strong> +662-687-7811,+6694-7365518<br> <strong>Email:</strong> info@tpo-wellness.com<br> </p> <div class="social-links mt-3"> <a href="#" class="twitter"><i class="bx bxl-twitter"></i></a> <a href="#" class="facebook"><i class="bx bxl-facebook"></i></a> <a href="#" class="instagram"><i class="bx bxl-instagram"></i></a> <a href="#" class="linkedin"><i class="bx bxl-linkedin"></i></a> </div> </div> </div> <div class="col-lg-2 col-md-6 footer-links"> <h4>Useful Links</h4> <ul> <li><i class="bx bx-chevron-right"></i> <a href="index.html#hero">Home</a></li> <li><i class="bx bx-chevron-right"></i> <a href="index.html#about">About us</a></li> <li><i class="bx bx-chevron-right"></i> <a href="index.html#services">Services</a></li> <li><i class="bx bx-chevron-right"></i> <a href="#">Terms of service</a></li> <li><i class="bx bx-chevron-right"></i> <a href="#">Privacy policy</a></li> </ul> </div> <div class="col-lg-2 col-md-6 footer-links"> <h4>Our Services</h4> <ul> <li><i class="bx bx-chevron-right"></i> <a href="#">Edibles Manufacturing</a></li> <li><i class="bx bx-chevron-right"></i> <a href="#">Pre-Roll Production</a></li> <li><i class="bx bx-chevron-right"></i> <a href="#">Cannabis Flower Packaging</a></li> <li><i class="bx bx-chevron-right"></i> <a href="#">R&D Services</a></li> <li><i class="bx bx-chevron-right"></i> <a href="#">Quality Control & Assurance</a></li> </ul> </div> <div class="col-lg-4 col-md-6 footer-newsletter"> <h4>Our Newsletter</h4> <p>Subscribe to our newsletter for the latest updates</p> <form action="" method="post"> <input type="email" name="email"><input type="submit" value="Subscribe"> </form> </div> </div> </div> </div>
+      <div class="container"> <div class="copyright"> &copy; Copyright <strong><span>TPO Wellness</span></strong>. All Rights Reserved </div> <div class="credits"> Designed by <a href="#">KH</a> </div> </div>
   </footer><!-- End Footer -->
 
   <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
-  <!-- <div id="preloader"></div> --> <!-- Preloader might not be needed for login page -->
 
   <!-- Vendor JS Files -->
   <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <!-- <script src="assets/vendor/aos/aos.js"></script> --> <!-- Optional -->
-  <!-- <script src="assets/vendor/glightbox/js/glightbox.min.js"></script> --> <!-- Optional -->
-  <!-- <script src="assets/vendor/isotope-layout/isotope.pkgd.min.js"></script> --> <!-- Optional -->
-  <!-- <script src="assets/vendor/swiper/swiper-bundle.min.js"></script> --> <!-- Optional -->
+  <script src="assets/vendor/glightbox/js/glightbox.min.js"></script> <!-- V87: Added to fix GLightbox error -->
 
   <!-- Template Main JS File -->
   <script src="assets/js/main.js"></script> <!-- Needed for mobile nav toggle -->
 
-  <!-- Login Script -->
+  <!-- V87 Login & Password Change Script -->
   <script>
-    // Google Apps Script URL for Employee Login
-    // !!! IMPORTANT: This URL should point to your deployed NewCode.gs script !!!
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzf-F_mvQfHM2dSJv10GEv-jAk1OX4APud3paB_ysgHCKv-Dd1uazx-pBJjTOd8f5xxDQ/exec';
+    // !!! IMPORTANT: Replace with your V87 deployed script URL !!!
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwW9cq4dhPxVPr98Wq2IsV5d7C08DJ1qGVbPEMWtSnWfN2GEwXj8H3wEsDJvNaMfiec0w/exec';
 
-    // Get error message from URL parameters (if any)
-    const urlParams = new URLSearchParams(window.location.search);
-    const errorParam = urlParams.get('error');
-    
-    const errorDiv = document.getElementById('error-message');
-    const changeErrorDiv = document.getElementById('change-error-message');
+    // --- Element References ---
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
     const loginButton = document.getElementById('loginButton');
-    const submitChangeButton = document.getElementById('submitChangeButton');
-    const changePasswordLink = document.getElementById('changePasswordLink');
-    const cancelChangeLink = document.getElementById('cancelChangeLink');
-    const loginForm = document.getElementById('login-form');
-    const changePasswordSection = document.getElementById('changePasswordSection');
-    const formTitle = document.getElementById('form-title');
+    const errorDiv = document.getElementById('error-message');
 
-    // Function to disable/enable buttons
-    function setButtonsDisabled(disabled) {
+    const toggleChangePasswordLink = document.getElementById('toggleChangePassword');
+    const changePasswordSection = document.getElementById('change-password-section');
+    const oldPasswordInput = document.getElementById('oldPassword');
+    const newPasswordInput = document.getElementById('newPassword');
+    const confirmPasswordInput = document.getElementById('confirmPassword');
+    const changePasswordButton = document.getElementById('changePasswordButton');
+    const changePasswordMessageDiv = document.getElementById('change-password-message');
+
+    // --- Helper Functions ---
+    function setLoginButtonDisabled(disabled) {
         if(loginButton) loginButton.disabled = disabled;
-        if(submitChangeButton) submitChangeButton.disabled = disabled; // Also disable change button
     }
 
-    // --- Functions to toggle forms ---
-    function showChangePasswordForm() {
-        loginForm.style.display = 'none';
-        changePasswordSection.style.display = 'block';
-        formTitle.textContent = 'Change Password';
-        errorDiv.textContent = ''; // Clear login errors
-        changeErrorDiv.textContent = ''; // Clear change errors
-        // Clear password fields when switching
-        document.getElementById('currentPassword').value = '';
-        document.getElementById('newPassword').value = '';
-        document.getElementById('confirmNewPassword').value = '';
+    function setChangePasswordButtonDisabled(disabled) {
+        if(changePasswordButton) changePasswordButton.disabled = disabled;
     }
 
-    function showLoginForm() {
-        loginForm.style.display = 'block';
-        changePasswordSection.style.display = 'none';
-        formTitle.textContent = 'Employee Login';
-        errorDiv.textContent = ''; // Clear login errors
-        changeErrorDiv.textContent = ''; // Clear change errors
+    // Simple loading indicators (replace with more sophisticated UI if needed)
+    function showLoading(messageArea, buttonType) {
+        if (messageArea) messageArea.textContent = 'Loading...';
+        if (buttonType === 'login') setLoginButtonDisabled(true);
+        if (buttonType === 'changePassword') setChangePasswordButtonDisabled(true);
     }
 
-    // --- Password Change Function ---
-    function changePassword() {
-        const email = document.getElementById('email').value; // Get email from the (now hidden) login form
-        const currentPassword = document.getElementById('currentPassword').value;
-        const newPassword = document.getElementById('newPassword').value;
-        const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+    function hideLoading(buttonType) {
+        if (buttonType === 'login') setLoginButtonDisabled(false);
+        if (buttonType === 'changePassword') setChangePasswordButtonDisabled(false);
+    }
 
-        changeErrorDiv.textContent = ''; // Clear previous change errors
+    // --- JSONP Utility Functions ---
+    const activeScripts = {}; // Keep track of active script tags for cleanup
 
-        // Client-side validation
-        if (!email) { // Also check if email is present (might happen if user clears it before switching)
-            changeErrorDiv.textContent = 'Email is required (please ensure it is filled in the login form).';
-            return;
-        }
-        if (!currentPassword || !newPassword || !confirmNewPassword) {
-            changeErrorDiv.textContent = 'Please fill in all password fields.';
-            return;
-        }
-        if (newPassword !== confirmNewPassword) {
-            changeErrorDiv.textContent = 'New passwords do not match.';
-            return;
-        }
-        if (newPassword === currentPassword) {
-            changeErrorDiv.textContent = 'New password cannot be the same as the current password.';
-            return;
-        }
-        // Basic password complexity (example: at least 6 chars) - adjust as needed
-        if (newPassword.length < 6) {
-             changeErrorDiv.textContent = 'New password must be at least 6 characters long.';
-             return;
-        }
-
-
-        changeErrorDiv.textContent = 'Updating password...';
-        setButtonsDisabled(true);
-
-        // --- JSONP Implementation for Password Change ---
-        const callbackName = 'handleChangePasswordResponse';
-        const scriptId = 'jsonp-' + callbackName + '-' + Date.now();
-        let script = null;
-        let timeoutId = null;
-
-        // Define the global callback function
-        window[callbackName] = function(data) {
-            console.log('Password change response data (JSONP):', data);
-
-            // Cleanup
-            if (script && script.parentNode) {
-              script.parentNode.removeChild(script);
+    function cleanupJsonpScript(callbackName) {
+        const scriptInfo = activeScripts[callbackName];
+        if (scriptInfo) {
+            if (scriptInfo.timeoutId) {
+                clearTimeout(scriptInfo.timeoutId);
             }
-            delete window[callbackName];
-            if (timeoutId) clearTimeout(timeoutId);
-
-            // Process response
-            setButtonsDisabled(false);
+            if (scriptInfo.scriptElement && scriptInfo.scriptElement.parentNode) {
+                scriptInfo.scriptElement.parentNode.removeChild(scriptInfo.scriptElement);
+            }
+            delete activeScripts[callbackName];
+            // Delete the global callback function
             try {
-                if (data && data.success === true) {
-                    changeErrorDiv.textContent = data.message || "Password updated successfully.";
-                    // Optionally clear fields and return to login after a short delay
-                    setTimeout(() => {
-                        showLoginForm(); // Go back to login view
-                    }, 2000); // 2 second delay
-                } else {
-                    throw new Error(data.message || 'Failed to update password.');
-                }
-            } catch (error) {
-                console.error('Error processing password change response:', error);
-                changeErrorDiv.textContent = 'An error occurred: ' + error.message;
+                delete window[callbackName];
+            } catch (e) {
+                // IE might throw error when deleting from window
+                window[callbackName] = undefined;
             }
+            console.log(`Cleaned up JSONP script for callback: ${callbackName}`);
+        }
+    }
+
+    function jsonpRequest(baseUrl, callbackName) {
+        // Simple unique name generation (can be improved if high concurrency is expected)
+        const uniqueCallbackName = callbackName + "_" + Date.now();
+
+        const script = document.createElement('script');
+        const url = new URL(baseUrl);
+        url.searchParams.append('callback', uniqueCallbackName);
+        script.src = url.toString();
+
+        // Timeout for error handling (e.g., 10 seconds)
+        const timeoutId = setTimeout(() => {
+            console.error(`JSONP request timed out for ${uniqueCallbackName}`);
+            // Call the callback with an error object
+            if (window[uniqueCallbackName]) {
+                window[uniqueCallbackName]({ success: false, message: 'Request timed out.' });
+            } else {
+                // If callback doesn't exist, handle error appropriately (e.g., show generic error)
+                if (callbackName === 'handleLoginResponse') {
+                    errorDiv.textContent = 'Login request timed out.';
+                    hideLoading('login');
+                } else if (callbackName === 'handleChangePasswordResponse') {
+                    changePasswordMessageDiv.textContent = 'Password change request timed out.';
+                    hideLoading('changePassword');
+                }
+            }
+            // Cleanup is handled within the callback itself now
+        }, 10000); // 10 seconds timeout
+
+        // Store script info for cleanup
+        activeScripts[uniqueCallbackName] = { scriptElement: script, timeoutId: timeoutId };
+
+        // Define the actual global callback function dynamically
+        window[uniqueCallbackName] = function(result) {
+            console.log(`JSONP response received for ${uniqueCallbackName}:`, result);
+            // Call the intended handler (handleLoginResponse or handleChangePasswordResponse)
+            if (callbackName === 'handleLoginResponse') {
+                handleLoginResponse(result);
+            } else if (callbackName === 'handleChangePasswordResponse') {
+                handleChangePasswordResponse(result);
+            }
+            // Cleanup after the callback has executed
+            cleanupJsonpScript(uniqueCallbackName);
         };
 
-        // Timeout for JSONP error handling
-        timeoutId = setTimeout(() => {
-            console.error('Password change JSONP request timed out.');
-            changeErrorDiv.textContent = 'Error: Password change request timed out. Please try again.';
-            if (script && script.parentNode) {
-              script.parentNode.removeChild(script);
+        script.onerror = function() {
+            console.error(`JSONP script load error for ${uniqueCallbackName}`);
+            // Call the callback with an error object
+             if (window[uniqueCallbackName]) {
+                window[uniqueCallbackName]({ success: false, message: 'Script load error.' });
+            } else {
+                 if (callbackName === 'handleLoginResponse') {
+                    errorDiv.textContent = 'Error loading login script.';
+                    hideLoading('login');
+                } else if (callbackName === 'handleChangePasswordResponse') {
+                    changePasswordMessageDiv.textContent = 'Error loading password change script.';
+                    hideLoading('changePassword');
+                }
             }
-            delete window[callbackName];
-            setButtonsDisabled(false);
-        }, 15000); // 15 seconds timeout
+            // Cleanup is handled within the callback itself now
+        };
 
-        // Construct the JSONP URL (using GET)
-        const changePwdUrl = new URL(APPS_SCRIPT_URL);
-        changePwdUrl.searchParams.append('action', 'handleChangePassword');
-        changePwdUrl.searchParams.append('email', email); // Assuming email is available in this scope
-        changePwdUrl.searchParams.append('currentPassword', currentPassword);
-        changePwdUrl.searchParams.append('newPassword', newPassword);
-        changePwdUrl.searchParams.append('callback', callbackName);
-
-        // Create and append the script tag
-        script = document.createElement('script');
-        script.id = scriptId;
-        script.src = changePwdUrl.toString();
-        console.log('Requesting Password Change JSONP URL:', script.src);
-        document.head.appendChild(script);
+        console.log(`Initiating JSONP request: ${script.src}`);
+        document.body.appendChild(script); // Append script to trigger request
     }
 
-    // --- Employee login function (existing) ---
+    // --- Global JSONP Callback Handlers ---
+    function handleLoginResponse(result) {
+        hideLoading('login');
+        if (result && result.success === true && result.sessionToken && result.grantedTokens && result.linkedPage) {
+            errorDiv.textContent = ''; // Clear any "Loading..." message
+            console.log(`Login success. Storing tokens and redirecting to ${result.linkedPage}...`);
+
+            localStorage.setItem('tpoSessionToken', result.sessionToken);
+            localStorage.setItem('tpoGrantedTokens', JSON.stringify(result.grantedTokens));
+            localStorage.setItem('tpoUserEmail', result.email); // Store email
+            localStorage.removeItem('tpoCrmApiToken'); // Ensure old CRM token is cleared
+
+            // Redirect
+            window.top.location.href = result.linkedPage;
+
+        } else {
+            errorDiv.textContent = result.message || 'Login failed. Please check your credentials or configuration.';
+            console.log("Login failed:", result.message || 'Unknown error or missing data in response', result);
+            localStorage.removeItem('tpoSessionToken');
+            localStorage.removeItem('tpoGrantedTokens');
+            localStorage.removeItem('tpoUserEmail');
+        }
+    }
+
+    function handleChangePasswordResponse(result) {
+        hideLoading('changePassword');
+        if (result && result.success === true) {
+            changePasswordMessageDiv.textContent = result.message || 'Password changed successfully!';
+            changePasswordMessageDiv.classList.add('success');
+            // Clear password fields on success
+            oldPasswordInput.value = '';
+            newPasswordInput.value = '';
+            confirmPasswordInput.value = '';
+            // Optionally hide the section again after success
+            // changePasswordSection.style.display = 'none';
+        } else {
+            changePasswordMessageDiv.textContent = result.message || 'Failed to change password.';
+            changePasswordMessageDiv.classList.remove('success');
+        }
+    }
+
+    // --- Login Function (Using JSONP) ---
     function login() {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      const errorDiv = document.getElementById('error-message'); // Corrected ID
+      const email = emailInput.value;
+      const password = passwordInput.value;
 
       errorDiv.textContent = ''; // Clear previous errors
+      errorDiv.classList.remove('success');
 
       if (!email || !password) {
         errorDiv.textContent = 'Please enter both email and password';
         return;
       }
 
-      errorDiv.textContent = 'Logging in...';
-      setButtonsDisabled(true);
+      showLoading(errorDiv, 'login');
 
-      // --- JSONP Implementation ---
-      const callbackName = 'handleLoginResponse'; // Define callback function name
-      const scriptId = 'jsonp-' + callbackName + '-' + Date.now(); // Unique ID for the script tag
-      let script = null; // Variable to hold the script element
-      let timeoutId = null; // Variable for the timeout
-
-      // Define the global callback function
-      window[callbackName] = function(data) {
-        console.log('Login response data (JSONP):', data); // Log the received data
-
-        // Cleanup: Remove the script tag and the global callback function
-        if (script && script.parentNode) {
-          script.parentNode.removeChild(script);
-        }
-        delete window[callbackName];
-        if (timeoutId) clearTimeout(timeoutId); // Clear the error timeout
-
-        // Process the response data (similar to fetch .then block)
-        setButtonsDisabled(false); // Re-enable buttons now
-        try {
-          // Check the new success flag and necessary fields from the JSON response
-          if (data && data.success === true && data.sessionToken && data.grantedTokens && data.linkedPage) {
-            errorDiv.textContent = ''; // Clear any previous error message
-            console.log('Login success. Storing tokens and redirecting to ' + data.linkedPage + '...'); // Use concatenation
-
-            // Store session token
-            localStorage.setItem('tpoSessionToken', data.sessionToken);
-            console.log('Stored tpoSessionToken:', data.sessionToken);
-
-            // Store granted tokens as a JSON string
-            localStorage.setItem('tpoGrantedTokens', JSON.stringify(data.grantedTokens));
-            console.log('Stored tpoGrantedTokens:', JSON.stringify(data.grantedTokens));
-
-            // Store CRM API token if it exists (assuming it might be returned)
-            if (data.crmApiToken) {
-              localStorage.setItem('tpoCrmApiToken', data.crmApiToken);
-              console.log('Stored tpoCrmApiToken:', data.crmApiToken);
-            } else {
-              // Ensure any old CRM token is cleared if not provided this time
-              localStorage.removeItem('tpoCrmApiToken');
-              console.log('No crmApiToken received, cleared any existing tpoCrmApiToken.');
-            }
-
-            // Store user email for display purposes
-            localStorage.setItem('tpoUserEmail', data.email);
-            console.log('Stored tpoUserEmail:', data.email);
-
-            // Redirect to the linked page. Browser handles relative paths correctly.
-            window.top.location.href = data.linkedPage; // <-- Simpler and works for file:///
-
-          } else {
-            // Display the error message from the script's JSON response
-            errorDiv.textContent = data.message || 'Login failed. Please check your credentials or configuration.';
-            console.log("Login failed:", data.message || 'Unknown error or missing data in response', data);
-            // Clear any potentially partially stored tokens on failure
-            localStorage.removeItem('tpoSessionToken');
-            localStorage.removeItem('tpoGrantedTokens');
-            localStorage.removeItem('tpoCrmApiToken');
-          }
-        } catch (error) {
-           console.error('Error processing login response:', error);
-           errorDiv.textContent = 'Error processing login response: ' + error.message;
-           // Clear tokens on processing error too
-           localStorage.removeItem('tpoSessionToken');
-           localStorage.removeItem('tpoGrantedTokens');
-           localStorage.removeItem('tpoCrmApiToken');
-        }
-      };
-
-      // Timeout for JSONP error handling (e.g., 15 seconds)
-      timeoutId = setTimeout(() => {
-        console.error('JSONP request timed out.');
-        errorDiv.textContent = 'Error: Login request timed out. Please try again.';
-        if (script && script.parentNode) {
-          script.parentNode.removeChild(script); // Cleanup script tag on timeout
-        }
-        delete window[callbackName]; // Cleanup callback function on timeout
-        setButtonsDisabled(false); // Re-enable buttons
-      }, 15000); // 15 seconds timeout
-
-      // Construct the JSONP URL
       const loginUrl = new URL(APPS_SCRIPT_URL);
       loginUrl.searchParams.append('action', 'handleLogin');
       loginUrl.searchParams.append('email', email);
       loginUrl.searchParams.append('password', password);
-      loginUrl.searchParams.append('callback', callbackName); // Add the callback parameter
 
-      // Create and append the script tag
-      script = document.createElement('script');
-      script.id = scriptId;
-      script.src = loginUrl.toString();
-      console.log('Requesting JSONP URL:', script.src); // Log the request URL
-      document.head.appendChild(script); // Append to head to trigger request
+      // Use JSONP request instead of fetch
+      jsonpRequest(loginUrl.toString(), 'handleLoginResponse');
+    }
 
-      /*
-      // --- OLD FETCH LOGIC (Commented out) ---
-      const loginUrl = new URL(APPS_SCRIPT_URL); // This URL needs to be the NEW one
-      loginUrl.searchParams.append('action', 'handleLogin'); // Action might be different for new script
-      loginUrl.searchParams.append('email', email);
-      loginUrl.searchParams.append('password', password);
-      loginUrl.searchParams.append('type', 'employee'); // Add type parameter
+    // --- Change Password Function (Using JSONP) ---
+    function changePassword() {
+        const email = emailInput.value; // Use the email from the login form
+        const oldPassword = oldPasswordInput.value;
+        const newPassword = newPasswordInput.value;
+        const confirmPassword = confirmPasswordInput.value;
 
-      fetch(loginUrl, { method: 'GET' })
-      .then(response => {
-        if (!response.ok) { throw new Error(`Network response was not ok (${response.status})`); }
-        return response.json();
-      })
-      .then(result => {
-        setButtonsDisabled(false);
-        if (result && result.success && result.linkedPage) {
-          errorDiv.textContent = '';
-          console.log("Login success. Redirecting to:", result.linkedPage);
-          window.top.location.href = result.linkedPage; // Redirect to linked page
-        } else {
-          errorDiv.textContent = result.message || 'Login failed. Please check your credentials.';
+        changePasswordMessageDiv.textContent = ''; // Clear previous messages
+        changePasswordMessageDiv.classList.remove('success');
+
+        // Client-side validation
+        if (!email) {
+            changePasswordMessageDiv.textContent = 'Please enter your email in the login form first.';
+            return;
         }
-      })
-      .catch(error => {
-        setButtonsDisabled(false);
-        console.error('Error during login fetch:', error);
-        errorDiv.textContent = 'An error occurred during login: ' + error.message;
-      });
-      */
-    }
-
-    // Logout function (Not typically needed on basic login pages, keep CRM version commented)
-    /*
-    function logout() {
-        console.log("Logging out...");
-        localStorage.removeItem('tpoCrmToken');
-        localStorage.removeItem('tpoCrmUserEmail');
-        localStorage.removeItem('tpoCrmIsManager');
-        // Redirect to login page (this page) without any token/error
-        window.top.location.href = '/Login.html'; // Or maybe index.html?
-    }
-    */
-
-    // Add event listener for Enter key in password field
-    document.getElementById('password').addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') {
-         if (!loginButton || !loginButton.disabled) {
-            login();
+        if (!oldPassword || !newPassword || !confirmPassword) {
+            changePasswordMessageDiv.textContent = 'Please fill in all password fields.';
+            return;
+        }
+        if (newPassword !== confirmPassword) {
+            changePasswordMessageDiv.textContent = 'New passwords do not match.';
+            return;
+        }
+        if (newPassword.length < 6) { // Basic complexity check matching backend
+             changePasswordMessageDiv.textContent = 'New password must be at least 6 characters long.';
+             return;
+        }
+         if (oldPassword === newPassword) {
+             changePasswordMessageDiv.textContent = 'New password cannot be the same as the old password.';
+             return;
          }
-      }
-    });
 
-    // Display error message from URL parameter on load
+        showLoading(changePasswordMessageDiv, 'changePassword');
+
+        const changeUrl = new URL(APPS_SCRIPT_URL);
+        changeUrl.searchParams.append('action', 'changePassword');
+        changeUrl.searchParams.append('email', email);
+        changeUrl.searchParams.append('oldPassword', oldPassword);
+        changeUrl.searchParams.append('newPassword', newPassword);
+
+        // Use JSONP request instead of fetch
+        jsonpRequest(changeUrl.toString(), 'handleChangePasswordResponse');
+    }
+
+    // --- Event Listeners ---
+
+    // Add event listener for Enter key in password field for login
+    if (passwordInput) {
+        passwordInput.addEventListener('keypress', function(e) {
+          if (e.key === 'Enter') {
+             if (!loginButton || !loginButton.disabled) {
+                login();
+             }
+          }
+        });
+    }
+
+    // V87: Add event listener for toggling the change password section
+    if (toggleChangePasswordLink) {
+        toggleChangePasswordLink.addEventListener('click', function(e) {
+            e.preventDefault(); // Prevent default link behavior
+            if (changePasswordSection) {
+                const isVisible = changePasswordSection.style.display === 'block';
+                changePasswordSection.style.display = isVisible ? 'none' : 'block';
+                // Clear messages when toggling
+                if (changePasswordMessageDiv) changePasswordMessageDiv.textContent = '';
+                if (errorDiv) errorDiv.textContent = '';
+            }
+        });
+    }
+
+    // Display error message from URL parameter on load (from V85)
     document.addEventListener('DOMContentLoaded', function() {
-      if (errorParam) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const errorParam = urlParams.get('error');
+      if (errorParam && errorDiv) {
         errorDiv.textContent = decodeURIComponent(errorParam);
       }
-      // Removed login status check from basic login page
-
-      // Add event listeners for change password links/buttons
-      if(changePasswordLink) {
-          changePasswordLink.addEventListener('click', showChangePasswordForm);
-      }
-      if(cancelChangeLink) {
-          cancelChangeLink.addEventListener('click', showLoginForm);
-      }
-      // Submit button listener is handled by onclick attribute for now
-      // if(submitChangeButton) {
-      //    submitChangeButton.addEventListener('click', changePassword);
-      // }
     });
+
   </script>
 
- </body>
+</body>
 </html>
