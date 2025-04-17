@@ -680,8 +680,8 @@
 
     <script>
         // --- Authentication & API URLs ---
-        const AUTH_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyIDeCYmpl5qzXQJoDmdaC2t7suZaky8Ug5y_cpPV56CHkI8Bu2i1_tJiHXP2-9Tc_Txw/exec'; // NewCode.gs for Auth (Corrected URL)
-        const CRM_API_URL = 'https://script.google.com/macros/s/AKfycbzRENMEZ5uXIxU-RYAwSTsi19ytLMtXgc0JgNnwkHaXkmBFuopiL89b9um5CQiFvZ8x/exec'; // Code.gs for CRM data operations (Keep Old)
+        const AUTH_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzf-F_mvQfHM2dSJv10GEv-jAk1OX4APud3paB_ysgHCKv-Dd1uazx-pBJjTOd8f5xxDQ/exec'; // NewCode.gs for Auth (Corrected URL)
+        const CRM_API_URL = 'https://script.google.com/macros/s/AKfycbwYymRLOf_K5fYgmdm8301yWZIORRCAMajBTMRyKQN9cgKnpF3rUxkEBvc0nMu7v6g/exec'; // Code.gs for CRM data operations (Keep Old)
         // Function to detect mobile devices
         function isMobileDevice() {
           return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -762,6 +762,7 @@
             localStorage.removeItem('tpoSessionToken');
             localStorage.removeItem('tpoGrantedTokens');
             localStorage.removeItem('tpoCrmApiToken');
+            localStorage.removeItem('tpoUserEmail'); // Clear email too
             // Redirect to new login page without error/redirectUrl
             window.top.location.href = loginPage;
         }
@@ -773,6 +774,7 @@
           localStorage.removeItem('tpoSessionToken');
           localStorage.removeItem('tpoGrantedTokens');
           localStorage.removeItem('tpoCrmApiToken');
+          localStorage.removeItem('tpoUserEmail'); // Clear email too
           // Construct redirect URL, including the current page for post-login redirect
           const redirectUrl = `${loginPage}?redirectUrl=${encodeURIComponent(window.location.pathname + window.location.search)}&error=${encodeURIComponent(reason)}`;
           window.top.location.href = redirectUrl;
@@ -1490,6 +1492,10 @@
                 payload.append('action', 'addManagerComment');
                 payload.append('shopName', shopName);
                 payload.append('commentText', commentText);
+
+                // Add commenting user's email from localStorage
+                const userEmail = localStorage.getItem('tpoUserEmail') || 'email_not_found@example.com'; // Get email or use fallback
+                payload.append('commentingUserEmail', userEmail);
 
                 const sessionToken = localStorage.getItem('tpoSessionToken'); // Use Session token
                 if (!sessionToken) {
@@ -2233,6 +2239,11 @@
                 payload.append('shopIds', JSON.stringify(shopIdsToAssign));
                 payload.append('assignedMember', selectedMember);
                 payload.append('assignmentNotes', notes);
+
+                // Add assigning user's email from localStorage
+                const userEmail = localStorage.getItem('tpoUserEmail') || 'email_not_found@example.com'; // Get email or use fallback
+                payload.append('assigningUserEmail', userEmail);
+
                 const sessionToken = localStorage.getItem('tpoSessionToken'); // Use Session token
                 if (!sessionToken) {
                     showMessage(errorMessageElement, 'Authentication error. Please log in again.');

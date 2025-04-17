@@ -518,8 +518,8 @@
     <!-- Main CRM Script -->
     <script>
         // --- Authentication & API URLs ---
-        const AUTH_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyIDeCYmpl5qzXQJoDmdaC2t7suZaky8Ug5y_cpPV56CHkI8Bu2i1_tJiHXP2-9Tc_Txw/exec'; // NewCode.gs for Auth
-        const CRM_API_URL = 'https://script.google.com/macros/s/AKfycbzRENMEZ5uXIxU-RYAwSTsi19ytLMtXgc0JgNnwkHaXkmBFuopiL89b9um5CQiFvZ8x/exec'; // Code.gs for CRM data operations
+        const AUTH_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzf-F_mvQfHM2dSJv10GEv-jAk1OX4APud3paB_ysgHCKv-Dd1uazx-pBJjTOd8f5xxDQ/exec'; // NewCode.gs for Auth
+        const CRM_API_URL = 'https://script.google.com/macros/s/AKfycbwYymRLOf_K5fYgmdm8301yWZIORRCAMajBTMRyKQN9cgKnpF3rUxkEBvc0nMu7v6g/exec'; // Code.gs for CRM data operations
         // Function to detect mobile devices
         function isMobileDevice() {
           return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -838,7 +838,40 @@
                     populateFilterSalesPipelineSelect();
                     populateDistributorDatalist();
                     console.log("Using cached setup data.");
-                    return;
+                    // --- BEGIN: Set Default Member Filter (Moved from .then block) ---
+                    try {
+                        const userEmail = localStorage.getItem('tpoUserEmail');
+                        const filterDropdown = document.getElementById('filterAssignedMember');
+
+                        // Ensure setupData and necessary parts exist before proceeding
+                        if (userEmail && filterDropdown && setupData && setupData.members && setupData.memberEmails) {
+                            // Find the member name corresponding to the user's email
+                            const memberInfo = setupData.memberEmails.find(m => m.email && m.email.toLowerCase() === userEmail.toLowerCase());
+
+                            if (memberInfo && memberInfo.name) {
+                                const memberName = memberInfo.name;
+                                // Check if the member name exists as an option in the dropdown
+                                const optionExists = Array.from(filterDropdown.options).some(opt => opt.value === memberName);
+
+                                if (optionExists) {
+                                    filterDropdown.value = memberName;
+                                    console.log(`Set default filter to: ${memberName}`);
+                                    // Trigger the filter application immediately by re-populating the main select
+                                    populateDispensarySelect();
+                                } else {
+                                    console.warn(`Logged-in user's name "${memberName}" not found in filter dropdown options.`);
+                                }
+                            } else {
+                                console.warn(`Could not find member name for email: ${userEmail}`);
+                            }
+                        } else {
+                            console.log("Could not set default filter: Missing user email, dropdown, or setup data parts.");
+                        }
+                    } catch (error) {
+                        console.error("Error setting default member filter:", error);
+                    }
+                    // --- END: Set Default Member Filter ---
+                    return; // Don't fetch if cache is valid
                 }
                 showLoading('Fetching setup data...');
                 const sessionToken = localStorage.getItem('tpoSessionToken'); // Use Session token
@@ -865,6 +898,41 @@
                             populateSalesPipelineSelect();
                             populateFilterSalesPipelineSelect();
                             populateDistributorDatalist();
+
+                            // --- BEGIN: Set Default Member Filter ---
+                            try {
+                                const userEmail = localStorage.getItem('tpoUserEmail');
+                                const filterDropdown = document.getElementById('filterAssignedMember');
+
+                                // Ensure setupData and necessary parts exist before proceeding
+                                if (userEmail && filterDropdown && setupData && setupData.members && setupData.memberEmails) {
+                                    // Find the member name corresponding to the user's email
+                                    const memberInfo = setupData.memberEmails.find(m => m.email && m.email.toLowerCase() === userEmail.toLowerCase());
+
+                                    if (memberInfo && memberInfo.name) {
+                                        const memberName = memberInfo.name;
+                                        // Check if the member name exists as an option in the dropdown
+                                        const optionExists = Array.from(filterDropdown.options).some(opt => opt.value === memberName);
+
+                                        if (optionExists) {
+                                            filterDropdown.value = memberName;
+                                            console.log(`Set default filter to: ${memberName}`);
+                                            // Trigger the filter application immediately by re-populating the main select
+                                            populateDispensarySelect();
+                                        } else {
+                                            console.warn(`Logged-in user's name "${memberName}" not found in filter dropdown options.`);
+                                        }
+                                    } else {
+                                        console.warn(`Could not find member name for email: ${userEmail}`);
+                                    }
+                                } else {
+                                    console.log("Could not set default filter: Missing user email, dropdown, or setup data parts.");
+                                }
+                            } catch (error) {
+                                console.error("Error setting default member filter:", error);
+                            }
+                            // --- END: Set Default Member Filter ---
+
                         } else {
                             console.error('Error fetching setup data:', data ? data.message : 'Invalid response');
                             showMessage(errorMessageElement, 'Error fetching setup data: ' + (data ? data.message : 'Invalid response'));
@@ -1206,6 +1274,10 @@
                         return;
                     }
                     formData.append('token', sessionToken); // Add Session token
+
+                    // Add user's email from localStorage
+                    const userEmail = localStorage.getItem('tpoUserEmail') || 'email_not_found@example.com'; // Get email or use fallback
+                    formData.append('userEmail', userEmail); // Add email to payload (using generic 'userEmail' key)
 
                     // Log FormData for debugging
                     // for (let [key, value] of formData.entries()) {
