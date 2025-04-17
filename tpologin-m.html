@@ -235,10 +235,10 @@
 
   <!-- Vendor JS Files -->
   <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="assets/vendor/glightbox/js/glightbox.min.js"></script> <!-- V87: Added to fix GLightbox error -->
+  <!-- <script src="assets/vendor/glightbox/js/glightbox.min.js"></script> --> <!-- V87: Temporarily disabled for testing -->
 
   <!-- Template Main JS File -->
-  <script src="assets/js/main.js"></script> <!-- Needed for mobile nav toggle -->
+  <!-- <script src="assets/js/main.js"></script> --> <!-- Temporarily disabled for testing -->
 
   <!-- V87 Login & Password Change Script -->
   <script>
@@ -315,11 +315,13 @@
         // script.onerror = function(event) { ... };
 
         console.log(`Initiating JSONP request (v40 style): ${script.src}`);
+        console.log(`>>> Appending script tag for ${callbackName}`); // <<< ADDED LOG
         document.body.appendChild(script); // Append script to trigger request
     }
 
     // --- Global JSONP Callback Handlers (Must be global) ---
     window.handleLoginResponse = function(result) {
+        console.log(`>>> Entering handleLoginResponse`); // <<< ADDED LOG
         // Clear the timeout associated with this request
         if (requestTimeouts['handleLoginResponse']) {
             clearTimeout(requestTimeouts['handleLoginResponse']);
@@ -351,6 +353,7 @@
     }
 
     window.handleChangePasswordResponse = function(result) {
+        console.log(`>>> Entering handleChangePasswordResponse`); // <<< ADDED LOG
          // Clear the timeout associated with this request
         if (requestTimeouts['handleChangePasswordResponse']) {
             clearTimeout(requestTimeouts['handleChangePasswordResponse']);
