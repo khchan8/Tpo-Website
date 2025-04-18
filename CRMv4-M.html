@@ -1107,7 +1107,24 @@
                     timer = setTimeout(() => { func.apply(this, args); }, timeout);
                 };
             }
-
+ 
+            // Add delegated listener for "Select All" checkbox in Assignment table
+            if (assignmentTableContainer) {
+                assignmentTableContainer.addEventListener('change', function(event) {
+                    if (event.target.id === 'selectAllAssignCheckbox') {
+                        const isChecked = event.target.checked;
+                        const currentTable = assignmentTableContainer.querySelector('table');
+                        if (currentTable) {
+                            currentTable.querySelectorAll('.assign-checkbox').forEach(checkbox => {
+                                checkbox.checked = isChecked;
+                            });
+                        }
+                    }
+                });
+            } else {
+                console.error("Could not find assignmentTableContainer to attach delegated listener.");
+            }
+ 
             // Assignment Tab Listeners
             if (filterAssignProvince) filterAssignProvince.addEventListener('change', () => fetchUnassignedData(1));
             if (searchAssignName) searchAssignName.addEventListener('input', debounce(() => fetchUnassignedData(1), 500));
@@ -2203,25 +2220,8 @@
                 setTimeout(() => { if (assignMap) assignMap.invalidateSize() }, 150); // Increased delay slightly
 
 
-                // Add event listener for "Select All" checkbox AFTER table is in DOM
-                const selectAllCheckbox = document.getElementById('selectAllAssignCheckbox');
-                if (selectAllCheckbox) {
-                    // Clear previous listener before adding new one
-                    const newSelectAllCheckbox = selectAllCheckbox.cloneNode(true);
-                    selectAllCheckbox.parentNode.replaceChild(newSelectAllCheckbox, selectAllCheckbox);
-
-                    newSelectAllCheckbox.addEventListener('change', function() {
-                        // Select only visible checkboxes in the current table context
-                        const currentTable = assignmentTableContainer.querySelector('table');
-                        if (currentTable) {
-                            currentTable.querySelectorAll('.assign-checkbox').forEach(checkbox => {
-                                checkbox.checked = this.checked;
-                            });
-                        }
-                    });
-                } else {
-                     console.error("Could not find selectAllAssignCheckbox element after table population");
-                }
+                // Removed direct event listener attachment for #selectAllAssignCheckbox
+                // This will be handled by event delegation in initializeApp
 
                 // Add delegated listener for clicking table rows (for highlighting) AFTER table is in DOM
                 const currentTable = assignmentTableContainer.querySelector('table');
