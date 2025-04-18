@@ -1506,13 +1506,13 @@
                 qrCodeInput.value = ''; // Clear file input on selection change
                 qrCodePreviewContainer.innerHTML = ''; // Clear previews
                 if (selectedDispensary === 'new') {
-                    newDispensaryNameGroup.style.display = 'block';
-                    newDispensaryNameInput.required = true; // Make required when visible
-                    clearFormFields();
+                    clearFormFields(); // Clear first
+                    newDispensaryNameGroup.style.display = 'block'; // Then show
+                    newDispensaryNameInput.required = true; // Then set required
                     this.value = 'new'; // Keep 'new' selected
                     newDispensaryNameInput.focus(); // Focus on new name field
                 } else {
-                    newDispensaryNameGroup.style.display = 'none';
+                    newDispensaryNameGroup.style.display = 'none'; // Hide if not 'new'
                     newDispensaryNameInput.required = false; // Make not required when hidden
                     newDispensaryNameInput.value = ''; // Clear new name field
                     if (selectedDispensary) {
