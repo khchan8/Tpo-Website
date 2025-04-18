@@ -241,7 +241,7 @@
                             </select>
                         </div>
                          <div class="form-group col-md-6" id="newDispensaryNameGroup" style="display: none;">
-                            <label for="newDispensaryName">New Dispensary Name</label>
+                            <label for="newDispensaryName">New Dispensary Name <span class="required-indicator">*</span></label>
                             <input type="text" id="newDispensaryName" class="form-control" name="newDispensaryName" placeholder="Enter new shop name">
                         </div>
                     </div>
@@ -264,7 +264,7 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="dispensaryAddress">Dispensary Address</label><span class="required-indicator">*</span></label>
+                        <label for="dispensaryAddress">Dispensary Address<span class="required-indicator">*</span></label>
                         <input type="text" id="dispensaryAddress" class="form-control" name="Dispensary Address" required placeholder="Enter full address">
                     </div>
                      <!-- Lat/Lon and Map -->
@@ -716,6 +716,7 @@
             // --- Original CRM DOMContentLoaded Logic Moved Here ---
             const selectDispensary = document.getElementById('selectDispensary');
             const newDispensaryNameGroup = document.getElementById('newDispensaryNameGroup');
+            const newDispensaryNameInput = document.getElementById('newDispensaryName'); // Get the input element
             const form = document.getElementById('dispensaryForm');
             const qrCodeInput = document.getElementById('qrCode');
             const qrCodePreviewContainer = document.getElementById('qrCodePreviewContainer');
@@ -955,13 +956,16 @@
                 const currentSelectedDispensary = selectDispensary.value;
                 const currentMemberFilter = filterAssignedMember.value;
                 const currentPipelineFilter = filterSalesPipeline.value;
+                const currentNameFilter = searchDispensary.value; // Store text filter value
+                const currentAddressFilter = filterDispensaryAddress.value; // Store text filter value
+                const currentAdditionalFilter = filterAdditional.value; // Store text filter value
 
                 // Get filter values for processing
-                const nameFilter = searchDispensary.value.toLowerCase();
+                const nameFilter = currentNameFilter.toLowerCase(); // Use stored value for filtering logic
                 const memberFilter = currentMemberFilter; // Use stored value for filtering logic
                 const pipelineFilter = currentPipelineFilter; // Use stored value for filtering logic
-                const addressFilter = filterDispensaryAddress.value.toLowerCase();
-                const additionalFilter = filterAdditional.value.toLowerCase();
+                const addressFilter = currentAddressFilter.toLowerCase(); // Use stored value for filtering logic
+                const additionalFilter = currentAdditionalFilter.toLowerCase(); // Use stored value for filtering logic
 
                 selectDispensary.innerHTML = '<option value="">Select a dispensary</option><option value="new">New Dispensary</option>';
 
@@ -1019,6 +1023,10 @@
                 // Restore filter dropdown selections
                 filterAssignedMember.value = currentMemberFilter;
                 filterSalesPipeline.value = currentPipelineFilter;
+                // Restore text filter values
+                searchDispensary.value = currentNameFilter;
+                filterDispensaryAddress.value = currentAddressFilter;
+                filterAdditional.value = currentAdditionalFilter;
             }
 
             function populateFormFields(dispensaryName) {
@@ -1244,15 +1252,16 @@
 
                 // Get selected dispensary name or new name
                 const selectedDispensaryValue = selectDispensary.value;
+                const newNameInput = document.getElementById('newDispensaryName');
                 if (selectedDispensaryValue === 'new') {
-                    const newName = document.getElementById('newDispensaryName').value.trim();
+                    const newName = newNameInput.value.trim();
                     if (!newName) {
                         showMessage(errorMessageElement, 'Please enter a name for the new dispensary.');
                         hideLoading();
-                        return;
+                        return; // Stop submission if new name is required but empty
                     }
-                    formData.append('selectedDispensary', 'new'); // Indicate new entry
-                    // formData.append('newDispensaryName', newName); // Already captured by FormData(form) if input has name attribute
+                    // formData.append('selectedDispensary', 'new'); // Already captured by FormData(form)
+                    // formData.append('newDispensaryName', newName); // Already captured by FormData(form)
                 } else if (!selectedDispensaryValue) {
                      showMessage(errorMessageElement, 'Please select a dispensary or choose "New Dispensary".');
                      hideLoading();
@@ -1497,17 +1506,19 @@
                 qrCodePreviewContainer.innerHTML = ''; // Clear previews
                 if (selectedDispensary === 'new') {
                     newDispensaryNameGroup.style.display = 'block';
+                    newDispensaryNameInput.required = true; // Make required when visible
                     clearFormFields();
                     this.value = 'new'; // Keep 'new' selected
-                    document.getElementById('newDispensaryName').focus(); // Focus on new name field
-                } else if (selectedDispensary) {
-                    newDispensaryNameGroup.style.display = 'none';
-                    document.getElementById('newDispensaryName').value = ''; // Clear new name field
-                    populateFormFields(selectedDispensary);
+                    newDispensaryNameInput.focus(); // Focus on new name field
                 } else {
                     newDispensaryNameGroup.style.display = 'none';
-                    document.getElementById('newDispensaryName').value = '';
-                    clearFormFields();
+                    newDispensaryNameInput.required = false; // Make not required when hidden
+                    newDispensaryNameInput.value = ''; // Clear new name field
+                    if (selectedDispensary) {
+                        populateFormFields(selectedDispensary);
+                    } else {
+                        clearFormFields();
+                    }
                 }
             });
 
