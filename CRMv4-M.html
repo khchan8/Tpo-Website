@@ -138,7 +138,6 @@
         }
         /* Logout button styles removed */
 
-
         /* === Styles from CRMv4-M.html (Manager-Specific) === */
 
         /* Collapsible header background colors */
@@ -354,23 +353,22 @@
 </head>
 <body>
 
-    <!-- ======= Top Bar ======= -->
+    <!-- ======= Top Bar (from CRMv4.html) ======= -->
     <section id="topbar" class="d-flex align-items-center">
         <div class="container d-flex justify-content-center justify-content-md-between">
-          <!-- Contact Info (Visibility controlled by JS/CSS) -->
-          <div class="contact-info d-flex align-items-center">
+        <div class="contact-info d-flex align-items-center">
             <i class="bi bi-envelope d-flex align-items-center"><a href="mailto:info@tpo-wellness.com">info@tpo-wellness.com</a></i>
             <i class="bi bi-phone d-flex align-items-center ms-4"><span>+66 87 789 4950</span></i>
-          </div>
-          <!-- User Info (Re-added for status display) -->
-          <div class="user-info d-flex align-items-center" style="display: none;"> <!-- Initially hidden -->
-              <span id="loginStatus"></span>
-              <!-- Logout Button REMOVED from here -->
-          </div>
+        </div>
+        <div class="user-info d-none d-md-flex align-items-center">
+            <!-- Login status will be added dynamically by JS -->
+            <span id="loginStatus"></span>
+            <!-- Logout button will be added dynamically by JS if needed, or use header link -->
+        </div>
         </div>
     </section>
 
-    <!-- ======= Header ======= -->
+    <!-- ======= Header (from CRMv4.html, modified nav) ======= -->
     <header id="header" class="d-flex align-items-center">
         <div class="container d-flex align-items-center justify-content-between">
         <h1 class="logo"><a href="index.html"><img src="./assets/img/TPOLogo.png" alt="TPO Wellness Logo" class="img-fluid"></a></h1>
@@ -401,7 +399,6 @@
                   </li>
                 </ul>
               </li>
-              <!-- Login Link (Initially Visible, hidden by JS if logged in) -->
               <!-- Dynamic Login/Logout Link -->
               <li id="loginLogoutItem"><a id="loginLogoutLink" class="nav-link" href="#">Login</a></li>
             </ul>
@@ -525,6 +522,242 @@
                                      <input type="date" class="form-control" id="endDateInput" title="End Date">
                                  </div>
                              </div>
+                        </div>
+                        <div class="form-group col-md-2">
+                            <label for="searchPipelineName">Dispensary Name</label>
+                            <input type="text" id="searchPipelineName" class="form-control form-control-sm" placeholder="Type name...">
+                        </div>
+                         <!-- Buttons Group Moved to Right -->
+                         <div class="form-group col-md-2 d-flex align-items-end justify-content-end">
+                             <div class="pipeline-controls-container">
+                                 <div class="form-check mb-2 pipeline-control-item">
+                                     <input class="form-check-input" type="checkbox" value="" id="multiFieldSelectCheck">
+                                     <label class="form-check-label" for="multiFieldSelectCheck">
+                                         Multi-Select
+                                     </label>
+                                 </div>
+                                 <button class="btn btn-sm btn-primary mb-2 pipeline-control-item" type="button" id="applyPipelineFilterBtn" title="Apply Filters">Apply</button>
+                                 <button class="btn btn-sm btn-secondary pipeline-control-item" type="button" id="reloadPipelineBtn" title="Reload Pipeline Data"><i class="fas fa-sync-alt"></i></button>
+                                 <!-- Global Reload Button Moved to Header/Top Bar potentially -->
+                                 <button class="btn btn-sm btn-outline-primary mt-2 pipeline-control-item" id="reloadDataBtn" title="Reload All Data"><i class="fas fa-sync-alt"></i> Reload All</button>
+                             </div>
+                         </div>
+                    </div>
+                    <!-- Column Visibility Toggle -->
+                    <div id="pipelineColumnToggle" class="mb-2 column-toggle-controls">
+                        <small>Show Columns:</small>
+                        <label><input type="checkbox" class="column-toggle" data-column-class="col-assigned-member" checked> Member</label>
+                        <label><input type="checkbox" class="column-toggle" data-column-class="col-pipeline-record" checked> Pipeline Record</label>
+                        <label><input type="checkbox" class="column-toggle" data-column-class="col-notes-history" checked> Notes/History</label>
+                        <label><input type="checkbox" class="column-toggle" data-column-class="col-next-action" checked> Next Action</label>
+                        <label><input type="checkbox" class="column-toggle" data-column-class="col-add-comment" checked> Add Comment</label> <!-- Added toggle for comment column -->
+                    </div>
+                    <!-- Display -->
+                    <div id="assignedShopsTableContainer" class="table-responsive">
+                        <!-- Table will be generated here by JS -->
+                        <p>Loading assigned shops...</p>
+                    </div>
+                    <div id="assignedShopsPaginationControls" class="pagination-controls mt-2">
+                        <!-- Pagination controls will be generated here by JS -->
+                    </div>
+                </div>
+            </div>
+            <!-- End Sales Pipeline View Section -->
+
+            <!-- ======= Sales Performance Section (from performance.html) ======= -->
+            <section id="sales-performance" class="dashboard-section">
+              <div data-aos="fade-up"> <!-- Removed container to allow full width -->
+                <div class="section-title">
+                  <span>Sales Performance</span>
+                  <h2>Sales Performance</h2>
+                  <p>Detailed analytics of our sales performance across different dimensions</p>
+                </div>
+
+                <div class="submenu-container">
+                  <ul class="submenu-nav" id="sales-submenu">
+                    <li class="active" data-target="monthly-by-agent">Sales by Months</li>
+                    <li data-target="sales-by-agent">Sales By Agent</li>
+                    <li data-target="sales-customer">Sales By Customer</li>
+                    <li data-target="current-month">Current Month by Agent</li>
+                    <li data-target="duenow-sales">Due Now By Month</li>
+                    <li data-target="consignment-sales">Consignment By Month</li>
+                  </ul>
+
+                  <!-- Sales by Month by Agent -->
+                  <div class="submenu-content active" id="monthly-by-agent">
+                    <div class="dashboard-container">
+                      <h3 class="dashboard-title">Sales Performance by Month by Agent</h3>
+                      <div class="iframe-container">
+                        <!-- Loader div removed -->
+                        <iframe id="monthly-by-agent-iframe" class="responsive-iframe" src="about:blank" data-src="https://lookerstudio.google.com/embed/reporting/d382249f-dd45-4e7d-9acd-da577f5036d1/page/KqU3E" frameborder="0" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Sales By Agent -->
+                  <div class="submenu-content" id="sales-by-agent">
+                    <div class="dashboard-container">
+                      <h3 class="dashboard-title">Sales by Agent All</h3>
+                      <div class="iframe-container">
+                        <!-- Loader div removed -->
+                        <iframe id="sales-agent-iframe" class="responsive-iframe" src="about:blank" data-src="https://lookerstudio.google.com/embed/reporting/0f2be493-16d7-4e74-b0d2-243153ddfb1e/page/J7j3E" frameborder="0" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"></iframe>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Sales By Customer -->
+                  <div class="submenu-content" id="sales-customer">
+                    <div class="dashboard-container">
+                      <h3 class="dashboard-title">Previous Months by Agents</h3>
+                      <div class="iframe-container">
+                        <!-- Loader div removed -->
+                        <iframe id="sales-customer-iframe" class="responsive-iframe" src="about:blank" data-src="https://lookerstudio.google.com/embed/reporting/8a5e6282-1475-4228-82a0-758ea951c0ae/page/KqU3E" frameborder="0" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"></iframe>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Current Month by Agent -->
+                  <div class="submenu-content" id="current-month">
+                    <div class="dashboard-container">
+                      <h3 class="dashboard-title">Sales by Agent for Current Month</h3>
+                      <div class="iframe-container">
+                        <!-- Loader div removed -->
+                        <iframe id="current-month-iframe" class="responsive-iframe" src="about:blank" data-src="https://lookerstudio.google.com/embed/reporting/c4399438-677b-44c0-8258-023242e8e48b/page/1wv3E" frameborder="0" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"></iframe>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Due Now Now -->
+                  <div class="submenu-content" id="duenow-sales">
+                    <div class="dashboard-container">
+                      <h3 class="dashboard-title">Due Now Sales Order by Month</h3>
+                      <div class="iframe-container">
+                        <!-- Loader div removed -->
+                        <iframe id="duenow-sales-iframe" class="responsive-iframe" src="about:blank" data-src="https://lookerstudio.google.com/embed/reporting/77f10391-b8f2-473a-85d0-88a824af1377/page/kRx3E" frameborder="0" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"></iframe>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- Consignment Sales -->
+                  <div class="submenu-content" id="consignment-sales">
+                    <div class="dashboard-container">
+                      <h3 class="dashboard-title">Consignment Sales Order by Month</h3>
+                      <div class="iframe-container">
+                        <!-- Loader div removed -->
+                        <iframe id="consignment-sales-iframe" class="responsive-iframe" src="about:blank" data-src="https://lookerstudio.google.com/embed/reporting/a2e80547-caf4-4554-abfb-0306cf2d3086/page/YXy3E" frameborder="0" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"></iframe>
+                      </div>
+                    </div>
+                  </div>
+                </div> <!-- End submenu-container -->
+              </div> <!-- End data-aos -->
+            </section><!-- End Sales Performance Section -->
+
+
+        <!-- Main CRM Form Removed -->
+        <!-- Message Area -->
+        <div id="loadingOverlay" class="loading-overlay">
+            <div class="loading-content">
+                <div class="spinner"></div>
+                <span id="loadingMessage">Loading...</span>
+            </div>
+        </div>
+        <div class="message sent-message mt-3"></div>
+        <div class="message error-message mt-3"></div>
+    </div> <!-- End crm-container -->
+    </main><!-- End #main -->
+
+    <!-- ======= Footer (Assuming structure from style.css/Login.html if needed) ======= -->
+    <!-- If a footer is defined in style.css or needed, add it here -->
+    <!-- Example structure (adjust based on actual style.css): -->
+    <!--
+    <footer id="footer">
+        <div class="footer-top">
+            <div class="container">
+                </div>
+            </div>
+        </div>
+        <div class="container d-md-flex py-4">
+            <div class="me-md-auto text-center text-md-start">
+                <div class="copyright">
+                    &copy; Copyright <strong><span>TPO Wellness</span></strong>. All Rights Reserved
+                </div>
+            </div>
+            <div class="social-links text-center text-md-right pt-3 pt-md-0">
+                <a href="#" class="twitter"><i class="bx bxl-twitter"></i></a>
+                <a href="#" class="facebook"><i class="bx bxl-facebook"></i></a>
+                <a href="#" class="instagram"><i class="bx bxl-instagram"></i></a>
+            </div>
+        </div>
+    </footer>
+    -->
+    <!-- End Footer -->
+
+    <!-- Vendor JS Files (Ensure these are loaded if style.css depends on them) -->
+    <!-- Popper and Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <!-- Leaflet Fullscreen JS -->
+    <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/Leaflet.fullscreen.min.js'></script>
+    <!-- Main JS (From Login.html/style.css template, if needed for header/nav functionality) -->
+    <script src="assets/js/main.js"></script>
+
+    <script>
+        // --- Authentication & API URLs ---
+        const AUTH_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzf-F_mvQfHM2dSJv10GEv-jAk1OX4APud3paB_ysgHCKv-Dd1uazx-pBJjTOd8f5xxDQ/exec'; // NewCode.gs for Auth (Corrected URL)
+        const CRM_API_URL = 'https://script.google.com/macros/s/AKfycbz0TiC5iA_tOVjwiTfm7hrf_3PS1yNzRdepPDONdCAsVf9jQHnR8THG2MREFVASqr4r/exec'; // Code.gs for CRM data operations (Keep Old)
+        // Function to detect mobile devices
+        function isMobileDevice() {
+          return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        }
+        // Set login page based on device
+        const loginPage = isMobileDevice() ? 'tpologin-m.html' : 'tpologin.html';
+        const requiredToken = 'tpoCRMManagerToken'; // Correct Token for Manager View
+
+        // --- Messaging Functions (Defined Globally) ---
+        function showLoading(message = "Loading...") {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const loadingMessage = document.getElementById('loadingMessage');
+            // Get message elements here as well, as hideMessage might be called
+            const sentMessageElement = document.querySelector('.sent-message');
+            const errorMessageElement = document.querySelector('.error-message');
+
+            // Check if elements exist before manipulating
+            if (loadingMessage) {
+                loadingMessage.textContent = message;
+            } else {
+                console.warn("showLoading: loadingMessage element not found.");
+            }
+            if (loadingOverlay) {
+                loadingOverlay.style.display = 'block';
+            } else {
+                 console.warn("showLoading: loadingOverlay element not found.");
+            }
+            // Ensure hideMessage is called only if elements exist
+            if (sentMessageElement) hideMessage(sentMessageElement);
+            if (errorMessageElement) hideMessage(errorMessageElement);
+        }
+
+        function hideLoading() {
+             const loadingOverlay = document.getElementById('loadingOverlay');
+             if (loadingOverlay) {
+                 loadingOverlay.style.display = 'none';
+             } else {
+                 console.warn("hideLoading: loadingOverlay element not found.");
+             }
+        }
+
+        function showMessage(element, message) {
+            // Use overlay for loading, specific elements for success/error
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const loadingMessage = document.getElementById('loadingMessage');
+
+            if(element === loadingOverlay || element === loadingMessage) {
+                showLoading(message);
+            } else {
+                hideLoading(); // Hide loading overlay when showing success/error
+                if(element) {
                     element.textContent = message;
                     element.style.display = 'block';
                 } else {
@@ -572,7 +805,7 @@
           window.top.location.href = redirectUrl;
         }
         // --- Authorization Check (New Standard - Relies on localStorage) ---
-        function checkAuthorization() { // No parameters needed - Updated for Nav Plan v5
+        function checkAuthorization() { // No parameters needed - Updated for Nav Plan v6
             console.log("Checking authorization for required token:", requiredToken);
  
             // --- Retrieve data from localStorage ---
