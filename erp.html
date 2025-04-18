@@ -109,27 +109,27 @@
         display: flex; /* Use flexbox */
         flex-direction: column; /* Stack children vertically */
     }
-    /* Style for logout button in top bar (similar to CRMv4) */
-    #topbar .logout-btn {
-        background: #dc3545; /* Red color */
-        border: 0;
-        padding: 4px 15px;
-        color: #fff;
-        transition: 0.3s;
-        border-radius: 4px;
-        font-size: 13px;
-        margin-left: 15px;
-        cursor: pointer;
-        display: none; /* Initially hidden */
-    }
-    #topbar .logout-btn:hover {
-        background: #c82333; /* Darker red */
-    }
+    /* Top Bar Visibility Logic */
+    #topbar .user-info { display: none; } /* Hide user info by default */
+    #topbar .contact-info { display: flex; } /* Show contact info by default */
     #topbar #loginStatus { /* Style for login status text */
          font-size: 14px;
          color: #fff; /* White text on dark top bar */
-         margin-right: 15px;
+         /* Add margin if needed, e.g., margin-right: 15px; */
     }
+
+    /* Desktop: Logged in - Show both */
+    @media (min-width: 768px) { /* Adjust breakpoint as needed */
+       body.logged-in #topbar .contact-info { display: flex !important; } /* Ensure contact is shown */
+       body.logged-in #topbar .user-info { display: flex !important; } /* Ensure user info is shown */
+    }
+
+    /* Mobile: Logged in - Show only user info */
+    @media (max-width: 767.98px) { /* Adjust breakpoint as needed */
+       body.logged-in #topbar .contact-info { display: none !important; } /* Hide contact */
+       body.logged-in #topbar .user-info { display: flex !important; } /* Show user info */
+    }
+    /* Logout button styles removed */
   </style>
 
 </head>
@@ -142,11 +142,11 @@
         <i class="bi bi-envelope d-flex align-items-center"><a href="mailto:info@tpo-wellness.com">info@tpo-wellness.com</a></i>
         <i class="bi bi-phone d-flex align-items-center ms-4"><span>+66 87 789 4950</span></i>
       </div>
-      <div class="user-info d-none d-md-flex align-items-center">
-         <!-- Login status and logout button will be added dynamically by JS -->
-         <span id="loginStatus"></span>
-         <button id="logoutButton" class="logout-btn" onclick="logout()">Logout</button>
-       </div>
+      <!-- User Info (Re-added for status display) -->
+      <div class="user-info d-flex align-items-center" style="display: none;"> <!-- Initially hidden -->
+          <span id="loginStatus"></span>
+          <!-- Logout Button REMOVED from here -->
+      </div>
     </div>
   </section>
 
@@ -160,19 +160,34 @@
 			  <li><a class="nav-link scrollto" href="index.html#hero">Home</a></li>
 			  <li><a class="nav-link scrollto" href="index.html#about">About</a></li>
 			  <li><a class="nav-link scrollto" href="index.html#contact">Contact</a></li>
-			  <!-- Added Links -->
-			  <li><a class="nav-link" href="AA-Sales-Tools.html">Sales Tools</a></li>
-			  <li><a class="nav-link" href="performance.html">Performance</a></li>
-			  <!-- Link to the current page, marked active -->
-			  <li><a class="nav-link active" href="erp.html">ERP</a></li>
-			  <!-- Added CRM Link -->
-			  <li><a class="nav-link" href="CRMv4.html">CRM</a></li>
-			  <!-- Simplified Login Link -->
-			  <li><a class="nav-link" href="tpologin.html">Login</a></li>
-			           <li><a class="nav-link" href="#" onclick="logout()">Logout</a></li> <!-- Logout link -->
+			  <!-- Employee Portal Dropdown (Added based on feedback) -->
+		            <li class="dropdown" id="employeePortalDropdown" style="display: none;"><a href="#"><span>Employee Portal</span> <i class="bi bi-chevron-down"></i></a>
+		              <ul>
+		                <li class="dropdown"><a href="#"><span>Sales Tools</span> <i class="bi bi-chevron-right"></i></a>
+		                  <ul>
+		                    <li><a href="AA-Sales-Tools.html">Auntie Aloha</a></li>
+		                    <li><a href="MC-Sales-Tools.html">Mana Cannabis</a></li>
+		                    <li><a href="TF-Sales-Tools.html">Fuzzies</a></li>
+		                    <li><a href="TY-Sales-Tools.html">Tyson</a></li>
+		                  </ul>
+		                </li>
+		                <li><a href="performance.html">Performance</a></li>
+		                <li><a href="erp.html">ERP</a></li> <!-- Link to current page -->
+		                <li><a href="CRMv4.html">CRM</a></li>
+		                <li class="dropdown"><a href="#"><span>Customer Portal</span> <i class="bi bi-chevron-right"></i></a>
+		                   <ul>
+		                     <li><a href="Fuzzies-data.html">Fuzzies</a></li>
+		                     <li><a href="Tyson-data.html">Tyson</a></li>
+		                   </ul>
+		                </li>
+		              </ul>
+		            </li>
+			  <!-- Login Link (Initially Visible, hidden by JS if logged in) -->
+			  <!-- Dynamic Login/Logout Link -->
+			  <li id="loginLogoutItem"><a id="loginLogoutLink" class="nav-link" href="#">Login</a></li>
 			</ul>
 			<i class="bi bi-list mobile-nav-toggle"></i>
-			</nav><!-- .navbar -->
+		</nav><!-- .navbar -->
     </div>
   </header><!-- End Header -->
 
@@ -342,24 +357,61 @@
     // --- Authorization Check (Runs after successful authentication) ---
     function checkAuthorization(grantedTokens, userEmail) {
         console.log("Checking authorization for:", requiredToken);
+ 
+        // Get UI elements for Navbar and Topbar
+        const loginLogoutLink = document.getElementById('loginLogoutLink');
+        const employeePortalDropdown = document.getElementById('employeePortalDropdown');
+        const loginStatusSpan = document.getElementById('loginStatus'); // Re-add for top bar status
+        const bodyElement = document.body; // Needed for body class
+ 
+        // Check if elements exist before manipulating
+        if (!loginLogoutLink || !employeePortalDropdown || !loginStatusSpan || !bodyElement) {
+            console.error("Required UI elements for auth check not found (loginLogoutLink, employeePortalDropdown, loginStatusSpan, body).");
+            return false; // Indicate failure but don't redirect (checkAuthentication handles redirect)
+        }
+ 
         // Ensure grantedTokens is an array before checking includes()
         const tokensArray = Array.isArray(grantedTokens) ? grantedTokens : [];
-
+ 
         if (!tokensArray.includes(requiredToken)) {
+            // This path might not be strictly necessary if checkAuthentication handles redirects,
+            // but it ensures correct UI state if called directly with invalid tokens.
+            bodyElement.classList.remove('logged-in'); // Ensure logged-out state
+            loginStatusSpan.textContent = ''; // Clear status
+            // Configure Login link
+            loginLogoutLink.textContent = 'Login';
+            loginLogoutLink.href = loginPage;
+            loginLogoutLink.onclick = null;
+            // Hide Employee Portal
+            employeePortalDropdown.style.display = 'none';
             redirectToLogin(`Access denied. Required permission (${requiredToken}) not found.`);
             return false; // Indicate authorization failed
         }
         console.log("Authorization successful.");
-
-        // Update UI with user info
-        const loginStatusSpan = document.getElementById('loginStatus');
-        const logoutButton = document.getElementById('logoutButton');
-        if (loginStatusSpan && userEmail) {
-             loginStatusSpan.textContent = `Logged in as: ${userEmail}`;
+ 
+        // Update UI for logged-in state
+        bodyElement.classList.add('logged-in'); // Add class for CSS rules
+ 
+        // Update Top Bar Status
+        if (userEmail) {
+            loginStatusSpan.textContent = `Logged in as: ${userEmail}`;
+        } else {
+            loginStatusSpan.textContent = `Logged in`; // Fallback
         }
-        if (logoutButton) {
-            logoutButton.style.display = 'inline-block'; // Show logout button
-        }
+ 
+        // Configure Logout link
+        loginLogoutLink.textContent = 'Logout';
+        loginLogoutLink.href = '#'; // Set href to # to prevent navigation
+        loginLogoutLink.onclick = (e) => { // Add onclick handler
+            e.preventDefault(); // Prevent default link behavior
+            logout();
+        };
+ 
+        // Show Employee Portal
+        employeePortalDropdown.style.display = 'list-item';
+ 
+        // Top Bar UI status is managed above
+ 
         return true; // Indicate authorization succeeded
     }
 
@@ -373,7 +425,23 @@
       console.log('Checking local authentication...'); // Updated log
 
       if (!sessionToken || !grantedTokensString) {
-        // If either session token or granted tokens are missing, redirect
+        // If either session token or granted tokens are missing, set UI to logged out and redirect
+        const loginLogoutLink = document.getElementById('loginLogoutLink');
+        const employeePortalDropdown = document.getElementById('employeePortalDropdown');
+        const loginStatusSpan = document.getElementById('loginStatus'); // Get status span
+        const bodyElement = document.body; // Get body
+ 
+        if (bodyElement) bodyElement.classList.remove('logged-in'); // Ensure logged-out state
+        if (loginStatusSpan) loginStatusSpan.textContent = ''; // Clear status
+ 
+        if (loginLogoutLink) {
+            loginLogoutLink.textContent = 'Login';
+            loginLogoutLink.href = loginPage;
+            loginLogoutLink.onclick = null;
+        }
+        if (employeePortalDropdown) {
+            employeePortalDropdown.style.display = 'none';
+        }
         redirectToLogin('Session or permissions not found locally. Please login.');
         return; // Stop script execution
       }
@@ -386,11 +454,39 @@
         if (!Array.isArray(grantedTokens)) {
            // If parsing succeeds but it's not an array, treat as invalid
            console.error('Parsed grantedTokens is not an array:', grantedTokensString);
+           const loginLogoutLink = document.getElementById('loginLogoutLink'); // Ensure UI reset before redirect
+           const employeePortalDropdown = document.getElementById('employeePortalDropdown');
+           const loginStatusSpan = document.getElementById('loginStatus'); // Get status span
+           const bodyElement = document.body; // Get body
+           if (bodyElement) bodyElement.classList.remove('logged-in'); // Ensure logged-out state
+           if (loginStatusSpan) loginStatusSpan.textContent = ''; // Clear status
+           if (loginLogoutLink) {
+               loginLogoutLink.textContent = 'Login';
+               loginLogoutLink.href = loginPage;
+               loginLogoutLink.onclick = null;
+           }
+           if (employeePortalDropdown) {
+               employeePortalDropdown.style.display = 'none';
+           }
            redirectToLogin('Invalid local permissions format. Please login again.');
            return;
         }
       } catch (e) {
         console.error('Error parsing granted tokens from localStorage:', e);
+        const loginLogoutLink = document.getElementById('loginLogoutLink'); // Ensure UI reset before redirect
+        const employeePortalDropdown = document.getElementById('employeePortalDropdown');
+        const loginStatusSpan = document.getElementById('loginStatus'); // Get status span
+        const bodyElement = document.body; // Get body
+        if (bodyElement) bodyElement.classList.remove('logged-in'); // Ensure logged-out state
+        if (loginStatusSpan) loginStatusSpan.textContent = ''; // Clear status
+        if (loginLogoutLink) {
+            loginLogoutLink.textContent = 'Login';
+            loginLogoutLink.href = loginPage;
+            loginLogoutLink.onclick = null;
+        }
+        if (employeePortalDropdown) {
+            employeePortalDropdown.style.display = 'none';
+        }
         redirectToLogin('Error reading local permissions. Please login again.');
         return;
       }

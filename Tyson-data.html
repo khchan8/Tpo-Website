@@ -122,6 +122,27 @@
       width: 3rem;
       height: 3rem;
     }
+    /* Top Bar Visibility Logic */
+    #topbar .user-info { display: none; } /* Hide user info by default */
+    #topbar .contact-info { display: flex; } /* Show contact info by default */
+    #topbar #loginStatus { /* Style for login status text */
+         font-size: 14px;
+         color: #fff; /* White text on dark top bar */
+         /* Add margin if needed, e.g., margin-right: 15px; */
+    }
+
+    /* Desktop: Logged in - Show both */
+    @media (min-width: 768px) { /* Adjust breakpoint as needed (e.g., 992px for lg) */
+       body.logged-in #topbar .contact-info { display: flex !important; } /* Ensure contact is shown */
+       body.logged-in #topbar .user-info { display: flex !important; } /* Ensure user info is shown */
+    }
+
+    /* Mobile: Logged in - Show only user info */
+    @media (max-width: 767.98px) { /* Adjust breakpoint as needed */
+       body.logged-in #topbar .contact-info { display: none !important; } /* Hide contact */
+       body.logged-in #topbar .user-info { display: flex !important; } /* Show user info */
+    }
+    /* Logout button styles removed */
   </style>
 </head>
 
@@ -130,15 +151,15 @@
   <!-- ======= Top Bar ======= -->
   <section id="topbar" class="d-flex align-items-center">
     <div class="container d-flex justify-content-center justify-content-md-between">
+      <!-- Contact Info (Visibility controlled by JS/CSS) -->
       <div class="contact-info d-flex align-items-center">
         <i class="bi bi-envelope d-flex align-items-center"><a href="mailto:info@tpo-wellness.com">info@tpo-wellness.com</a></i>
         <i class="bi bi-phone d-flex align-items-center ms-4"><span>+66 87 789 4950</span></i>
       </div>
-      <div class="social-links d-none d-md-flex align-items-center">
-        <a href="#" class="twitter"><i class="bi bi-twitter"></i></a>
-        <a href="#" class="facebook"><i class="bi bi-facebook"></i></a>
-        <a href="#" class="instagram"><i class="bi bi-instagram"></i></a>
-        <a href="#" class="linkedin"><i class="bi bi-linkedin"></i></i></a>
+      <!-- User Info (Re-added for status display) -->
+      <div class="user-info d-flex align-items-center" style="display: none;"> <!-- Initially hidden -->
+          <span id="loginStatus"></span>
+          <!-- Logout Button REMOVED from here -->
       </div>
     </div>
   </section>
@@ -151,6 +172,9 @@
         <ul>
           <li><a class="nav-link scrollto" href="index.html">Home</a></li>
           <li><a class="nav-link scrollto active" href="#tyson-data">Tyson 2.0 Data</a></li>
+          <!-- Login Link (Initially Visible, hidden by JS if logged in) -->
+          <!-- Dynamic Login/Logout Link -->
+          <li id="loginLogoutItem"><a id="loginLogoutLink" class="nav-link" href="#">Login</a></li>
         </ul>
         <i class="bi bi-list mobile-nav-toggle"></i>
       </nav><!-- .navbar -->
@@ -657,5 +681,139 @@
         initialize();
     });
   </script>
+
+  <!-- Authentication & Authorization Script -->
+  <script>
+    // --- Global Variables ---
+    // Function to detect mobile devices
+    function isMobileDevice() {
+      return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    }
+    // Set login page based on device
+    const loginPage = isMobileDevice() ? 'tpologin-m.html' : 'tpologin.html';
+    const requiredToken = 'tpoTysonToken'; // Specific token for this page
+
+    // --- Helper: Redirect to Login ---
+    function redirectToLogin(reason) {
+      console.log('Redirecting to login: ' + reason);
+      localStorage.removeItem('tpoSessionToken');
+      localStorage.removeItem('tpoGrantedTokens');
+      localStorage.removeItem('tpoCrmApiToken'); // Clear potentially related tokens
+      localStorage.removeItem('tpoUserEmail');
+      const redirectUrl = loginPage + '?redirectUrl=' + encodeURIComponent(window.location.pathname + window.location.search) + '&error=' + encodeURIComponent(reason);
+      window.top.location.href = redirectUrl;
+    }
+
+    // --- Logout Function ---
+    function logout() {
+        console.log("Logging out...");
+        localStorage.removeItem('tpoSessionToken');
+        localStorage.removeItem('tpoGrantedTokens');
+        localStorage.removeItem('tpoCrmApiToken');
+        localStorage.removeItem('tpoUserEmail');
+        window.top.location.href = loginPage;
+    }
+
+    // --- Authorization Check (Runs on Load - LOCAL STORAGE ONLY) ---
+    function checkAuthorization(specificRequiredToken) { // Added parameter
+      const sessionToken = localStorage.getItem('tpoSessionToken');
+      const userEmail = localStorage.getItem('tpoUserEmail');
+      const grantedTokensString = localStorage.getItem('tpoGrantedTokens');
+ 
+      console.log(`Checking local authentication for Tyson page, requiring: ${specificRequiredToken}`);
+ 
+      // Get UI elements for Navbar and Topbar
+      const loginLogoutLink = document.getElementById('loginLogoutLink');
+      // const employeePortalDropdown = document.getElementById('employeePortalDropdown'); // Not on this page
+      const loginStatusSpan = document.getElementById('loginStatus'); // Re-add for top bar status
+      const bodyElement = document.body; // Needed for body class
+ 
+      // Check if elements exist before manipulating
+      if (!loginLogoutLink || !loginStatusSpan || !bodyElement) {
+          console.error("Required UI elements for auth check not found (loginLogoutLink, loginStatusSpan, body).");
+          // Don't redirect, just log error, as basic page content might still be viewable
+          return; // Indicate failure but don't redirect (checkAuthentication equivalent handles redirect)
+      }
+ 
+ 
+      if (!sessionToken || !grantedTokensString) {
+        console.log("Session or permissions not found locally.");
+        bodyElement.classList.remove('logged-in'); // Ensure logged-out state
+        loginStatusSpan.textContent = ''; // Clear status
+        // Configure Login link
+        loginLogoutLink.textContent = 'Login';
+        loginLogoutLink.href = loginPage;
+        loginLogoutLink.onclick = null;
+        // No Employee Portal to hide
+        redirectToLogin('Session or permissions not found locally. Please login.'); // Redirect if essential tokens missing
+        return;
+      }
+ 
+      console.log('Session token and granted tokens string found locally.');
+ 
+      let grantedTokens = [];
+      try {
+        grantedTokens = JSON.parse(grantedTokensString);
+         if (!Array.isArray(grantedTokens)) {
+           console.error('Parsed grantedTokens is not an array:', grantedTokensString);
+           // Configure Login link before redirect
+           bodyElement.classList.remove('logged-in'); // Ensure logged-out state
+           loginStatusSpan.textContent = ''; // Clear status
+           loginLogoutLink.textContent = 'Login';
+           loginLogoutLink.href = loginPage;
+           loginLogoutLink.onclick = null;
+           redirectToLogin('Invalid local permissions format. Please login again.');
+           return;
+         }
+      } catch (e) {
+        console.error('Error parsing granted tokens from localStorage:', e);
+        // Configure Login link before redirect
+        bodyElement.classList.remove('logged-in'); // Ensure logged-out state
+        loginStatusSpan.textContent = ''; // Clear status
+        loginLogoutLink.textContent = 'Login';
+        loginLogoutLink.href = loginPage;
+        loginLogoutLink.onclick = null;
+        redirectToLogin('Error reading local permissions. Please login again.');
+        return;
+      }
+ 
+      // Check for the *specific* required token for this page
+      if (!grantedTokens.includes(specificRequiredToken)) {
+          // Configure Login link before redirect
+          bodyElement.classList.remove('logged-in'); // Ensure logged-out state
+          loginStatusSpan.textContent = ''; // Clear status
+          loginLogoutLink.textContent = 'Login';
+          loginLogoutLink.href = loginPage;
+          loginLogoutLink.onclick = null;
+          redirectToLogin(`Access denied. Required permission (${specificRequiredToken}) not found.`);
+          return;
+      }
+ 
+      // User is logged in AND has the required token
+      console.log("Authorization successful.");
+      bodyElement.classList.add('logged-in'); // Add class for CSS rules
+ 
+      // Update Top Bar Status
+      if (userEmail) {
+          loginStatusSpan.textContent = `Logged in as: ${userEmail}`;
+      } else {
+          loginStatusSpan.textContent = `Logged in`; // Fallback
+      }
+ 
+      // Configure Logout link
+      loginLogoutLink.textContent = 'Logout';
+      loginLogoutLink.href = '#'; // Set href to # to prevent navigation
+      loginLogoutLink.onclick = (e) => { // Add onclick handler
+          e.preventDefault(); // Prevent default link behavior
+          logout();
+      };
+      // No Employee Portal to show/hide on this page
+ 
+    }
+
+    // --- Run Authentication Check on Page Load ---
+    document.addEventListener('DOMContentLoaded', () => checkAuthorization(requiredToken)); // Pass the specific token
+  </script>
+
 </body>
 </html>

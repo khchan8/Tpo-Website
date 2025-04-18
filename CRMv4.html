@@ -115,46 +115,49 @@
             .form-row .col-md-6, .form-row .col-md-4, .form-row .col-md-2 { flex-basis: 100%; max-width: 100%; }
         }
 
-        /* Style for logout button in top bar (can customize) */
-        #topbar .logout-btn {
-            background: #dc3545; /* Red color */
-            border: 0;
-            padding: 4px 15px;
-            color: #fff;
-            transition: 0.3s;
-            border-radius: 4px;
-            font-size: 13px;
-            margin-left: 15px;
-            cursor: pointer;
-        }
-        #topbar .logout-btn:hover {
-            background: #c82333; /* Darker red */
-        }
+        /* Top Bar Visibility Logic */
+        #topbar .user-info { display: none; } /* Hide user info by default */
+        #topbar .contact-info { display: flex; } /* Show contact info by default */
         #topbar #loginStatus { /* Style for login status text */
              font-size: 14px;
              color: #fff; /* White text on dark top bar */
+             /* Add margin if needed, e.g., margin-right: 15px; */
         }
+
+        /* Desktop: Logged in - Show both */
+        @media (min-width: 768px) { /* Adjust breakpoint as needed (e.g., 992px for lg) */
+           body.logged-in #topbar .contact-info { display: flex !important; } /* Ensure contact is shown */
+           body.logged-in #topbar .user-info { display: flex !important; } /* Ensure user info is shown */
+        }
+
+        /* Mobile: Logged in - Show only user info */
+        @media (max-width: 767.98px) { /* Adjust breakpoint as needed */
+           body.logged-in #topbar .contact-info { display: none !important; } /* Hide contact */
+           body.logged-in #topbar .user-info { display: flex !important; } /* Show user info */
+        }
+        /* Logout button styles removed */
 
     </style>
 </head>
 <body>
 
-    <!-- ======= Top Bar (from Login.html) ======= -->
+    <!-- ======= Top Bar ======= -->
     <section id="topbar" class="d-flex align-items-center">
         <div class="container d-flex justify-content-center justify-content-md-between">
-        <div class="contact-info d-flex align-items-center">
+          <!-- Contact Info (Visibility controlled by JS/CSS) -->
+          <div class="contact-info d-flex align-items-center">
             <i class="bi bi-envelope d-flex align-items-center"><a href="mailto:info@tpo-wellness.com">info@tpo-wellness.com</a></i>
             <i class="bi bi-phone d-flex align-items-center ms-4"><span>+66 87 789 4950</span></i>
-        </div>
-        <div class="user-info d-none d-md-flex align-items-center">
-            <!-- Login status will be added dynamically by JS -->
-            <span id="loginStatus"></span>
-
-        </div>
+          </div>
+          <!-- User Info (Re-added for status display) -->
+          <div class="user-info d-flex align-items-center" style="display: none;"> <!-- Initially hidden -->
+              <span id="loginStatus"></span>
+              <!-- Logout Button REMOVED from here -->
+          </div>
         </div>
     </section>
 
-    <!-- ======= Header (from Login.html, modified nav) ======= -->
+    <!-- ======= Header ======= -->
     <header id="header" class="d-flex align-items-center">
         <div class="container d-flex align-items-center justify-content-between">
         <h1 class="logo"><a href="index.html"><img src="./assets/img/TPOLogo.png" alt="TPO Wellness Logo" class="img-fluid"></a></h1>
@@ -163,7 +166,31 @@
               <li><a class="nav-link scrollto" href="index.html">Home</a></li> <!-- Assuming index.html is home -->
               <li><a class="nav-link scrollto active" href="#">CRM</a></li> <!-- Current page is active -->
               <li><a id="headerManagerViewLink" class="nav-link scrollto" href="CRMv4-M.html" style="display: none;">Manager View</a></li> <!-- Initially hidden, controlled by JS -->
-              <li><a class="nav-link scrollto" href="#" onclick="logout()">Logout</a></li> <!-- Logout link -->
+              <!-- Employee Portal Dropdown (Added based on plan) -->
+              <li class="dropdown" id="employeePortalDropdown" style="display: none;"><a href="#"><span>Employee Portal</span> <i class="bi bi-chevron-down"></i></a>
+                <ul>
+                  <li class="dropdown"><a href="#"><span>Sales Tools</span> <i class="bi bi-chevron-right"></i></a>
+                    <ul>
+                      <li><a href="AA-Sales-Tools.html">Auntie Aloha</a></li>
+                      <li><a href="MC-Sales-Tools.html">Mana Cannabis</a></li>
+                      <li><a href="TF-Sales-Tools.html">Fuzzies</a></li>
+                      <li><a href="TY-Sales-Tools.html">Tyson</a></li>
+                    </ul>
+                  </li>
+                  <li><a href="performance.html">Performance</a></li>
+                  <li><a href="erp.html">ERP</a></li>
+                  <li><a href="CRMv4.html">CRM</a></li>
+                  <li class="dropdown"><a href="#"><span>Customer Portal</span> <i class="bi bi-chevron-right"></i></a>
+                     <ul>
+                       <li><a href="Fuzzies-data.html">Fuzzies</a></li>
+                       <li><a href="Tyson-data.html">Tyson</a></li>
+                     </ul>
+                  </li>
+                </ul>
+              </li>
+              <!-- Login Link (Initially Visible, hidden by JS if logged in) -->
+              <!-- Dynamic Login/Logout Link -->
+              <li id="loginLogoutItem"><a id="loginLogoutLink" class="nav-link" href="#">Login</a></li>
             </ul>
             <i class="bi bi-list mobile-nav-toggle"></i>
         </nav><!-- .navbar -->
@@ -605,22 +632,43 @@
         }
 
         // --- Authorization Check (New Standard - Relies on localStorage) ---
-        function checkAuthorization() { // No parameters needed
-            console.log("Checking authorization for required token:", requiredToken);
-
+        function checkAuthorization(specificRequiredToken) { // Added parameter
+            console.log("Checking authorization for required token:", specificRequiredToken);
+ 
             // --- Retrieve data from localStorage ---
             const sessionToken = localStorage.getItem('tpoSessionToken');
             const userEmail = localStorage.getItem('tpoUserEmail');
             const grantedTokensString = localStorage.getItem('tpoGrantedTokens');
             let grantedTokens = []; // Default to empty array
-
+ 
+            // Get UI elements for Navbar and Topbar
+            const loginLogoutLink = document.getElementById('loginLogoutLink');
+            const employeePortalDropdown = document.getElementById('employeePortalDropdown');
+            const loginStatusSpan = document.getElementById('loginStatus'); // Re-add for top bar status
+            const bodyElement = document.body; // Needed for body class
+ 
+            // Check if elements exist before manipulating
+            if (!loginLogoutLink || !employeePortalDropdown || !loginStatusSpan || !bodyElement) {
+                console.error("Required UI elements for auth check not found (loginLogoutLink, employeePortalDropdown, loginStatusSpan, body).");
+                // Don't redirect, just log error, as basic page content might still be viewable
+                return false; // Indicate failure but don't redirect (initializeApp handles redirect)
+            }
+ 
             // 1. Check if session token exists at all
             if (!sessionToken) {
                  console.log("Authorization failed: Session token missing in localStorage.");
+                 bodyElement.classList.remove('logged-in'); // Ensure logged-out state
+                 loginStatusSpan.textContent = ''; // Clear status
+                 // Configure Login link
+                 loginLogoutLink.textContent = 'Login';
+                 loginLogoutLink.href = loginPage;
+                 loginLogoutLink.onclick = null;
+                 // Hide Employee Portal
+                 employeePortalDropdown.style.display = 'none';
                  redirectToLogin('Session token missing.'); // Redirect if no token
                  return false; // Indicate authorization failed
             }
-
+ 
             // 2. Parse granted tokens if they exist
             if (grantedTokensString) {
                 try {
@@ -630,47 +678,91 @@
                          grantedTokens = parsedTokens;
                     } else {
                          console.warn("Parsed granted tokens from localStorage is not an array:", parsedTokens);
+                         // Configure Login link before redirect
+                         bodyElement.classList.remove('logged-in'); // Ensure logged-out state
+                         loginStatusSpan.textContent = ''; // Clear status
+                         loginLogoutLink.textContent = 'Login';
+                         loginLogoutLink.href = loginPage;
+                         loginLogoutLink.onclick = null;
+                         employeePortalDropdown.style.display = 'none';
+                         redirectToLogin('Invalid local permissions format. Please login again.');
+                         return false;
                     }
                 } catch (e) {
                     console.error("Error parsing granted tokens from localStorage:", e);
-                    // Keep grantedTokens as empty array if parsing fails
+                    // Configure Login link before redirect
+                    bodyElement.classList.remove('logged-in'); // Ensure logged-out state
+                    loginStatusSpan.textContent = ''; // Clear status
+                    loginLogoutLink.textContent = 'Login';
+                    loginLogoutLink.href = loginPage;
+                    loginLogoutLink.onclick = null;
+                    employeePortalDropdown.style.display = 'none';
+                    redirectToLogin('Error reading local permissions. Please login again.');
+                    return false; // Indicate authorization failed
                 }
+            } else {
+                // If session token exists but granted tokens don't, redirect
+                console.log("Authorization failed: Granted tokens missing in localStorage.");
+                // Configure Login link before redirect
+                bodyElement.classList.remove('logged-in'); // Ensure logged-out state
+                loginStatusSpan.textContent = ''; // Clear status
+                loginLogoutLink.textContent = 'Login';
+                loginLogoutLink.href = loginPage;
+                loginLogoutLink.onclick = null;
+                employeePortalDropdown.style.display = 'none';
+                redirectToLogin('Permissions not found locally. Please login again.');
+                return false;
             }
             console.log("Retrieved from localStorage - Email:", userEmail, "Granted Tokens:", grantedTokens);
-
-            // 3. Check if the required token is present in the granted tokens
-            if (!grantedTokens.includes(requiredToken)) {
+ 
+            // 3. Check if the specific required token is present in the granted tokens
+            if (!grantedTokens.includes(specificRequiredToken)) {
                 console.log("Authorization failed: Required token not found in granted tokens.");
-                // Use the retrieved email for the message if available
-                redirectToLogin(`Access denied for ${userEmail || 'user'}. Required permission (${requiredToken}) not found.`);
+                // Configure Login link before redirect
+                bodyElement.classList.remove('logged-in'); // Ensure logged-out state
+                loginStatusSpan.textContent = ''; // Clear status
+                loginLogoutLink.textContent = 'Login';
+                loginLogoutLink.href = loginPage;
+                loginLogoutLink.onclick = null;
+                employeePortalDropdown.style.display = 'none';
+                redirectToLogin(`Access denied for ${userEmail || 'user'}. Required permission (${specificRequiredToken}) not found.`);
                 return false; // Indicate authorization failed
             }
-
+ 
             // 4. If checks pass, update UI and return true
             console.log("Authorization successful based on localStorage tokens.");
-
-            // Update UI with user info (using retrieved email)
-            const loginStatusSpan = document.getElementById('loginStatus');
-            if (loginStatusSpan && userEmail) {
-                 loginStatusSpan.textContent = `Logged in as: ${userEmail}`;
-            } else if (loginStatusSpan) {
-                 loginStatusSpan.textContent = `Logged in (email not found)`; // Fallback
+            bodyElement.classList.add('logged-in'); // Add class for CSS rules
+ 
+            // Update Top Bar Status
+            if (userEmail) {
+                loginStatusSpan.textContent = `Logged in as: ${userEmail}`;
+            } else {
+                loginStatusSpan.textContent = `Logged in`; // Fallback
             }
-
-            // Show/Hide Manager links based on retrieved tokens (example for CRMv4.html)
-            // This logic might differ slightly between CRMv4.html and CRMv4-M.html
+ 
+            // Configure Logout link
+            loginLogoutLink.textContent = 'Logout';
+            loginLogoutLink.href = '#'; // Set href to # to prevent navigation
+            loginLogoutLink.onclick = (e) => { // Add onclick handler
+                e.preventDefault(); // Prevent default link behavior
+                logout();
+            };
+ 
+            // Show Employee Portal
+            employeePortalDropdown.style.display = 'list-item';
+ 
+            // Show/Hide Manager links based on retrieved tokens (specific to CRMv4.html)
             const isManager = grantedTokens.includes('tpoCRMManagerToken');
             const managerViewLinkContent = document.getElementById('managerViewLink'); // Link within page content
             const managerViewLinkHeader = document.getElementById('headerManagerViewLink'); // Link in header nav
-
+ 
             if (managerViewLinkContent) {
                 managerViewLinkContent.style.display = isManager ? 'inline-block' : 'none';
             }
             if (managerViewLinkHeader) {
-                // Use 'list-item' for display if it's an <li> element, otherwise 'inline' or 'block'
                 managerViewLinkHeader.style.display = isManager ? 'list-item' : 'none';
             }
-
+ 
             return true; // Indicate authorization succeeded
         }
 
@@ -680,8 +772,8 @@
         // --- Main Application Initialization ---
         function initializeApp() {
             // Call authorization check first.
-            // checkAuthorization now retrieves data from localStorage and returns true/false.
-            if (!checkAuthorization()) {
+            // Pass the required token for this specific page.
+            if (!checkAuthorization(requiredToken)) {
                  console.log("Authorization failed in initializeApp. Stopping initialization.");
                  return; // Stop if authorization fails
             }

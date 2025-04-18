@@ -30,7 +30,31 @@
   <link href="assets/css/style.css" rel="stylesheet">
 
   <!-- Added jQuery Library -->
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script> 
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+  <style>
+    /* Top Bar Visibility Logic */
+    #topbar .user-info { display: none; } /* Hide user info by default */
+    #topbar .contact-info { display: flex; } /* Show contact info by default */
+    #topbar #loginStatus { /* Style for login status text */
+         font-size: 14px;
+         color: #fff; /* White text on dark top bar */
+         /* Add margin if needed, e.g., margin-right: 15px; */
+    }
+
+    /* Desktop: Logged in - Show both */
+    @media (min-width: 768px) { /* Using 768px as the breakpoint for md */
+       body.logged-in #topbar .contact-info { display: flex !important; } /* Ensure contact is shown */
+       body.logged-in #topbar .user-info { display: flex !important; } /* Ensure user info is shown */
+    }
+
+    /* Mobile: Logged in - Show only user info */
+    @media (max-width: 767.98px) {
+       body.logged-in #topbar .contact-info { display: none !important; } /* Hide contact */
+       body.logged-in #topbar .user-info { display: flex !important; } /* Show user info */
+    }
+    /* Logout button styles removed */
+  </style>
 
 </head>
 
@@ -39,16 +63,15 @@
   <!-- ======= Top Bar ======= -->
   <section id="topbar" class="d-flex align-items-center">
     <div class="container d-flex justify-content-center justify-content-md-between">
+      <!-- Contact Info (Visibility controlled by JS/CSS) -->
       <div class="contact-info d-flex align-items-center">
         <i class="bi bi-envelope d-flex align-items-center"><a href="mailto:info@tpo-wellness.com">info@tpo-wellness.com</a></i>
         <i class="bi bi-phone d-flex align-items-center ms-4"><span>+66 87 789 4950</span></i>
       </div>
-      <div class="social-links d-none d-md-flex align-items-center">
-        <a href="#" class="twitter"><i class="bi bi-twitter"></i></a>
-        <a href="#" class="facebook"><i class="bi bi-facebook"></i></a>
-        <a href="#" class="instagram"><i class="bi bi-instagram"></i></a>
-        <a href="#" class="linkedin"><i class="bi bi-linkedin"></i></i></a>
-		<!-- <a href="#" class="line"><i class="icon-line_icon"></i></a> <!-- Custom LINE icon -->
+      <!-- User Info (Re-added for status display) -->
+      <div class="user-info d-flex align-items-center" style="display: none;"> <!-- Initially hidden -->
+          <span id="loginStatus"></span>
+          <!-- Logout Button REMOVED from here -->
       </div>
     </div>
   </section>
@@ -67,7 +90,30 @@
           <li><a class="nav-link scrollto " href="#products">Products</a></li>
           <li><a class="nav-link scrollto" href="#team">Team</a></li>
           <li><a class="nav-link scrollto" href="#contact">Contact</a></li>
-          <li><a class="nav-link" href="tpologin.html">Login</a></li>
+          <!-- Employee Portal Dropdown (Initially Hidden) -->
+          <li class="dropdown" id="employeePortalDropdown" style="display: none;"><a href="#"><span>Employee Portal</span> <i class="bi bi-chevron-down"></i></a>
+            <ul>
+              <li class="dropdown"><a href="#"><span>Sales Tools</span> <i class="bi bi-chevron-right"></i></a>
+                <ul>
+                  <li><a href="AA-Sales-Tools.html">Auntie Aloha</a></li>
+                  <li><a href="MC-Sales-Tools.html">Mana Cannabis</a></li>
+                  <li><a href="TF-Sales-Tools.html">Fuzzies</a></li>
+                  <li><a href="TY-Sales-Tools.html">Tyson</a></li>
+                </ul>
+              </li>
+              <li><a href="performance.html">Performance</a></li>
+              <li><a href="erp.html">ERP</a></li>
+              <li><a href="CRMv4.html">CRM</a></li>
+              <li class="dropdown"><a href="#"><span>Customer Portal</span> <i class="bi bi-chevron-right"></i></a>
+                 <ul>
+                   <li><a href="Fuzzies-data.html">Fuzzies</a></li>
+                   <li><a href="Tyson-data.html">Tyson</a></li>
+                 </ul>
+              </li>
+            </ul>
+          </li>
+          <!-- Dynamic Login/Logout Link -->
+          <li id="loginLogoutItem"><a id="loginLogoutLink" class="nav-link" href="#">Login</a></li>
         </ul>
         <i class="bi bi-list mobile-nav-toggle"></i>
       </nav><!-- .navbar -->
@@ -261,9 +307,6 @@
 
 
 
-
-
-
     <!-- ======= Team Section ======= -->
     <section id="team" class="team">
       <div class="container">
@@ -442,13 +485,13 @@
         <div class="row" data-aos="fade-up">
 
           <div class="col-lg-6">
-			<iframe 
+			<iframe
         src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d496115.3313133451!2d100.35290282935726!3d13.724699806600398!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x311d6032280d61f3%3A0x10100b25de24820!2sBangkok%2C%20Thailand!5e0!3m2!1sen!2sus!4v1691035652862!5m2!1sen!2sus"
-        width="600" 
-        height="450" 
-        style="border:0; width: 100%; height: 384px;" 
-        allowfullscreen="" 
-        loading="lazy" 
+        width="600"
+        height="450"
+        style="border:0; width: 100%; height: 384px;"
+        allowfullscreen=""
+        loading="lazy"
         referrerpolicy="no-referrer-when-downgrade">
 			</iframe>
 		</div>
@@ -575,7 +618,7 @@
 		// Form submission handler for both contact and newsletter forms
 		$('#contactForm, #newsletterForm').submit(function(e) {
 		  e.preventDefault();
-		  
+
 		  var $form = $(this);
 		  var formData = {
 			action: $form.attr('id') === 'contactForm' ? 'contact' : 'newsletter'
@@ -588,7 +631,7 @@
 		  submitForm(formData, $form);
 		});
 
-		function submitForm(formData, $form) { 
+		function submitForm(formData, $form) {
 		  const scriptURL = 'https://script.google.com/macros/s/AKfycbwJDAeDBi1-_iodvcl_4bFZ6HlFXouWRkZ0kiCOlj7g4lXbI6yXQsi33QjAVYMYKb09/exec'; // Replace with your actual script URL
 
 		  fetch(scriptURL, {
@@ -601,7 +644,7 @@
 		  })
 		  .then(response => {
 			// Note: With 'no-cors', response.ok and response.json() might not be reliable
-			console.log('Response (no-cors):', response); 
+			console.log('Response (no-cors):', response);
 
 			// Handle success, but you might not have access to detailed response data
 			$form.find('.loading').hide();
@@ -610,7 +653,7 @@
 			  $('#newsletterForm')[0].reset();
 			} else {
 			  $form.find('.sent-message').text('Message sent successfully!').show(); // Generic message
-			  $form[0].reset(); 
+			  $form[0].reset();
 			}
 		  })
 		  .catch(error => {
@@ -625,16 +668,16 @@
 	    <script>
 	    // --- Flowing Energy Stream Effect (Section Specific) ---
 	    window.addEventListener('load', function() {
-	
+
 	        const canvases = document.querySelectorAll('.energy-stream-canvas');
 	        if (canvases.length === 0) {
 	            console.warn("No elements with class '.energy-stream-canvas' found.");
 	            return;
 	        }
-	
+
 	        let animationFrameId = null;
 	        let time = 0; // Shared time/phase offset
-	
+
 	        // --- Effect Configuration ---
 	        const config = {
 	            streamColor: '#1e56a0', // Theme blue
@@ -648,7 +691,7 @@
 	            particleSize: 6.4, /* 8x size */
 	            particleSpeedFactor: 0.5
 	        };
-	
+
 	        // Wave parameters for each layer (example: vary frequency, amplitude, speed)
 	        const layerParams = [];
 	        for (let i = 0; i < config.numStreamLayers; i++) {
@@ -665,9 +708,9 @@
 	                lineWidth: config.streamLineWidthBase + Math.random() * 1.0 // Vary thickness
 	            });
 	        }
-	
+
 	        const activeCanvases = []; // Store { canvas, ctx, width, height, particles }
-	
+
 	        // --- Particle Class ---
 	        class Particle {
 	            constructor(canvasWidth, canvasHeight, streamCenterYFunc) {
@@ -676,7 +719,7 @@
 	                this.getStreamCenterY = streamCenterYFunc; // Function to get stream y at particle x
 	                this.reset();
 	            }
-	
+
 	            reset() {
 	                this.x = Math.random() * this.width;
 	                this.y = Math.random() * this.height; // Start anywhere, will snap towards stream
@@ -687,30 +730,30 @@
 	                this.alpha = 0;
 	                this.targetAlpha = 0.5 + Math.random() * 0.4;
 	            }
-	
+
 	            update() {
 	                this.life++;
-	
+
 	                // Gently pull towards the stream's current vertical position
 	                const streamY = this.getStreamCenterY(this.x);
 	                this.vy += (streamY - this.y) * 0.005 * config.particleSpeedFactor;
-	
+
 	                // Add small random drift
 	                this.vx += (Math.random() - 0.5) * 0.1 * config.particleSpeedFactor;
 	                this.vy += (Math.random() - 0.5) * 0.1 * config.particleSpeedFactor;
-	
+
 	                // Damping
 	                this.vx *= 0.96;
 	                this.vy *= 0.96;
-	
+
 	                this.x += this.vx;
 	                this.y += this.vy;
-	
+
 	                // Fade in/out
 	                 if (this.life < 30) this.alpha += (this.targetAlpha - this.alpha) * 0.1;
 	                 else this.alpha += (this.targetAlpha - this.alpha) * 0.05;
-	
-	
+
+
 	                // Reset Check
 	                if (this.life > this.maxLife || this.alpha < 0.01 || this.x < -10 || this.x > this.width + 10) {
 	                    this.reset();
@@ -718,7 +761,7 @@
 	                    this.alpha = 0; // Ensure fade-in on reset
 	                }
 	            }
-	
+
 	            draw(ctx) {
 	                if (this.alpha <= 0.01) return;
 	                ctx.fillStyle = `rgba(255, 255, 255, ${this.alpha * 0.7})`; // Revert to using white particle color base
@@ -727,17 +770,17 @@
 	                ctx.fill();
 	            }
 	        }
-	
-	
+
+
 	        // --- Setup and Drawing ---
 	        function setupCanvas(canvas) {
 	            const ctx = canvas.getContext('2d');
 	            if (!ctx) { console.error("No context for", canvas.id); return null; }
-	
+
 	            const parentRect = canvas.parentElement.getBoundingClientRect();
 	            canvas.width = parentRect.width || 300; // Fallback width
 	            canvas.height = parentRect.height || 150; // Fallback height
-	
+
 	            // Function to estimate stream center Y at a given X for particles
 	            // This is an approximation based on the average of layer parameters
 	            const getStreamCenterY = (xPos) => {
@@ -753,30 +796,30 @@
 	                 });
 	                 return avgY + (totalAmpEffect / layerParams.length) * 0.8; // Return average y offset
 	            };
-	
-	
+
+
 	            const particles = [];
 	            for (let i = 0; i < config.numParticles; i++) {
 	                particles.push(new Particle(canvas.width, canvas.height, getStreamCenterY));
 	            }
-	
+
 	            return { canvas, ctx, width: canvas.width, height: canvas.height, particles, getStreamCenterY };
 	        }
-	
+
 	        function drawEffect(canvasData) {
 	            const { canvas, ctx, width, height, particles, getStreamCenterY } = canvasData; // Removed centerY calculation here, done in loop
 	            const centerY = height / 2;
-	
+
 	            // Clear with slight fade for motion blur / trails
 	            ctx.fillStyle = 'rgba(0, 0, 0, 0.15)'; // Adjust alpha for trail length
 	            ctx.fillRect(0, 0, width, height);
-	
+
 	            // --- Draw Stream Layers ---
 	            ctx.save(); // Save context state
 	            ctx.globalCompositeOperation = 'lighter'; // Additive blending for glow
 	            ctx.shadowColor = config.glowColor;
 	            ctx.shadowBlur = config.glowBlur;
-	
+
 	            layerParams.forEach((p, i) => {
 	                ctx.beginPath();
 	                ctx.lineWidth = p.lineWidth;
@@ -786,7 +829,7 @@
 	                const baseHue = 217; // Approximate hue for #1e56a0
 	                const baseSaturation = 70; // Approximate saturation
 	                ctx.strokeStyle = `hsla(${baseHue}, ${baseSaturation}%, ${layerBrightness}%, ${p.alpha})`;
-	
+
 	                const centerY = height * 0.75; // Calculate dynamic center Y (bottom quarter)
 	                for (let x = -10; x < width + 10; x += 5) { // Draw slightly off-screen for smooth edges
 	                    let y = centerY;
@@ -796,7 +839,7 @@
 	                    const y1 = Math.sin(x * p.freq1 * freqScale + phase1) * p.amp1;
 	                    const y2 = Math.sin(x * p.freq2 * freqScale + phase2) * p.amp2;
 	                    y += y1 + y2; // Sum wave components
-	
+
 	                    if (x <= -5) {
 	                        ctx.moveTo(x, y);
 	                    } else {
@@ -806,7 +849,7 @@
 	                ctx.stroke();
 	            });
 	            ctx.restore(); // Restore context state (removes shadow, composite op)
-	
+
 	            // --- Draw Particles ---
 	            // (Draw particles after stream and without glow/lighter for clarity)
 	            particles.forEach(p => {
@@ -814,40 +857,40 @@
 	                p.draw(ctx);
 	            });
 	        }
-	
+
 	        // --- Animation Loop ---
 	        function loop() {
 	            time += 1; // Increment time
-	
+
 	            activeCanvases.forEach(canvasData => {
 	                if (canvasData) drawEffect(canvasData);
 	            });
-	
+
 	            animationFrameId = requestAnimationFrame(loop);
 	        }
-	
+
 	        // --- Initialization and Resize ---
 	        function initialize() {
 	            if (animationFrameId) cancelAnimationFrame(animationFrameId);
 	            activeCanvases.length = 0; // Clear array
-	
+
 	            canvases.forEach(canvas => {
 	                const canvasData = setupCanvas(canvas);
 	                if (canvasData) activeCanvases.push(canvasData);
 	            });
-	
+
 	            if (activeCanvases.length > 0) loop();
 	        }
-	
+
 	        let resizeTimeout;
 	        window.addEventListener('resize', () => {
 	            clearTimeout(resizeTimeout);
 	            resizeTimeout = setTimeout(initialize, 250);
 	        });
-	
+
 	        // --- Start ---
 	        initialize();
-	
+
 	    }); // End window.onload
 	    </script>
 
@@ -857,6 +900,9 @@
 	         // Basic check for common mobile user agent strings
 	         return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 	       }
+
+           // Set login page based on device (used by mobile check and auth check)
+           const loginPage = isMobileDevice() ? 'tpologin-m.html' : 'tpologin.html';
 
 	       document.addEventListener('DOMContentLoaded', function() {
 	         if (isMobileDevice()) {
@@ -872,6 +918,85 @@
 	         }
 	       });
 	     </script>
+
+         <!-- NEW: Authentication Check and UI Update Script -->
+         <script>
+            // --- Logout Function (New Standard) ---
+            function logout() {
+                console.log("Logging out...");
+                // Clear ALL relevant tokens
+                localStorage.removeItem('tpoSessionToken');
+                localStorage.removeItem('tpoGrantedTokens');
+                localStorage.removeItem('tpoCrmApiToken');
+                localStorage.removeItem('tpoUserEmail'); // Clear email too
+                // Redirect to new login page without error/redirectUrl
+                window.top.location.href = loginPage; // Use loginPage constant
+            }
+
+            // --- Helper: Redirect to Login (New Standard - Optional for index.html) ---
+            // function redirectToLogin(reason) { ... } // Not strictly needed if index is public
+
+            // --- Authorization Check (New Standard - Relies on localStorage) ---
+            function checkAuthorization() { // No specific requiredToken for index.html
+                console.log("Checking authorization for index.html...");
+ 
+                // --- Retrieve data from localStorage ---
+                const sessionToken = localStorage.getItem('tpoSessionToken');
+                const userEmail = localStorage.getItem('tpoUserEmail'); // Keep userEmail check for robustness
+ 
+                // Get UI elements for Navbar and Topbar
+                const loginLogoutLink = document.getElementById('loginLogoutLink');
+                const employeePortalDropdown = document.getElementById('employeePortalDropdown');
+                const loginStatusSpan = document.getElementById('loginStatus'); // Re-add for top bar status
+                const bodyElement = document.body; // Needed for body class
+ 
+                // Check if elements exist before manipulating
+                if (!loginLogoutLink || !employeePortalDropdown || !loginStatusSpan || !bodyElement) {
+                    console.error("Required UI elements for auth check not found (loginLogoutLink, employeePortalDropdown, loginStatusSpan, body).");
+                    return; // Stop if essential elements are missing
+                }
+ 
+                // Check if session token exists (and userEmail for extra check)
+                if (sessionToken && userEmail) {
+                    // User is logged in
+                    console.log("User is logged in. Updating UI.");
+                    bodyElement.classList.add('logged-in'); // Add class for CSS rules
+ 
+                    // Update Top Bar Status
+                    loginStatusSpan.textContent = `Logged in as: ${userEmail}`;
+ 
+                    // Configure Logout link
+                    loginLogoutLink.textContent = 'Logout';
+                    loginLogoutLink.href = '#'; // Set href to # to prevent navigation
+                    loginLogoutLink.onclick = (e) => { // Add onclick handler
+                        e.preventDefault(); // Prevent default link behavior
+                        logout();
+                    };
+ 
+                    // Show Employee Portal
+                    employeePortalDropdown.style.display = 'list-item';
+ 
+                } else {
+                    // User is not logged in
+                    console.log("User is not logged in. Setting default UI.");
+                    bodyElement.classList.remove('logged-in'); // Remove class from body
+ 
+                    // Clear Top Bar Status
+                    loginStatusSpan.textContent = '';
+ 
+                    // Configure Login link
+                    loginLogoutLink.textContent = 'Login';
+                    loginLogoutLink.href = loginPage; // Link to the appropriate login page
+                    loginLogoutLink.onclick = null; // Remove any previous onclick handler
+ 
+                    // Hide Employee Portal
+                    employeePortalDropdown.style.display = 'none';
+                }
+            }
+
+            // --- Run Auth Check on Page Load ---
+            document.addEventListener('DOMContentLoaded', checkAuthorization);
+         </script>
 
 	</body>
 </body>
