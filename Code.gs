@@ -138,89 +138,8 @@ function conditionalLog(message) {
   }
 }
 
-// --- New Authentication Function ---
-
-/**
- * Verifies a session token and required permissions by calling the central Auth Service (NewCode.gs).
- * @param {string} sessionToken The session token provided by the client.
- * @param {string[]} requiredTokensArray An array of token names required for the action (e.g., ['tpoCRMToken']).
- * @return {object} An object { authorized: boolean, email: string|null, message?: string, requireLogin?: boolean }
- */
-function verifySessionAndAccess(sessionToken, requiredTokensArray) {
-  // URL of the deployed NewCode.gs script (Auth Service)
-  const authServiceUrl = 'https://script.google.com/macros/s/AKfycbyIDeCYmpl5qzXQJoDmdaC2t7suZaky8Ug5y_cpPV56CHkI8Bu2i1_tJiHXP2-9Tc_Txw/exec'; // Ensure this is the correct NewCode.gs deployment URL
-
-  if (!sessionToken) {
-    Logger.log('verifySessionAndAccess: No session token provided.');
-    return { authorized: false, email: null, message: "Session token missing.", requireLogin: true };
-  }
-
-  if (!Array.isArray(requiredTokensArray) || requiredTokensArray.length === 0) {
-      Logger.log("verifySessionAndAccess: No required tokens specified. Denying access for safety.");
-      return { authorized: false, email: null, message: "Internal Error: No permissions specified for check.", requireLogin: true };
-  }
-
-  const requiredTokensString = JSON.stringify(requiredTokensArray);
-  const payload = {
-    action: 'checkAccess', // Action defined in NewCode.gs
-    sessionToken: sessionToken,
-    requiredTokensString: requiredTokensString
-  };
-
-  const options = {
-    method: 'get', // NewCode.gs checkAccess is handled via doGet
-    muteHttpExceptions: true, // Prevent script termination on HTTP errors
-    headers: {
-      'Authorization': 'Bearer ' + ScriptApp.getIdentityToken() // Add identity token for server-to-server auth
-    }
-  };
-
-  // Construct URL with parameters for GET request
-  const urlWithParams = `${authServiceUrl}?action=${payload.action}&sessionToken=${encodeURIComponent(payload.sessionToken)}&requiredTokensString=${encodeURIComponent(payload.requiredTokensString)}`;
-
-  Logger.log(`verifySessionAndAccess: Calling Auth Service: ${urlWithParams}`);
-
-  try {
-    const response = UrlFetchApp.fetch(urlWithParams, options);
-    const responseCode = response.getResponseCode();
-    const responseBody = response.getContentText();
-
-    Logger.log(`verifySessionAndAccess: Auth Service Response Code: ${responseCode}`);
-    Logger.log(`verifySessionAndAccess: Auth Service Response Body: ${responseBody}`);
-
-    if (responseCode === 200) {
-      const result = JSON.parse(responseBody);
-      // Expecting { authorized: boolean, email: string|null, message?: string } from NewCode.gs checkAccess
-      if (result && typeof result.authorized === 'boolean') {
-          // Add requireLogin hint if unauthorized
-          if (!result.authorized && !result.message) {
-              result.message = "Authorization failed."; // Default message
-          }
-          if (!result.authorized) {
-              result.requireLogin = true;
-          }
-          return result;
-      } else {
-          Logger.log('verifySessionAndAccess: Invalid response format from Auth Service.');
-          return { authorized: false, email: null, message: "Internal error: Invalid response from auth service.", requireLogin: true };
-      }
-    } else {
-      // Handle non-200 responses
-      Logger.log(`verifySessionAndAccess: Auth Service returned non-200 status: ${responseCode}. Body: ${responseBody}`);
-      let message = `Authorization check failed (Error ${responseCode}).`;
-      try {
-          const errorResult = JSON.parse(responseBody);
-          if (errorResult && errorResult.message) {
-              message = errorResult.message;
-          }
-      } catch (e) { /* Ignore parsing error */ }
-      return { authorized: false, email: null, message: message, requireLogin: true };
-    }
-  } catch (error) {
-    Logger.log(`verifySessionAndAccess: Error calling Auth Service: ${error}`);
-    return { authorized: false, email: null, message: `Internal error communicating with auth service: ${error.message}`, requireLogin: true };
-  }
-}
+// --- Authentication Function (REMOVED - No longer used for logging verification) ---
+// function verifySessionAndAccess(...) { ... } // REMOVED
 
 // --- Web App Endpoints (doGet, doPost) ---
 
@@ -410,9 +329,7 @@ function doPost(e) {
             const assigningUserEmail = postData.assigningUserEmail || 'FrontendEmailMissing'; // Read email sent from frontend
             let shopIds = [];
 
-            // Basic check for manager token presence (can be enhanced if needed)
-            // This doesn't replace full verification but acts as a quick check
-            // const requiredTokensAssign = ['tpoCRMManagerToken']; // Example check
+            // REMOVED: verifySessionAndAccess call and authorization check block
 
             if (shopIdsParam) {
                 try {
@@ -448,8 +365,7 @@ function doPost(e) {
             if (!shopName) throw new Error("Shop name not provided for comment.");
             if (!commentText) throw new Error("Comment text cannot be empty.");
 
-            // Basic check for manager token presence (can be enhanced if needed)
-            // const requiredTokensComment = ['tpoCRMManagerToken']; // Example check
+            // REMOVED: verifySessionAndAccess call and authorization check block
 
             // Pass email read from postData
             result = addManagerComment(shopName, commentText, commentingUserEmail);
@@ -462,6 +378,10 @@ function doPost(e) {
             if (!dispensaryName) {
               throw new Error('Missing required dispensary name parameter.');
             }
+
+            // Look up user name based on email
+            const userInfo = setupData.data.memberEmails.find(m => m.email && m.email.toLowerCase() === userEmail.toLowerCase());
+            const userName = userInfo ? userInfo.name : userEmail; // Fallback to email if name not found
 
             const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(CRM_SHEET_NAME);
             if (!sheet) throw new Error(`CRM sheet "${CRM_SHEET_NAME}" not found.`);
@@ -539,15 +459,15 @@ function doPost(e) {
             const timestamp = Utilities.formatDate(now, TIMEZONE, "yyyy-MM-dd HH:mm:ss");
             const isoTimestamp = now.toISOString();
 
-            // Use email from frontend for standard CRM submit logging
-            let historyEntry = postData.activityLogging ? `${timestamp}: ${userEmail}: ${postData.activityLogging}\n` : '';
+            // Use looked-up userName for standard CRM submit logging
+            let historyEntry = postData.activityLogging ? `${timestamp}: ${userName}: ${postData.activityLogging}\n` : '';
             if (rowIndex > 0) {
               historyEntry = historyEntry + (data[rowIndex][COL_HISTORY] || ''); // Prepend
             }
 
             let salesPipelineRecord = '';
             if (postData['Sales Pipeline']) {
-              salesPipelineRecord = `${timestamp}: ${userEmail}: ${postData['Sales Pipeline']}\n`; // Use email from frontend
+              salesPipelineRecord = `${timestamp}: ${userName}: ${postData['Sales Pipeline']}\n`; // Use looked-up userName
               if (rowIndex > 0) {
                 salesPipelineRecord += data[rowIndex][COL_PIPELINE_RECORD] || '';
               }
@@ -557,7 +477,7 @@ function doPost(e) {
 
             let nextActionItemRecord = '';
             if (postData['Next Action Item']) {
-              nextActionItemRecord = `${timestamp}: ${userEmail}: ${postData['Next Action Item']}\n`; // Use email from frontend
+              nextActionItemRecord = `${timestamp}: ${userName}: ${postData['Next Action Item']}\n`; // Use looked-up userName
               if (rowIndex > 0) {
                 nextActionItemRecord += data[rowIndex][COL_NEXT_ACTION_RECORD] || '';
               }
@@ -1402,7 +1322,7 @@ function assignShops(shopIds, assignedMember, assignmentNotes = '', assigningUse
       newCrmRowData[COL_PIPELINE_CRM] = currentSetupData.salesPipelines[0] || 'New Lead'; // Default pipeline stage
       newCrmRowData[COL_LAST_MODIFIED_CRM] = isoTimestamp;
       newCrmRowData[COL_HISTORY_CRM] = `${timestamp}: Assigned to ${assignedMember} by ${assigningUserName}\n`; // Add assigning user
-      newCrmRowData[COL_PIPELINE_RECORD_CRM] = `${timestamp}: ${newCrmRowData[COL_PIPELINE_CRM]} (Assignment by ${assigningUserName})\n`; // Add assigning user context
+      newCrmRowData[COL_PIPELINE_RECORD_CRM] = `${timestamp}: ${assigningUserName}: ${newCrmRowData[COL_PIPELINE_CRM]}\n`; // Use Name for Pipeline Record
       newCrmRowData[COL_NEXT_ACTION_RECORD_CRM] = ''; // Initialize empty
 
       // Add formatted assignment note to the new Assignment History column (AD)
@@ -1520,7 +1440,7 @@ function addManagerComment(shopName, commentText, commentingUserEmail) {
 
         const assignmentHistoryCell = crmSheet.getRange(targetRowIndex, COL_ASSIGNMENT_HISTORY + 1); // +1 because sheet cols are 1-based
         const currentHistory = assignmentHistoryCell.getValue();
-        const newCommentEntry = `${timestamp}: ${managerName} : ${commentText}`;
+        const newCommentEntry = `${timestamp}: ${managerName} : ${commentText}`; // Format uses Name
 
         // Prepend new comment
         const updatedHistory = `${newCommentEntry}\n${currentHistory}`;
