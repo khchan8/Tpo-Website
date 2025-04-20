@@ -1264,12 +1264,13 @@
     }
 
     // --- Authorization Check (Runs on Load - LOCAL STORAGE ONLY) ---
-    function checkAuthorization() { // No specific requiredToken needed here
+    function checkAuthorization(specificRequiredToken) { // Added parameter
       const sessionToken = localStorage.getItem('tpoSessionToken');
       const userEmail = localStorage.getItem('tpoUserEmail');
-      // const grantedTokensString = localStorage.getItem('tpoGrantedTokens'); // Not needed unless checking specific tokens
+      const grantedTokensString = localStorage.getItem('tpoGrantedTokens'); // Needed for token check
+      let grantedTokens = []; // Default to empty array
  
-      console.log('Checking local authentication for Performance page...');
+      console.log(`Checking local authentication for Performance page, requiring: ${specificRequiredToken}`);
  
       // Get UI elements for Navbar and Topbar
       const loginLogoutLink = document.getElementById('loginLogoutLink');
@@ -1284,9 +1285,9 @@
       }
  
  
-      if (!sessionToken) { // Only need session token to be considered "logged in" for this page
-        // User is not logged in
-        console.log("User is not logged in. Setting default UI.");
+      if (!sessionToken || !grantedTokensString) { // Check for granted tokens string as well
+        // User is not logged in or essential tokens missing
+        console.log("User is not logged in or session/permissions missing. Setting default UI.");
         bodyElement.classList.remove('logged-in'); // Remove class from body
  
         // Clear Top Bar Status
@@ -1299,11 +1300,52 @@
  
         // Hide Employee Portal
         employeePortalDropdown.style.display = 'none';
+        // Redirect if essential tokens are missing
+        redirectToLogin('Session or permissions not found locally. Please login.');
+        return; // Stop execution
+      }
+ 
+      // Parse granted tokens
+      try {
+        grantedTokens = JSON.parse(grantedTokensString);
+         if (!Array.isArray(grantedTokens)) {
+           console.error('Parsed grantedTokens is not an array:', grantedTokensString);
+           bodyElement.classList.remove('logged-in'); // Ensure logged-out state
+           loginStatusSpan.textContent = ''; // Clear status
+           loginLogoutLink.textContent = 'Login';
+           loginLogoutLink.href = loginPage;
+           loginLogoutLink.onclick = null;
+           employeePortalDropdown.style.display = 'none';
+           redirectToLogin('Invalid local permissions format. Please login again.');
+           return;
+         }
+      } catch (e) {
+        console.error('Error parsing granted tokens from localStorage:', e);
+        bodyElement.classList.remove('logged-in'); // Ensure logged-out state
+        loginStatusSpan.textContent = ''; // Clear status
+        loginLogoutLink.textContent = 'Login';
+        loginLogoutLink.href = loginPage;
+        loginLogoutLink.onclick = null;
+        employeePortalDropdown.style.display = 'none';
+        redirectToLogin('Error reading local permissions. Please login again.');
         return;
       }
  
-      // User is logged in (session token exists)
-      console.log('Session token found locally, user is logged in. Updating UI.');
+      // Check for the specific required token
+      if (!grantedTokens.includes(specificRequiredToken)) {
+          console.log("Authorization failed: Required token not found in granted tokens.");
+          bodyElement.classList.remove('logged-in'); // Ensure logged-out state
+          loginStatusSpan.textContent = ''; // Clear status
+          loginLogoutLink.textContent = 'Login';
+          loginLogoutLink.href = loginPage;
+          loginLogoutLink.onclick = null;
+          employeePortalDropdown.style.display = 'none';
+          redirectToLogin(`Access denied. Required permission (${specificRequiredToken}) not found.`);
+          return;
+      }
+ 
+      // User is logged in AND has the required token
+      console.log('Session token and required token found locally, user is authorized. Updating UI.');
       bodyElement.classList.add('logged-in'); // Add class for CSS rules
  
       // Update Top Bar Status
@@ -1324,12 +1366,14 @@
       // Show Employee Portal
       employeePortalDropdown.style.display = 'list-item';
  
-      // No need to check specific tokens like tpoEmployeeToken here
-      // No redirection needed if only sessionToken is present
+      // Authorization successful
     }
 
     // --- Run Authentication Check on Page Load ---
-    document.addEventListener('DOMContentLoaded', checkAuthorization);
+    document.addEventListener('DOMContentLoaded', () => {
+        const requiredToken = 'tpoEmployeeToken'; // Define the required token
+        checkAuthorization(requiredToken); // Pass the token to the check function
+    });
 
   </script>
 
