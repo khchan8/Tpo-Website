@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+
+  <title>Store Locations - TPO Wellness</title>
+  <meta content="Find retail locations for TPO Wellness products. List of dispensaries and clinics in Thailand." name="description">
+  <meta content="TPO Wellness, cannabis, edibles, prerolls, dispensaries, clinics, Thailand, store locator, where to buy" name="keywords">
+
+  <!-- Favicons -->
+  <link href="assets/img/favicon.png" rel="icon">
+  <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Raleway:300,300i,400,400i,500,500i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="assets/vendor/aos/aos.css" rel="stylesheet">
+  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="assets/vendor/boxicons/css/boxicons.min.css" rel="stylesheet">
+  <link href="assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+  <link href="assets/vendor/remixicon/remixicon.css" rel="stylesheet">
+  <link href="assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+
+  <!-- Template Main CSS File -->
+  <link href="assets/css/style.css" rel="stylesheet">
+
+  <!-- Added jQuery Library -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+  <style>
+    /* Top Bar Visibility Logic (Copied from index.html) */
+    #topbar .user-info { display: none; }
+    #topbar .contact-info { display: flex; }
+    #topbar #loginStatus {
+         font-size: 14px;
+         color: #fff;
+    }
+    @media (min-width: 768px) {
+       body.logged-in #topbar .contact-info { display: flex !important; }
+       body.logged-in #topbar .user-info { display: flex !important; }
+    }
+    @media (max-width: 767.98px) {
+       body.logged-in #topbar .contact-info { display: none !important; }
+       body.logged-in #topbar .user-info { display: flex !important; }
+    }
+    /* Styles for store locator page specifically */
+    .store-item-col {
+      margin-bottom: 30px;
+    }
+    .store-card {
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      overflow: hidden;
+      transition: all 0.3s ease-in-out;
+      height: 100%; /* Ensure cards in a row have same height */
+      display: flex;
+      flex-direction: column;
+    }
+    .store-card:hover {
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      transform: translateY(-5px);
+    }
+    .store-image img {
+      width: 100%;
+      height: 200px; /* Fixed height for images */
+      object-fit: cover; /* Crop images to fit */
+    }
+    .store-info {
+      padding: 20px;
+      flex-grow: 1; /* Allows info to take remaining space */
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .store-info h4 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+    .store-info p {
+      font-size: 0.9rem;
+      margin-bottom: 8px;
+      color: #6c757d;
+    }
+    .store-info p strong {
+      color: #343a40;
+    }
+    .btn-map {
+      display: inline-block;
+      padding: 8px 15px;
+      background: #ff4a17; /* TPO Orange */
+      color: white;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: 500;
+      transition: background-color 0.3s;
+      margin-top: auto; /* Pushes button to bottom of card */
+    }
+    .btn-map:hover {
+      background: #e04215; /* Darker TPO Orange */
+      color: white;
+    }
+    #store-index-section ul { /* Updated selector for quick nav */
+      list-style-type: none;
+      padding-left: 0;
+      text-align: center; /* Center the links */
+    }
+    #store-index-section li { /* Updated selector for quick nav */
+      display: inline-block;
+      margin-right: 5px; /* Further reduced horizontal margin */
+      margin-left: 5px;  /* Further reduced horizontal margin */
+      margin-bottom: 15px; /* Keep increased bottom margin */
+    }
+    #store-index-section li a { /* Updated selector for quick nav */
+      text-decoration: none;
+      padding: 6px 10px; /* Reduced padding */
+      border: 1px solid #ff4a17;
+      color: #ff4a17;
+      border-radius: 4px;
+      transition: all 0.3s ease;
+    }
+    #store-index-section li a:hover { /* Updated selector for quick nav */
+      background-color: #ff4a17;
+      color: white;
+    }
+    .store-group h2 a {
+      text-decoration: none;
+      color: #333;
+      display: block;
+      padding: 10px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .store-group h2 a:hover {
+      color: #ff4a17;
+    }
+    .store-group h2 a .bi-chevron-down, .store-group h2 a .bi-chevron-up {
+      transition: transform 0.3s ease;
+    }
+    .store-group h2 a[aria-expanded="true"] .bi-chevron-down {
+      transform: rotate(180deg);
+    }
+    .store-group .collapse .row {
+        padding-top: 15px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ======= Top Bar ======= -->
+  <section id="topbar" class="d-flex align-items-center">
+    <div class="container d-flex justify-content-center justify-content-md-between">
+      <div class="contact-info d-flex align-items-center">
+        <i class="bi bi-envelope d-flex align-items-center"><a href="mailto:info@tpo-wellness.com">info@tpo-wellness.com</a></i>
+        <i class="bi bi-phone d-flex align-items-center ms-4"><span>+66 87 789 4950</span></i>
+      </div>
+      <div class="user-info d-flex align-items-center" style="display: none;">
+          <span id="loginStatus"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======= Header ======= -->
+  <header id="header" class="d-flex align-items-center">
+    <div class="container d-flex align-items-center justify-content-between">
+      <h1 class="logo"><a href="index.html"><img src="./assets/img/TPOLogo.png" alt="TPO Wellness Logo" class="img-fluid"></a></h1>
+      <nav id="navbar" class="navbar">
+        <ul>
+          <li><a class="nav-link scrollto" href="index.html#hero">Home</a></li>
+          <li><a class="nav-link scrollto" href="index.html#about">About</a></li>
+          <li><a class="nav-link scrollto" href="index.html#services">Services</a></li>
+          <li><a class="nav-link scrollto " href="index.html#products">Products</a></li>
+          <li><a class="nav-link active" href="stores.html">Store Locations</a></li>
+          <li><a class="nav-link scrollto" href="index.html#team">Team</a></li>
+          <li><a class="nav-link scrollto" href="index.html#contact">Contact</a></li>
+          <li class="dropdown" id="employeePortalDropdown" style="display: none;"><a href="#"><span>Employee Portal</span> <i class="bi bi-chevron-down"></i></a>
+            <ul>
+              <li class="dropdown"><a href="#"><span>Sales Tools</span> <i class="bi bi-chevron-right"></i></a>
+                <ul>
+                  <li><a href="AA-Sales-Tools.html">Auntie Aloha</a></li>
+                  <li><a href="MC-Sales-Tools.html">Mana Cannabis</a></li>
+                  <li><a href="TF-Sales-Tools.html">Fuzzies</a></li>
+                  <li><a href="TY-Sales-Tools.html">Tyson</a></li>
+                </ul>
+              </li>
+              <li><a href="performance.html">Performance</a></li>
+              <li><a href="erp.html">ERP</a></li>
+              <li><a href="CRMv4.html">CRM</a></li>
+              <li class="dropdown"><a href="#"><span>Customer Portal</span> <i class="bi bi-chevron-right"></i></a>
+                 <ul>
+                   <li><a href="Fuzzies-data.html">Fuzzies</a></li>
+                   <li><a href="Tyson-data.html">Tyson</a></li>
+                 </ul>
+              </li>
+            </ul>
+          </li>
+        </ul>
+        <i class="bi bi-list mobile-nav-toggle"></i>
+      </nav><!-- .navbar -->
+    </div>
+  </header><!-- End Header -->
+
+  <main id="main">
+
+    <!-- ======= Breadcrumbs ======= -->
+    <section class="breadcrumbs">
+      <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+          <h2>Store Locations</h2>
+          <ol>
+            <li><a href="index.html">Home</a></li>
+            <li>Store Locations</li>
+          </ol>
+        </div>
+      </div>
+    </section><!-- End Breadcrumbs -->
+
+    <!-- ======= Store Index Section ======= -->
+    <section id="store-index-section" class="store-index-section pt-5 pb-3">
+        <div class="container" data-aos="fade-up">
+            <div id="store-index">
+                <ul>
+                    <li><a href="#group-greenhead-clinic">Greenhead Clinic</a></li>
+                    <li><a href="#group-siam-green">Siam Green</a></li>
+                    <li><a href="#group-stoned-co">Stoned & Co.</a></li>
+                    <li><a href="#group-high-society">High Society Cannabis Club</a></li>
+                    <li><a href="#group-cannabis-twins">Cannabis Twins Bangkok</a></li>
+                    <li><a href="#store-californias-finest">California's Finest</a></li>
+                    <li><a href="#store-cannastock">CannaStock</a></li>
+                    <li><a href="#store-sawadee-sativa">Sawadee Sativa</a></li>
+                    <li><a href="#store-slimjim-strains">Slimjim Strains</a></li>
+                    <li><a href="#store-strainz-dispensary">Strainz Dispensary</a></li>
+                </ul>
+            </div>
+        </div>
+    </section> <!-- End Store Index Section -->
+
+    <!-- ======= Store Listings Section ======= -->
+    <section id="store-listings" class="portfolio section-bg"> 
+      <div class="container" data-aos="fade-up">
+
+        <div class="section-title">
+          <span>Our Retail Partners</span>
+          <h2>Our Retail Partners</h2>
+          <p>Find TPO Wellness products at these fine establishments.</p>
+        </div>
+
+        <div class="store-group mb-5" id="group-greenhead-clinic" data-aos="fade-up">
+          <h2><a data-bs-toggle="collapse" href="#collapse-greenhead-clinic" role="button" aria-expanded="true" aria-controls="collapse-greenhead-clinic">Greenhead Clinic <i class="bi bi-chevron-down"></i></a></h2>
+          <div class="collapse show" id="collapse-greenhead-clinic"> 
+            <div class="row gy-4">
+              <div class="col-lg-4 col-md-6 store-item-col" data-aos="zoom-in" data-aos-delay="50">
+                <div class="store-card">
+                  <div class="store-image">
+                    <img src="assets/img/stores/Greenhead_PhuketTown_ourclinic-02.jpg" alt="Greenhead Clinic Phuket Town" class="img-fluid">
+                  </div>
+                  <div class="store-info">
+                    <h4>Greenhead Clinic Phuket Town</h4>
+                    <p><strong>Address:</strong> Phuket province</p>
+                    <p><strong>Phone:</strong> <a href="tel:0888919149">088-891-9149</a></p>
+                    <p><strong>Hours:</strong> Mon-Sat 10:00 AM – 08:00 PM; Sun 12:00 PM – 10:00 PM</p>
+                    <p><a href="https://goo.gl/maps/J8gM2VBKWfF7q1Dm8" target="_blank" class="btn-map">View on Google Maps</a></p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-4 col-md-6 store-item-col" data-aos="zoom-in" data-aos-delay="100">
+                <div class="store-card">
+                  <div class="store-image">
+                    <img src="assets/img/stores/Greenhead_Kamala_ourclinic-01.jpg" alt="Greenhead Clinic Kamala" class="img-fluid">
+                  </div>
+                  <div class="store-info">
+                    <h4>Greenhead Clinic Kamala</h4>
+                    <p><strong>Address:</strong> Phuket Province</p>
+                    <p><strong>Phone:</strong> </p>
+                    <p><strong>Hours:</strong> 01:00 PM – 11:00 PM (Closed on Friday)</p>
+                    <p><a href="https://goo.gl/maps/L1bXzgLgpvVJfL5y7" target="_blank" class="btn-map">View on Google Maps</a></p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-4 col-md-6 store-item-col" data-aos="zoom-in" data-aos-delay="150">
+                <div class="store-card">
+                  <div class="store-image">
+                    <img src="assets/img/stores/Greenhead_Kata_ourclinic-phuket-kata.jpg" alt="Greenhead Clinic Kata" class="img-fluid">
+                  </div>
+                  <div class="store-info">
+                    <h4>Greenhead Clinic Kata</h4>
+                    <p><strong>Address:</strong> Phuket province</p>
+                    <p><strong>Phone:</strong> <a href="tel:0654641003">065-464-1003</a></p>
+                    <p><strong>Hours:</strong> 10:00 AM – 11:00 PM</p>
+                    <p><a href="https://goo.gl/maps/Wb3i3iXyD1ciG3wn9" target="_blank" class="btn-map">View on Google Maps</a></p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-4 col-md-6 store-item-col" data-aos="zoom-in" data-aos-delay="200">
+                <div class="store-card">
+                  <div class="store-image">
+                    <img src="assets/img/stores/Greenhead_Andaman_ourclinic-andaman.jpg" alt="Greenhead Clinic Andaman" class="img-fluid">
+                  </div>
+                  <div class="store-info">
+                    <h4>Greenhead Clinic Andaman</h4>
+                    <p><strong>Address:</strong> Phuket province</p>
+                    <p><strong>Phone:</strong> <a href="tel:0962382227">096 238 2227</a></p>
+                    <p><strong>Hours:</strong> 10:00 AM – 12:00 AM (midnight)</p>
+                    <p><a href="https://maps.app.goo.gl/n8j3uKam16NWhFSK7" target="_blank" class="btn-map">View on Google Maps</a></p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-4 col-md-6 store-item-col" data-aos="zoom-in" data-aos-delay="250">
+                <div class="store-card">
+                  <div class="store-image">
+                    <img src="assets/img/stores/Greenhead_ChawengSamui_ourclinic-surat-chaweng.jpg" alt="Greenhead Clinic Chaweng Samui" class="img-fluid">
+                  </div>
+                  <div class="store-info">
+                    <h4>Greenhead Clinic Chaweng Samui</h4>
+                    <p><strong>Address:</strong> Surathani province</p>
+                    <p><strong>Phone:</strong> <a href="tel:0826297863">082 629 7863</a></p>
+                    <p><strong>Hours:</strong> 12:00 PM – 02:00 AM</p>
+                    <p><a href="https://goo.gl/maps/476X22rEZqmNp75Q7" target="_blank" class="btn-map">View on Google Maps</a></p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-4 col-md-6 store-item-col" data-aos="zoom-in" data-aos-delay="300">
+                <div class="store-card">
+                  <div class="store-image">
+                    <img src="assets/img/stores/Greenhead_Aonang_ourclinic-krabi-aonang.jpg" alt="Greenhead Clinic Aonang" class="img-fluid">
+                  </div>
+                  <div class="store-info">
+                    <h4>Greenhead Clinic Aonang</h4>
+                    <p><strong>Address:</strong> Krabi province</p>
+                    <p><strong>Phone:</strong> <a href="tel:0656052195">065-605-2195</a></p>
+                    <p><strong>Hours:</strong> 01:00 PM – 11:00 PM</p>
+                    <p><a href="https://maps.app.goo.gl/KgdsnFKCLuZHNrHq8" target="_blank" class="btn-map">View on Google Maps</a></p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-4 col-md-6 store-item-col" data-aos="zoom-in" data-aos-delay="350">
+                <div class="store-card">
+                  <div class="store-image">
+                    <img src="assets/img/stores/Greenhead_Nimman_ourclinic-01.jpg" alt="Greenhead Clinic Nimman" class="img-fluid">
+                  </div>
+                  <div class="store-info">
+                    <h4>Greenhead Clinic Nimman</h4>
+                    <p><strong>Address:</strong> Chiang Mai province</p>
+                    <p><strong>Phone:</strong> <a href="tel:0655632326">065 563 2326</a></p>
+                    <p><strong>Hours:</strong> 10:00 AM – 01:00 AM</p>
+                    <p><a href="https://goo.gl/maps/A936JccFPKEHP4926" target="_blank" class="btn-map">View on Google Maps</a></p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-4 col-md-6 store-item-col" data-aos="zoom-in" data-aos-delay="400">
+                <div class="store-card">
+                  <div class="store-image">
+                    <img src="assets/img/stores/Greenhead_KhaosanRoad_ourclinic-bangkok-kaosang.jpg" alt="Greenhead Clinic Khaosan Road" class="img-fluid">
+                  </div>
+                  <div class="store-info">
+                    <h4>Greenhead Clinic Khaosan Road</h4>
+                    <p><strong>Address:</strong> Bangkok province</p>
+                    <p><strong>Phone:</strong> <a href="tel:0838264166">083-826-4166</a></p>
+                    <p><strong>Hours:</strong> 12:00 PM – 02:00 AM</p>
+                    <p><a href="https://goo.gl/maps/oByw5o1xSqdDUZzi8" target="_blank" class="btn-map">View on Google Maps</a></p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-4 col-md-6 store-item-col" data-aos="zoom-in" data-aos-delay="450">
+                <div class="store-card">
+                  <div class="store-image">
+                    <img src="assets/img/stores/Greenhead_Silom_ourclinic-bangkok-Silom.jpg" alt="Greenhead Clinic Silom" class="img-fluid">
+                  </div>
+                  <div class="store-info">
+                    <h4>Greenhead Clinic Silom</h4>
+                    <p><strong>Address:</strong> Silom Complex, B08, B Floor, 191 Silom Rd, Silom, Bang Rak, Bangkok 10500</p>
+                    <p><strong>Phone:</strong> </p>
+                    <p><strong>Hours:</strong> 11:00 AM – 10:00 PM (Closed on Monday)</p>
+                    <p><a href="https://goo.gl/maps/jLu4W7LJkJkV2LdV8" target="_blank" class="btn-map">View on Google Maps</a></p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-4 col-md-6 store-item-col" data-aos="zoom-in" data-aos-delay="500">
+                <div class="store-card">
+                  <div class="store-image">
+                    <img src="assets/img/stores/Greenhead_ChinaTownBranch_ourclinic-bangkokchina-town.jpg" alt="Greenhead Clinic China Town (Branch)" class="img-fluid">
+                  </div>
+                  <div class="store-info">
+                    <h4>Greenhead Clinic China Town (Branch)</h4>
+                    <p><strong>Address:</strong> Bangkok province</p>
+                    <p><strong>Phone:</strong> <a href="tel:0890303300">089-030-3300</a></p>
+                    <p><strong>Hours:</strong> 10:00 AM – 02:00 AM</p>
+                    <p><a href="https://goo.gl/maps/DPcXiLSSVy6Zc47f7" target="_blank" class="btn-map">View on Google Maps</a></p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-4 col-md-6 store-item-col" data-aos="zoom-in" data-aos-delay="550">
+                <div class="store-card">
+                  <div class="store-image">
+                    <img src="assets/img/stores/Greenhead_PattayaSai2_ourclinic-pattaya-PattayaSai2.jpg" alt="Greenhead Clinic Pattaya Sai 2" class="img-fluid">
+                  </div>
+                  <div class="store-info">
+                    <h4>Greenhead Clinic Pattaya Sai 2</h4>
+                    <p><strong>Address:</strong> Chonburi province</p>
+                    <p><strong>Phone:</strong> <a href="tel:0939646646">093-964-6646</a></p>
+                    <p><strong>Hours:</strong> 11:00 AM – 10:00 PM (Closed on Monday)</p>
+                    <p><a href="https://goo.gl/maps/ogGZVVjm4GXtQNz18" target="_blank" class="btn-map">View on Google Maps</a></p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-4 col-md-6 store-item-col" data-aos="zoom-in" data-aos-delay="600">
+                <div class="store-card">
+                  <div class="store-image">
+                    <img src="assets/img/stores/Greenhead_Jomtien_ourclinic-pattaya-South-Pattaya.jpg" alt="Greenhead Clinic Jomtien, Pattaya" class="img-fluid">
+                  </div>
+                  <div class="store-info">
+                    <h4>Greenhead Clinic Jomtien, Pattaya</h4>
+                    <p><strong>Address:</strong> Chonburi province</p>
+                    <p><strong>Phone:</strong> <a href="tel:0926262659">092-626-2659</a></p>
+                    <p><strong>Hours:</strong> 04:00 PM – 01:00 AM</p>
+                    <p><a href="https://maps.app.goo.gl/YDFZzjJmEJqs2hGm9" target="_blank" class="btn-map">View on Google Maps</a></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="store-group mb-5" id="group-siam-green" data-aos="fade-up" data-aos-delay="100">
+            <h2><a data-bs-toggle="collapse" href="#collapse-siam-green" role="button" aria-expanded="true" aria-controls="collapse-siam-green">Siam Green <i class="bi bi-chevron-down"></i></a></h2>
+            <div class="collapse show" id="collapse-siam-green">
+              <div class="row gy-4">
+                <div class="col-lg-4 col-md-6 store-item-col" data-aos="zoom-in" data-aos-delay="50">
+                  <div class="store-card">
+                    <div class="store-image">
+                      <img src="assets/img/stores/SiamGreen_Nana.jpg" alt="Siam Green Cannabis Co (Nana)" class="img-fluid">
+                    </div>
+                    <div class="store-info">
+                      <h4>Siam Green Cannabis Co (Nana)</h4>
+                      <p><strong>Address:</strong> 210 Sukhumvit Rd, Khlong Tan, Khlong Toei, Bangkok 10110</p>
+                      <p><strong>Phone:</strong> <a href="tel:0617805531">0617805531</a></p>
+                      <p><strong>Hours:</strong> Open Everyday 11 am–3 am</p>
+                      <p><a href="https://www.google.com/maps/place/Siam+Green+Cannabis+Co+Nana+Weed+Shop/@13.7303079,100.5701416,15z/data=!4m6!3m5!1s0x30e29febecd82907:0x56fb9211f41e92c6!8m2!3d13.7385735!4d100.5578553!16s%2Fg%2F11v3nmnty6?entry=tts" target="_blank" class="btn-map">View on Google Maps</a></p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-lg-4 col-md-6 store-item-col" data-aos="zoom-in" data-aos-delay="100">
+                  <div class="store-card">
+                    <div class="store-image">
+                      <img src="assets/img/stores/SiamGreen_KohSamui.jpg" alt="Siam Green, Koh Samui, Chaweng Cannabis Dispensary" class="img-fluid">
+                    </div>
+                    <div class="store-info">
+                      <h4>Siam Green, Koh Samui, Chaweng Cannabis Dispensary</h4>
+                      <p><strong>Address:</strong> 200/8, Chaweng Beach Road, Bo Put, Ko Samui</p>
+                      <p><strong>Phone:</strong> </p>
+                      <p><strong>Hours:</strong> Open Everyday 11 am–3 am</p>
+                      <p><a href="https://www.google.com/maps/search/?api=1&query=Siam+Green+Koh+Samui+Chaweng+200/8,+Chaweng+Beach+Road,+Bo+Put,+Ko+Samui" target="_blank" class="btn-map">View on Google Maps</a></p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-lg-4 col-md-6 store-item-col" data-aos="zoom-in" data-aos-delay="150">
+                  <div class="store-card">
+                    <div class="store-image">
+                      <img src="assets/img/stores/SiamGreen_PhromPhong.jpg" alt="Siam Green Phrom Phong, Sukhumvit Dispensary" class="img-fluid">
+                    </div>
+                    <div class="store-info">
+                      <h4>Siam Green Phrom Phong, Sukhumvit Dispensary</h4>
+                      <p><strong>Address:</strong> 663 Sukhumvit Rd, Khwaeng Khlong Tan Nuea, Watthana, Bangkok 10110</p>
+                      <p><strong>Phone:</strong> <a href="tel:0968930545">096-893-0545</a></p>
+                      <p><strong>Email:</strong> info@siamgreenco.com</p>
+                      <p><strong>Hours:</strong> Open Everyday 11 am–3 am</p>
+                      <p><strong>Landmarks:</strong> Emquartier, Emporium, Phrom Phong BTS</p>
+                      <p><a href="https://www.google.com/maps/search/?api=1&query=Siam+Green+Phrom+Phong+663+Sukhumvit+Rd,+Khwaeng+Khlong+Tan+Nuea,+Watthana,+Bangkok+10110" target="_blank" class="btn-map">View on Google Maps</a></p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-lg-4 col-md-6 store-item-col" data-aos="zoom-in" data-aos-delay="200">
+                  <div class="store-card">
+                    <div class="store-image">
+                      <img src="assets/img/stores/SiamGreen_SalaDaeng.jpg" alt="SiamGreen Sala Daeng, Silom Dispensary" class="img-fluid">
+                    </div>
+                    <div class="store-info">
+                      <h4>SiamGreen Sala Daeng, Silom Dispensary</h4>
+                      <p><strong>Address:</strong> 18 Silom Road, Silom, Bang Rak, Bangkok 10110</p>
+                      <p><strong>Phone:</strong> <a href="tel:0964034198">096-403-4198</a></p>
+                      <p><strong>Email:</strong> info@siamgreenco.com</p>
+                      <p><strong>Hours:</strong> Open Everyday 11 am–3 am</p>
+                      <p><strong>Landmarks:</strong> Silom Complex, Patpong, Sala Daeng BTS</p>
+                      <p><a href="https://www.google.com/maps/search/?api=1&query=SiamGreen+Sala+Daeng+18+Silom+Road,+Silom,+Bang+Rak,+Bangkok+10110" target="_blank" class="btn-map">View on Google Maps</a></p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-lg-4 col-md-6 store-item-col" data-aos="zoom-in" data-aos-delay="250">
+                  <div class="store-card">
+                    <div class="store-image">
+                      <img src="assets/img/stores/SiamGreen_Chinatown.jpg" alt="Siam Green Chinatown Cannabis Dispensary" class="img-fluid">
+                    </div>
+                    <div class="store-info">
+                      <h4>Siam Green Chinatown Cannabis Dispensary</h4>
+                      <p><strong>Address:</strong> 325 Maha Chai Rd, Samran Rat, Phra Nakhon, Bangkok</p>
+                      <p><strong>Phone:</strong> <a href="tel:0981273004">0981273004</a></p>
+                      <p><strong>Email:</strong> </p>
+                      <p><strong>Hours:</strong> </p>
+                      <p><a href="https://www.google.com/maps/search/?api=1&query=Siam+Green+Chinatown+325+Maha+Chai+Rd,+Samran+Rat,+Phra+Nakhon,+Bangkok" target="_blank" class="btn-map">View on Google Maps</a></p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+        </div>
+
+        <div class="store-group mb-5" id="group-stoned-co" data-aos="fade-up" data-aos-delay="200">
+            <h2><a data-bs-toggle="collapse" href="#collapse-stoned-co" role="button" aria-expanded="true" aria-controls="collapse-stoned-co">Stoned & Co. <i class="bi bi-chevron-down"></i></a></h2>
+            <div class="collapse show" id="collapse-stoned-co">
+              <div class="row gy-4">
+                <div class="col-lg-4 col-md-6 store-item-col" data-aos="zoom-in" data-aos-delay="50">
+                  <div class="store-card">
+                    <div class="store-image">
+                      <img src="assets/img/stores/StonedAndCo_ThongLo.jpg" alt="Stoned & Co. Thailand (Thong Lo)" class="img-fluid">
+                    </div>
+                    <div class="store-info">
+                      <h4>Stoned & Co. Thailand (Thong Lo)</h4>
+                      <p><strong>Address:</strong> 2nd Floor, Seenspace Thong Lo 13, Sukhumvit 55 Rd., Vadhana, Bangkok, Thailand, Bangkok</p>
+                      <p><strong>Phone:</strong> <a href="tel:0834645108">083 464 5108</a></p>
+                      <p><strong>Email:</strong> hello@stonedandcothailand.com</p>
+                      <p><strong>Hours:</strong> </p>
+                      <p><a href="https://goo.gl/maps/cfZe9sPk99vNGeWi6" target="_blank" class="btn-map">View on Google Maps</a></p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+        </div>
+
+        <div class="store-group mb-5" id="group-high-society" data-aos="fade-up" data-aos-delay="300">
+            <h2><a data-bs-toggle="collapse" href="#collapse-high-society" role="button" aria-expanded="true" aria-controls="collapse-high-society">High Society Cannabis Club <i class="bi bi-chevron-down"></i></a></h2>
+            <div class="collapse show" id="collapse-high-society">
+              <div class="row gy-4">
+                <div class="col-lg-4 col-md-6 store-item-col" data-aos="zoom-in" data-aos-delay="50">
+                  <div class="store-card">
+                    <div class="store-image">
+                      <img src="assets/img/stores/HighSociety_Sukhumvit.png" alt="High Society Cannabis Club - Sukhumvit" class="img-fluid">
+                    </div>
+                    <div class="store-info">
+                      <h4>High Society Cannabis Club - Sukhumvit</h4>
+                      <p><strong>Address:</strong> 10 5-6 Soi Sukhumvit 31, Khlong Toei Nuea, Watthana, Bangkok 10110, Thailand</p>
+                      <p><strong>Phone:</strong> <a href="tel:0800023236">080 002 3236</a></p>
+                      <p><strong>Email:</strong> </p>
+                      <p><strong>Hours:</strong> Mon-Sun: 10:00 AM - 1:00 AM</p>
+                      <p><a href="https://www.google.com/maps?gs_lcrp=EgRlZGdlKgYIABBFGDkyBggAEEUYOTIHCAEQIRifBTIHCAIQIRifBdIBCDIwNTlqMGoxqAIAsAIA&amp;um=1&amp;ie=UTF-8&amp;fb=1&amp;gl=th&amp;sa=X&amp;geocode=Ka220H53n-IwMSzHyeB_3GDY&amp;daddr=Sawasdee,+245/14+Soi+Sukhumvit+31,+Khlong+Toei+Nuea,+Watthana,+Bangkok+10110" target="_blank" class="btn-map">View on Google Maps</a></p> 
+                    </div>
+                  </div>
+                </div>
+                <div class="col-lg-4 col-md-6 store-item-col" data-aos="zoom-in" data-aos-delay="100">
+                  <div class="store-card">
+                    <div class="store-image">
+                      <img src="assets/img/stores/HighSociety_SuanPhlu.png" alt="High Society Cannabis Club - Suan Phlu" class="img-fluid">
+                    </div>
+                    <div class="store-info">
+                      <h4>High Society Cannabis Club - Suan Phlu</h4>
+                      <p><strong>Address:</strong> 27 1 Suan Phlu Rd, Thung Maha Mek, Sathon, Bangkok 10120, Thailand</p>
+                      <p><strong>Phone:</strong> <a href="tel:0800023236">080 002 3236</a></p>
+                      <p><strong>Email:</strong> </p>
+                      <p><strong>Hours:</strong> Mon-Sun: 10:00 AM - 1:00 AM</p>
+                      <p><a href="https://www.google.com/maps?gs_lcrp=EgRlZGdlKgYIABBFGDkyBggAEEUYOTIICAEQABgWGB4yCggCEAAYgAQYogQyCggDEAAYgAQYogQyBwgEEAAY7wUyCggFEAAYgAQYogTSAQgxNjY1ajBqNKgCALACAA&amp;um=1&amp;ie=UTF-8&amp;fb=1&amp;gl=th&amp;sa=X&amp;geocode=Kd_etidbn-IwMTfWjOHGKvjt&amp;daddr=313+2+Suan+Phlu+1+Alley,+Thung+Maha+Mek,+Sathon,+Bangkok+10120" target="_blank" class="btn-map">View on Google Maps</a></p> 
+                    </div>
+                  </div>
+                </div>
+                <div class="col-lg-4 col-md-6 store-item-col" data-aos="zoom-in" data-aos-delay="150">
+                  <div class="store-card">
+                    <div class="store-image">
+                      <img src="assets/img/stores/HighSociety_KohPhangan.png" alt="High Society Cannabis Club - Koh Phangan" class="img-fluid">
+                    </div>
+                    <div class="store-info">
+                      <h4>High Society Cannabis Club - Koh Phangan</h4>
+                      <p><strong>Address:</strong> 64/34 Moo 1, Tambon Ko Pha-ngan, Amphoe Ko Pha-ngan, Surat Thani 84280, Thailand</p>
+                      <p><strong>Phone:</strong> <a href="tel:0800023236">080 002 3236</a></p>
+                      <p><strong>Email:</strong> </p>
+                      <p><strong>Hours:</strong> Mon-Sun: 10:00 AM - 1:00 AM</p>
+                      <p><a href="https://www.google.com/maps/place/High+Society+Ko+Phangan/@9.7019875,100.016972,15z/data=!4m6!3m5!1s0x3054fd099a96f6a5:0x19fc4a4dc4894bcf!8m2!3d9.7019875!4d100.016972!16s%2Fg%2F11vspgklqs?sa=X&amp;ved=1t:2428&amp;ictx=111&amp;entry=tts" target="_blank" class="btn-map">View on Google Maps</a></p> 
+                    </div>
+                  </div>
+                </div>
+                <div class="col-lg-4 col-md-6 store-item-col" data-aos="zoom-in" data-aos-delay="200">
+                  <div class="store-card">
+                    <div class="store-image">
+                      <img src="assets/img/stores/HighSociety_HuaLamPhong.png" alt="High Society Cannabis Club - HUA LAMPHONG" class="img-fluid">
+                    </div>
+                    <div class="store-info">
+                      <h4>High Society Cannabis Club - HUA LAMPHONG</h4>
+                      <p><strong>Address:</strong> 23 34-35 Tri Mit Rd, Talat Noi, Samphanthawong, Bangkok 10100</p>
+                      <p><strong>Phone:</strong> <a href="tel:0800023236">080 002 3236</a></p> 
+                      <p><strong>Email:</strong> </p>
+                      <p><strong>Hours:</strong> Mon-Sun: 10:00 AM - 1:00 AM</p> 
+                      <p><a href="https://www.google.com/maps/search/?api=1&query=23+34-35+Tri+Mit+Rd,+Talat+Noi,+Samphanthawong,+Bangkok+10100" target="_blank" class="btn-map">View on Google Maps</a></p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+        </div>
+
+        <div class="store-group mb-5" id="group-cannabis-twins" data-aos="fade-up" data-aos-delay="400">
+            <h2><a data-bs-toggle="collapse" href="#collapse-cannabis-twins" role="button" aria-expanded="true" aria-controls="collapse-cannabis-twins">Cannabis Twins Bangkok <i class="bi bi-chevron-down"></i></a></h2>
+            <div class="collapse show" id="collapse-cannabis-twins">
+              <div class="row gy-4">
+                <div class="col-lg-4 col-md-6 store-item-col" data-aos="zoom-in" data-aos-delay="50">
+                  <div class="store-card">
+                    <div class="store-image">
+                      <img src="assets/img/stores/CannabisTwins_SalaDaeng.jpg" alt="Cannabis Twins - Sala Daeng" class="img-fluid">
+                    </div>
+                    <div class="store-info">
+                      <h4>Cannabis Twins - Sala Daeng</h4>
+                      <p><strong>Address:</strong> 69/2 Sala Daeng Soi 3, Silom, Bang Rak, Bangkok 10500</p>
+                      <p><strong>Phone:</strong> <a href="tel:+66824204266">+66 82-420-4266</a></p>
+                      <p><strong>Email:</strong> <a href="mailto:cannabistwinsth@gmail.com">cannabistwinsth@gmail.com</a></p>
+                      <p><strong>Hours:</strong> Mon-Sun: 10:00 AM - 2:00 AM</p>
+                      <p><strong>LINE:</strong> @cannabistwins</p>
+                      <p><strong>Proximity:</strong> BTS Sala Daeng 300m</p>
+                      <p><strong>Parking:</strong> MK Gold (11am-9pm, ฿50/hr); Local market (5pm-12am, ฿100 flat)</p>
+                      <p><a href="https://maps.google.com/maps?ll=13.7262949,100.5371712&z=16" target="_blank" class="btn-map">View on Google Maps</a></p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-lg-4 col-md-6 store-item-col" data-aos="zoom-in" data-aos-delay="100">
+                  <div class="store-card">
+                    <div class="store-image">
+                      <img src="assets/img/stores/CannabisTwins_PhloenChit.webp" alt="Cannabis Twins - Phloen Chit" class="img-fluid">
+                    </div>
+                    <div class="store-info">
+                      <h4>Cannabis Twins - Phloen Chit</h4>
+                      <p><strong>Address:</strong> 11/17 Woodberry Common, 4th Floor, Ruamrudee Rd., Lumpini, Pathum Wan, Bangkok 10330</p>
+                      <p><strong>Phone:</strong> <a href="tel:+66824204266">+66 82-420-4266</a></p>
+                      <p><strong>Email:</strong> <a href="mailto:cannabistwinsth@gmail.com">cannabistwinsth@gmail.com</a></p>
+                      <p><strong>Hours:</strong> Mon-Sun: 10:00 AM - 2:00 AM</p>
+                      <p><strong>LINE:</strong> @cannabistwins</p>
+                      <p><strong>Proximity:</strong> BTS Phloen Chit 150m</p>
+                      <p><strong>Parking:</strong> Onsite across from the store</p>
+                      <p><a href="https://maps.google.com/maps?ll=13.7407196,100.5501722&z=16" target="_blank" class="btn-map">View on Google Maps</a></p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+        </div>
+
+        <!-- Standalone Stores Section Title (Optional) -->
+        <div class="section-title mt-5" data-aos="fade-up" data-aos-delay="500">
+            <span>Standalone Stores</span>
+            <h2>Standalone Stores</h2>
+        </div>
+        <div class="row gy-4" id="standalone-stores-row" data-aos="fade-up" data-aos-delay="600">
+          <!-- Store 1: California's Finest -->
+          <div class="col-lg-4 col-md-6 store-item-col" data-aos="zoom-in" data-aos-delay="50" id="store-californias-finest">
+            <div class="store-card">
+              <div class="store-image">
+                <img src="assets/img/stores/CaliforniasFinest.jpg" alt="California's Finest" class="img-fluid">
+              </div>
+              <div class="store-info">
+                <h4>California's Finest</h4>
+                <p><strong>Address:</strong> 760/3 Sukhumvit road Bangkok, Thailand</p>
+                <p><strong>Phone:</strong> <a href="tel:0649962888">0649962888</a></p>
+                <p><strong>Email:</strong> </p>
+                <p><strong>Hours:</strong> </p>
+                <p><a href="https://www.google.com/maps/search/?api=1&query=760/3+Sukhumvit+road+Bangkok+Thailand" target="_blank" class="btn-map">View on Google Maps</a></p>
+              </div>
+            </div>
+          </div>
+          <!-- Store 2: CannaStock -->
+          <div class="col-lg-4 col-md-6 store-item-col" data-aos="zoom-in" data-aos-delay="100" id="store-cannastock">
+            <div class="store-card">
+              <div class="store-image">
+                <img src="assets/img/stores/CannaStock.jpg" alt="CannaStock" class="img-fluid">
+              </div>
+              <div class="store-info">
+                <h4>CannaStock</h4>
+                <p><strong>Address:</strong> Bangna, Bangkok, Bangkok, Thailand, Bangkok</p>
+                <p><strong>Phone:</strong> <a href="tel:0832016605">083 201 6605</a></p>
+                <p><strong>Email:</strong> </p>
+                <p><strong>Hours:</strong> </p>
+                <p><a href="https://www.google.com/maps/search/?api=1&query=CannaStock+Bangna+Bangkok" target="_blank" class="btn-map">View on Google Maps</a></p>
+              </div>
+            </div>
+          </div>
+          <!-- Store 3: Sawadee Sativa -->
+          <div class="col-lg-4 col-md-6 store-item-col" data-aos="zoom-in" data-aos-delay="150" id="store-sawadee-sativa">
+            <div class="store-card">
+              <div class="store-image">
+                <img src="assets/img/stores/SawadeeSativa.jpg" alt="Sawadee Sativa - Bangkok" class="img-fluid">
+              </div>
+              <div class="store-info">
+                <h4>Sawadee Sativa - Bangkok</h4>
+                <p><strong>Address:</strong> 3 Chaloem Loke Bridge , Ratchadamri Road Level1, Room D Lumphini, Pathum Wan, Bangkok 10330</p>
+                <p><strong>Phone:</strong> <a href="tel:+66851945151">+6685 194 5151</a></p>
+                <p><strong>Email:</strong> </p>
+                <p><strong>Hours:</strong> Open daily: 11 AM - 11:30 PM</p>
+                <p><a href="https://www.google.com/maps?gs_lcrp=EgRlZGdlKgYIABBFGDkyBggAEEUYOTIICAEQABgWGB4yDQgCEAAYhgMYgAQYigUyDQgDEAAYhgMYgAQYigUyDQgEEAAYhgMYgAQYigUyCggFEAAYgAQYogQyCggGEAAYgAQYogQyBwgHEAAY7wUyCggIEAAYgAQYogTSAQc4MDVqMGo0qAIAsAIB&amp;um=1&amp;ie=UTF-8&amp;fb=1&amp;gl=th&amp;sa=X&amp;geocode=KfkpzOBsn-IwMUt2g948Bn4O&amp;daddr=3+Chaloem+Loke+Bridge+,+Ratchadamri+Road+Level1,+Room+D+Lumphini,+Pathum+Wan,+Bangkok+10330" target="_blank" class="btn-map">View on Google Maps</a></p> <!-- Placeholder Link -->
+              </div>
+            </div>
+          </div>
+          <!-- Store 4: Slimjim Strains Cannabis & Weed Dispensary -->
+          <div class="col-lg-4 col-md-6 store-item-col" data-aos="zoom-in" data-aos-delay="200" id="store-slimjim-strains">
+            <div class="store-card">
+              <div class="store-image">
+                <img src="assets/img/stores/SlimjimStrains.jpg" alt="Slimjim Strains Cannabis & Weed Dispensary - Sukhumvit" class="img-fluid">
+              </div>
+              <div class="store-info">
+                <h4>Slimjim Strains Cannabis & Weed Dispensary - Sukhumvit</h4>
+                <p><strong>Address:</strong> 110, 11 Sukhumvit Rd, Khlong Toei Nuea, Watthana, Bangkok 10110, Thailand</p>
+                <p><strong>Phone:</strong> <a href="tel:+66858248906">+66 858248906</a></p>
+                <p><strong>Email:</strong> <a href="mailto:info@slimjim.asia">info@slimjim.asia</a></p>
+                <p><strong>Hours:</strong> </p>
+                <p><a href="https://www.google.com/maps?gs_lcrp=EgRlZGdlKgYIABBFGDkyBggAEEUYOTIHCAEQABjvBTIHCAIQABjvBTIHCAMQABjvBTIHCAQQABjvBTIKCAUQABiABBiiBNIBBzM1N2owajSoAgCwAgE&amp;um=1&amp;ie=UTF-8&amp;fb=1&amp;gl=th&amp;sa=X&amp;geocode=KasyPxFsn-IwMWq9yLj0Dvs1&amp;daddr=4876+Rama+IV+Rd,+Phra+Khanong,+Khlong+Toei,+Bangkok+10110" target="_blank" class="btn-map">View on Google Maps</a></p> <!-- Placeholder Link -->
+              </div>
+            </div>
+          </div>
+          <!-- Store 5: Strainz Dispensary -->
+          <div class="col-lg-4 col-md-6 store-item-col" data-aos="zoom-in" data-aos-delay="250" id="store-strainz-dispensary">
+            <div class="store-card">
+              <div class="store-image">
+                <img src="assets/img/stores/StrainzDispensary.jpg" alt="Strainz Dispensary - Bangkok" class="img-fluid">
+              </div>
+              <div class="store-info">
+                <h4>Strainz Dispensary - Bangkok</h4>
+                <p><strong>Address:</strong> 18, 10 Soi Sukhumvit 22, Khlong Toei, Bangkok 10110, Thailand</p>
+                <p><strong>Phone:</strong> <a href="tel:0650023269">065 002 3269</a></p>
+                <p><strong>Email:</strong> </p>
+                <p><strong>Hours:</strong> </p>
+                <p><a href="https://www.google.com/maps/dir/13.870843,100.480988/Strainz+8+Soi+Sukhumvit+63,+Phra+Khanong+Nuea,+Watthana,+Bangkok+10110/@13.7904366,100.5372239,12z/data=!3m1!4b1!4m19!1m8!3m7!1s0x30e29f49376145b3:0xa0f7ad67f3b5a66!2sStrainz!8m2!3d13.7211644!4d100.5847294!15sChpTdHJhaW56IERpc3BlbnNhcnkgQmFuZ2tva1ocIhpzdHJhaW56IGRpc3BlbnNhcnkgYmFuZ2tva5IBC2NvZmZlZV9zaG9wqgFbEAEqFiISc3RyYWlueiBkaXNwZW5zYXJ5KAAyHxABIhuIFw7yUlleSATh-6KtzHvFnC-VxWPQznb8BBIyHhACIhpzdHJhaW56IGRpc3BlbnNhcnkgYmFuZ2tva-ABAA!16s%2Fg%2F11vbdpqm0l!4m9!1m1!4e1!1m5!1m1!1s0x30e29f49376145b3:0xa0f7ad67f3b5a66!2m2!1d100.5847294!2d13.7211644!3e0?entry=ttu&amp;g_ep=EgoyMDI1MDUwNy4wIKXMDSoASAFQAw%3D%3D" target="_blank" class="btn-map">View on Google Maps</a></p> <!-- Placeholder Link -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section><!-- End Store Listings Section -->
+
+  </main><!-- End #main -->
+
+  <!-- ======= Footer ======= -->
+  <footer id="footer">
+    <div class="footer-top">
+      <div class="container">
+        <div class="row">
+
+          <div class="col-lg-4 col-md-6">
+            <div class="footer-info">
+              <h3>TPO Wellness</h3>
+              <p>
+                Sukhumvit Road <br>
+                Bangkok, Thailand<br><br>
+                <strong>Phone:</strong> +66 87 789 4950<br>
+                <strong>Email:</strong> info@tpo-wellness.com<br>
+              </p>
+              <div class="social-links mt-3">
+                <a href="#" class="twitter"><i class="bx bxl-twitter"></i></a>
+                <a href="#" class="facebook"><i class="bx bxl-facebook"></i></a>
+                <a href="#" class="instagram"><i class="bx bxl-instagram"></i></a>
+                <a href="#" class="google-plus"><i class="bx bxl-skype"></i></a>
+                <a href="#" class="linkedin"><i class="bx bxl-linkedin"></i></a>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-2 col-md-6 footer-links">
+            <h4>Useful Links</h4>
+            <ul>
+              <li><i class="bx bx-chevron-right"></i> <a href="index.html#hero">Home</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="index.html#about">About us</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="index.html#services">Services</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="index.html#products">Products</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="stores.html">Store Locations</a></li>
+            </ul>
+          </div>
+
+          <div class="col-lg-2 col-md-6 footer-links">
+            <h4>Our Services</h4>
+            <ul>
+              <li><i class="bx bx-chevron-right"></i> <a href="oem-edibles-manufacturing.html">Edibles Manufacturing</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="oem-preroll-production.html">Pre-Roll Production</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="#">Flower Packaging</a></li>
+            </ul>
+          </div>
+
+          <div class="col-lg-4 col-md-6 footer-newsletter">
+            <h4>Our Newsletter</h4>
+            <p>Subscribe to our newsletter for the latest updates and offers.</p>
+            <form action="" method="post">
+              <input type="email" name="email"><input type="submit" value="Subscribe">
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="copyright">
+        &copy; Copyright <strong><span>TPO Wellness</span></strong>. All Rights Reserved
+      </div>
+      <div class="credits">
+        Designed by <a href="https://bootstrapmade.com/">BootstrapMade</a>
+      </div>
+    </div>
+  </footer><!-- End Footer -->
+
+  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+  <div id="preloader"></div>
+
+  <!-- Vendor JS Files -->
+  <script src="assets/vendor/aos/aos.js"></script>
+  <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/vendor/glightbox/js/glightbox.min.js"></script>
+  <script src="assets/vendor/isotope-layout/isotope.pkgd.min.js"></script>
+  <script src="assets/vendor/swiper/swiper-bundle.min.js"></script>
+  <!-- <script src="assets/vendor/php-email-form/validate.js"></script> --> 
+
+  <!-- Template Main JS File -->
+  <script src="assets/js/main.js"></script>
+  <script src="assets/js/login.js"></script> 
+  <script src="assets/js/dynamic_background.js"></script>
+
+</body>
+</html>
