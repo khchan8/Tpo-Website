@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Shop — Peak Performance</title>
+  <link rel="stylesheet" href="assets/css/pp.css" />
+  <style>
+    /* Hero Section with Background Image */
+    .shop-hero {
+      background: linear-gradient(rgba(11, 15, 20, 0.7), rgba(11, 15, 20, 0.7)), url('assets/img/hero-bg.jpg');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      color: #fff;
+      text-align: center;
+      padding: 100px 0;
+      margin-bottom: 40px;
+    }
+    .shop-hero h1 {
+      font-size: 48px;
+      margin-bottom: 20px;
+      color: #fff;
+    }
+    .shop-hero p {
+      font-size: 20px;
+      max-width: 800px;
+      margin: 0 auto 30px;
+      color: rgba(255, 255, 255, 0.9);
+    }
+    .shop-hero .btn {
+      margin: 0 10px;
+    }
+
+    /* Product Section Enhancements */
+    .product-section {
+      padding: 60px 0;
+    }
+    .section-title {
+      text-align: center;
+      font-size: 36px;
+      margin-bottom: 40px;
+      color: var(--pp-primary);
+    }
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 30px;
+    }
+    .product-card {
+      background: var(--pp-surface);
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .product-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+    }
+    .product-img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      background: var(--pp-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .product-img img {
+      max-width: 80%;
+      max-height: 80%;
+    }
+    .product-info {
+      padding: 20px;
+    }
+    .product-badge {
+      font-size: 12px;
+      color: #03201e;
+      background: linear-gradient(135deg, var(--pp-primary), var(--pp-primary-2));
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-weight: 700;
+      display: inline-block;
+      margin-bottom: 10px;
+    }
+    .product-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--pp-text);
+    }
+    .product-sub {
+      font-size: 14px;
+      color: var(--pp-muted);
+      margin-bottom: 15px;
+    }
+    .product-link {
+      color: var(--pp-primary);
+      font-weight: 600;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: gap 0.3s ease;
+    }
+    .product-link:hover {
+      gap: 10px;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .shop-hero h1 {
+        font-size: 36px;
+      }
+      .shop-hero p {
+        font-size: 16px;
+      }
+      .product-grid {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="container nav">
+      <a class="brand" href="index.html">
+        <div class="brand-mark">PP</div>
+        <div class="brand-name">Peak Performance</div>
+      </a>
+      <nav class="menu">
+        <a href="shop.html" aria-current="page">Shop</a>
+        <a href="science.html">Science</a>
+        <a href="about.html">About</a>
+        <a href="faq.html">FAQ</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- Enhanced Hero Section -->
+    <section class="shop-hero">
+      <div class="container">
+        <h1>Shop Our Premium Supplements</h1>
+        <p>Discover our range of science-backed, nature-inspired supplements designed to elevate your performance and wellbeing.</p>
+        <a href="#products" class="btn primary">View Products</a>
+        <a href="science.html" class="btn">Learn More</a>
+      </div>
+    </section>
+
+    <!-- Products Section -->
+    <section id="products" class="product-section">
+      <div class="container">
+        <h2 class="section-title">All Products</h2>
+        <div class="product-grid">
+          <!-- Pre-Workout -->
+          <a class="product-card" href="products/pre-workout.html">
+            <div class="product-img">
+              <img src="../assets/img/products/pre-workout-elixir.svg" alt="Pre Workout"/>
+            </div>
+            <div class="product-info">
+              <div class="product-badge">Pre-Workout</div>
+              <div class="product-title">Lion's Peak Pre-Workout Elixir</div>
+              <div class="product-sub">Cordyceps • Rhodiola • Beetroot</div>
+              <div class="product-link">Learn More →</div>
+            </div>
+          </a>
+
+          <!-- Post-Workout -->
+          <a class="product-card" href="products/post-workout.html">
+            <div class="product-img">
+              <img src="../assets/img/products/post-workout-recovery.svg" alt="Post Workout"/>
+            </div>
+            <div class="product-info">
+              <div class="product-badge">Recovery</div>
+              <div class="product-title">Reishi Restore Recovery Blend</div>
+              <div class="product-sub">Reishi • BCAA • Tart Cherry</div>
+              <div class="product-link">Learn More →</div>
+            </div>
+          </a>
+
+          <!-- Hydration Support -->
+          <a class="product-card" href="products/hydration-support.html">
+            <div class="product-img">
+              <img src="../assets/img/products/hydration-support.svg" alt="Hydration Support"/>
+            </div>
+            <div class="product-info">
+              <div class="product-badge">Hydration</div>
+              <div class="product-title">Himalayan Hydration Elixir</div>
+              <div class="product-sub">Electrolytes • Coconut Water • Citrus</div>
+              <div class="product-link">Learn More →</div>
+            </div>
+          </a>
+
+          <!-- Sleep Support -->
+          <a class="product-card" href="products/sleep-support.html">
+            <div class="product-img">
+              <img src="../assets/img/products/sleep-tonic.svg" alt="Sleep Support"/>
+            </div>
+            <div class="product-info">
+              <div class="product-badge">Sleep</div>
+              <div class="product-title">Chill Chaga Nighttime Tonic</div>
+              <div class="product-sub">Chaga • Magnesium • Botanicals</div>
+              <div class="product-link">Learn More →</div>
+            </div>
+          </a>
+
+          <!-- Sexual Health -->
+          <a class="product-card" href="products/sexual-health.html">
+            <div class="product-img">
+              <img src="../assets/img/products/sexual-health.svg" alt="Sexual Health"/>
+            </div>
+            <div class="product-info">
+              <div class="product-badge">Vitality</div>
+              <div class="product-title">Tribulus Vitality Libido Lift</div>
+              <div class="product-sub">Tribulus • Maca • Zinc+B6</div>
+              <div class="product-link">Learn More →</div>
+            </div>
+          </a>
+
+          <!-- Focus & Memory -->
+          <a class="product-card" href="products/focus-memory.html">
+            <div class="product-img">
+              <img src="../assets/img/products/focus-memory.svg" alt="Focus & Memory"/>
+            </div>
+            <div class="product-info">
+              <div class="product-badge">Focus</div>
+              <div class="product-title">Lion's Mane Mind Fuel</div>
+              <div class="product-sub">Lion's Mane • Bacopa • Ginkgo</div>
+              <div class="product-link">Learn More →</div>
+            </div>
+          </a>
+
+          <!-- Stress Management -->
+          <a class="product-card" href="products/stress-management.html">
+            <div class="product-img">
+              <img src="../assets/img/products/stress-management.svg" alt="Stress Management"/>
+            </div>
+            <div class="product-info">
+              <div class="product-badge">Calm</div>
+              <div class="product-title">Adaptogen Zen Balance Blend</div>
+              <div class="product-sub">Ashwagandha • Holy Basil • Reishi</div>
+              <div class="product-link">Learn More →</div>
+            </div>
+          </a>
+
+          <!-- Immune Support -->
+          <a class="product-card" href="products/immune-support.html">
+            <div class="product-img">
+              <img src="../assets/img/products/immune-support.svg" alt="Immune Support"/>
+            </div>
+            <div class="product-info">
+              <div class="product-badge">Immunity</div>
+              <div class="product-title">Mushroom Defense Immune Shield</div>
+              <div class="product-sub">Shiitake • Maitake • Vitamin C</div>
+              <div class="product-link">Learn More →</div>
+            </div>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container" style="display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap">
+      <div>© Peak Performance</div>
+      <div style="color:#a7b0be">Made with care in GMP facilities</div>
+    </div>
+  </footer>
+</body>
+</html>

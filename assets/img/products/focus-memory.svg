@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#062b3b"/>
+      <stop offset="100%" stop-color="#0c516c"/>
+    </linearGradient>
+    <style>
+      .title{font: 900 120px 'Poppins', sans-serif; fill:#ffffff}
+      .subtitle{font: 600 44px 'Open Sans', sans-serif; fill:#d6f4ff}
+      .badge{font:700 32px 'Open Sans', sans-serif; fill:#062b3b}
+    </style>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#bg)"/>
+  <!-- Brain-like nodes -->
+  <g fill="#b8ecff" opacity="0.9">
+    <circle cx="1200" cy="320" r="14"/>
+    <circle cx="1280" cy="260" r="10"/>
+    <circle cx="1320" cy="340" r="12"/>
+    <circle cx="1240" cy="380" r="10"/>
+    <path d="M1200 320 L1280 260 L1320 340 L1240 380 Z" fill="none" stroke="#b8ecff" stroke-width="4"/>
+  </g>
+  <text x="120" y="200" class="title">Focus &amp; Memory</text>
+  <text x="120" y="300" class="subtitle">Lion's Mane Mind Fuel</text>
+  <g transform="translate(160, 760)">
+    <rect width="880" height="70" rx="14" fill="#fff"/>
+    <text x="440" y="48" text-anchor="middle" class="badge">Lion's Mane • Bacopa • Ginkgo • L-Theanine</text>
+  </g>
+</svg>

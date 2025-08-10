@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0a0e2a"/>
+      <stop offset="100%" stop-color="#162060"/>
+    </linearGradient>
+    <style>
+      .title{font: 900 120px 'Poppins', sans-serif; fill:#ffffff}
+      .subtitle{font: 600 44px 'Open Sans', sans-serif; fill:#d6e4ff}
+      .badge{font:700 32px 'Open Sans', sans-serif; fill:#0a0e2a}
+    </style>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#bg)"/>
+  <!-- Moon and stars -->
+  <circle cx="1300" cy="260" r="120" fill="#ffe97a"/>
+  <circle cx="1350" cy="220" r="120" fill="url(#bg)"/>
+  <g fill="#fff8c9" opacity="0.9">
+    <circle cx="200" cy="160" r="5"/>
+    <circle cx="280" cy="240" r="4"/>
+    <circle cx="320" cy="120" r="3"/>
+    <circle cx="420" cy="200" r="4"/>
+    <circle cx="500" cy="140" r="3"/>
+  </g>
+  <text x="160" y="220" class="title">Sleep Support</text>
+  <text x="160" y="320" class="subtitle">Chill Chaga Nighttime Tonic</text>
+  <g transform="translate(160, 760)">
+    <rect width="900" height="70" rx="14" fill="#fff"/>
+    <text x="450" y="48" text-anchor="middle" class="badge">Chaga • Magnesium • L-Theanine • GABA • Botanicals</text>
+  </g>
+</svg>

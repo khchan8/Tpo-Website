@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0b3d91"/>
+      <stop offset="100%" stop-color="#1e56a0"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffcc00"/>
+      <stop offset="100%" stop-color="#ff8c00"/>
+    </linearGradient>
+    <style>
+      .title{font: 900 120px 'Poppins', sans-serif; fill:#fff; letter-spacing:2px}
+      .subtitle{font: 600 44px 'Open Sans', sans-serif; fill:#e6f0ff}
+      .badge{font:700 32px 'Open Sans', sans-serif; fill:#0b3d91}
+    </style>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#bg)"/>
+  <g opacity="0.15" fill="none" stroke="#fff" stroke-width="6">
+    <path d="M-50 800 C 200 700, 400 720, 650 660 S 1100 560, 1650 640"/>
+    <path d="M-50 700 C 250 600, 450 600, 700 540 S 1200 460, 1650 520"/>
+    <path d="M-50 600 C 180 520, 420 480, 780 470 S 1280 420, 1650 440"/>
+  </g>
+  <!-- Dumbbell icon -->
+  <g transform="translate(200,260)">
+    <rect x="0" y="130" width="460" height="90" rx="20" fill="url(#accent)"/>
+    <rect x="-40" y="90" width="80" height="170" rx="18" fill="#ffd166"/>
+    <rect x="420" y="90" width="80" height="170" rx="18" fill="#ffd166"/>
+  </g>
+  <text x="200" y="220" class="title">Pre-Workout</text>
+  <text x="200" y="320" class="subtitle">Lion's Peak Pre-Workout Elixir</text>
+  <g transform="translate(200, 760)">
+    <rect width="520" height="70" rx="14" fill="#fff"/>
+    <text x="260" y="48" text-anchor="middle" class="badge">Cordyceps • Rhodiola • Beetroot</text>
+  </g>
+</svg>

@@ -892,6 +892,18 @@ section {
   object-fit: cover; /* Ensures the image covers the area, cropping if necessary */
 }
 
+/* Avoid cropping SVG text for Peak Performance thumbnails */
+.portfolio .portfolio-item.filter-peak .portfolio-img {
+  object-fit: contain;
+  background-color: #0c0c0c; /* provide contrast behind SVG */
+}
+
+/* Supplement cards thumbnails tuning (keep default hover behavior) */
+.portfolio .portfolio-item.supplement-card .portfolio-img {
+  object-fit: contain;
+  background-color: #0c0c0c;
+}
+
 /*--------------------------------------------------------------
 # Portfolio Details
 --------------------------------------------------------------*/

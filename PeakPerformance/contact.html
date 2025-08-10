@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Contact — Peak Performance</title>
+    <link rel="stylesheet" href="assets/css/pp.css"/>
+    <style>
+        /* Hero Section with Background Image */
+        .contact-hero {
+            background: linear-gradient(rgba(11, 15, 20, 0.7), rgba(11, 15, 20, 0.7)), url('assets/img/hero-bg.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: #fff;
+            text-align: center;
+            padding: 100px 0;
+            margin-bottom: 40px;
+        }
+        .contact-hero h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+        .contact-hero p {
+            font-size: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        /* Contact Information Section */
+        .contact-info-section {
+            background: var(--pp-surface);
+            padding: 60px 40px;
+            border-radius: 10px;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+        .contact-info-section h2 {
+            font-size: 32px;
+            margin-bottom: 30px;
+            color: var(--pp-primary);
+        }
+        .contact-details {
+            display: flex;
+            justify-content: center;
+            gap: 60px;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+        .contact-item {
+            text-align: center;
+        }
+        .contact-item-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--pp-primary), var(--pp-primary-2));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 24px;
+            color: #021016;
+        }
+        .contact-item h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+            color: var(--pp-text);
+        }
+        .contact-item p {
+            color: var(--pp-muted);
+            font-size: 16px;
+        }
+        .contact-item a {
+            color: var(--pp-primary);
+            text-decoration: none;
+        }
+        .contact-item a:hover {
+            color: #7ad7d7;
+        }
+
+        /* Contact Form Section */
+        .contact-form-section {
+            background: var(--pp-surface);
+            padding: 60px 40px;
+            border-radius: 10px;
+            margin-bottom: 40px;
+        }
+        .contact-form-section h2 {
+            font-size: 32px;
+            margin-bottom: 20px;
+            color: var(--pp-primary);
+            text-align: center;
+        }
+        .contact-form-section p {
+            text-align: center;
+            color: var(--pp-muted);
+            margin-bottom: 30px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .contact-form {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--pp-text);
+            font-weight: 500;
+        }
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            background: var(--pp-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            color: var(--pp-text);
+            font-family: inherit;
+            transition: border-color 0.3s ease;
+        }
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--pp-primary);
+        }
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .submit-btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: var(--pp-primary);
+            color: #021016;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            transition: background 0.3s ease;
+            width: 100%;
+            text-align: center;
+        }
+        .submit-btn:hover {
+            background: #0d9b9c;
+        }
+        .form-message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            display: none;
+        }
+        .form-message.success {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+            border: 1px solid #22c55e;
+        }
+        .form-message.error {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid #ef4444;
+        }
+
+        /* Business Hours Section */
+        .business-hours {
+            background: var(--pp-surface);
+            padding: 40px;
+            border-radius: 10px;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+        .business-hours h3 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: var(--pp-primary);
+        }
+        .hours-table {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        .hours-table tr {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .hours-table tr:last-child {
+            border-bottom: none;
+        }
+        .hours-table td {
+            padding: 10px;
+            color: var(--pp-muted);
+        }
+        .hours-table td:first-child {
+            text-align: left;
+            font-weight: 500;
+            color: var(--pp-text);
+        }
+        .hours-table td:last-child {
+            text-align: right;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .contact-hero h1 {
+                font-size: 36px;
+            }
+            .contact-hero p {
+                font-size: 16px;
+            }
+            .contact-details {
+                gap: 30px;
+            }
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            .contact-info-section,
+            .contact-form-section {
+                padding: 40px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container nav">
+            <a class="brand" href="index.html">
+                <div class="brand-mark"></div>
+                <div class="brand-name">Peak Performance</div>
+            </a>
+            <nav class="menu">
+                <a href="shop.html">Shop</a>
+                <a href="science.html">Science</a>
+                <a href="about.html">About</a>
+                <a href="faq.html">FAQ</a>
+                <a href="contact.html" aria-current="page">Contact</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <!-- Enhanced Hero Section -->
+        <section class="contact-hero">
+            <div class="container">
+                <h1>Get In Touch</h1>
+                <p>We're here to help with any questions about our products, wholesale inquiries, or partnership opportunities.</p>
+            </div>
+        </section>
+
+        <!-- Contact Information Section -->
+        <section class="contact-info-section">
+            <div class="container">
+                <h2>Contact Information</h2>
+                <div class="contact-details">
+                    <div class="contact-item">
+                        <div class="contact-item-icon">✉️</div>
+                        <h3>Email</h3>
+                        <p><a href="mailto:info@tpo-wellness.com">info@tpo-wellness.com</a></p>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-item-icon">📞</div>
+                        <h3>Phone</h3>
+                        <p><a href="tel:+66877894950">+66 87 789 4950</a></p>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-item-icon">🏢</div>
+                        <h3>Business Hours</h3>
+                        <p>Monday - Friday: 9:00 AM - 6:00 PM</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Form Section -->
+        <section class="contact-form-section">
+            <div class="container">
+                <h2>Send Us a Message</h2>
+                <p>Fill out the form below and we'll get back to you as soon as possible.</p>
+                <form class="contact-form" id="contactForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="firstName">First Name</label>
+                            <input type="text" id="firstName" name="firstName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="lastName">Last Name</label>
+                            <input type="text" id="lastName" name="lastName" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Phone Number</label>
+                        <input type="tel" id="phone" name="phone">
+                    </div>
+                    <div class="form-group">
+                        <label for="subject">Subject</label>
+                        <select id="subject" name="subject" required>
+                            <option value="">Select a subject</option>
+                            <option value="general">General Inquiry</option>
+                            <option value="wholesale">Wholesale Inquiry</option>
+                            <option value="partnership">Partnership Opportunity</option>
+                            <option value="support">Product Support</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="message">Message</label>
+                        <textarea id="message" name="message" placeholder="Tell us more about your inquiry..." required></textarea>
+                    </div>
+                    <button type="submit" class="submit-btn">Send Message</button>
+                    <div class="form-message" id="formMessage"></div>
+                </form>
+            </div>
+        </section>
+
+        <!-- Business Hours Section -->
+        <section class="business-hours">
+            <div class="container">
+                <h3>Business Hours</h3>
+                <table class="hours-table">
+                    <tr>
+                        <td>Monday - Friday</td>
+                        <td>9:00 AM - 6:00 PM</td>
+                    </tr>
+                    <tr>
+                        <td>Saturday</td>
+                        <td>10:00 AM - 4:00 PM</td>
+                    </tr>
+                    <tr>
+                        <td>Sunday</td>
+                        <td>Closed</td>
+                    </tr>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container" style="display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap">
+            <div>© Peak Performance</div>
+            <div style="color:#a7b0be">Made with care in GMP facilities</div>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById('contactForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formMessage = document.getElementById('formMessage');
+            const firstName = document.getElementById('firstName').value;
+            const lastName = document.getElementById('lastName').value;
+            const email = document.getElementById('email').value;
+            const subject = document.getElementById('subject').value;
+            const message = document.getElementById('message').value;
+            
+            // Simple validation
+            if (!firstName || !lastName || !email || !subject || !message) {
+                formMessage.textContent = 'Please fill in all required fields.';
+                formMessage.className = 'form-message error';
+                formMessage.style.display = 'block';
+                return;
+            }
+            
+            // Simulate form submission
+            formMessage.textContent = 'Thank you for your message! We\'ll get back to you within 24 hours.';
+            formMessage.className = 'form-message success';
+            formMessage.style.display = 'block';
+            
+            // Reset form
+            this.reset();
+            
+            // Hide message after 5 seconds
+            setTimeout(() => {
+                formMessage.style.display = 'none';
+            }, 5000);
+        });
+    </script>
+</body>
+</html>

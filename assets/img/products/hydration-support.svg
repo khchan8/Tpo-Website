@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#001d3d"/>
+      <stop offset="100%" stop-color="#0066cc"/>
+    </linearGradient>
+    <style>
+      .title{font: 900 120px 'Poppins', sans-serif; fill:#ffffff}
+      .subtitle{font: 600 44px 'Open Sans', sans-serif; fill:#e8f4ff}
+      .badge{font:700 32px 'Open Sans', sans-serif; fill:#001d3d}
+    </style>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#bg)"/>
+  <!-- Water droplet icon -->
+  <g transform="translate(1260,220)">
+    <path d="M80 0 C 150 120, 160 180, 160 220 C 160 280, 120 320, 80 320 C 40 320, 0 280, 0 220 C 0 180, 10 120, 80 0 Z" fill="#a7d9ff"/>
+  </g>
+  <text x="120" y="200" class="title">Hydration Support</text>
+  <text x="120" y="300" class="subtitle">Himalayan Hydration &amp; Hydro-Freeze Pops</text>
+  <g transform="translate(160, 760)">
+    <rect width="1120" height="70" rx="14" fill="#fff"/>
+    <text x="560" y="48" text-anchor="middle" class="badge">Electrolytes • Coconut Water • Adaptogens • Citrus</text>
+  </g>
+</svg>

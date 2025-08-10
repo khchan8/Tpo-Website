@@ -1,0 +1,580 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>FAQ — Peak Performance</title>
+    <link rel="stylesheet" href="assets/css/pp.css"/>
+    <style>
+        /* Hero Section with Background Image */
+        .faq-hero {
+            background: linear-gradient(rgba(11, 15, 20, 0.7), rgba(11, 15, 20, 0.7)), url('assets/img/hero-bg.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: #fff;
+            text-align: center;
+            padding: 100px 0;
+            margin-bottom: 40px;
+        }
+        .faq-hero h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+        .faq-hero p {
+            font-size: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        /* FAQ Section */
+        .faq-section {
+            margin-bottom: 40px;
+        }
+        .faq-category {
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            background: var(--pp-surface);
+        }
+        .faq-category-header {
+            padding: 15px 20px;
+            background: var(--pp-primary);
+            color: #021016;
+            font-weight: 700;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.3s ease;
+        }
+        .faq-category-header:hover {
+            background: #0d9b9c;
+        }
+        .faq-category-header::after {
+            content: '+';
+            font-size: 24px;
+            transition: transform 0.3s ease;
+        }
+        .faq-category.active .faq-category-header::after {
+            transform: rotate(45deg);
+        }
+        .faq-items {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        .faq-category.active .faq-items {
+            max-height: 1000px;
+        }
+        .faq-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .faq-item:last-child {
+            border-bottom: none;
+        }
+        .faq-question {
+            font-weight: 700;
+            color: var(--pp-text);
+            margin-bottom: 10px;
+        }
+        .faq-answer {
+            color: var(--pp-muted);
+            line-height: 1.6;
+        }
+        .faq-answer a {
+            color: var(--pp-primary);
+            text-decoration: none;
+        }
+        .faq-answer a:hover {
+            color: #7ad7d7;
+        }
+
+        /* Search Bar */
+        .search-container {
+            margin: 30px 0;
+            text-align: center;
+        }
+        .search-input {
+            width: 100%;
+            max-width: 600px;
+            padding: 12px 20px;
+            background: var(--pp-surface);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+            color: var(--pp-text);
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+        .search-input:focus {
+            border-color: var(--pp-primary);
+        }
+        .search-input::placeholder {
+            color: var(--pp-muted);
+        }
+        .no-results {
+            text-align: center;
+            color: var(--pp-muted);
+            margin: 20px 0;
+            display: none;
+        }
+
+        /* Highlight matching text */
+        .highlight {
+            background-color: rgba(14, 165, 166, 0.3);
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        /* Contact Form Section */
+        .contact-form-section {
+            margin-top: 60px;
+            padding: 40px 20px;
+            background: var(--pp-surface);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .contact-form-section h3 {
+            color: var(--pp-primary);
+            margin-bottom: 20px;
+            font-size: 24px;
+            text-align: center;
+        }
+        .contact-form {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--pp-text);
+            font-weight: 500;
+        }
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            background: var(--pp-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            color: var(--pp-text);
+            font-family: inherit;
+        }
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+        .submit-btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: var(--pp-primary);
+            color: #021016;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            transition: background 0.3s ease;
+        }
+        .submit-btn:hover {
+            background: #0d9b9c;
+        }
+        .form-message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            display: none;
+        }
+        .form-message.success {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+            border: 1px solid #22c55e;
+        }
+        .form-message.error {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid #ef4444;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .faq-hero h1 {
+                font-size: 36px;
+            }
+            .faq-hero p {
+                font-size: 16px;
+            }
+            .faq-category-header {
+                font-size: 16px;
+            }
+            .contact-form-section {
+                padding: 30px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container nav">
+            <a class="brand" href="index.html">
+                <div class="brand-mark"></div>
+                <div class="brand-name">Peak Performance</div>
+            </a>
+            <nav class="menu">
+                <a href="shop.html">Shop</a>
+                <a href="science.html">Science</a>
+                <a href="about.html">About</a>
+                <a href="faq.html" aria-current="page">FAQ</a>
+                <a href="contact.html">Contact</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <!-- Enhanced Hero Section -->
+        <section class="faq-hero">
+            <div class="container">
+                <h1>Frequently Asked Questions</h1>
+                <p>Find answers to common questions about our products and how they can support your wellness journey.</p>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="container">
+                <!-- Search Bar -->
+                <div class="search-container">
+                    <input type="text" class="search-input" id="searchInput" placeholder="Search for questions or answers...">
+                </div>
+
+                <div class="no-results" id="noResults">No results found. Try a different search term.</div>
+
+                <!-- General Questions -->
+                <div class="faq-section">
+                    <div class="faq-category">
+                        <div class="faq-category-header" onclick="toggleFAQ(this)">
+                            General Questions
+                        </div>
+                        <div class="faq-items">
+                            <div class="faq-item">
+                                <div class="faq-question">Are your products vegan?</div>
+                                <div class="faq-answer">Most of our powders and capsules are vegan. Please check the product label or description for specific dietary information.</div>
+                            </div>
+                            <div class="faq-item">
+                                <div class="faq-question">Do you ship nationwide?</div>
+                                <div class="faq-answer">Yes, we ship nationwide. Typical delivery time is 2–4 business days. Free shipping is available on orders over $50.</div>
+                            </div>
+                            <div class="faq-item">
+                                <div class="faq-question">Are your products third-party tested?</div>
+                                <div class="faq-answer">Yes, all our products undergo third-party testing for purity, potency, and safety. Certificates of Analysis (COA) are available upon request.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pre-Workout -->
+                <div class="faq-section">
+                    <div class="faq-category">
+                        <div class="faq-category-header" onclick="toggleFAQ(this)">
+                            Pre-Workout Supplement
+                        </div>
+                        <div class="faq-items">
+                            <div class="faq-item">
+                                <div class="faq-question">When should I take Lion's Peak Pre-Workout Elixir?</div>
+                                <div class="faq-answer">Take it 20–30 minutes before your workout for optimal energy and stamina. Mix with water or your favorite beverage.</div>
+                            </div>
+                            <div class="faq-item">
+                                <div class="faq-question">Is this product caffeine-free?</div>
+                                <div class="faq-answer">No, it contains natural caffeine from Green Tea Extract. Each serving provides approximately 100mg of caffeine.</div>
+                            </div>
+                            <div class="faq-item">
+                                <div class="faq-question">Can I take this every day?</div>
+                                <div class="faq-answer">Yes, it's safe for daily use. However, we recommend cycling off every 8–12 weeks to maintain sensitivity to the ingredients.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Post-Workout -->
+                <div class="faq-section">
+                    <div class="faq-category">
+                        <div class="faq-category-header" onclick="toggleFAQ(this)">
+                            Post-Workout Recovery
+                        </div>
+                        <div class="faq-items">
+                            <div class="faq-item">
+                                <div class="faq-question">When should I take Reishi Restore Recovery Blend?</div>
+                                <div class="faq-answer">Take it within 30 minutes after your workout to support muscle recovery and reduce soreness.</div>
+                            </div>
+                            <div class="faq-item">
+                                <div class="faq-question">Does this product contain any animal-derived ingredients?</div>
+                                <div class="faq-answer">No, it's 100% plant-based, including the BCAAs, which are derived from fermented vegetables.</div>
+                            </div>
+                            <div class="faq-item">
+                                <div class="faq-question">Can I take this before bed?</div>
+                                <div class="faq-answer">Yes, the Reishi Mushroom and Ashwagandha help promote relaxation, making it suitable for evening use.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sleep Support -->
+                <div class="faq-section">
+                    <div class="faq-category">
+                        <div class="faq-category-header" onclick="toggleFAQ(this)">
+                            Sleep Support
+                        </div>
+                        <div class="faq-items">
+                            <div class="faq-item">
+                                <div class="faq-question">When should I take Chill Chaga Nighttime Tonic?</div>
+                                <div class="faq-answer">Take it 30–60 minutes before bedtime to help relax and prepare your body for restful sleep.</div>
+                            </div>
+                            <div class="faq-item">
+                                <div class="faq-question">Is this product habit-forming?</div>
+                                <div class="faq-answer">No, it contains natural ingredients that support sleep without causing dependency.</div>
+                            </div>
+                            <div class="faq-item">
+                                <div class="faq-question">Can I drive after taking this?</div>
+                                <div class="faq-answer">We recommend not driving or operating heavy machinery after taking this product, as it may cause drowsiness.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sexual Health -->
+                <div class="faq-section">
+                    <div class="faq-category">
+                        <div class="faq-category-header" onclick="toggleFAQ(this)">
+                            Sexual Health
+                        </div>
+                        <div class="faq-items">
+                            <div class="faq-item">
+                                <div class="faq-question">How long does it take for Tribulus Vitality Libido Lift to work?</div>
+                                <div class="faq-answer">Effects may be felt within 1–2 hours, but optimal results are typically seen with consistent daily use over 1–2 weeks.</div>
+                            </div>
+                            <div class="faq-item">
+                                <div class="faq-question">Is this product safe for both men and women?</div>
+                                <div class="faq-answer">Yes, it's formulated to support vitality and hormonal balance in both men and women.</div>
+                            </div>
+                            <div class="faq-item">
+                                <div class="faq-question">Can I take this with other medications?</div>
+                                <div class="faq-answer">Consult your healthcare provider before combining this product with other medications, especially those affecting hormone levels.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Focus & Memory -->
+                <div class="faq-section">
+                    <div class="faq-category">
+                        <div class="faq-category-header" onclick="toggleFAQ(this)">
+                            Focus & Memory
+                        </div>
+                        <div class="faq-items">
+                            <div class="faq-item">
+                                <div class="faq-question">When should I take Lion's Mane Mind Fuel?</div>
+                                <div class="faq-answer">Take it in the morning or early afternoon to support mental clarity and focus throughout the day.</div>
+                            </div>
+                            <div class="faq-item">
+                                <div class="faq-question">Will this keep me awake at night?</div>
+                                <div class="faq-answer">It contains a small amount of natural caffeine, so we recommend taking it at least 6 hours before bedtime.</div>
+                            </div>
+                            <div class="faq-item">
+                                <div class="faq-question">How long does it take to feel the effects?</div>
+                                <div class="faq-answer">Many users report improved focus within 30–60 minutes, but long-term benefits are best achieved with consistent daily use.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stress Management -->
+                <div class="faq-section">
+                    <div class="faq-category">
+                        <div class="faq-category-header" onclick="toggleFAQ(this)">
+                            Stress Management
+                        </div>
+                        <div class="faq-items">
+                            <div class="faq-item">
+                                <div class="faq-question">When should I take Adaptogen Zen Balance Blend?</div>
+                                <div class="faq-answer">Take it during stressful periods or as a daily supplement to support resilience to stress. Can be taken morning or evening.</div>
+                            </div>
+                            <div class="faq-item">
+                                <div class="faq-question">Can I take this with other supplements?</div>
+                                <div class="faq-answer">Yes, it's generally safe to combine with other supplements, but consult your healthcare provider if you have specific concerns.</div>
+                            </div>
+                            <div class="faq-item">
+                                <div class="faq-question">Is this product safe for long-term use?</div>
+                                <div class="faq-answer">Yes, the adaptogens in this blend are safe for long-term use and support overall stress resilience.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hydration Support -->
+                <div class="faq-section">
+                    <div class="faq-category">
+                        <div class="faq-category-header" onclick="toggleFAQ(this)">
+                            Hydration Support
+                        </div>
+                        <div class="faq-items">
+                            <div class="faq-item">
+                                <div class="faq-question">When should I take Himalayan Hydration Elixir?</div>
+                                <div class="faq-answer">Take it during or after exercise, in hot weather, or anytime you need to replenish electrolytes and stay hydrated.</div>
+                            </div>
+                            <div class="faq-item">
+                                <div class="faq-question">Is this suitable for children?</div>
+                                <div class="faq-answer">Yes, it's safe for children. Adjust the serving size based on their age and activity level.</div>
+                            </div>
+                            <div class="faq-item">
+                                <div class="faq-question">Can I use this every day?</div>
+                                <div class="faq-answer">Absolutely! It's designed for daily hydration support and is especially beneficial during active or hot days.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Form Section -->
+                <div class="contact-form-section">
+                    <h3>Still Have Questions?</h3>
+                    <p style="text-align: center; color: var(--pp-muted); margin-bottom: 30px;">Ask us anything and we'll get back to you as soon as possible.</p>
+                    <form class="contact-form" id="contactForm">
+                        <div class="form-group">
+                            <label for="name">Your Name</label>
+                            <input type="text" id="name" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Your Email</label>
+                            <input type="email" id="email" name="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="question">Your Question</label>
+                            <textarea id="question" name="question" placeholder="Type your question here..." required></textarea>
+                        </div>
+                        <button type="submit" class="submit-btn">Submit Question</button>
+                        <div class="form-message" id="formMessage"></div>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container" style="display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap">
+            <div>© Peak Performance</div>
+            <div style="color:#a7b0be">Made with care in GMP facilities</div>
+        </div>
+    </footer>
+
+    <script>
+        function toggleFAQ(element) {
+            const category = element.parentElement;
+            category.classList.toggle('active');
+        }
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('keyup', function() {
+            const searchTerm = this.value.toLowerCase();
+            const faqItems = document.querySelectorAll('.faq-item');
+            const faqCategories = document.querySelectorAll('.faq-category');
+            const noResults = document.getElementById('noResults');
+            let hasResults = false;
+
+            // Remove previous highlights
+            document.querySelectorAll('.highlight').forEach(el => {
+                el.outerHTML = el.innerHTML;
+            });
+
+            faqItems.forEach(item => {
+                const question = item.querySelector('.faq-question').textContent.toLowerCase();
+                const answer = item.querySelector('.faq-answer').textContent.toLowerCase();
+                
+                if (question.includes(searchTerm) || answer.includes(searchTerm)) {
+                    item.style.display = 'block';
+                    hasResults = true;
+                    
+                    // Highlight matching text
+                    if (searchTerm.length > 0) {
+                        highlightText(item, searchTerm);
+                    }
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            // Show/hide categories based on visible items
+            faqCategories.forEach(category => {
+                const visibleItems = category.querySelectorAll('.faq-item[style="display: block;"]');
+                if (visibleItems.length > 0) {
+                    category.style.display = 'block';
+                    // Auto-expand if there are visible items
+                    if (searchTerm.length > 0) {
+                        category.classList.add('active');
+                    }
+                } else {
+                    category.style.display = 'none';
+                }
+            });
+
+            // Show/hide no results message
+            if (hasResults || searchTerm.length === 0) {
+                noResults.style.display = 'none';
+            } else {
+                noResults.style.display = 'block';
+            }
+        });
+
+        function highlightText(element, searchTerm) {
+            const questionEl = element.querySelector('.faq-question');
+            const answerEl = element.querySelector('.faq-answer');
+            
+            highlightInElement(questionEl, searchTerm);
+            highlightInElement(answerEl, searchTerm);
+        }
+
+        function highlightInElement(element, searchTerm) {
+            const text = element.textContent;
+            const regex = new RegExp(`(${searchTerm})`, 'gi');
+            element.innerHTML = text.replace(regex, '<span class="highlight">$1</span>');
+        }
+
+        document.getElementById('contactForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formMessage = document.getElementById('formMessage');
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const question = document.getElementById('question').value;
+            
+            // Simple validation
+            if (!name || !email || !question) {
+                formMessage.textContent = 'Please fill in all fields.';
+                formMessage.className = 'form-message error';
+                formMessage.style.display = 'block';
+                return;
+            }
+            
+            // Simulate form submission
+            formMessage.textContent = 'Thank you for your question! We\'ll get back to you soon.';
+            formMessage.className = 'form-message success';
+            formMessage.style.display = 'block';
+            
+            // Reset form
+            this.reset();
+            
+            // Hide message after 5 seconds
+            setTimeout(() => {
+                formMessage.style.display = 'none';
+            }, 5000);
+        });
+    </script>
+</body>
+</html>

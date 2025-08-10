@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f2e1a"/>
+      <stop offset="100%" stop-color="#1f5e36"/>
+    </linearGradient>
+    <style>
+      .title{font: 900 120px 'Poppins', sans-serif; fill:#ffffff}
+      .subtitle{font: 600 44px 'Open Sans', sans-serif; fill:#e6fff1}
+      .badge{font:700 32px 'Open Sans', sans-serif; fill:#0f2e1a}
+    </style>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#bg)"/>
+  <!-- Lotus-like icon -->
+  <g transform="translate(1240,340)" fill="#cfeee0">
+    <path d="M0 0 C 40 -60, 120 -60, 160 0 C 120 40, 40 40, 0 0 Z"/>
+    <path d="M30 50 C 60 20, 100 20, 130 50 C 100 70, 60 70, 30 50 Z"/>
+  </g>
+  <text x="160" y="220" class="title">Stress Management</text>
+  <text x="160" y="320" class="subtitle">Adaptogen Zen Balance Blend</text>
+  <g transform="translate(160, 760)">
+    <rect width="980" height="70" rx="14" fill="#fff"/>
+    <text x="490" y="48" text-anchor="middle" class="badge">Ashwagandha • Holy Basil • Reishi • Magnesium</text>
+  </g>
+</svg>

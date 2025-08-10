@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Peak Performance — Functional Supplements</title>
+  <link rel="stylesheet" href="assets/css/pp.css" />
+  <link rel="icon" href="../assets/img/favicon.png" />
+  <style>
+    /* Custom styles for background images */
+    .hero {
+      background: linear-gradient(rgba(11, 15, 20, 0.7), rgba(11, 15, 20, 0.7)), url('assets/img/hero-bg.jpg');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      color: #fff;
+      text-align: center;
+      padding: 100px 0;
+    }
+    .bestsellers-section {
+      background: linear-gradient(rgba(15, 23, 32, 0.9), rgba(15, 23, 32, 0.9)), url('assets/img/bestsellers-bg.jpg');
+      background-size: cover;
+      background-position: center;
+      padding: 60px 0;
+      border-radius: 10px;
+      margin: 40px 0;
+    }
+    .bestsellers-section h2 {
+      color: var(--pp-primary);
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .card {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="container nav">
+      <a class="brand" href="index.html">
+        <div class="brand-mark">PP</div>
+        <div class="brand-name">Peak Performance</div>
+      </a>
+      <nav class="menu">
+        <a href="shop.html">Shop</a>
+        <a href="science.html">Science</a>
+        <a href="about.html">About</a>
+        <a href="faq.html">FAQ</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <!-- Enhanced Hero Section with Background Image -->
+    <section class="hero">
+      <div class="container">
+        <h1>Elevate Energy, Focus, Sleep and Recovery</h1>
+        <p>Clinically-aligned functional formulas with adaptogens, nootropics, and targeted electrolytes — built for performance and everyday wellness.</p>
+        <div style="display:flex;gap:12px;margin-top:8px;justify-content:center">
+          <a class="btn primary" href="shop.html">Shop All</a>
+          <a class="btn" href="science.html">Explore the Science</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Enhanced Best Sellers Section with Background Image -->
+    <section class="bestsellers-section">
+      <div class="container">
+        <h2>Best Sellers</h2>
+        <div class="grid cols-4">
+          <a class="card" href="products/pre-workout.html">
+            <div class="card-media"><img src="../assets/img/products/pre-workout-elixir.svg" alt="Pre Workout"/></div>
+            <div class="card-body">
+              <div class="badge">Pre-Workout</div>
+              <div class="card-title">Lion's Peak Pre-Workout Elixir</div>
+              <div class="card-sub">Cordyceps • Rhodiola • Beetroot</div>
+            </div>
+          </a>
+          <a class="card" href="products/post-workout.html">
+            <div class="card-media"><img src="../assets/img/products/post-workout-recovery.svg" alt="Post Workout"/></div>
+            <div class="card-body">
+              <div class="badge">Recovery</div>
+              <div class="card-title">Reishi Restore Recovery Blend</div>
+              <div class="card-sub">Reishi • BCAA • Tart Cherry</div>
+            </div>
+          </a>
+          <a class="card" href="products/hydration-support.html">
+            <div class="card-media"><img src="../assets/img/products/hydration-support.svg" alt="Hydration Support"/></div>
+            <div class="card-body">
+              <div class="badge">Hydration</div>
+              <div class="card-title">Himalayan Hydration Elixir</div>
+              <div class="card-sub">Electrolytes • Coconut Water • Citrus</div>
+            </div>
+          </a>
+          <a class="card" href="products/sleep-support.html">
+            <div class="card-media"><img src="../assets/img/products/sleep-tonic.svg" alt="Sleep Support"/></div>
+            <div class="card-body">
+              <div class="badge">Sleep</div>
+              <div class="card-title">Chill Chaga Nighttime Tonic</div>
+              <div class="card-sub">Chaga • Magnesium • Botanicals</div>
+            </div>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer class="footer">
+    <div class="container" style="display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap">
+      <div>© Peak Performance</div>
+      <div style="color:#a7b0be">Made with care in GMP facilities</div>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>About — Peak Performance</title>
+    <link rel="stylesheet" href="assets/css/pp.css"/>
+    <style>
+        /* Hero Section with Background Image */
+        .about-hero {
+            background: linear-gradient(rgba(11, 15, 20, 0.7), rgba(11, 15, 20, 0.7)), url('assets/img/hero-bg.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: #fff;
+            text-align: center;
+            padding: 100px 0;
+            margin-bottom: 40px;
+        }
+        .about-hero h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+        .about-hero p {
+            font-size: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        /* Story Section */
+        .story-section {
+            margin-bottom: 60px;
+        }
+        .story-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: center;
+        }
+        .story-text h2 {
+            font-size: 32px;
+            margin-bottom: 20px;
+            color: var(--pp-primary);
+        }
+        .story-text p {
+            color: var(--pp-muted);
+            line-height: 1.8;
+            margin-bottom: 20px;
+        }
+        .story-image {
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        .story-image img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* Mission Section */
+        .mission-section {
+            background: var(--pp-surface);
+            padding: 60px 40px;
+            border-radius: 10px;
+            margin-bottom: 60px;
+            text-align: center;
+        }
+        .mission-section h2 {
+            font-size: 32px;
+            margin-bottom: 20px;
+            color: var(--pp-primary);
+        }
+        .mission-section p {
+            font-size: 18px;
+            color: var(--pp-muted);
+            max-width: 800px;
+            margin: 0 auto 30px;
+            line-height: 1.8;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--pp-primary);
+            margin-bottom: 10px;
+        }
+        .stat-label {
+            color: var(--pp-muted);
+            font-size: 16px;
+        }
+
+        /* Team Section */
+        .team-section {
+            margin-bottom: 60px;
+        }
+        .team-section h2 {
+            font-size: 32px;
+            margin-bottom: 40px;
+            color: var(--pp-primary);
+            text-align: center;
+        }
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+        }
+        .team-member {
+            background: var(--pp-surface);
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .team-member:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+        .team-member-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--pp-primary), var(--pp-primary-2));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 24px;
+            color: #021016;
+        }
+        .team-member h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+            color: var(--pp-text);
+        }
+        .team-member p {
+            color: var(--pp-muted);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            background: linear-gradient(135deg, var(--pp-primary), var(--pp-primary-2));
+            padding: 60px 40px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 60px;
+        }
+        .cta-section h2 {
+            font-size: 32px;
+            margin-bottom: 20px;
+            color: #021016;
+        }
+        .cta-section p {
+            font-size: 18px;
+            color: #021016;
+            max-width: 600px;
+            margin: 0 auto 30px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: #021016;
+            color: var(--pp-primary);
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: 700;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .about-hero h1 {
+                font-size: 36px;
+            }
+            .about-hero p {
+                font-size: 16px;
+            }
+            .story-grid {
+                grid-template-columns: 1fr;
+            }
+            .mission-section {
+                padding: 40px 20px;
+            }
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container nav">
+            <a class="brand" href="index.html">
+                <div class="brand-mark"></div>
+                <div class="brand-name">Peak Performance</div>
+            </a>
+            <nav class="menu">
+                <a href="shop.html">Shop</a>
+                <a href="science.html">Science</a>
+                <a href="about.html" aria-current="page">About</a>
+                <a href="faq.html">FAQ</a>
+                <a href="contact.html">Contact</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <!-- Enhanced Hero Section -->
+        <section class="about-hero">
+            <div class="container">
+                <h1>From Nature to Your Peak Performance</h1>
+                <p>We craft science-backed supplements that help you unlock your full potential — mind, body, and spirit.</p>
+            </div>
+        </section>
+
+        <!-- Our Story Section -->
+        <section class="section story-section">
+            <div class="container">
+                <div class="story-grid">
+                    <div class="story-text">
+                        <h2>Our Journey</h2>
+                        <p>Peak Performance began with a simple belief: nature holds the key to optimal health. For over a decade, we've traveled the globe to source the finest adaptogens, mushrooms, and botanicals — bringing their ancient wisdom to modern wellness.</p>
+                        <p>Our founders, inspired by traditional herbal practices and cutting-edge nutritional science, set out to create supplements that are not only effective but also pure and delicious.</p>
+                        <p>Today, we're proud to serve millions who trust us to support their journey to peak performance — whether in the gym, the office, or life's many adventures.</p>
+                    </div>
+                    <div class="story-image">
+                        <img src="assets/img/products/about-story.jpg" alt="Our Story">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Mission Section -->
+        <section class="mission-section">
+            <div class="container">
+                <h2>Our Mission</h2>
+                <p>We're here to help you feel your absolute best. Through meticulously formulated supplements, we harness the power of nature to support your physical performance, mental clarity, and overall wellbeing.</p>
+                <p>Every product is a testament to our commitment to quality, transparency, and sustainability. We believe that when you feel your best, you can achieve your best.</p>
+                
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-number">10+</div>
+                        <div class="stat-label">Years of Excellence</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">50M+</div>
+                        <div class="stat-label">Servings Delivered</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">100%</div>
+                        <div class="stat-label">Quality Guarantee</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">30+</div>
+                        <div class="stat-label">Countries Reached</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Our Team Section -->
+        <section class="section team-section">
+            <div class="container">
+                <h2>Meet Our Team</h2>
+                <div class="team-grid">
+                    <div class="team-member">
+                        <div class="team-member-icon">🔬</div>
+                        <h3>Scientists</h3>
+                        <p>Our research team ensures every formula is backed by the latest science and traditional wisdom.</p>
+                    </div>
+                    <div class="team-member">
+                        <div class="team-member-icon">🌿</div>
+                        <h3>Foragers</h3>
+                        <p>We source only the finest ingredients from their natural habitats around the world.</p>
+                    </div>
+                    <div class="team-member">
+                        <div class="team-member-icon">🏋️</div>
+                        <h3>Athletes</h3>
+                        <p>Our team includes fitness enthusiasts who test and trust every product we create.</p>
+                    </div>
+                    <div class="team-member">
+                        <div class="team-member-icon">❤️</div>
+                        <h3>Wellness Advocates</h3>
+                        <p>We're passionate about helping you achieve your health and wellness goals.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA Section -->
+        <section class="cta-section">
+            <div class="container">
+                <h2>Join the Peak Performance Family</h2>
+                <p>Experience the difference that science-backed, nature-inspired supplements can make in your life.</p>
+                <a href="shop.html" class="btn">Shop Now</a>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container" style="display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap">
+            <div>© Peak Performance</div>
+            <div style="color:#a7b0be">Made with care in GMP facilities</div>
+        </div>
+    </footer>
+</body>
+</html>
