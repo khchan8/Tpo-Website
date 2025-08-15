@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TPO Wellness Ltd. - Financial Reports Index</title>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Source Sans Pro', sans-serif;
+            overflow-x: hidden;
+            background-color: #f5f7fa;
+        }
+        .slide {
+            width: 1280px;
+            min-height: 720px;
+            position: relative;
+            background: linear-gradient(135deg, #1a4f8a 0%, #2a6bb5 100%);
+            color: white;
+            margin: 0 auto;
+        }
+        .header {
+            padding: 40px 70px 20px;
+            text-align: center;
+        }
+        .company-name {
+            font-size: 42px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #ffffff, #e0e0e0);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .report-title {
+            font-size: 28px;
+            font-weight: 400;
+            color: #bbdefb;
+        }
+        .content {
+            padding: 20px 70px 40px;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .section-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #e0e0e0;
+            display: flex;
+            align-items: center;
+        }
+        .section-title i {
+            margin-right: 12px;
+        }
+        .card-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .report-card {
+            background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 20px;
+            transition: transform 0.3s, background-color 0.3s;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        .report-card:hover {
+            transform: translateY(-5px);
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        .report-title-card {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #ffffff;
+        }
+        .report-description {
+            font-size: 14px;
+            color: #e0e0e0;
+            margin-bottom: 15px;
+            flex-grow: 1;
+        }
+        .report-link {
+            display: inline-flex;
+            align-items: center;
+            color: #bbdefb;
+            font-weight: 600;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .report-link:hover {
+            color: #ffffff;
+        }
+        .report-link i {
+            margin-left: 5px;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #bbdefb;
+            font-size: 14px;
+        }
+        .decoration-circle {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            z-index: 0;
+        }
+        .circle-1 {
+            width: 300px;
+            height: 300px;
+            top: -100px;
+            left: -100px;
+        }
+        .circle-2 {
+            width: 200px;
+            height: 200px;
+            bottom: -50px;
+            right: 100px;
+        }
+        .circle-3 {
+            width: 150px;
+            height: 150px;
+            top: 100px;
+            right: -50px;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide">
+        <div class="decoration-circle circle-1"></div>
+        <div class="decoration-circle circle-2"></div>
+        <div class="decoration-circle circle-3"></div>
+        
+        <div class="header">
+            <h1 class="company-name">TPO Wellness Ltd.</h1>
+            <h2 class="report-title">Financial Reports - July 2025</h2>
+        </div>
+        
+        <div class="content">
+            <!-- Section 01: Financial Metrics -->
+            <div class="section">
+                <div class="section-title">
+                    <i class="fas fa-chart-line"></i>
+                    Financial Metrics
+                </div>
+                <div class="card-container">
+                    <div class="report-card">
+                        <div class="report-title-card">Overview</div>
+                        <div class="report-description">Executive summary and key financial highlights for July 2025</div>
+                        <a href="01-0-Overview.html" class="report-link">View Report <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                    
+                    <div class="report-card">
+                        <div class="report-title-card">Revenue</div>
+                        <div class="report-description">Monthly revenue trend from June 2024 to July 2025</div>
+                        <a href="01-1-Revenue.html" class="report-link">View Report <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                    
+                    <div class="report-card">
+                        <div class="report-title-card">Gross Profit Margin</div>
+                        <div class="report-description">Trend analysis of gross profit margin over time</div>
+                        <a href="01-1-GrossProfitMargin.html" class="report-link">View Report <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                    
+                    <div class="report-card">
+                        <div class="report-title-card">Operating Profit Margin</div>
+                        <div class="report-description">Analysis of operating profit margin performance</div>
+                        <a href="01-2-OperatingProfitMargin.html" class="report-link">View Report <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                    
+                    <div class="report-card">
+                        <div class="report-title-card">Net Profit Margin</div>
+                        <div class="report-description">Trend of net profit margin over the analysis period</div>
+                        <a href="01-3-NetProfitMargin.html" class="report-link">View Report <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                    
+                    <div class="report-card">
+                        <div class="report-title-card">Return on Assets</div>
+                        <div class="report-description">ROA analysis showing asset utilization efficiency</div>
+                        <a href="01-4-ReturnOnAssets.html" class="report-link">View Report <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                    
+                    <div class="report-card">
+                        <div class="report-title-card">Return on Equity</div>
+                        <div class="report-description">ROE trend showing return on shareholder investment</div>
+                        <a href="01-5-ReturnOnEquity.html" class="report-link">View Report <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                    
+                    <div class="report-card">
+                        <div class="report-title-card">Cost of Goods Sold</div>
+                        <div class="report-description">Analysis of direct production costs over time</div>
+                        <a href="01-6-COGS.html" class="report-link">View Report <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                    
+                    <div class="report-card">
+                        <div class="report-title-card">Revenue vs. Selling Expenses</div>
+                        <div class="report-description">Comparison of revenue and selling expenses</div>
+                        <a href="01-7-RevenueVsSellingExpense.html" class="report-link">View Report <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                    
+                    <div class="report-card">
+                        <div class="report-title-card">Revenue vs. Net Profit</div>
+                        <div class="report-description">Analysis of revenue versus net profit before tax</div>
+                        <a href="01-8-RevenueVsNetProfit.html" class="report-link">View Report <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                    
+                    <div class="report-card">
+                        <div class="report-title-card">Revenue vs. Admin Expenses</div>
+                        <div class="report-description">Comparison of revenue and administrative expenses</div>
+                        <a href="01-9-RevenueVsAdminExpenses.html" class="report-link">View Report <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Section 02: Expense Analysis -->
+            <div class="section">
+                <div class="section-title">
+                    <i class="fas fa-receipt"></i>
+                    Expense Analysis
+                </div>
+                <div class="card-container">
+                    <div class="report-card">
+                        <div class="report-title-card">Expense & Income</div>
+                        <div class="report-description">Detailed breakdown of expenses and income sources</div>
+                        <a href="02-1-Expense & Income.html" class="report-link">View Report <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                    
+                    <div class="report-card">
+                        <div class="report-title-card">Expense Analysis</div>
+                        <div class="report-description">Trend analysis of top selling and administrative expenses</div>
+                        <a href="02-2-Expense Analysis.html" class="report-link">View Report <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Section 03: Outlook & Performance -->
+            <div class="section">
+                <div class="section-title">
+                    <i class="fas fa-lightbulb"></i>
+                    Outlook & Performance
+                </div>
+                <div class="card-container">
+                    <div class="report-card">
+                        <div class="report-title-card">Outlook & Performance</div>
+                        <div class="report-description">Key findings, regulatory impact, and strategic initiatives</div>
+                        <a href="03-1-OutlookAndPerformance.html" class="report-link">View Report <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>© 2025 TPO Wellness Ltd. | Financial Reports | July 2025</p>
+        </div>
+    </div>
+</body>
+</html>

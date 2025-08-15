@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Analysis</title>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Source Sans Pro', sans-serif;
+            overflow: hidden;
+            background-color: #f5f7fa;
+        }
+        .slide {
+            width: 1280px;
+            min-height: 720px;
+            position: relative;
+            background-color: #ffffff;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+        }
+        .header {
+            background-color: #1a4f8a;
+            color: white;
+            padding: 20px 70px;
+        }
+        .title {
+            font-size: 40px;
+            font-weight: 700;
+        }
+        .content {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            padding: 20px 50px 80px 50px; /* Increased bottom padding */
+        }
+        .chart-section {
+            margin-bottom: 20px; /* Reduced margin */
+        }
+        .chart-title {
+            font-size: 24px;
+            color: #1a4f8a;
+            margin-bottom: 10px; /* Reduced margin */
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+        }
+        .chart-title i {
+            margin-right: 10px;
+        }
+        .chart-container {
+            height: 200px; /* Reduced height */
+            position: relative;
+        }
+        .legend {
+            display: flex;
+            justify-content: center;
+            margin-top: 5px; /* Reduced margin */
+            flex-wrap: wrap;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 0 15px 5px;
+            font-size: 14px;
+        }
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        /* Navigation styles updated here */
+        .navigation {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            z-index: 10;
+            background-color: rgba(26, 79, 138, 0.9);
+            padding: 12px 0;
+            border-radius: 10px 10px 0 0;
+        }
+        .nav-button {
+            background-color: #ffffff;
+            color: #1a4f8a;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .nav-button:hover:not(:disabled) {
+            background-color: #f0f5ff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        .nav-button:disabled {
+            background-color: #e0e6ed;
+            color: #7a8a9a;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        .nav-button i {
+            margin-right: 8px;
+        }
+        .nav-button.next i {
+            margin-right: 0;
+            margin-left: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide">
+        <div class="header">
+            <h1 class="title">Expense Analysis</h1>
+        </div>
+        <div class="content">
+            <!-- Top 4 Selling Expenses Chart -->
+            <div class="chart-section">
+                <div class="chart-title">
+                    <i class="fas fa-shopping-cart"></i>
+                    Top 4 Selling Expenses Trend
+                </div>
+                <div class="chart-container">
+                    <canvas id="sellingExpensesChart"></canvas>
+                </div>
+                <div class="legend" id="sellingLegend"></div>
+            </div>
+            
+            <!-- Top 4 Admin Expenses Chart -->
+            <div class="chart-section">
+                <div class="chart-title">
+                    <i class="fas fa-building"></i>
+                    Top 4 Admin Expenses Trend
+                </div>
+                <div class="chart-container">
+                    <canvas id="adminExpensesChart"></canvas>
+                </div>
+                <div class="legend" id="adminLegend"></div>
+            </div>
+        </div>
+        
+        <!-- Navigation buttons updated here -->
+        <div class="navigation">
+            <button class="nav-button home" onclick="goHome()">
+                <i class="fas fa-home"></i> Home
+            </button>
+            <button class="nav-button prev" onclick="goPrev()">
+                <i class="fas fa-arrow-left"></i> Previous
+            </button>
+            <button class="nav-button next" onclick="goNext()">
+                Next <i class="fas fa-arrow-right"></i>
+            </button>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Format dates for display
+            const formatDate = (dateStr) => {
+                const date = new Date(dateStr);
+                const month = date.toLocaleString('default', { month: 'short' });
+                const year = date.getFullYear().toString().substr(-2);
+                return `${month}-${year}`;
+            };
+            
+            // Selling Expenses Data
+            const sellingDates = [
+                '1/1/2024', '2/1/2024', '3/1/2024', '4/1/2024', '5/1/2024', '6/1/2024', 
+                '7/1/2024', '8/1/2024', '9/1/2024', '10/1/2024', '11/1/2024', '12/1/2024', 
+                '1/1/2025', '2/1/2025', '3/1/2025', '4/1/2025', '5/1/2025', '6/1/2025', '7/1/2025'
+            ].map(formatDate);
+            
+            const sellingData = {
+                labels: sellingDates,
+                datasets: [
+                    {
+                        label: 'Other marketing expenses',
+                        data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2186280.65, 610146.59, 433076.23, 664508.96, 503843.82, 573931.18, 224810.23, 497239.32],
+                        borderColor: '#4361ee',
+                        backgroundColor: 'rgba(67, 97, 238, 0.1)',
+                        tension: 0.4,
+                        fill: false
+                    },
+                    {
+                        label: 'Vehicles Travelling and Accommodations',
+                        data: [83531.6, 84961.56, 63210.28, -1230.56, 3450, 0, 0, 11085, 5237.65, 3950, 17708.76, 662779.14, 139596.29, 7300.85, 5908.4, 40848.25, 6550.35, 7418.05, 0],
+                        borderColor: '#3a0ca3',
+                        backgroundColor: 'rgba(58, 12, 163, 0.1)',
+                        tension: 0.4,
+                        fill: false
+                    },
+                    {
+                        label: 'Salary & Wages - Sale and Marketing',
+                        data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 155833, 74833, 90000, 90000, 155334, 160000, 160000, 105000],
+                        borderColor: '#4cc9f0',
+                        backgroundColor: 'rgba(76, 201, 240, 0.1)',
+                        tension: 0.4,
+                        fill: false
+                    },
+                    {
+                        label: 'Sales Commissions',
+                        data: [0, 0, 0, 0, 0, 78952.5, 0, 0, 57607.5, 0, 68571.75, 158257.64, 1197, 101643, 83320, 94619.25, 16088.75, 65003.75, 158350.5],
+                        borderColor: '#7209b7',
+                        backgroundColor: 'rgba(114, 9, 183, 0.1)',
+                        tension: 0.4,
+                        fill: false
+                    }
+                ]
+            };
+            
+            // Admin Expenses Data
+            const adminDates = [
+                '1/1/2024', '2/1/2024', '3/1/2024', '4/1/2024', '5/1/2024', '6/1/2024', 
+                '7/1/2024', '8/1/2024', '9/1/2024', '10/1/2024', '11/1/2024', '12/1/2024', 
+                '1/1/2025', '2/1/2025', '3/1/2025', '4/1/2025', '5/1/2025', '6/1/2025', '7/1/2025'
+            ].map(formatDate);
+            
+            const adminData = {
+                labels: adminDates,
+                datasets: [
+                    {
+                        label: 'Management fee',
+                        data: [0, 0, 0, 0, 31500, 101500, 1001500, 1001500, 1001500, 1001500, 1001500, 1001500, 1001500, 1001500, 801500, 0, 0, 0, 0],
+                        borderColor: '#f72585',
+                        backgroundColor: 'rgba(247, 37, 133, 0.1)',
+                        tension: 0.4,
+                        fill: false
+                    },
+                    {
+                        label: 'Salary & Wages',
+                        data: [0, 0, 0, 0, 0, 0, 107533, 136500, 146500, 164000, 200333, -258092, 88167, 96933, 280200, 1134000, 1187200, 1191933, 1192194],
+                        borderColor: '#b5179e',
+                        backgroundColor: 'rgba(181, 23, 158, 0.1)',
+                        tension: 0.4,
+                        fill: false
+                    },
+                    {
+                        label: 'Land Rental',
+                        data: [40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 0],
+                        borderColor: '#7209b7',
+                        backgroundColor: 'rgba(114, 9, 183, 0.1)',
+                        tension: 0.4,
+                        fill: false
+                    },
+                    {
+                        label: 'Physical security costs',
+                        data: [0, 0, 0, 0, 0, 66300, 51000, 51000, 51000, 51000, 51000, 51000, 52200, 52200, 52200, 52200, 52200, 52200, 0],
+                        borderColor: '#560bad',
+                        backgroundColor: 'rgba(86, 11, 173, 0.1)',
+                        tension: 0.4,
+                        fill: false
+                    }
+                ]
+            };
+            
+            // Create Selling Expenses Chart
+            const sellingCtx = document.getElementById('sellingExpensesChart').getContext('2d');
+            const sellingChart = new Chart(sellingCtx, {
+                type: 'line',
+                data: sellingData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        title: {
+                            display: true,
+                            text: 'Top 4 Selling Expenses (฿)',
+                            color: '#1a4f8a',
+                            font: {
+                                size: 16
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return '฿' + value.toLocaleString();
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Create Admin Expenses Chart
+            const adminCtx = document.getElementById('adminExpensesChart').getContext('2d');
+            const adminChart = new Chart(adminCtx, {
+                type: 'line',
+                data: adminData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        title: {
+                            display: true,
+                            text: 'Top 4 Admin Expenses (฿)',
+                            color: '#1a4f8a',
+                            font: {
+                                size: 16
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return '฿' + value.toLocaleString();
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Create custom legends
+            function createLegend(containerId, datasets) {
+                const container = document.getElementById(containerId);
+                datasets.forEach(dataset => {
+                    const item = document.createElement('div');
+                    item.className = 'legend-item';
+                    
+                    const color = document.createElement('div');
+                    color.className = 'legend-color';
+                    color.style.backgroundColor = dataset.borderColor;
+                    
+                    const label = document.createElement('span');
+                    label.textContent = dataset.label;
+                    
+                    item.appendChild(color);
+                    item.appendChild(label);
+                    container.appendChild(item);
+                });
+            }
+            
+            createLegend('sellingLegend', sellingData.datasets);
+            createLegend('adminLegend', adminData.datasets);
+        });
+        
+        // Navigation script
+        const pages = [
+            "01-0-Overview.html",
+            "01-1-Revenue.html",
+            "01-1-GrossProfitMargin.html",
+            "01-2-OperatingProfitMargin.html",
+            "01-3-NetProfitMargin.html",
+            "01-4-ReturnOnAssets.html",
+            "01-5-ReturnOnEquity.html",
+            "01-6-COGS.html",
+            "01-7-RevenueVsSellingExpense.html",
+            "01-8-RevenueVsNetProfit.html",
+            "01-9-RevenueVsAdminExpenses.html",
+            "02-1-Expense & Income.html",
+            "02-2-Expense Analysis.html",
+            "03-1-OutlookAndPerformance.html"
+        ];
+        
+        // Get current page filename with proper decoding
+        const currentPage = decodeURIComponent(window.location.pathname.split('/').pop());
+        let currentIndex = pages.indexOf(currentPage);
+        if (currentIndex === -1) currentIndex = 0;
+        
+        function goHome() {
+            window.location.href = "index.html";
+        }
+        
+        function goPrev() {
+            if (currentIndex > 0) {
+                window.location.href = pages[currentIndex - 1];
+            }
+        }
+        
+        function goNext() {
+            if (currentIndex < pages.length - 1) {
+                window.location.href = pages[currentIndex + 1];
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const prevButton = document.querySelector('.nav-button.prev');
+            const nextButton = document.querySelector('.nav-button.next');
+            
+            if (currentIndex === 0) {
+                prevButton.disabled = true;
+            }
+            
+            if (currentIndex === pages.length - 1) {
+                nextButton.disabled = true;
+            }
+        });
+    </script>
+</body>
+</html>

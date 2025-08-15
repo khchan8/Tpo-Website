@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Chart - Gross Profit Margin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700&amp;display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Source Sans Pro', sans-serif;
+            overflow: hidden;
+        }
+        .slide {
+            width: 1280px;
+            min-height: 720px;
+            position: relative;
+            background: linear-gradient(135deg, #1a4f8a 0%, #2a6bb5 100%);
+            color: white;
+        }
+        .content {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            min-height: 720px;
+            padding: 70px;
+        }
+        .title {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            line-height: 1.2;
+            background: linear-gradient(90deg, #ffffff, #e0e0e0);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .chart-explanation {
+            font-size: 18px;
+            color: #e0e0e0;
+            margin-bottom: 30px;
+            line-height: 1.5;
+            max-width: 90%;
+        }
+        .chart-container {
+            height: 400px;
+            margin-top: 20px;
+            flex-grow: 1;
+        }
+        .decoration-circle {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            z-index: 0;
+        }
+        .circle-1 {
+            width: 300px;
+            height: 300px;
+            top: -100px;
+            left: -100px;
+        }
+        .circle-2 {
+            width: 200px;
+            height: 200px;
+            bottom: -50px;
+            right: 100px;
+        }
+        .circle-3 {
+            width: 150px;
+            height: 150px;
+            top: 100px;
+            right: -50px;
+        }
+        /* Navigation styles added here */
+        .navigation {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            z-index: 10;
+        }
+        .nav-button {
+            background-color: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        .nav-button:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        .nav-button i {
+            margin-right: 8px;
+        }
+        .nav-button.next i {
+            margin-right: 0;
+            margin-left: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide">
+        <div class="decoration-circle circle-1"></div>
+        <div class="decoration-circle circle-2"></div>
+        <div class="decoration-circle circle-3"></div>
+        
+        <div class="content">
+            <h1 class="title">Executive Summary - <span id="chartName">Gross Profit Margin</span></h1>
+            
+            <div class="chart-explanation" id="chartExplanation">
+                This chart displays the Gross Profit Margin trend from January 2024 to July 2025. 
+                Gross Profit Margin is calculated as (Total Revenue - Total COGS) / Total Revenue. 
+                The data shows significant volatility with periods of negative margins followed by 
+                periods of strong profitability, indicating fluctuations in cost structure and pricing strategies.
+            </div>
+            
+            <div class="chart-container">
+                <canvas id="financialChart"></canvas>
+            </div>
+        </div>
+		        <!-- Navigation buttons added here -->
+        <div class="navigation">
+            <button class="nav-button home" onclick="goHome()">
+                <i class="fas fa-home"></i> Home
+            </button>
+            <button class="nav-button prev" onclick="goPrev()">
+                <i class="fas fa-arrow-left"></i> Previous
+            </button>
+            <button class="nav-button next" onclick="goNext()">
+                Next <i class="fas fa-arrow-right"></i>
+            </button>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            updateChart();
+        });
+
+        function updateChart() {
+            const chartName = "Gross Profit Margin";
+            const chartType = "line";
+            const chartData = {
+                labels: ['Jan-24', 'Feb-24', 'Mar-24', 'Apr-24', 'May-24', 'Jun-24', 'Jul-24', 'Aug-24', 'Sep-24', 'Oct-24', 'Nov-24', 'Dec-24', 'Jan-25', 'Feb-25', 'Mar-25', 'Apr-25', 'May-25', 'Jun-25', 'Jul-25'],
+                datasets: [{
+                    label: 'Gross Profit Margin',
+                    data: [-139.63, 99.53, -189.25, 99.81, 37.25, -33.84, 54.92, 76.14, 0.40, 85.28, 80.76, 117.36, 89.54, 76.46, 86.36, 77.06, 91.34, 61.10, 43.83],
+                    borderColor: '#ffffff',
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            };
+            const chartTitle = "Gross Profit Margin Trend (%)";
+            const explanation = "This chart displays the Gross Profit Margin trend from January 2024 to July 2025. Gross Profit Margin is calculated as (Total Revenue - Total COGS) / Total Revenue. The data shows significant volatility with periods of negative margins followed by periods of strong profitability, indicating fluctuations in cost structure and pricing strategies.";
+            
+            // Update title
+            document.getElementById('chartName').textContent = chartName;
+            
+            // Update explanation
+            document.getElementById('chartExplanation').textContent = explanation;
+            
+            // Create or update chart
+            const ctx = document.getElementById('financialChart').getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (window.financialChartInstance) {
+                window.financialChartInstance.destroy();
+            }
+            
+            // Create gradient fill for line charts
+            let backgroundColor = 'rgba(255, 255, 255, 0.2)';
+            if (chartType === 'line') {
+                const gradientFill = ctx.createLinearGradient(0, 0, 0, 400);
+                gradientFill.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
+                gradientFill.addColorStop(1, 'rgba(255, 255, 255, 0.05)');
+                backgroundColor = gradientFill;
+                
+                // Update dataset with gradient
+                chartData.datasets[0].backgroundColor = backgroundColor;
+            }
+            
+            // Create new chart
+            window.financialChartInstance = new Chart(ctx, {
+                type: chartType,
+                data: chartData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: chartType !== 'line',
+                            position: 'top',
+                            labels: {
+                                color: '#ffffff'
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: chartTitle,
+                            color: '#ffffff',
+                            font: {
+                                size: 16
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#e0e0e0',
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#e0e0e0'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+            // Navigation script added here
+        const pages = [
+            "01-0-Overview.html",
+            "01-1-Revenue.html",
+            "01-1-GrossProfitMargin.html",
+            "01-2-OperatingProfitMargin.html",
+            "01-3-NetProfitMargin.html",
+            "01-4-ReturnOnAssets.html",
+            "01-5-ReturnOnEquity.html",
+            "01-6-COGS.html",
+            "01-7-RevenueVsSellingExpense.html",
+            "01-8-RevenueVsNetProfit.html",
+            "01-9-RevenueVsAdminExpenses.html",
+            "02-1-Expense & Income.html",
+            "02-2-Expense Analysis.html",
+            "03-1-OutlookAndPerformance.html"
+        ];
+        
+        const currentPage = window.location.pathname.split('/').pop();
+        let currentIndex = pages.indexOf(currentPage);
+        if (currentIndex === -1) currentIndex = 0;
+        
+        function goHome() {
+            window.location.href = "index.html";
+        }
+        
+        function goPrev() {
+            if (currentIndex > 0) {
+                window.location.href = pages[currentIndex - 1];
+            }
+        }
+        
+        function goNext() {
+            if (currentIndex < pages.length - 1) {
+                window.location.href = pages[currentIndex + 1];
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const prevButton = document.querySelector('.nav-button.prev');
+            const nextButton = document.querySelector('.nav-button.next');
+            
+            if (currentIndex === 0) {
+                prevButton.style.opacity = '0.5';
+                prevButton.style.cursor = 'not-allowed';
+                prevButton.setAttribute('disabled', 'disabled');
+            }
+            
+            if (currentIndex === pages.length - 1) {
+                nextButton.style.opacity = '0.5';
+                nextButton.style.cursor = 'not-allowed';
+                nextButton.setAttribute('disabled', 'disabled');
+            }
+        });
+	</script>
+</body>
+</html>
