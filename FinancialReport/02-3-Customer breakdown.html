@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Expense Analysis</title>
+    <title>Customer Revenue Breakdown</title>
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
@@ -41,15 +41,15 @@
             display: flex;
             flex-direction: column;
             flex-grow: 1;
-            padding: 20px 50px 80px 50px; /* Increased bottom padding */
+            padding: 20px 50px 80px 50px;
         }
         .chart-section {
-            margin-bottom: 20px; /* Reduced margin */
+            margin-bottom: 20px;
         }
         .chart-title {
             font-size: 24px;
             color: #1a4f8a;
-            margin-bottom: 10px; /* Reduced margin */
+            margin-bottom: 15px;
             font-weight: 600;
             display: flex;
             align-items: center;
@@ -58,13 +58,13 @@
             margin-right: 10px;
         }
         .chart-container {
-            height: 200px; /* Reduced height */
+            height: 300px;
             position: relative;
         }
         .legend {
             display: flex;
             justify-content: center;
-            margin-top: 5px; /* Reduced margin */
+            margin-top: 10px;
             flex-wrap: wrap;
         }
         .legend-item {
@@ -79,7 +79,24 @@
             border-radius: 50%;
             margin-right: 5px;
         }
-        /* Navigation styles updated here */
+        .summary-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a4f8a;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #5a6a85;
+        }
+        /* Navigation styles */
         .navigation {
             position: absolute;
             bottom: 0;
@@ -130,35 +147,41 @@
 <body>
     <div class="slide">
         <div class="header">
-            <h1 class="title">Expense Analysis</h1>
+            <h1 class="title">Customer Revenue Breakdown</h1>
         </div>
         <div class="content">
-            <!-- Top 4 Selling Expenses Chart -->
             <div class="chart-section">
                 <div class="chart-title">
-                    <i class="fas fa-shopping-cart"></i>
-                    Top 4 Selling Expenses Trend
+                    <i class="fas fa-users"></i>
+                    Revenue by Customer (2025)
                 </div>
                 <div class="chart-container">
-                    <canvas id="sellingExpensesChart"></canvas>
+                    <canvas id="customerRevenueChart"></canvas>
                 </div>
-                <div class="legend" id="sellingLegend"></div>
+                <div class="legend" id="customerLegend"></div>
             </div>
             
-            <!-- Top 4 Admin Expenses Chart -->
-            <div class="chart-section">
-                <div class="chart-title">
-                    <i class="fas fa-building"></i>
-                    Top 4 Admin Expenses Trend
+            <div class="summary-stats">
+                <div class="stat-item">
+                    <div class="stat-value">฿15.4M</div>
+                    <div class="stat-label">Total Revenue</div>
                 </div>
-                <div class="chart-container">
-                    <canvas id="adminExpensesChart"></canvas>
+                <div class="stat-item">
+                    <div class="stat-value">฿2.9M</div>
+                    <div class="stat-label">Highest Month</div>
                 </div>
-                <div class="legend" id="adminLegend"></div>
+                <div class="stat-item">
+                    <div class="stat-value">฿1.1M</div>
+                    <div class="stat-label">Lowest Month</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">8</div>
+                    <div class="stat-label">Active Customers</div>
+                </div>
             </div>
         </div>
         
-        <!-- Navigation buttons updated here -->
+        <!-- Navigation buttons -->
         <div class="navigation">
             <button class="nav-button home" onclick="goHome()">
                 <i class="fas fa-home"></i> Home
@@ -174,109 +197,84 @@
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Format dates for display
-            const formatDate = (dateStr) => {
-                const date = new Date(dateStr);
-                const month = date.toLocaleString('default', { month: 'short' });
-                const year = date.getFullYear().toString().substr(-2);
-                return `${month}-${year}`;
-            };
+            // Customer revenue data
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'];
             
-            // Selling Expenses Data
-            const sellingDates = [
-                '1/1/2024', '2/1/2024', '3/1/2024', '4/1/2024', '5/1/2024', '6/1/2024', 
-                '7/1/2024', '8/1/2024', '9/1/2024', '10/1/2024', '11/1/2024', '12/1/2024', 
-                '1/1/2025', '2/1/2025', '3/1/2025', '4/1/2025', '5/1/2025', '6/1/2025', '7/1/2025'
-            ].map(formatDate);
-            
-            const sellingData = {
-                labels: sellingDates,
+            const customerData = {
+                labels: months,
                 datasets: [
                     {
-                        label: 'Other marketing expenses',
-                        data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2186280.65, 610146.59, 433076.23, 664508.96, 503843.82, 573931.18, 224810.23, 497239.32],
+                        label: 'Auntie Aloha',
+                        data: [1481033, 1223364.17, 1028527.50, 1196344.65, 798037.40, 468373.75, 258360.00, 54750.00],
                         borderColor: '#4361ee',
                         backgroundColor: 'rgba(67, 97, 238, 0.1)',
                         tension: 0.4,
                         fill: false
                     },
                     {
-                        label: 'Vehicles Travelling and Accommodations',
-                        data: [83531.6, 84961.56, 63210.28, -1230.56, 3450, 0, 0, 11085, 5237.65, 3950, 17708.76, 662779.14, 139596.29, 7300.85, 5908.4, 40848.25, 6550.35, 7418.05, 0],
+                        label: 'Fuzzies',
+                        data: [1426719.90, 1096400.00, 542060.00, 621739.98, 744928.33, 478718.33, 363081.66, 275050.00],
                         borderColor: '#3a0ca3',
                         backgroundColor: 'rgba(58, 12, 163, 0.1)',
                         tension: 0.4,
                         fill: false
                     },
                     {
-                        label: 'Salary & Wages - Sale and Marketing',
-                        data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 155833, 74833, 90000, 90000, 155334, 160000, 160000, 105000],
+                        label: 'Thai Cannabis Club',
+                        data: [0, 98604.00, 0, 0, 0, 0, 0, 0],
                         borderColor: '#4cc9f0',
                         backgroundColor: 'rgba(76, 201, 240, 0.1)',
                         tension: 0.4,
                         fill: false
                     },
                     {
-                        label: 'Sales Commissions',
-                        data: [0, 0, 0, 0, 0, 78952.5, 0, 0, 57607.5, 0, 68571.75, 158257.64, 1197, 101643, 83320, 94619.25, 16088.75, 65003.75, 158350.5],
+                        label: 'LocalBoyz',
+                        data: [0, 204000.00, 187203.00, 182157.00, 97000.00, 211695.00, 199375.00, 0],
                         borderColor: '#7209b7',
                         backgroundColor: 'rgba(114, 9, 183, 0.1)',
                         tension: 0.4,
                         fill: false
-                    }
-                ]
-            };
-            
-            // Admin Expenses Data
-            const adminDates = [
-                '1/1/2024', '2/1/2024', '3/1/2024', '4/1/2024', '5/1/2024', '6/1/2024', 
-                '7/1/2024', '8/1/2024', '9/1/2024', '10/1/2024', '11/1/2024', '12/1/2024', 
-                '1/1/2025', '2/1/2025', '3/1/2025', '4/1/2025', '5/1/2025', '6/1/2025', '7/1/2025'
-            ].map(formatDate);
-            
-            const adminData = {
-                labels: adminDates,
-                datasets: [
+                    },
                     {
-                        label: 'Management fee',
-                        data: [0, 0, 0, 0, 31500, 101500, 1001500, 1001500, 1001500, 1001500, 1001500, 1001500, 1001500, 1001500, 801500, 0, 0, 0, 0],
+                        label: 'Mana Cannabis',
+                        data: [0, 0, 0, 30120.00, 114840.00, 194157.50, 47550.00, 589750.00],
                         borderColor: '#f72585',
                         backgroundColor: 'rgba(247, 37, 133, 0.1)',
                         tension: 0.4,
                         fill: false
                     },
                     {
-                        label: 'Salary & Wages',
-                        data: [0, 0, 0, 0, 0, 0, 107533, 136500, 146500, 164000, 200333, -258092, 88167, 96933, 280200, 1134000, 1187200, 1191933, 1192194],
+                        label: 'Tyson',
+                        data: [0, 0, 110150.00, 261065.00, 331490.00, 191180.00, 51350.00, 152800.00],
                         borderColor: '#b5179e',
                         backgroundColor: 'rgba(181, 23, 158, 0.1)',
                         tension: 0.4,
                         fill: false
                     },
                     {
-                        label: 'Land Rental',
-                        data: [40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 0],
-                        borderColor: '#7209b7',
-                        backgroundColor: 'rgba(114, 9, 183, 0.1)',
+                        label: 'ThaiStick',
+                        data: [0, 0, 0, 0, 27350.00, 71640.00, 0, 0],
+                        borderColor: '#560bad',
+                        backgroundColor: 'rgba(86, 11, 173, 0.1)',
                         tension: 0.4,
                         fill: false
                     },
                     {
-                        label: 'Physical security costs',
-                        data: [0, 0, 0, 0, 0, 66300, 51000, 51000, 51000, 51000, 51000, 51000, 52200, 52200, 52200, 52200, 52200, 52200, 0],
-                        borderColor: '#560bad',
-                        backgroundColor: 'rgba(86, 11, 173, 0.1)',
+                        label: 'Frost',
+                        data: [0, 0, 9408.00, 0, 0, 0, 0, 0],
+                        borderColor: '#3a86ff',
+                        backgroundColor: 'rgba(58, 134, 255, 0.1)',
                         tension: 0.4,
                         fill: false
                     }
                 ]
             };
             
-            // Create Selling Expenses Chart
-            const sellingCtx = document.getElementById('sellingExpensesChart').getContext('2d');
-            const sellingChart = new Chart(sellingCtx, {
+            // Create Customer Revenue Chart
+            const ctx = document.getElementById('customerRevenueChart').getContext('2d');
+            const chart = new Chart(ctx, {
                 type: 'line',
-                data: sellingData,
+                data: customerData,
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
@@ -286,53 +284,25 @@
                         },
                         title: {
                             display: true,
-                            text: 'Top 4 Selling Expenses (฿)',
+                            text: 'Monthly Revenue by Customer (฿)',
                             color: '#1a4f8a',
                             font: {
                                 size: 16
                             }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: {
-                                color: 'rgba(0, 0, 0, 0.05)'
-                            },
-                            ticks: {
-                                callback: function(value) {
-                                    return '฿' + value.toLocaleString();
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += '฿' + context.parsed.y.toLocaleString();
+                                    }
+                                    return label;
                                 }
                             }
-                        },
-                        x: {
-                            grid: {
-                                color: 'rgba(0, 0, 0, 0.05)'
-                            }
-                        }
-                    }
-                }
-            });
-            
-            // Create Admin Expenses Chart
-            const adminCtx = document.getElementById('adminExpensesChart').getContext('2d');
-            const adminChart = new Chart(adminCtx, {
-                type: 'line',
-                data: adminData,
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        title: {
-                            display: true,
-                            text: 'Top 4 Admin Expenses (฿)',
-                            color: '#1a4f8a',
-                            font: {
-                                size: 16
-                            }
                         }
                     },
                     scales: {
@@ -343,7 +313,7 @@
                             },
                             ticks: {
                                 callback: function(value) {
-                                    return '฿' + value.toLocaleString();
+                                    return '฿' + (value / 1000000).toFixed(1) + 'M';
                                 }
                             }
                         },
@@ -376,8 +346,7 @@
                 });
             }
             
-            createLegend('sellingLegend', sellingData.datasets);
-            createLegend('adminLegend', adminData.datasets);
+            createLegend('customerLegend', customerData.datasets);
         });
         
         // Navigation script
@@ -395,7 +364,7 @@
             "01-9-RevenueVsAdminExpenses.html",
             "02-1-Expense & Income.html",
             "02-2-Expense Analysis.html",
-			"02-3-Customer breakdown.html",
+            "02-3-Customer breakdown.html",
             "03-1-OutlookAndPerformance.html"
         ];
         
