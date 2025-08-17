@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Automation Strategy | Asian Tigers Group</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: "Warm Neutral Harmony" -->
+    <!-- Application Structure Plan: The SPA is designed as a top-down narrative dashboard. It starts with a high-level Executive Summary with key metrics to grab attention. A sticky navigation bar allows users to jump to thematic sections: "The Imperative" (Why AI is needed), "The Platforms" (Vendor analysis), "The Roadmap" (How and when), "The Investment" (Financials), and "The Risks". This structure prioritizes user-led exploration over the report's linear format. Users can get the gist from the top or dive deep into any area of interest. Key interactions include toggling TCO scenarios, filtering the platform comparison table, and revealing details on the roadmap and risk cards. This design makes dense information digestible and empowers users to find what's most relevant to them quickly. -->
+    <!-- Visualization & Content Choices: 
+        - Executive Summary Stats: Goal=Inform -> Dynamic stat cards (HTML/CSS) -> Simple, high-impact numbers for immediate understanding.
+        - TCO Comparison: Goal=Compare -> Interactive Bar Chart (Chart.js) -> Interaction: Buttons to toggle scenarios ("Buy", "Build", "Hybrid"). Justification: Visually demonstrates the long-term financial advantage of the hybrid model far more effectively than a static table.
+        - Implementation Roadmap: Goal=Change/Organize -> Interactive Gantt-style diagram (HTML/CSS Grid) -> Interaction: Hover effects on tasks to show details. Justification: Provides a clear, visual timeline of the multi-year strategy, making it easy to understand phasing and milestones.
+        - Platform Comparison: Goal=Compare -> Sortable HTML Table -> Interaction: Column header clicks to sort data. Justification: Allows users to rank vendors by the criteria most important to them (e.g., cost, timeline), facilitating direct comparison.
+        - Risk Matrix: Goal=Inform/Organize -> Interactive Cards (HTML/CSS/JS) -> Interaction: Click to reveal mitigation strategies. Justification: Presents risks in a clean, organized grid, with details available on demand to avoid overwhelming the user.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Inter', sans-serif; scroll-behavior: smooth; }
+        .nav-link { transition: all 0.3s ease; }
+        .nav-link.active { color: #f59e0b; border-bottom-color: #f59e0b; }
+        .nav-link:not(.active):hover { color: #fbbf24; border-bottom-color: #fbbf24; }
+        .content-section { display: none; }
+        .content-section.active { display: block; }
+        .chart-container { position: relative; width: 100%; max-width: 800px; margin-left: auto; margin-right: auto; height: 400px; max-height: 50vh; }
+        @media (min-width: 768px) { .chart-container { height: 500px; } }
+        .gantt-chart { display: grid; grid-template-columns: 100px 1fr; gap: 4px; }
+        .gantt-header { grid-column: 2 / -1; display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; }
+        .gantt-phase, .gantt-task { grid-column: 1 / -1; display: grid; grid-template-columns: 100px repeat(42, 1fr); align-items: center; }
+        .gantt-bar { grid-column: span var(--span); background-color: #3b82f6; }
+        .gantt-milestone { grid-column-start: var(--start); }
+    </style>
+</head>
+<body class="bg-stone-50 text-stone-800">
+
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold text-stone-900">AI-Powered Operational Transformation</h1>
+            <p class="text-lg text-stone-600 mt-2">A Strategic Roadmap for Asian Tigers Group</p>
+        </header>
+
+        <nav class="sticky top-0 bg-stone-50/80 backdrop-blur-sm z-10 mb-8 border-b border-stone-200">
+            <ul class="flex justify-center flex-wrap gap-4 md:gap-8 text-sm md:text-base font-medium">
+                <li><a href="#summary" class="nav-link active py-4 px-2 block border-b-2 border-transparent" onclick="showSection('summary', this)">Executive Summary</a></li>
+                <li><a href="#imperative" class="nav-link py-4 px-2 block border-b-2 border-transparent" onclick="showSection('imperative', this)">The Imperative</a></li>
+                <li><a href="#platforms" class="nav-link py-4 px-2 block border-b-2 border-transparent" onclick="showSection('platforms', this)">Platform Analysis</a></li>
+                <li><a href="#roadmap" class="nav-link py-4 px-2 block border-b-2 border-transparent" onclick="showSection('roadmap', this)">The Roadmap</a></li>
+                <li><a href="#investment" class="nav-link py-4 px-2 block border-b-2 border-transparent" onclick="showSection('investment', this)">The Investment</a></li>
+                <li><a href="#risks" class="nav-link py-4 px-2 block border-b-2 border-transparent" onclick="showSection('risks', this)">Risk Assessment</a></li>
+            </ul>
+        </nav>
+
+        <main id="app-content">
+            <section id="summary" class="content-section active space-y-8">
+                <div class="text-center">
+                    <h2 class="text-3xl font-bold text-stone-800 mb-2">Key Findings & Projected Impact</h2>
+                    <p class="max-w-3xl mx-auto text-stone-600">A hybrid "Buy to Accelerate, Build to Differentiate" strategy will deliver immediate ROI while building a long-term competitive moat. This approach leverages third-party platforms for quick wins and develops in-house AI for unique, high-value processes.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-stone-200">
+                        <p class="text-5xl font-bold text-amber-500">20-30%</p>
+                        <p class="mt-2 text-stone-600 font-medium">Reduction in Operational Costs</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-stone-200">
+                        <p class="text-5xl font-bold text-amber-500">75%</p>
+                        <p class="mt-2 text-stone-600 font-medium">Decrease in Document Processing Times</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-stone-200">
+                        <p class="text-5xl font-bold text-amber-500">>98%</p>
+                        <p class="mt-2 text-stone-600 font-medium">Improvement in Order Accuracy</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="imperative" class="content-section space-y-8">
+                <div class="text-center">
+                    <h2 class="text-3xl font-bold text-stone-800 mb-2">The Automation Imperative</h2>
+                    <p class="max-w-3xl mx-auto text-stone-600">The Southeast Asian logistics market is rapidly adopting AI. Competitors like DHL and SingPost are already investing heavily. To maintain its leadership, ATG must act decisively to automate its unique blend of physical logistics and high-touch professional services.</p>
+                </div>
+                 <div class="bg-white p-6 rounded-lg shadow-sm border border-stone-200">
+                    <h3 class="text-xl font-semibold mb-4">Mapping AI to ATG's Value Chain</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div class="p-4 bg-stone-50 rounded-md">
+                            <h4 class="font-bold">Workflow Automation</h4>
+                            <p class="text-sm text-stone-600">Automate end-to-end relocation lifecycle, from inquiry to invoicing.</p>
+                        </div>
+                        <div class="p-4 bg-stone-50 rounded-md">
+                            <h4 class="font-bold">Intelligent Document Processing</h4>
+                            <p class="text-sm text-stone-600">Extract data from customs forms, visas, and invoices to reduce errors.</p>
+                        </div>
+                        <div class="p-4 bg-stone-50 rounded-md">
+                            <h4 class="font-bold">Communication Automation</h4>
+                            <p class="text-sm text-stone-600">Provide instant, personalized answers to common customer queries.</p>
+                        </div>
+                        <div class="p-4 bg-stone-50 rounded-md">
+                            <h4 class="font-bold">Resource Scheduling</h4>
+                            <p class="text-sm text-stone-600">Optimize allocation of crews, trucks, and warehouse space with AI.</p>
+                        </div>
+                        <div class="p-4 bg-stone-50 rounded-md">
+                            <h4 class="font-bold">Logistics Management</h4>
+                            <p class="text-sm text-stone-600">Gain real-time, predictive tracking of all international shipments.</p>
+                        </div>
+                         <div class="p-4 bg-stone-50 rounded-md">
+                            <h4 class="font-bold">Competitive Edge</h4>
+                            <p class="text-sm text-stone-600">Create a service and technology gap that competitors will struggle to close.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="platforms" class="content-section space-y-8">
+                <div class="text-center">
+                    <h2 class="text-3xl font-bold text-stone-800 mb-2">Third-Party Platform Analysis</h2>
+                    <p class="max-w-3xl mx-auto text-stone-600">An evaluation of market-leading platforms reveals a choice between comprehensive solutions like UiPath and specialized, best-of-breed tools. The following table compares key vendors against the proposed internal development and hybrid strategies. Click headers to sort.</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow-sm border border-stone-200 overflow-x-auto">
+                    <table class="min-w-full text-sm text-left" id="platformsTable">
+                        <thead class="bg-stone-100 text-stone-600 uppercase">
+                            <tr>
+                                <th class="p-3 cursor-pointer" onclick="sortTable(0)">Criteria</th>
+                                <th class="p-3 cursor-pointer" onclick="sortTable(1)">UiPath</th>
+                                <th class="p-3 cursor-pointer" onclick="sortTable(2)">Automation Anywhere</th>
+                                <th class="p-3 cursor-pointer" onclick="sortTable(3)">project44</th>
+                                <th class="p-3 cursor-pointer" onclick="sortTable(4)">Splice</th>
+                                <th class="p-3 cursor-pointer" onclick="sortTable(5)">KlearStack</th>
+                                <th class="p-3 cursor-pointer" onclick="sortTable(6)">Internal Dev</th>
+                                <th class="p-3 cursor-pointer" onclick="sortTable(7)">Hybrid (Rec.)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+                 <div class="bg-white p-6 rounded-lg shadow-sm border border-stone-200">
+                    <h3 class="text-xl font-semibold mb-2">Note on Sola.ai</h3>
+                    <p class="text-stone-600">While referenced in the initial scope, Sola.ai, a nascent startup founded in 2023, was excluded from the primary comparison. As a new, venture-backed company, it lacks the established track record, public case studies, and third-party validation of the selected market leaders. Partnering with an unproven vendor for a mission-critical transformation introduces significant risks regarding platform stability, long-term viability, and support. While its innovative approach warrants monitoring for future, smaller-scale tests, it is not recommended as a foundational platform for ATG's strategic program at this time.</p>
+                </div>
+            </section>
+
+            <section id="roadmap" class="content-section space-y-8">
+                <div class="text-center">
+                    <h2 class="text-3xl font-bold text-stone-800 mb-2">5-Year Implementation Roadmap</h2>
+                    <p class="max-w-3xl mx-auto text-stone-600">A phased, 60-month strategy ensures value is delivered at every stage, managing risk and allowing short-term gains to fund long-term investments. The roadmap follows the "Buy to Accelerate, Build to Differentiate" principle.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-stone-200">
+                    <div id="gantt-chart-container"></div>
+                </div>
+            </section>
+
+            <section id="investment" class="content-section space-y-8">
+                <div class="text-center">
+                    <h2 class="text-3xl font-bold text-stone-800 mb-2">The Investment: 5-Year TCO</h2>
+                    <p class="max-w-3xl mx-auto text-stone-600">A 5-Year Total Cost of Ownership (TCO) analysis reveals the long-term financial trade-offs. While a "Buy Only" strategy is cheapest initially, the recommended "Hybrid" approach provides the best balance of cost, risk, and strategic value by building a proprietary asset over time.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-stone-200">
+                    <div class="text-center mb-6">
+                        <div class="inline-flex rounded-md shadow-sm" role="group">
+                            <button type="button" id="btn-hybrid" class="tco-btn bg-amber-500 text-white py-2 px-4 text-sm font-medium rounded-l-lg" onclick="updateTcoChart('hybrid')">Hybrid (Recommended)</button>
+                            <button type="button" id="btn-buy" class="tco-btn bg-white text-stone-900 hover:bg-stone-100 py-2 px-4 text-sm font-medium" onclick="updateTcoChart('buy')">Buy Only</button>
+                            <button type="button" id="btn-build" class="tco-btn bg-white text-stone-900 hover:bg-stone-100 py-2 px-4 text-sm font-medium rounded-r-lg" onclick="updateTcoChart('build')">Build Only</button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="tcoChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <section id="risks" class="content-section space-y-8">
+                <div class="text-center">
+                    <h2 class="text-3xl font-bold text-stone-800 mb-2">Risk Assessment & Mitigation</h2>
+                     <p class="max-w-3xl mx-auto text-stone-600">A comprehensive risk management framework is essential. Key risks include vendor lock-in, talent scarcity, and staff resistance. Click on each risk to see the proposed mitigation strategy.</p>
+                </div>
+                <div id="risk-cards-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        const navLinks = document.querySelectorAll('.nav-link');
+        const contentSections = document.querySelectorAll('.content-section');
+
+        function showSection(sectionId, clickedLink) {
+            navLinks.forEach(link => link.classList.remove('active'));
+            contentSections.forEach(section => section.classList.remove('active'));
+
+            document.getElementById(sectionId).classList.add('active');
+            clickedLink.classList.add('active');
+        }
+
+        const platformData = [
+            { "Criteria": "Initial Cost", "UiPath": "High", "Automation Anywhere": "High", "project44": "Medium-High", "Splice": "Low", "KlearStack": "Medium", "Internal Dev": "Very High", "Hybrid (Rec.)": "Medium-High" },
+            { "Criteria": "5-Year TCO", "UiPath": "Very High", "Automation Anywhere": "Very High", "project44": "High", "Splice": "Medium", "KlearStack": "Medium-High", "Internal Dev": "High", "Hybrid (Rec.)": "High" },
+            { "Criteria": "Timeline", "UiPath": "6-12 mos", "Automation Anywhere": "3-9 mos", "project44": "4-8 mos", "Splice": "1-3 mos", "KlearStack": "3-6 mos", "Internal Dev": "24-36+ mos", "Hybrid (Rec.)": "6-9 mos" },
+            { "Criteria": "Capability", "UiPath": "Very Broad", "Automation Anywhere": "Very Broad", "project44": "Specialized", "Splice": "Specialized", "KlearStack": "Specialized", "Internal Dev": "Custom", "Hybrid (Rec.)": "Best of Both" },
+            { "Criteria": "Flexibility", "UiPath": "Medium", "Automation Anywhere": "Medium", "project44": "Low", "Splice": "High", "KlearStack": "Medium", "Internal Dev": "Very High", "Hybrid (Rec.)": "Very High" },
+            { "Criteria": "Scalability", "UiPath": "High", "Automation Anywhere": "Very High", "project44": "High", "Splice": "Very High", "KlearStack": "High", "Internal Dev": "High", "Hybrid (Rec.)": "Very High" },
+            { "Criteria": "Integration", "UiPath": "Excellent", "Automation Anywhere": "Good", "project44": "Excellent", "Splice": "Core", "KlearStack": "Good", "Internal Dev": "High", "Hybrid (Rec.)": "Excellent" },
+            { "Criteria": "Maintenance", "UiPath": "High", "Automation Anywhere": "Medium", "project44": "Low", "Splice": "Low", "KlearStack": "Medium", "Internal Dev": "Very High", "Hybrid (Rec.)": "Medium" },
+            { "Criteria": "Vendor Lock-in", "UiPath": "High", "Automation Anywhere": "High", "project44": "Medium", "Splice": "Low", "KlearStack": "Medium", "Internal Dev": "None", "Hybrid (Rec.)": "Low" },
+            { "Criteria": "Knowledge", "UiPath": "Low", "Automation Anywhere": "Low", "project44": "Low", "Splice": "Low", "KlearStack": "Low", "Internal Dev": "Very High", "Hybrid (Rec.)": "High" },
+            { "Criteria": "Strategic Value", "UiPath": "Medium", "Automation Anywhere": "Medium", "project44": "Medium", "Splice": "Low", "KlearStack": "Medium", "Internal Dev": "Very High", "Hybrid (Rec.)": "Very High" }
+        ];
+
+        let currentSort = { col: 0, dir: 'asc' };
+
+        function renderTable() {
+            const tableBody = document.querySelector('#platformsTable tbody');
+            tableBody.innerHTML = '';
+            platformData.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.className = 'border-b border-stone-200 hover:bg-stone-50';
+                tr.innerHTML = `
+                    <td class="p-3 font-semibold">${row.Criteria}</td>
+                    <td class="p-3">${row.UiPath}</td>
+                    <td class="p-3">${row['Automation Anywhere']}</td>
+                    <td class="p-3">${row.project44}</td>
+                    <td class="p-3">${row.Splice}</td>
+                    <td class="p-3">${row.KlearStack}</td>
+                    <td class="p-3">${row['Internal Dev']}</td>
+                    <td class="p-3">${row['Hybrid (Rec.)']}</td>
+                `;
+                tableBody.appendChild(tr);
+            });
+        }
+        
+        function sortTable(colIndex) {
+            const colKey = Object.keys(platformData[0])[colIndex];
+            const dir = (currentSort.col === colIndex && currentSort.dir === 'asc') ? 'desc' : 'asc';
+            
+            platformData.sort((a, b) => {
+                const valA = a[colKey].toUpperCase();
+                const valB = b[colKey].toUpperCase();
+                if (valA < valB) return dir === 'asc' ? -1 : 1;
+                if (valA > valB) return dir === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            currentSort = { col: colIndex, dir: dir };
+            renderTable();
+        }
+
+        const tcoData = {
+            labels: ['Year 1', 'Year 2', 'Year 3', 'Year 4', 'Year 5'],
+            hybrid: {
+                datasets: [
+                    { label: 'Third-Party Licenses', data: [250000, 287500, 330625, 190109, 218626], backgroundColor: '#3b82f6' },
+                    { label: 'Internal Team Salaries', data: [0, 500000, 525000, 771750, 810338], backgroundColor: '#10b981' },
+                    { label: 'Infrastructure/Software', data: [50000, 100000, 150000, 175000, 200000], backgroundColor: '#f59e0b' }
+                ]
+            },
+            buy: {
+                datasets: [
+                    { label: 'Third-Party Licenses', data: [250000, 287500, 330625, 380219, 437252], backgroundColor: '#3b82f6' },
+                    { label: 'Internal Management', data: [100000, 105000, 110250, 115763, 121551], backgroundColor: '#f59e0b' }
+                ]
+            },
+            build: {
+                datasets: [
+                    { label: 'Internal Team Salaries', data: [600000, 630000, 913500, 959175, 1007134], backgroundColor: '#10b981' },
+                    { label: 'Infrastructure/Software', data: [250000, 150000, 175000, 200000, 225000], backgroundColor: '#f59e0b' }
+                ]
+            }
+        };
+
+        let tcoChart;
+        function renderTcoChart(scenario = 'hybrid') {
+            const ctx = document.getElementById('tcoChart').getContext('2d');
+            if (tcoChart) {
+                tcoChart.destroy();
+            }
+            tcoChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: tcoData.labels,
+                    datasets: tcoData[scenario].datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { stacked: true },
+                        y: { 
+                            stacked: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + (value / 1000) + 'k';
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(context.parsed.y);
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateTcoChart(scenario) {
+            document.querySelectorAll('.tco-btn').forEach(btn => {
+                btn.classList.remove('bg-amber-500', 'text-white');
+                btn.classList.add('bg-white', 'text-stone-900', 'hover:bg-stone-100');
+            });
+            document.getElementById(`btn-${scenario}`).classList.add('bg-amber-500', 'text-white');
+            document.getElementById(`btn-${scenario}`).classList.remove('bg-white', 'text-stone-900', 'hover:bg-stone-100');
+            renderTcoChart(scenario);
+        }
+
+        const roadmapData = [
+            { phase: 1, name: 'Assessment & Quick Wins', tasks: [
+                { name: 'Process Discovery', start: 1, span: 6 },
+                { name: 'Vendor Selection & PoC', start: 1, span: 6 },
+                { name: 'Implement "Quick Win" #1', start: 1, span: 6 },
+                { name: 'Define Team Charter', start: 1, span: 6 },
+            ], milestones: [{ name: 'First ROI', at: 12 }] },
+            { phase: 2, name: 'Parallel Implementation & KT', tasks: [
+                { name: 'Scale 3-5 Processes', start: 7, span: 18 },
+                { name: 'Recruit Foundational Team', start: 7, span: 6 },
+                { name: 'Develop Internal MVP 1.0', start: 13, span: 12 },
+                { name: 'Knowledge Transfer', start: 7, span: 18 },
+            ], milestones: [{ name: 'MVP Deployed', at: 24 }] },
+            { phase: 3, name: 'Integration & Transition', tasks: [
+                { name: 'Develop Production Solution', start: 25, span: 12 },
+                { name: 'Benchmark Solutions', start: 25, span: 12 },
+                { name: 'Transition Process #1', start: 37, span: 12 },
+                { name: 'Expand Team', start: 25, span: 12 },
+            ], milestones: [{ name: 'First Process In-Sourced', at: 48 }] },
+            { phase: 4, name: 'Internal Dominance', tasks: [
+                { name: 'Transition Key Processes', start: 49, span: 12 },
+                { name: 'Retire Vendor Licenses', start: 49, span: 12 },
+                { name: 'Focus on Strategic AI', start: 49, span: 12 },
+            ], milestones: [{ name: 'Platform Dominant', at: 60 }] }
+        ];
+
+        function renderGanttChart() {
+            const container = document.getElementById('gantt-chart-container');
+            let html = `
+                <div class="gantt-chart text-xs">
+                    <div class="gantt-header font-semibold">
+                        <span>Months 1-6</span>
+                        <span>7-12</span>
+                        <span>13-24</span>
+                        <span>25-36</span>
+                        <span>37-48</span>
+                        <span>49-60</span>
+                        <span>Year 5+</span>
+                    </div>
+            `;
+            roadmapData.forEach(phase => {
+                html += `<div class="gantt-phase font-bold bg-stone-100 p-2 col-span-full">${phase.name} (Phase ${phase.phase})</div>`;
+                phase.tasks.forEach(task => {
+                    const gridStart = Math.ceil((task.start / 60) * 42) + 1;
+                    const gridSpan = Math.ceil((task.span / 60) * 42);
+                    html += `
+                        <div class="gantt-task border-b border-stone-200">
+                            <div class="pr-2">${task.name}</div>
+                            <div class="h-6 rounded bg-blue-500/80" style="grid-column: ${gridStart} / span ${gridSpan};" title="${task.name} (Months: ${task.start}-${task.start + task.span - 1})"></div>
+                        </div>
+                    `;
+                });
+                phase.milestones.forEach(milestone => {
+                    const gridStart = Math.ceil((milestone.at / 60) * 42) + 1;
+                     html += `
+                        <div class="gantt-task">
+                            <div></div>
+                            <div class="flex items-center" style="grid-column: ${gridStart};">
+                                <div class="w-4 h-4 bg-green-500 transform rotate-45" title="${milestone.name} (End of Month ${milestone.at})"></div>
+                                <span class="ml-2 font-semibold text-green-600">${milestone.name}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+            });
+            html += `</div>`;
+            container.innerHTML = html;
+        }
+
+        const riskData = [
+            { category: 'Vendor & Technology', risk: 'Third-Party Vendor Lock-in', mitigation: 'Negotiate favorable exit clauses, prioritize open APIs, and execute parallel in-house development to create a viable alternative.' },
+            { category: 'Project Execution', risk: 'Internal Development Failure', mitigation: 'Adopt agile methodology, start with a small MVP to prove capability, and hire a strong Head of AI with proven delivery experience.' },
+            { category: 'Personnel', risk: 'Talent Scarcity', mitigation: 'Offer competitive compensation, implement a remote/hybrid work policy, and foster a strong engineering culture.' },
+            { category: 'Data & Security', risk: 'Data Breach', mitigation: 'Implement a multi-layered security framework (encryption, RBAC, MFA), conduct thorough vendor due diligence, and perform regular security audits.' },
+            { category: 'Operational', risk: 'Business Disruption', mitigation: 'Conduct thorough testing in a sandbox environment, implement changes in a phased manner, and maintain manual processes as a backup during transition.' },
+            { category: 'Organizational', risk: 'Staff Resistance to Change', mitigation: 'Implement a comprehensive change management plan, involve employees in the design process, and provide extensive training and support.' }
+        ];
+
+        function renderRiskCards() {
+            const container = document.getElementById('risk-cards-container');
+            riskData.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-lg shadow-sm border border-stone-200 p-4 cursor-pointer transition-all duration-300';
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-sm text-stone-500 font-medium">${item.category}</p>
+                            <h4 class="font-semibold mt-1">${item.risk}</h4>
+                        </div>
+                        <span class="text-amber-500 text-xl font-bold transform transition-transform duration-300">&#x25BC;</span>
+                    </div>
+                    <div class="text-sm text-stone-600 mt-2 overflow-hidden max-h-0 transition-all duration-500 ease-in-out">
+                        <p class="pt-2 border-t border-stone-200">${item.mitigation}</p>
+                    </div>
+                `;
+                card.addEventListener('click', () => {
+                    card.querySelector('div:last-child').classList.toggle('max-h-0');
+                    card.querySelector('div:last-child').classList.toggle('max-h-40');
+                    card.querySelector('span').classList.toggle('rotate-180');
+                });
+                container.appendChild(card);
+            });
+        }
+
+
+        window.onload = () => {
+            renderTable();
+            renderTcoChart('hybrid');
+            renderGanttChart();
+            renderRiskCards();
+        };
+    </script>
+
+</body>
+</html>
