@@ -231,52 +231,6 @@
                         <div class="expense-value">0.66M</div>
                     </div>
                 </div>
-                
-                <div class="expense-card">
-                    <div class="expense-title">
-                        <i class="fas fa-chart-line"></i>
-                        Other Income
-                    </div>
-                    <div class="expense-item top-expense">
-                        <div class="expense-name">Other Revenue <span class="rank">#1</span></div>
-                        <div class="expense-value">0.26M</div>
-                    </div>
-                    <div class="expense-item top-expense">
-                        <div class="expense-name">Exchange Rate Gains <span class="rank">#2</span></div>
-                        <div class="expense-value">0.02M</div>
-                    </div>
-                    <div class="expense-item top-expense">
-                        <div class="expense-name">Interest Income <span class="rank">#3</span></div>
-                        <div class="expense-value">0.005M</div>
-                    </div>
-                    <div class="expense-item">
-                        <div class="expense-name">Unclaimed Purchase VAT <span class="rank">#4</span></div>
-                        <div class="expense-value">0.02M</div>
-                    </div>
-                </div>
-                
-                <div class="expense-card">
-                    <div class="expense-title">
-                        <i class="fas fa-money-bill-wave"></i>
-                        Other Expenses
-                    </div>
-                    <div class="expense-item top-expense">
-                        <div class="expense-name">Tax Absorb <span class="rank">#1</span></div>
-                        <div class="expense-value">0.27M</div>
-                    </div>
-                    <div class="expense-item top-expense">
-                        <div class="expense-name">Non-taxable Expenses <span class="rank">#2</span></div>
-                        <div class="expense-value">0.13M</div>
-                    </div>
-                    <div class="expense-item top-expense">
-                        <div class="expense-name">Transaction bank fee <span class="rank">#3</span></div>
-                        <div class="expense-value">0.06M</div>
-                    </div>
-                    <div class="expense-item">
-                        <div class="expense-name">Tax Fine & Penalties <span class="rank">#4</span></div>
-                        <div class="expense-value">0.03M</div>
-                    </div>
-                </div>
             </div>
             
             <div class="chart-container">
@@ -324,21 +278,17 @@
             const chart = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: ['Selling Expenses', 'Admin Expenses', 'Other Income', 'Other Expenses'],
+                    labels: ['Selling Expenses', 'Admin Expenses'],
                     datasets: [{
                         label: 'Amount (Million)',
-                        data: [9.26, 16.48, 0.28, 0.48],
+                        data: [9.26, 16.48],
                         backgroundColor: [
                             'rgba(54, 162, 235, 0.7)',
-                            'rgba(255, 99, 132, 0.7)',
-                            'rgba(75, 192, 192, 0.7)',
-                            'rgba(255, 159, 64, 0.7)'
+                            'rgba(255, 99, 132, 0.7)'
                         ],
                         borderColor: [
                             'rgba(54, 162, 235, 1)',
-                            'rgba(255, 99, 132, 1)',
-                            'rgba(75, 192, 192, 1)',
-                            'rgba(255, 159, 64, 1)'
+                            'rgba(255, 99, 132, 1)'
                         ],
                         borderWidth: 1
                     }]
@@ -385,7 +335,7 @@
             "01-8-RevenueVsNetProfit.html",
             "01-9-RevenueVsAdminExpenses.html",
             "02-1-Expense & Income.html",
-            "02-2-Expense Analysis.html",
+            "02-3-Customer breakdown.html",
             "03-1-OutlookAndPerformance.html"
         ];
         
