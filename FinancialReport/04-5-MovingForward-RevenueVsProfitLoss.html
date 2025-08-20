@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Moving Forward Plan</title>
+    <title>Moving Forward Plan - Revenue vs. Profit & Loss</title>
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
@@ -240,12 +240,18 @@
         .chevron.rotated {
             transform: rotate(90deg);
         }
+        .profit-positive {
+            color: #4caf50;
+        }
+        .profit-negative {
+            color: #f44336;
+        }
     </style>
 </head>
 <body>
     <div class="slide">
         <div class="header">
-            <h1 class="title">TPO - Moving Forward Plan - Revenue vs. Admin Expenses</h1>
+            <h1 class="title">TPO - Moving Forward Plan - Revenue vs. Profit & Loss</h1>
         </div>
         <div class="content">
             <div class="chart-section">
@@ -369,8 +375,8 @@
                     <div class="stat-label">Projected Annual Revenue</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-value" id="projectedExpenses">฿0M</div>
-                    <div class="stat-label">Projected Annual Expenses</div>
+                    <div class="stat-value" id="projectedProfit" class="">฿0M</div>
+                    <div class="stat-label">Projected Annual Profit/Loss</div>
                 </div>
             </div>
         </div>
@@ -390,66 +396,86 @@
     </div>
     
     <script>
-        // Project data with impact on revenue and expenses
+        // Project data with impact on revenue and profit/loss (revenue - total expenses)
         const projectData = {
             'current-thc': {
                 name: 'Current THC Products',
                 revenueImpact: [1686108, 1686108, 1939024, 1939024, 1939024, 1939024, 1686108, 1686108, 1686108, 1686108, 1686108, 1686108],
-                expenseImpact: [1418141, 1418141, 1418141, 1418141, 1418141, 1418141, 1418141, 1418141, 1418141, 1418141, 1418141, 1418141],
+                adminExpenseImpact: [1418141, 1418141, 1418141, 1418141, 1418141, 1418141, 1418141, 1418141, 1418141, 1418141, 1418141, 1418141],
+                salesExpenseImpact: [807073, 807073, 807073, 807073, 807073, 807073, 807073, 807073, 807073, 807073, 807073, 807073],
+                cogsImpact: [421527, 421527, 484756, 484756, 484756, 484756, 421527, 421527, 421527, 421527, 421527, 421527],
                 color: '#4361ee'
             },
             'creatine-powder': {
                 name: 'Creatine Powder',
                 revenueImpact: [0, 0, 0, 150000, 200000, 250000, 300000, 350000, 500000, 600000, 700000, 800000],
-                expenseImpact: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                adminExpenseImpact: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                salesExpenseImpact: [0, 0, 0, 60000, 80000, 100000, 120000, 140000, 200000, 240000, 280000, 320000],
+                cogsImpact: [0, 0, 0, 37500, 50000, 62500, 75000, 87500, 125000, 150000, 175000, 200000],
                 color: '#3a0ca3'
             },
             'creatine-gummies': {
                 name: 'Creatine Gummies',
                 revenueImpact: [0, 0, 0, 50000, 100000, 100000, 150000, 200000, 200000, 200000, 200000, 200000],
-                expenseImpact: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                adminExpenseImpact: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                salesExpenseImpact: [0, 0, 0, 20000, 40000, 40000, 60000, 80000, 80000, 80000, 80000, 80000],
+                cogsImpact: [0, 0, 0, 12500, 25000, 25000, 37500, 50000, 50000, 50000, 50000, 50000],
                 color: '#4cc9f0'
             },
             'cbd-cbn-gummies': {
                 name: 'CBD/CBN gummies',
                 revenueImpact: [0, 0, 0, 150000, 200000, 250000, 300000, 350000, 500000, 500000, 500000, 500000],
-                expenseImpact: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                adminExpenseImpact: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                salesExpenseImpact: [0, 0, 0, 60000, 80000, 100000, 120000, 140000, 200000, 200000, 200000, 200000],
+                cogsImpact: [0, 0, 0, 37500, 50000, 62500, 75000, 87500, 125000, 125000, 125000, 125000],
                 color: '#7209b7'
             },
             'pre-post-workout': {
                 name: 'Pre/Post workout supplement',
                 revenueImpact: [0, 0, 0, 0, 0, 0, 100000, 150000, 200000, 300000, 300000, 300000],
-                expenseImpact: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                adminExpenseImpact: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                salesExpenseImpact: [0, 0, 0, 0, 0, 0, 40000, 60000, 80000, 120000, 120000, 120000],
+                cogsImpact: [0, 0, 0, 0, 0, 0, 25000, 37500, 50000, 75000, 75000, 75000],
                 color: '#f72585'
             },
             'sexual-health': {
                 name: 'Sexual Health',
                 revenueImpact: [0, 0, 0, 150000, 200000, 250000, 300000, 350000, 500000, 500000, 500000, 500000],
-                expenseImpact: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                adminExpenseImpact: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                salesExpenseImpact: [0, 0, 0, 60000, 80000, 100000, 120000, 140000, 200000, 200000, 200000, 200000],
+                cogsImpact: [0, 0, 0, 37500, 50000, 62500, 75000, 87500, 125000, 125000, 125000, 125000],
                 color: '#b5179e'
             },
             'sleep-aid': {
                 name: 'Sleep aid Supplement',
                 revenueImpact: [0, 0, 0, 150000, 200000, 250000, 300000, 350000, 500000, 500000, 500000, 500000],
-                expenseImpact: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                adminExpenseImpact: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                salesExpenseImpact: [0, 0, 0, 60000, 80000, 100000, 120000, 140000, 200000, 200000, 200000, 200000],
+                cogsImpact: [0, 0, 0, 37500, 50000, 62500, 75000, 87500, 125000, 125000, 125000, 125000],
                 color: '#560bad'
             },
             'hydration': {
                 name: 'Hydration ice pops/gummies',
                 revenueImpact: [0, 0, 0, 0, 250000, 250000, 250000, 250000, 300000, 300000, 300000, 350000],
-                expenseImpact: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                adminExpenseImpact: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                salesExpenseImpact: [0, 0, 0, 0, 100000, 100000, 100000, 100000, 120000, 120000, 120000, 140000],
+                cogsImpact: [0, 0, 0, 0, 62500, 62500, 62500, 62500, 75000, 75000, 75000, 87500],
                 color: '#3a86ff'
             },
             'siam-green': {
                 name: 'Siam Green Acquisition',
                 revenueImpact: [0, 0, 0, 5500000, 6500000, 6500000, 5500000, 5000000, 5000000, 5000000, 5000000, 5000000],
-                expenseImpact: [0, 0, 0, 2337500, 2762500, 2762500, 2337500, 2125000, 2125000, 2125000, 2125000, 2125000],
+                adminExpenseImpact: [0, 0, 0, 2337500, 2762500, 2762500, 2337500, 2125000, 2125000, 2125000, 2125000, 2125000],
+                salesExpenseImpact: [0, 0, 0, 412500, 487500, 487500, 412500, 375000, 375000, 375000, 375000, 375000],
+                cogsImpact: [0, 0, 0, 1375000, 1625000, 1625000, 1375000, 1250000, 1250000, 1250000, 1250000, 1250000],
                 color: '#06ffa5'
             },
             'extraction-facility': {
                 name: 'CBD/THC Extraction Facility',
                 revenueImpact: [0, 0, 0, 0, 0, 0, 0, 1000000, 1500000, 2000000, 3000000, 3000000],
-                expenseImpact: [0, 0, 0, 0, 0, 0, 0, 400000, 600000, 800000, 1200000, 1200000],
+                adminExpenseImpact: [0, 0, 0, 0, 0, 0, 0, 400000, 600000, 800000, 1200000, 1200000],
+                salesExpenseImpact: [0, 0, 0, 0, 0, 0, 0, 400000, 600000, 800000, 1200000, 1200000],
+                cogsImpact: [0, 0, 0, 0, 0, 0, 0, 250000, 375000, 500000, 750000, 750000],
                 color: '#ff006e'
             }
         };
@@ -457,7 +483,14 @@
         // Historical data (from July 2025 and before)
         const historicalMonths = ['Jan-24', 'Feb-24', 'Mar-24', 'Apr-24', 'May-24', 'Jun-24', 'Jul-24', 'Aug-24', 'Sep-24', 'Oct-24', 'Nov-24', 'Dec-24', 'Jan-25', 'Feb-25', 'Mar-25', 'Apr-25', 'May-25', 'Jun-25', 'Jul-25'];
         const historicalRevenue = [55800, 152100, 67750, 326235, 163983, 685982, 262138, 258660, 388542, 914767, 1503622, 2726811, 2998751, 2863000, 1368652, 2396530, 2049392, 1686108, 830435];
-        const historicalExpenses = [90591, 129387, 73484, 118759, 132463, 323726, 1373400, 1362817, 1423275, 1448816, 1429699, 1388553, 1313581, 1332778, 1387512, 1369981, 1444567, 1418141, 1490633];
+        const historicalAdminExpenses = [90591, 129387, 73484, 118759, 132463, 323726, 1373400, 1362817, 1423275, 1448816, 1429699, 1388553, 1313581, 1332778, 1387512, 1369981, 1444567, 1418141, 1490633];
+        const historicalSalesExpenses = [22320, 60840, 27100, 130494, 65593, 274393, 104855, 103464, 155417, 365907, 601449, 1090724, 1199500, 1145200, 547461, 958612, 819757, 674443, 332174];
+        const historicalCOGS = [13950, 38025, 16938, 81559, 40996, 171496, 65535, 64665, 97136, 228692, 375906, 681703, 749688, 715750, 342163, 599133, 512348, 421527, 207609];
+        
+        // Calculate historical profit/loss
+        const historicalProfit = historicalRevenue.map((rev, i) => 
+            rev - (historicalAdminExpenses[i] + historicalSalesExpenses[i] + historicalCOGS[i])
+        );
         
         // Projection months (from August 2025 onwards)
         const projectionMonths = ['Aug-25', 'Sep-25', 'Oct-25', 'Nov-25', 'Dec-25', 'Jan-26', 'Feb-26', 'Mar-26', 'Apr-26', 'May-26', 'Jun-26', 'Jul-26'];
@@ -492,22 +525,26 @@
             
             // Initialize projection data with zeros
             const projectionRevenue = new Array(projectionMonths.length).fill(0);
-            const projectionExpenses = new Array(projectionMonths.length).fill(0);
+            const projectionProfit = new Array(projectionMonths.length).fill(0);
             
             // Calculate projection based on selected projects
             selectedProjects.forEach(projectId => {
                 const project = projectData[projectId];
                 if (project) {
                     for (let i = 0; i < projectionMonths.length; i++) {
-                        projectionRevenue[i] += project.revenueImpact[i];
-                        projectionExpenses[i] += project.expenseImpact[i];
+                        const revenue = project.revenueImpact[i];
+                        const totalExpenses = project.adminExpenseImpact[i] + project.salesExpenseImpact[i] + project.cogsImpact[i];
+                        const profit = revenue - totalExpenses;
+                        
+                        projectionRevenue[i] += revenue;
+                        projectionProfit[i] += profit;
                     }
                 }
             });
             
             // Prepare datasets - combine historical and projection data
             const allRevenue = [...historicalRevenue, ...projectionRevenue];
-            const allExpenses = [...historicalExpenses, ...projectionExpenses];
+            const allProfit = [...historicalProfit, ...projectionProfit];
             
             // Prepare datasets with segment spans
             const datasets = [
@@ -526,16 +563,22 @@
                     }
                 },
                 {
-                    label: 'Admin Expenses',
-                    data: allExpenses,
-                    borderColor: '#ff6b6b',
-                    backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                    label: 'Profit/Loss',
+                    data: allProfit,
+                    borderColor: '#4caf50',
+                    backgroundColor: 'rgba(76, 175, 80, 0.1)',
                     tension: 0.4,
                     fill: false,
                     segment: {
                         borderColor: (ctx) => {
                             const index = ctx.p0DataIndex;
-                            return index >= historicalMonths.length - 1 ? '#ff9e80' : '#ff6b6b';
+                            // Determine color based on profit/loss value
+                            const value = ctx.p0.parsed.y;
+                            if (index >= historicalMonths.length - 1) {
+                                return value >= 0 ? '#81c784' : '#e57373'; // Projected profit/loss
+                            } else {
+                                return value >= 0 ? '#4caf50' : '#f44336'; // Historical profit/loss
+                            }
                         }
                     }
                 }
@@ -563,7 +606,7 @@
                         },
                         title: {
                             display: true,
-                            text: 'Revenue & Admin Expenses Projection',
+                            text: 'Revenue & Profit/Loss Projection',
                             color: '#1a4f8a',
                             font: {
                                 size: 16
@@ -609,7 +652,7 @@
             updateLegend();
             
             // Update summary statistics
-            updateSummaryStats(projectionRevenue, projectionExpenses);
+            updateSummaryStats(projectionRevenue, projectionProfit);
         }
         
         // Update chart legend
@@ -621,8 +664,8 @@
             const legendItems = [
                 { label: 'Revenue (Historical)', color: '#4361ee' },
                 { label: 'Revenue (Projected)', color: '#4cc9f0' },
-                { label: 'Admin Expenses (Historical)', color: '#ff6b6b' },
-                { label: 'Admin Expenses (Projected)', color: '#ff9e80' }
+                { label: 'Profit/Loss (Historical)', color: '#4caf50' },
+                { label: 'Profit/Loss (Projected)', color: '#81c784' }
             ];
             
             legendItems.forEach(item => {
@@ -643,14 +686,17 @@
         }
         
         // Update summary statistics
-        function updateSummaryStats(projectionRevenue, projectionExpenses) {
+        function updateSummaryStats(projectionRevenue, projectionProfit) {
             // Calculate annual projections
             const annualRevenue = projectionRevenue.reduce((sum, val) => sum + val, 0);
-            const annualExpenses = projectionExpenses.reduce((sum, val) => sum + val, 0);
+            const annualProfit = projectionProfit.reduce((sum, val) => sum + val, 0);
             
             // Update DOM elements
             document.getElementById('projectedRevenue').textContent = '฿' + (annualRevenue / 1000000).toFixed(1) + 'M';
-            document.getElementById('projectedExpenses').textContent = '฿' + (annualExpenses / 1000000).toFixed(1) + 'M';
+            
+            const profitElement = document.getElementById('projectedProfit');
+            profitElement.textContent = '฿' + (annualProfit / 1000000).toFixed(1) + 'M';
+            profitElement.className = annualProfit >= 0 ? 'stat-value profit-positive' : 'stat-value profit-negative';
         }
         
         // Navigation functions
