@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moving Forward Plan - Revenue vs. All Financial Metrics</title>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Source Sans Pro', sans-serif;
+            overflow: hidden;
+            background-color: #f5f7fa;
+        }
+        .slide {
+            width: 1280px;
+            min-height: 720px;
+            position: relative;
+            background-color: #ffffff;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+        }
+        .header {
+            background-color: #1a4f8a;
+            color: white;
+            padding: 20px 70px;
+        }
+        .title {
+            font-size: 40px;
+            font-weight: 700;
+        }
+        .content {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            padding: 20px 50px 80px 50px;
+        }
+        .chart-section {
+            display: flex;
+            margin-bottom: 20px;
+            height: 380px;
+        }
+        .chart-container {
+            flex-grow: 1;
+            height: 100%;
+            position: relative;
+        }
+        .project-controls {
+            width: 320px;
+            padding: 15px;
+            background-color: #f8fafd;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-right: 20px;
+            overflow-y: auto;
+            max-height: 350px;
+        }
+        .control-title {
+            font-size: 18px;
+            color: #1a4f8a;
+            margin-bottom: 15px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+        }
+        .control-title i {
+            margin-right: 8px;
+        }
+        .project-group {
+            margin-bottom: 15px;
+        }
+        .project-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            cursor: pointer;
+        }
+        .project-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a4f8a;
+            margin-left: 8px;
+        }
+        .subprojects {
+            margin-left: 28px;
+            display: none;
+        }
+        .subprojects.active {
+            display: block;
+        }
+        .subproject {
+            display: flex;
+            align-items: center;
+            margin-bottom: 6px;
+            padding: 5px;
+            border-radius: 5px;
+            transition: background-color 0.2s;
+        }
+        .subproject:hover {
+            background-color: rgba(26, 79, 138, 0.05);
+        }
+        .subproject-name {
+            font-size: 14px;
+            color: #5a6a85;
+            margin-left: 8px;
+        }
+        .toggle {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+        }
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 20px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #1a4f8a;
+        }
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+        .legend {
+            display: flex;
+            justify-content: center;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 0 15px 5px;
+            font-size: 14px;
+        }
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        .summary-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a4f8a;
+        }
+        .stat-value.profit-positive {
+            color: #4caf50;
+        }
+        .stat-value.profit-negative {
+            color: #f44336;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #5a6a85;
+        }
+        /* Navigation styles */
+        .navigation {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            z-index: 10;
+            background-color: rgba(26, 79, 138, 0.9);
+            padding: 12px 0;
+            border-radius: 10px 10px 0 0;
+        }
+        .nav-button {
+            background-color: #ffffff;
+            color: #1a4f8a;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .nav-button:hover:not(:disabled) {
+            background-color: #f0f5ff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        .nav-button:disabled {
+            background-color: #e0e6ed;
+            color: #7a8a9a;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        .nav-button i {
+            margin-right: 8px;
+        }
+        .nav-button.next i {
+            margin-right: 0;
+            margin-left: 8px;
+        }
+        .chevron {
+            font-size: 12px;
+            color: #1a4f8a;
+            transition: transform 0.3s;
+        }
+        .chevron.rotated {
+            transform: rotate(90deg);
+        }
+        /* Metric selector styles */
+        .metric-selector {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+        }
+        .metric-selector-toggle {
+            background-color: #1a4f8a;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .metric-selector-toggle i {
+            margin-left: 8px;
+        }
+        .metric-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding: 15px;
+            width: 250px;
+            margin-top: 10px;
+            display: none;
+            z-index: 1000;
+        }
+        .metric-dropdown.show {
+            display: block;
+        }
+        .metric-options {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .metric-option {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+        }
+        .metric-option input {
+            margin-right: 10px;
+        }
+        .metric-option label {
+            font-size: 14px;
+            color: #333;
+            cursor: pointer;
+        }
+        .metric-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        .metric-btn {
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            border: none;
+        }
+        .metric-btn.apply {
+            background-color: #1a4f8a;
+            color: white;
+        }
+        .metric-btn.clear {
+            background-color: #f5f5f5;
+            color: #666;
+        }
+        /* Collapsible styles */
+        .collapsible {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            background-color: #f1f1f1;
+            border: none;
+            outline: none;
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a4f8a;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        .collapsible:after {
+            content: '\002B';
+            color: #1a4f8a;
+            font-weight: bold;
+            float: right;
+            margin-left: 5px;
+        }
+        .collapsible.active:after {
+            content: "\2212";
+        }
+        .content-collapsible {
+            padding: 0 18px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.2s ease-out;
+            background-color: #f9f9f9;
+        }
+        .content-collapsible.active {
+            max-height: 500px;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide">
+        <div class="header">
+            <h1 class="title">TPO - Moving Forward Plan - Revenue vs. All Financial Metrics</h1>
+        </div>
+        <div class="content">
+            <div class="chart-section">
+                <div class="project-controls">
+                    <div class="control-title">
+                        <i class="fas fa-tasks"></i>
+                        Project Selection
+                    </div>
+                    
+                    <!-- Current Operations -->
+                    <div class="project-group">
+                        <div class="project-header" onclick="toggleSubprojects('subproject0')">
+                            <i class="fas fa-chevron-right chevron" id="chevron0"></i>
+                            <div class="project-name">Current Operations</div>
+                        </div>
+                        <div class="subprojects active" id="subproject0">
+                            <div class="subproject">
+                                <label class="toggle">
+                                    <input type="checkbox" checked onchange="updateChart()" data-project="current-thc">
+                                    <span class="slider"></span>
+                                </label>
+                                <div class="subproject-name">Current THC Products</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Supplement Line Expansion -->
+                    <div class="project-group">
+                        <div class="project-header" onclick="toggleSubprojects('subproject1')">
+                            <i class="fas fa-chevron-right chevron" id="chevron1"></i>
+                            <div class="project-name">Supplement Line Expansion</div>
+                        </div>
+                        <div class="subprojects" id="subproject1">
+                            <div class="subproject">
+                                <label class="toggle">
+                                    <input type="checkbox" onchange="updateChart()" data-project="creatine-powder">
+                                    <span class="slider"></span>
+                                </label>
+                                <div class="subproject-name">Creatine Powder</div>
+                            </div>
+                            <div class="subproject">
+                                <label class="toggle">
+                                    <input type="checkbox" onchange="updateChart()" data-project="creatine-gummies">
+                                    <span class="slider"></span>
+                                </label>
+                                <div class="subproject-name">Creatine Gummies</div>
+                            </div>
+                            <div class="subproject">
+                                <label class="toggle">
+                                    <input type="checkbox" onchange="updateChart()" data-project="cbd-cbn-gummies">
+                                    <span class="slider"></span>
+                                </label>
+                                <div class="subproject-name">CBD/CBN gummies</div>
+                            </div>
+                            <div class="subproject">
+                                <label class="toggle">
+                                    <input type="checkbox" onchange="updateChart()" data-project="pre-post-workout">
+                                    <span class="slider"></span>
+                                </label>
+                                <div class="subproject-name">Pre/Post workout supplement</div>
+                            </div>
+                            <div class="subproject">
+                                <label class="toggle">
+                                    <input type="checkbox" onchange="updateChart()" data-project="sexual-health">
+                                    <span class="slider"></span>
+                                </label>
+                                <div class="subproject-name">Sexual Health</div>
+                            </div>
+                            <div class="subproject">
+                                <label class="toggle">
+                                    <input type="checkbox" onchange="updateChart()" data-project="sleep-aid">
+                                    <span class="slider"></span>
+                                </label>
+                                <div class="subproject-name">Sleep aid Supplement</div>
+                            </div>
+                            <div class="subproject">
+                                <label class="toggle">
+                                    <input type="checkbox" onchange="updateChart()" data-project="hydration">
+                                    <span class="slider"></span>
+                                </label>
+                                <div class="subproject-name">Hydration ice pops/gummies</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Business Expansion -->
+                    <div class="project-group">
+                        <div class="project-header" onclick="toggleSubprojects('subproject2')">
+                            <i class="fas fa-chevron-right chevron" id="chevron2"></i>
+                            <div class="project-name">Business Expansion</div>
+                        </div>
+                        <div class="subprojects" id="subproject2">
+                            <div class="subproject">
+                                <label class="toggle">
+                                    <input type="checkbox" onchange="updateChart()" data-project="siam-green">
+                                    <span class="slider"></span>
+                                </label>
+                                <div class="subproject-name">Siam Green Acquisition</div>
+                            </div>
+                            <div class="subproject">
+                                <label class="toggle">
+                                    <input type="checkbox" onchange="updateChart()" data-project="extraction-facility">
+                                    <span class="slider"></span>
+                                </label>
+                                <div class="subproject-name">CBD/THC Extraction Facility</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="metric-selector">
+                        <button class="metric-selector-toggle" onclick="toggleMetricSelector()">
+                            Select Metrics <i class="fas fa-caret-down"></i>
+                        </button>
+                        <div class="metric-dropdown" id="metricDropdown">
+                            <div class="metric-options">
+                                <div class="metric-option">
+                                    <input type="checkbox" id="metric-revenue" checked onchange="updateChart()">
+                                    <label for="metric-revenue">Revenue</label>
+                                </div>
+                                <div class="metric-option">
+                                    <input type="checkbox" id="metric-admin-expenses" checked onchange="updateChart()">
+                                    <label for="metric-admin-expenses">Admin Expenses</label>
+                                </div>
+                                <div class="metric-option">
+                                    <input type="checkbox" id="metric-sales-expenses" onchange="updateChart()">
+                                    <label for="metric-sales-expenses">Sales Expenses</label>
+                                </div>
+                                <div class="metric-option">
+                                    <input type="checkbox" id="metric-cogs" onchange="updateChart()">
+                                    <label for="metric-cogs">COGS</label>
+                                </div>
+                                <div class="metric-option">
+                                    <input type="checkbox" id="metric-net-profit" onchange="updateChart()">
+                                    <label for="metric-net-profit">Net Profit/Loss</label>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                    <canvas id="projectionChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="legend" id="chartLegend"></div>
+            
+            <div class="summary-stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="projectedRevenue">฿0M</div>
+                    <div class="stat-label">Projected Annual Revenue</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="projectedAdminExpenses">฿0M</div>
+                    <div class="stat-label">Projected Annual Admin Expenses</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="projectedSalesExpenses">฿0M</div>
+                    <div class="stat-label">Projected Annual Sales Expenses</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="projectedCOGS">฿0M</div>
+                    <div class="stat-label">Projected Annual COGS</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="projectedNetProfit">฿0M</div>
+                    <div class="stat-label">Projected Annual Net Profit/Loss</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Navigation buttons -->
+        <div class="navigation">
+            <button class="nav-button home" onclick="goHome()">
+                <i class="fas fa-home"></i> Home
+            </button>
+            <button class="nav-button prev" onclick="goPrev()">
+                <i class="fas fa-arrow-left"></i> Previous
+            </button>
+            <button class="nav-button next" onclick="goNext()">
+                Next <i class="fas fa-arrow-right"></i>
+            </button>
+        </div>
+    </div>
+    
+<script>
+    // Project data with impact on all financial metrics
+    const projectData = {
+        'current-thc': {
+            name: 'Current THC Products',
+            revenueImpact: [1686108, 1686108, 1939024, 1939024, 1939024, 1939024, 1686108, 1686108, 1686108, 1686108, 1686108, 1686108],
+            adminExpenseImpact: [1418141, 1418141, 1418141, 1418141, 1418141, 1418141, 1418141, 1418141, 1418141, 1418141, 1418141, 1418141],
+            salesExpenseImpact: [807073, 807073, 807073, 807073, 807073, 807073, 807073, 807073, 807073, 807073, 807073, 807073],
+            cogsImpact: [421527, 421527, 484756, 484756, 484756, 484756, 421527, 421527, 421527, 421527, 421527, 421527],
+            color: '#4361ee'
+        },
+        'creatine-powder': {
+            name: 'Creatine Powder',
+            revenueImpact: [0, 0, 0, 150000, 200000, 250000, 300000, 350000, 500000, 600000, 700000, 800000],
+            adminExpenseImpact: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            salesExpenseImpact: [0, 0, 0, 60000, 80000, 100000, 120000, 140000, 200000, 240000, 280000, 320000],
+            cogsImpact: [0, 0, 0, 37500, 50000, 62500, 75000, 87500, 125000, 150000, 175000, 200000],
+            color: '#3a0ca3'
+        },
+        'creatine-gummies': {
+            name: 'Creatine Gummies',
+            revenueImpact: [0, 0, 0, 50000, 100000, 100000, 150000, 200000, 200000, 200000, 200000, 200000],
+            adminExpenseImpact: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            salesExpenseImpact: [0, 0, 0, 20000, 40000, 40000, 60000, 80000, 80000, 80000, 80000, 80000],
+            cogsImpact: [0, 0, 0, 12500, 25000, 25000, 37500, 50000, 50000, 50000, 50000, 50000],
+            color: '#4cc9f0'
+        },
+        'cbd-cbn-gummies': {
+            name: 'CBD/CBN gummies',
+            revenueImpact: [0, 0, 0, 150000, 200000, 250000, 300000, 350000, 500000, 500000, 500000, 500000],
+            adminExpenseImpact: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            salesExpenseImpact: [0, 0, 0, 60000, 80000, 100000, 120000, 140000, 200000, 200000, 200000, 200000],
+            cogsImpact: [0, 0, 0, 37500, 50000, 62500, 75000, 87500, 125000, 125000, 125000, 125000],
+            color: '#7209b7'
+        },
+        'pre-post-workout': {
+            name: 'Pre/Post workout supplement',
+            revenueImpact: [0, 0, 0, 0, 0, 0, 100000, 150000, 200000, 300000, 300000, 300000],
+            adminExpenseImpact: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            salesExpenseImpact: [0, 0, 0, 0, 0, 0, 40000, 60000, 80000, 120000, 120000, 120000],
+            cogsImpact: [0, 0, 0, 0, 0, 0, 25000, 37500, 50000, 75000, 75000, 75000],
+            color: '#f72585'
+        },
+        'sexual-health': {
+            name: 'Sexual Health',
+            revenueImpact: [0, 0, 0, 150000, 200000, 250000, 300000, 350000, 500000, 500000, 500000, 500000],
+            adminExpenseImpact: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            salesExpenseImpact: [0, 0, 0, 60000, 80000, 100000, 120000, 140000, 200000, 200000, 200000, 200000],
+            cogsImpact: [0, 0, 0, 37500, 50000, 62500, 75000, 87500, 125000, 125000, 125000, 125000],
+            color: '#b5179e'
+        },
+        'sleep-aid': {
+            name: 'Sleep aid Supplement',
+            revenueImpact: [0, 0, 0, 150000, 200000, 250000, 300000, 350000, 500000, 500000, 500000, 500000],
+            adminExpenseImpact: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            salesExpenseImpact: [0, 0, 0, 60000, 80000, 100000, 120000, 140000, 200000, 200000, 200000, 200000],
+            cogsImpact: [0, 0, 0, 37500, 50000, 62500, 75000, 87500, 125000, 125000, 125000, 125000],
+            color: '#560bad'
+        },
+        'hydration': {
+            name: 'Hydration ice pops/gummies',
+            revenueImpact: [0, 0, 0, 0, 250000, 250000, 250000, 250000, 300000, 300000, 300000, 350000],
+            adminExpenseImpact: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            salesExpenseImpact: [0, 0, 0, 0, 100000, 100000, 100000, 100000, 120000, 120000, 120000, 140000],
+            cogsImpact: [0, 0, 0, 0, 62500, 62500, 62500, 62500, 75000, 75000, 75000, 87500],
+            color: '#3a86ff'
+        },
+        'siam-green': {
+            name: 'Siam Green Acquisition',
+            revenueImpact: [0, 0, 0, 5500000, 6500000, 6500000, 5500000, 5000000, 5000000, 5000000, 5000000, 5000000],
+            adminExpenseImpact: [0, 0, 0, 2337500, 2762500, 2762500, 2337500, 2125000, 2125000, 2125000, 2125000, 2125000],
+            salesExpenseImpact: [0, 0, 0, 412500, 487500, 487500, 412500, 375000, 375000, 375000, 375000, 375000],
+            cogsImpact: [0, 0, 0, 1375000, 1625000, 1625000, 1375000, 1250000, 1250000, 1250000, 1250000, 1250000],
+            color: '#06ffa5'
+        },
+        'extraction-facility': {
+            name: 'CBD/THC Extraction Facility',
+            revenueImpact: [0, 0, 0, 0, 0, 0, 0, 1000000, 1500000, 2000000, 3000000, 3000000],
+            adminExpenseImpact: [0, 0, 0, 0, 0, 0, 0, 400000, 600000, 800000, 1200000, 1200000],
+            salesExpenseImpact: [0, 0, 0, 0, 0, 0, 0, 400000, 600000, 800000, 1200000, 1200000],
+            cogsImpact: [0, 0, 0, 0, 0, 0, 0, 250000, 375000, 500000, 750000, 750000],
+            color: '#ff006e'
+        }
+    };
+    
+    const historicalMonths = ['Jan-24', 'Feb-24', 'Mar-24', 'Apr-24', 'May-24', 'Jun-24', 'Jul-24', 'Aug-24', 'Sep-24', 'Oct-24', 'Nov-24', 'Dec-24', 'Jan-25', 'Feb-25', 'Mar-25', 'Apr-25', 'May-25', 'Jun-25', 'Jul-25'];
+    const historicalRevenue = [55800, 152100, 67750, 326235, 163983, 685982, 262138, 258660, 388542, 914767, 1503622, 2726811, 2998751, 2863000, 1368652, 2396530, 2049392, 1686108, 830435];
+    const historicalAdminExpenses = [90591, 129387, 73484, 118759, 132463, 323726, 1373400, 1362817, 1423275, 1448816, 1429699, 1388553, 1313581, 1332778, 1387512, 1369981, 1444567, 1418141, 1490633];
+    const historicalSalesExpenses = [22320, 60840, 27100, 130494, 65593, 274393, 104855, 103464, 155417, 365907, 601449, 1090724, 1199500, 1145200, 547461, 958612, 819757, 674443, 332174];
+    const historicalCOGS = [13950, 38025, 16938, 81559, 40996, 171496, 65535, 64665, 97136, 228692, 375906, 681703, 749688, 715750, 342163, 599133, 512348, 421527, 207609];
+    
+    const projectionMonths = ['Aug-25', 'Sep-25', 'Oct-25', 'Nov-25', 'Dec-25', 'Jan-26', 'Feb-26', 'Mar-26', 'Apr-26', 'May-26', 'Jun-26', 'Jul-26'];
+    
+    let chartInstance = null;
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        updateChart();
+    });
+    
+    function toggleSubprojects(id) {
+        const subprojects = document.getElementById(id);
+        const chevron = document.getElementById('chevron' + id.slice(-1));
+        subprojects.classList.toggle('active');
+        chevron.classList.toggle('rotated');
+    }
+    
+    function toggleMetricSelector() {
+        document.getElementById('metricDropdown').classList.toggle('show');
+    }
+    
+
+    function updateChart() {
+        const selectedProjects = Array.from(document.querySelectorAll('input[data-project]:checked')).map(cb => cb.dataset.project);
+        
+        const showRevenue = document.getElementById('metric-revenue').checked;
+        const showAdminExpenses = document.getElementById('metric-admin-expenses').checked;
+        const showSalesExpenses = document.getElementById('metric-sales-expenses').checked;
+        const showCOGS = document.getElementById('metric-cogs').checked;
+        const showNetProfit = document.getElementById('metric-net-profit').checked;
+        
+        const projectionRevenue = new Array(projectionMonths.length).fill(0);
+        const projectionAdminExpenses = new Array(projectionMonths.length).fill(0);
+        const projectionSalesExpenses = new Array(projectionMonths.length).fill(0);
+        const projectionCOGS = new Array(projectionMonths.length).fill(0);
+        
+        selectedProjects.forEach(projectId => {
+            const project = projectData[projectId];
+            if (project) {
+                for (let i = 0; i < projectionMonths.length; i++) {
+                    projectionRevenue[i] += project.revenueImpact[i];
+                    projectionAdminExpenses[i] += project.adminExpenseImpact[i];
+                    projectionSalesExpenses[i] += project.salesExpenseImpact[i];
+                    projectionCOGS[i] += project.cogsImpact[i];
+                }
+            }
+        });
+        
+        const projectionNetProfit = projectionRevenue.map((rev, i) => rev - projectionAdminExpenses[i] - projectionSalesExpenses[i] - projectionCOGS[i]);
+        
+        const allRevenue = [...historicalRevenue, ...projectionRevenue];
+        const allAdminExpenses = [...historicalAdminExpenses, ...projectionAdminExpenses];
+        const allSalesExpenses = [...historicalSalesExpenses, ...projectionSalesExpenses];
+        const allCOGS = [...historicalCOGS, ...projectionCOGS];
+        const historicalNetProfit = historicalRevenue.map((rev, i) => rev - historicalAdminExpenses[i] - historicalSalesExpenses[i] - historicalCOGS[i]);
+        const allNetProfit = [...historicalNetProfit, ...projectionNetProfit];
+        
+        const datasets = [];
+        const colors = {
+            revenue: '#4361ee',
+            adminExpenses: '#ff6b6b',
+            salesExpenses: '#ffa500',
+            cogs: '#2a9d8f',
+            netProfit: '#4caf50'
+        };
+        
+        if (showRevenue) {
+            datasets.push({
+                label: 'Revenue',
+                data: allRevenue,
+                borderColor: colors.revenue,
+                tension: 0.4,
+                fill: false,
+                segment: {
+                    borderColor: ctx => ctx.p0DataIndex >= historicalMonths.length - 1 ? '#4cc9f0' : colors.revenue,
+                }
+            });
+        }
+        
+        if (showAdminExpenses) {
+            datasets.push({
+                label: 'Admin Expenses',
+                data: allAdminExpenses,
+                borderColor: colors.adminExpenses,
+                tension: 0.4,
+                fill: false,
+                segment: {
+                    borderColor: ctx => ctx.p0DataIndex >= historicalMonths.length - 1 ? '#ff9e80' : colors.adminExpenses,
+                }
+            });
+        }
+        
+        if (showSalesExpenses) {
+            datasets.push({
+                label: 'Sales Expenses',
+                data: allSalesExpenses,
+                borderColor: colors.salesExpenses,
+                tension: 0.4,
+                fill: false,
+                segment: {
+                    borderColor: ctx => ctx.p0DataIndex >= historicalMonths.length - 1 ? '#ffd580' : colors.salesExpenses,
+                }
+            });
+        }
+        
+        if (showCOGS) {
+            datasets.push({
+                label: 'COGS',
+                data: allCOGS,
+                borderColor: colors.cogs,
+                tension: 0.4,
+                fill: false,
+                segment: {
+                    borderColor: ctx => ctx.p0DataIndex >= historicalMonths.length - 1 ? '#6bd5c7' : colors.cogs,
+                }
+            });
+        }
+        
+        if (showNetProfit) {
+            datasets.push({
+                label: 'Net Profit/Loss',
+                data: allNetProfit,
+                tension: 0.4,
+                fill: false,
+                segment: {
+                    borderColor: ctx => {
+                        // *** FIX: Check if ctx.p0.parsed exists ***
+                        if (!ctx.p0.parsed) return '#81c784'; 
+                        const value = ctx.p0.parsed.y;
+                        const index = ctx.p0DataIndex;
+                        if (index >= historicalMonths.length - 1) {
+                            return value >= 0 ? '#81c784' : '#e57373'; // Projected
+                        } else {
+                            return value >= 0 ? '#4caf50' : '#f44336'; // Historical
+                        }
+                    }
+                }
+            });
+        }
+        
+        if (chartInstance) {
+            chartInstance.destroy();
+        }
+        
+        const ctx = document.getElementById('projectionChart').getContext('2d');
+        chartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [...historicalMonths, ...projectionMonths],
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    title: {
+                        display: true,
+                        text: 'Revenue & Financial Metrics Projection',
+                        color: '#1a4f8a',
+                        font: { size: 16 }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: context => `${context.dataset.label}: ฿${context.parsed.y.toLocaleString()}`
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(0, 0, 0, 0.05)' },
+                        ticks: {
+                            callback: value => `฿${(value / 1000000).toFixed(1)}M`
+                        }
+                    },
+                    x: {
+                        grid: { color: 'rgba(0, 0, 0, 0.05)' }
+                    }
+                }
+            }
+        });
+        
+        updateLegend(showRevenue, showAdminExpenses, showSalesExpenses, showCOGS, showNetProfit, colors);
+        updateSummaryStats(projectionRevenue, projectionAdminExpenses, projectionSalesExpenses, projectionCOGS, projectionNetProfit);
+    }
+
+    function updateLegend(showRevenue, showAdminExpenses, showSalesExpenses, showCOGS, showNetProfit, colors) {
+        const legendContainer = document.getElementById('chartLegend');
+        legendContainer.innerHTML = '';
+        
+        const legendItems = [];
+        if (showRevenue) legendItems.push({ label: 'Revenue (Historical)', color: colors.revenue }, { label: 'Revenue (Projected)', color: '#4cc9f0' });
+        if (showAdminExpenses) legendItems.push({ label: 'Admin Expenses (Historical)', color: colors.adminExpenses }, { label: 'Admin Expenses (Projected)', color: '#ff9e80' });
+        if (showSalesExpenses) legendItems.push({ label: 'Sales Expenses (Historical)', color: colors.salesExpenses }, { label: 'Sales Expenses (Projected)', color: '#ffd580' });
+        if (showCOGS) legendItems.push({ label: 'COGS (Historical)', color: colors.cogs }, { label: 'COGS (Projected)', color: '#6bd5c7' });
+        if (showNetProfit) legendItems.push({ label: 'Profit (Historical)', color: '#4caf50' }, { label: 'Loss (Historical)', color: '#f44336' }, { label: 'Profit (Projected)', color: '#81c784' }, { label: 'Loss (Projected)', color: '#e57373' });
+
+        legendItems.forEach(item => {
+            const legendItem = document.createElement('div');
+            legendItem.className = 'legend-item';
+            legendItem.innerHTML = `<div class="legend-color" style="background-color: ${item.color};"></div><span>${item.label}</span>`;
+            legendContainer.appendChild(legendItem);
+        });
+    }
+
+    function updateSummaryStats(projectionRevenue, projectionAdminExpenses, projectionSalesExpenses, projectionCOGS, projectionNetProfit) {
+        const annualRevenue = projectionRevenue.reduce((a, b) => a + b, 0);
+        const annualAdminExpenses = projectionAdminExpenses.reduce((a, b) => a + b, 0);
+        const annualSalesExpenses = projectionSalesExpenses.reduce((a, b) => a + b, 0);
+        const annualCOGS = projectionCOGS.reduce((a, b) => a + b, 0);
+        const annualNetProfit = projectionNetProfit.reduce((a, b) => a + b, 0);
+
+        const showRevenue = document.getElementById('metric-revenue').checked;
+        const showAdminExpenses = document.getElementById('metric-admin-expenses').checked;
+        const showSalesExpenses = document.getElementById('metric-sales-expenses').checked;
+        const showCOGS = document.getElementById('metric-cogs').checked;
+        const showNetProfit = document.getElementById('metric-net-profit').checked;
+
+        const formatValue = (value) => `฿${(value / 1000000).toFixed(1)}M`;
+        
+        const revenueStat = document.getElementById('projectedRevenue').parentElement;
+        const adminStat = document.getElementById('projectedAdminExpenses').parentElement;
+        const salesStat = document.getElementById('projectedSalesExpenses').parentElement;
+        const cogsStat = document.getElementById('projectedCOGS').parentElement;
+        const profitStat = document.getElementById('projectedNetProfit').parentElement;
+
+        revenueStat.style.display = showRevenue ? 'block' : 'none';
+        adminStat.style.display = showAdminExpenses ? 'block' : 'none';
+        salesStat.style.display = showSalesExpenses ? 'block' : 'none';
+        cogsStat.style.display = showCOGS ? 'block' : 'none';
+        profitStat.style.display = showNetProfit ? 'block' : 'none';
+        
+        revenueStat.querySelector('.stat-value').textContent = formatValue(annualRevenue);
+        adminStat.querySelector('.stat-value').textContent = formatValue(annualAdminExpenses);
+        salesStat.querySelector('.stat-value').textContent = formatValue(annualSalesExpenses);
+        cogsStat.querySelector('.stat-value').textContent = formatValue(annualCOGS);
+        profitStat.querySelector('.stat-value').textContent = formatValue(annualNetProfit);
+        
+        profitStat.querySelector('.stat-value').className = `stat-value ${annualNetProfit >= 0 ? 'profit-positive' : 'profit-negative'}`;
+    }
+
+    const pages = ["01-0-Overview.html", "01-1-Revenue.html", "01-1-GrossProfitMargin.html", "01-2-OperatingProfitMargin.html", "01-3-NetProfitMargin.html", "01-6-COGS.html", "01-7-RevenueVsSellingExpense.html", "01-8-RevenueVsNetProfit.html", "01-9-RevenueVsAdminExpenses.html", "02-1-Expense & Income.html", "02-3-Customer breakdown.html", "03-1-OutlookAndPerformance.html", "04-1-MovingForward-RevenueVsAdminExpenses.html", "04-2-MovingForward-RevenueVsSalesExpense.html", "04-3-MovingForward-RevenueVsTotalExpense.html", "04-4-MovingForward-RevenueVsCOGS.html", "04-5-MovingForward-RevenueVsProfitLoss.html", "04-6-MovingForward-RevenueVsAll.html"];
+    const currentPage = decodeURIComponent(window.location.pathname.split('/').pop());
+    let currentIndex = pages.indexOf(currentPage);
+    if (currentIndex === -1) currentIndex = pages.length - 1; // Default to the current page if not found
+
+    function goHome() { window.location.href = "index.html"; }
+    function goPrev() { if (currentIndex > 0) window.location.href = pages[currentIndex - 1]; }
+    function goNext() { if (currentIndex < pages.length - 1) window.location.href = pages[currentIndex + 1]; }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        if (currentIndex === 0) document.querySelector('.nav-button.prev').disabled = true;
+        if (currentIndex === pages.length - 1) document.querySelector('.nav-button.next').disabled = true;
+    });
+
+    document.addEventListener('click', function(event) {
+        const dropdown = document.getElementById('metricDropdown');
+        const toggle = document.querySelector('.metric-selector-toggle');
+        if (!dropdown.contains(event.target) && !toggle.contains(event.target)) {
+            dropdown.classList.remove('show');
+        }
+    });
+</script>
+</body>
+</html>
