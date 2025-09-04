@@ -59,20 +59,18 @@
             width: 100%;
             height: 100%;
         }
-        
-        /* --- TABS STYLING [MODIFIED] --- */
         .tabs {
-            display: flex; /* Use flexbox for full-width tabs */
+            display: flex;
             width: 100%;
             background-color: #222;
             border-bottom: 1px solid #444;
         }
         .tab-button {
-            flex: 1; /* Each button takes equal space */
+            flex: 1;
             padding: 18px 16px;
             cursor: pointer;
             border: none;
-            border-bottom: 3px solid transparent; /* Default transparent border */
+            border-bottom: 3px solid transparent;
             background-color: transparent;
             color: #ccc;
             text-align: center;
@@ -86,13 +84,12 @@
         }
         .tab-button.active {
             color: #fff;
-            border-bottom: 3px solid #f5a706; /* Highlight active tab with a border */
+            border-bottom: 3px solid #f5a706;
         }
-        
         .tab-content {
             display: none;
-            flex-grow: 1; /* Allow content to fill remaining vertical space */
-            overflow: auto; /* Enable scrolling within the tab content */
+            flex-grow: 1;
+            overflow: auto;
             padding: 25px;
             color: #fff;
             text-align: left;
@@ -102,7 +99,7 @@
             flex-direction: column;
         }
         #Overview.active {
-             padding: 0; /* Remove padding for iframe to fill space */
+             padding: 0;
         }
         .loading {
             font-size: 18px;
@@ -118,6 +115,16 @@
             background-color: #555;
             color: #fff;
             border-color: #777;
+        }
+        /* Style for date input placeholder */
+        input[type="date"]::before {
+            content: attr(placeholder) !important;
+            color: #aaa;
+            margin-right: 0.5em;
+        }
+        input[type="date"]:focus::before,
+        input[type="date"]:valid::before {
+            display: none;
         }
         .filter-section {
             margin-bottom: 20px;
@@ -148,7 +155,6 @@
     <div class="main-content">
         <div class="tabs-section">
             <div class="tabs">
-                <!-- TABS REORDERED AS REQUESTED -->
                 <button class="tab-button active" onclick="openTab(event, 'Overview')">Overview</button>
                 <button class="tab-button" onclick="openTab(event, 'Reviews')">Reviews</button>
                 <button class="tab-button" onclick="openTab(event, 'CompetitorBenchmarking')">Competitor Benchmarking</button>
@@ -167,15 +173,15 @@
                     <p id="page-description"></p>
             
                     <div class="filter-section">
-                        <!-- GRID LAYOUT ADJUSTED AFTER BUTTON REMOVAL -->
+                        <!-- GRID LAYOUT MODIFIED TO INCLUDE DATE FILTERS -->
                         <div class="row">
-                            <div class="col-md-4">
-                                <input type="text" id="search-input" class="form-control" placeholder="Search name or comment...">
+                            <div class="col-md-3">
+                                <input type="text" id="search-input" class="form-control" placeholder="Search...">
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-2">
                                 <select id="location-filter" class="form-control"></select>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-2">
                                 <select id="stars-filter" class="form-control">
                                     <option value="">★ Stars</option>
                                     <option value="5">★★★★★</option>
@@ -185,7 +191,16 @@
                                     <option value="1">★☆☆☆☆</option>
                                 </select>
                             </div>
-                            <!-- "SORT BY LOCATION" BUTTON REMOVED -->
+                            <!-- NEW DATE INPUTS -->
+                            <div class="col-md-2">
+                                <input type="date" id="start-date-filter" placeholder="Start Date" class="form-control">
+                            </div>
+                            <div class="col-md-2">
+                                <input type="date" id="end-date-filter" placeholder="End Date" class="form-control">
+                            </div>
+                            <div class="col-md-1">
+                                <button id="clear-filters-btn" class="btn btn-secondary w-100">Clear</button>
+                            </div>
                         </div>
                     </div>
             
@@ -203,7 +218,6 @@
                 </div>
             </div>
             
-            <!-- Competitor Benchmarking Tab -->
             <div id="CompetitorBenchmarking" class="tab-content">
                 <div class="container">
                     <h1>Competitor Benchmarking</h1>
@@ -211,7 +225,6 @@
                 </div>
             </div>
 
-            <!-- Sentiment Analysis Tab -->
             <div id="SentimentAnalysis" class="tab-content">
                 <div class="container">
                     <h1>Sentiment Analysis with AI</h1>
@@ -235,11 +248,14 @@
         const searchInput = document.getElementById('search-input');
         const locationFilter = document.getElementById('location-filter');
         const starsFilter = document.getElementById('stars-filter');
-        // "groupByLocationBtn" VARIABLE REMOVED
+        // NEW ELEMENT REFERENCES
+        const startDateFilter = document.getElementById('start-date-filter');
+        const endDateFilter = document.getElementById('end-date-filter');
+        const clearFiltersBtn = document.getElementById('clear-filters-btn');
         const paginationElement = document.getElementById('pagination');
 
         function openTab(evt, tabName) {
-            var i, tabcontent, tablinks;
+            let i, tabcontent, tablinks;
             tabcontent = document.getElementsByClassName("tab-content");
             for (i = 0; i < tabcontent.length; i++) {
                 tabcontent[i].style.display = "none";
@@ -307,7 +323,7 @@
 
         function populateLocationFilter() {
             const locations = [...new Set(reviewsData.map(item => item.location))].sort();
-            locationFilter.innerHTML = '<option value="">Location</option>';
+            locationFilter.innerHTML = '<option value="">All Locations</option>';
             locations.forEach(location => {
                 const option = document.createElement('option');
                 option.value = location;
@@ -331,8 +347,6 @@
             paginatedItems.forEach(review => {
                 const row = document.createElement('tr');
                 const formattedDate = review.ReviewDate ? new Date(review.ReviewDate).toLocaleDateString() : 'N/A';
-                
-                // Added a simple star rating display
                 const starsDisplay = '★'.repeat(review.stars) + '☆'.repeat(5 - review.stars);
 
                 row.innerHTML = `
@@ -370,31 +384,55 @@
             }
         }
 
+        // FUNCTION MODIFIED TO INCLUDE DATE LOGIC
         function applyFilters() {
             const searchTerm = searchInput.value.toLowerCase();
             const selectedLocation = locationFilter.value;
             const selectedStars = starsFilter.value;
+            const startDate = startDateFilter.value ? new Date(startDateFilter.value) : null;
+            const endDate = endDateFilter.value ? new Date(endDateFilter.value) : null;
+            
+            // To make the end date inclusive, set the time to the end of the day
+            if (endDate) {
+                endDate.setHours(23, 59, 59, 999);
+            }
 
             filteredData = reviewsData.filter(review => {
                 const name = review.name || '';
                 const comment = review.comment || '';
+                const reviewDate = review.ReviewDate ? new Date(review.ReviewDate) : null;
+
                 const matchesSearch = name.toLowerCase().includes(searchTerm) || comment.toLowerCase().includes(searchTerm);
                 const matchesLocation = !selectedLocation || review.location === selectedLocation;
                 const matchesStars = !selectedStars || review.stars == selectedStars;
-                return matchesSearch && matchesLocation && matchesStars;
-            });
-            // When filtering, always sort by date descending
-            filteredData.sort((a, b) => new Date(b.ReviewDate) - new Date(a.ReviewDate));
+                
+                // New date filtering logic
+                const matchesDate = (!startDate || (reviewDate && reviewDate >= startDate)) &&
+                                    (!endDate || (reviewDate && reviewDate <= endDate));
 
+                return matchesSearch && matchesLocation && matchesStars && matchesDate;
+            });
+            
+            filteredData.sort((a, b) => new Date(b.ReviewDate) - new Date(a.ReviewDate));
             displayTable(1);
             setupPagination();
         }
         
+        // ADDED EVENT LISTENERS FOR NEW ELEMENTS
         searchInput.addEventListener('input', applyFilters);
         locationFilter.addEventListener('change', applyFilters);
         starsFilter.addEventListener('change', applyFilters);
+        startDateFilter.addEventListener('change', applyFilters);
+        endDateFilter.addEventListener('change', applyFilters);
 
-        // "groupByLocationBtn" EVENT LISTENER REMOVED
+        clearFiltersBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            locationFilter.value = '';
+            starsFilter.value = '';
+            startDateFilter.value = '';
+            endDateFilter.value = '';
+            applyFilters();
+        });
 
     </script>
 
