@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Company Review Analytics</title>
+    <!-- Assuming these paths are correct for your project structure -->
+    <link rel="stylesheet" href="CompleteWebsite/International Moving Company & Relocation _ Asian Tigers Group_files/bootstrap.min.css">
+    <link rel="stylesheet" href="CompleteWebsite/International Moving Company & Relocation _ Asian Tigers Group_files/style-main.css">
+    <link rel="stylesheet" href="CompleteWebsite/International Moving Company & Relocation _ Asian Tigers Group_files/all.min.css">
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            overflow: hidden; /* Prevent scrolling on the body */
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 50px;
+            background-color: #fff;
+            border-bottom: 1px solid #eee;
+            flex-shrink: 0;
+        }
+        .header .logo img {
+            height: 50px;
+        }
+        .header .navigation a {
+            margin: 0 15px;
+            text-decoration: none;
+            color: #333;
+        }
+        .header .contact-info a {
+            margin-left: 15px;
+            text-decoration: none;
+            color: #333;
+        }
+        .header .get-a-quote {
+            background-color: #f5a706;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            margin-left: 15px;
+        }
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 71px); /* Full height minus header */
+            color: white;
+            background-color: #2c2c2c;
+        }
+        .tabs-section {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* --- TABS STYLING [MODIFIED] --- */
+        .tabs {
+            display: flex; /* Use flexbox for full-width tabs */
+            width: 100%;
+            background-color: #222;
+            border-bottom: 1px solid #444;
+        }
+        .tab-button {
+            flex: 1; /* Each button takes equal space */
+            padding: 18px 16px;
+            cursor: pointer;
+            border: none;
+            border-bottom: 3px solid transparent; /* Default transparent border */
+            background-color: transparent;
+            color: #ccc;
+            text-align: center;
+            font-size: 16px;
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+            outline: none;
+        }
+        .tab-button:hover {
+            background-color: #333;
+            color: #fff;
+        }
+        .tab-button.active {
+            color: #fff;
+            border-bottom: 3px solid #f5a706; /* Highlight active tab with a border */
+        }
+        
+        .tab-content {
+            display: none;
+            flex-grow: 1; /* Allow content to fill remaining vertical space */
+            overflow: auto; /* Enable scrolling within the tab content */
+            padding: 25px;
+            color: #fff;
+            text-align: left;
+        }
+        .tab-content.active {
+            display: flex; 
+            flex-direction: column;
+        }
+        #Overview.active {
+             padding: 0; /* Remove padding for iframe to fill space */
+        }
+        .loading {
+            font-size: 18px;
+            color: #fff;
+            width: 100%;
+            text-align: center;
+            padding: 40px;
+        }
+        .table-striped tbody tr:nth-of-type(odd) {
+             background-color: rgba(255, 255, 255, 0.05);
+        }
+        .form-control {
+            background-color: #555;
+            color: #fff;
+            border-color: #777;
+        }
+        .filter-section {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <div class="logo">
+            <img src="assets/img/AsianTigersGroup-1024x286.webp" alt="Asian Tigers Group">
+        </div>
+        <nav class="navigation">
+            <a href="#">SERVICES</a>
+            <a href="#">SOLUTIONS</a>
+            <a href="#">ABOUT US</a>
+            <a href="#">LOCATIONS</a>
+            <a href="#">NEWS</a>
+            <a href="#">RESOURCES</a>
+            <a href="#">AI</a>
+        </nav>
+        <div class="contact-info">
+            <a href="#">Contact Us</a>
+            <a href="#" class="get-a-quote">Get A Quote</a>
+        </div>
+    </header>
+
+    <div class="main-content">
+        <div class="tabs-section">
+            <div class="tabs">
+                <!-- TABS REORDERED AS REQUESTED -->
+                <button class="tab-button active" onclick="openTab(event, 'Overview')">Overview</button>
+                <button class="tab-button" onclick="openTab(event, 'Reviews')">Reviews</button>
+                <button class="tab-button" onclick="openTab(event, 'CompetitorBenchmarking')">Competitor Benchmarking</button>
+                <button class="tab-button" onclick="openTab(event, 'SentimentAnalysis')">Sentiment Analysis with AI</button>
+            </div>
+
+            <!-- Overview Tab -->
+            <div id="Overview" class="tab-content active">
+                <iframe width="100%" height="100%" src="https://lookerstudio.google.com/embed/reporting/db01f07c-c5e4-4e70-a5ef-dfcd2c41f814/page/5KvWF" frameborder="0" style="border:0;" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
+            </div>
+
+            <!-- Reviews Tab -->
+            <div id="Reviews" class="tab-content">
+                <div class="container-fluid">
+                    <h1 id="page-title"></h1>
+                    <p id="page-description"></p>
+            
+                    <div class="filter-section">
+                        <!-- GRID LAYOUT ADJUSTED AFTER BUTTON REMOVAL -->
+                        <div class="row">
+                            <div class="col-md-4">
+                                <input type="text" id="search-input" class="form-control" placeholder="Search name or comment...">
+                            </div>
+                            <div class="col-md-4">
+                                <select id="location-filter" class="form-control"></select>
+                            </div>
+                            <div class="col-md-4">
+                                <select id="stars-filter" class="form-control">
+                                    <option value="">★ Stars</option>
+                                    <option value="5">★★★★★</option>
+                                    <option value="4">★★★★☆</option>
+                                    <option value="3">★★★☆☆</option>
+                                    <option value="2">★★☆☆☆</option>
+                                    <option value="1">★☆☆☆☆</option>
+                                </select>
+                            </div>
+                            <!-- "SORT BY LOCATION" BUTTON REMOVED -->
+                        </div>
+                    </div>
+            
+                    <table class="table table-striped table-dark">
+                        <thead id="table-head">
+                        </thead>
+                        <tbody id="table-body">
+                        </tbody>
+                    </table>
+            
+                    <nav>
+                        <ul class="pagination" id="pagination">
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+            
+            <!-- Competitor Benchmarking Tab -->
+            <div id="CompetitorBenchmarking" class="tab-content">
+                <div class="container">
+                    <h1>Competitor Benchmarking</h1>
+                    <p>Compare company metrics with industry standards. Feature coming soon.</p>
+                </div>
+            </div>
+
+            <!-- Sentiment Analysis Tab -->
+            <div id="SentimentAnalysis" class="tab-content">
+                <div class="container">
+                    <h1>Sentiment Analysis with AI</h1>
+                    <p>Advanced sentiment trends over time with keyword extraction with AI. Feature coming soon.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let reviewsData = [];
+        let filteredData = [];
+        let currentPage = 1;
+        const rowsPerPage = 10;
+        let dataLoaded = false;
+
+        const pageTitle = document.getElementById('page-title');
+        const pageDescription = document.getElementById('page-description');
+        const tableHead = document.getElementById('table-head');
+        const tableBody = document.getElementById('table-body');
+        const searchInput = document.getElementById('search-input');
+        const locationFilter = document.getElementById('location-filter');
+        const starsFilter = document.getElementById('stars-filter');
+        // "groupByLocationBtn" VARIABLE REMOVED
+        const paginationElement = document.getElementById('pagination');
+
+        function openTab(evt, tabName) {
+            var i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+                tabcontent[i].classList.remove("active");
+            }
+            tablinks = document.getElementsByClassName("tab-button");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            document.getElementById(tabName).style.display = "block";
+            document.getElementById(tabName).classList.add("active");
+            evt.currentTarget.className += " active";
+
+            if (tabName === 'Reviews' && !dataLoaded) {
+                loadReviewsData();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch('config.json')
+                .then(response => {
+                    if (!response.ok) throw new Error("config.json not found");
+                    return response.json();
+                })
+                .then(config => {
+                    const reviewsConfig = config.reviews_page;
+                    pageTitle.textContent = reviewsConfig.title;
+                    pageDescription.textContent = reviewsConfig.description;
+                    
+                    let headerHtml = '<tr>';
+                    reviewsConfig.table_headers.forEach(header => {
+                        headerHtml += `<th>${header}</th>`;
+                    });
+                    headerHtml += '</tr>';
+                    tableHead.innerHTML = headerHtml;
+                })
+                .catch(error => {
+                    console.error("Could not load config.json:", error);
+                    tableHead.innerHTML = '<tr><th>Location</th><th>Name</th><th>Stars</th><th>Review Date</th><th>Comment</th></tr>';
+                });
+
+            document.querySelector('.tab-button').click();
+        });
+
+        function loadReviewsData() {
+            const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxHVtT4zs1upveIiOYoBO_ilpYj4srDfz-RPGzDuwm89R4OHYMRxb8A9MuQ01G7_Lls/exec'; 
+
+            tableBody.innerHTML = `<tr><td colspan="5"><div class="loading">Loading review data...</div></td></tr>`;
+
+            fetch(GOOGLE_APPS_SCRIPT_URL)
+                .then(response => response.json())
+                .then(data => {
+                    reviewsData = data.sort((a, b) => new Date(b.ReviewDate) - new Date(a.ReviewDate));
+                    filteredData = [...reviewsData];
+                    populateLocationFilter();
+                    displayTable(currentPage);
+                    setupPagination();
+                    dataLoaded = true;
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                    tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: red;">Error loading data. Please check the console for details.</td></tr>`;
+                });
+        }
+
+        function populateLocationFilter() {
+            const locations = [...new Set(reviewsData.map(item => item.location))].sort();
+            locationFilter.innerHTML = '<option value="">Location</option>';
+            locations.forEach(location => {
+                const option = document.createElement('option');
+                option.value = location;
+                option.textContent = location;
+                locationFilter.appendChild(option);
+            });
+        }
+
+        function displayTable(page) {
+            currentPage = page;
+            tableBody.innerHTML = '';
+            const start = (page - 1) * rowsPerPage;
+            const end = start + rowsPerPage;
+            const paginatedItems = filteredData.slice(start, end);
+
+            if (paginatedItems.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center;">No reviews found matching your criteria.</td></tr>`;
+                return;
+            }
+
+            paginatedItems.forEach(review => {
+                const row = document.createElement('tr');
+                const formattedDate = review.ReviewDate ? new Date(review.ReviewDate).toLocaleDateString() : 'N/A';
+                
+                // Added a simple star rating display
+                const starsDisplay = '★'.repeat(review.stars) + '☆'.repeat(5 - review.stars);
+
+                row.innerHTML = `
+                    <td>${review.location}</td>
+                    <td>${review.name}</td>
+                    <td>${starsDisplay}</td>
+                    <td>${formattedDate}</td>
+                    <td>${review.comment}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function setupPagination() {
+            paginationElement.innerHTML = '';
+            const pageCount = Math.ceil(filteredData.length / rowsPerPage);
+            for (let i = 1; i <= pageCount; i++) {
+                const li = document.createElement('li');
+                li.className = 'page-item' + (i === currentPage ? ' active' : '');
+                const a = document.createElement('a');
+                a.className = 'page-link';
+                a.href = '#';
+                a.innerText = i;
+                a.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    displayTable(i);
+                    const currentActive = paginationElement.querySelector('.active');
+                    if (currentActive) {
+                        currentActive.classList.remove('active');
+                    }
+                    li.classList.add('active');
+                });
+                li.appendChild(a);
+                paginationElement.appendChild(li);
+            }
+        }
+
+        function applyFilters() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const selectedLocation = locationFilter.value;
+            const selectedStars = starsFilter.value;
+
+            filteredData = reviewsData.filter(review => {
+                const name = review.name || '';
+                const comment = review.comment || '';
+                const matchesSearch = name.toLowerCase().includes(searchTerm) || comment.toLowerCase().includes(searchTerm);
+                const matchesLocation = !selectedLocation || review.location === selectedLocation;
+                const matchesStars = !selectedStars || review.stars == selectedStars;
+                return matchesSearch && matchesLocation && matchesStars;
+            });
+            // When filtering, always sort by date descending
+            filteredData.sort((a, b) => new Date(b.ReviewDate) - new Date(a.ReviewDate));
+
+            displayTable(1);
+            setupPagination();
+        }
+        
+        searchInput.addEventListener('input', applyFilters);
+        locationFilter.addEventListener('change', applyFilters);
+        starsFilter.addEventListener('change', applyFilters);
+
+        // "groupByLocationBtn" EVENT LISTENER REMOVED
+
+    </script>
+
+</body>
+</html>
