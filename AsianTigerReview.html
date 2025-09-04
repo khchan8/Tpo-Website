@@ -5,129 +5,417 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Asian Tiger Group Review Analytics</title>
     <!-- Assuming these paths are correct for your project structure -->
-	<link rel="stylesheet" href="assets/css/bootstrap.min.css">
-	<link rel="stylesheet" href="assets/css/style-main.css">
-	<link rel="stylesheet" href="assets/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/css/style-main.css">
+    <link rel="stylesheet" href="assets/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         html, body {
             height: 100%;
             margin: 0;
             padding: 0;
-            font-family: Arial, sans-serif;
-            overflow: hidden; /* Prevent scrolling on the body */
+            font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+            overflow: hidden;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2c2c2c 100%);
         }
+        
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 50px;
-            background-color: #fff;
-            border-bottom: 1px solid #eee;
+            padding: 12px 50px;
+            background: #ffffff;
+            border-bottom: 2px solid #f5a706;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
             flex-shrink: 0;
         }
+        
         .header .logo img {
             height: 50px;
         }
+        
         .header .navigation a {
             margin: 0 15px;
             text-decoration: none;
             color: #333;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            position: relative;
         }
+        
+        .header .navigation a:hover {
+            color: #f5a706;
+        }
+        
+        .header .navigation a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -5px;
+            left: 0;
+            background-color: #f5a706;
+            transition: width 0.3s ease;
+        }
+        
+        .header .navigation a:hover::after {
+            width: 100%;
+        }
+        
         .header .contact-info a {
             margin-left: 15px;
             text-decoration: none;
             color: #333;
+            font-weight: 500;
         }
+        
         .header .get-a-quote {
-            background-color: #f5a706;
+            background: linear-gradient(135deg, #f5a706 0%, #e69500 100%);
             color: #fff;
-            padding: 10px 20px;
-            border-radius: 5px;
+            padding: 12px 24px;
+            border-radius: 8px;
             text-decoration: none;
-            margin-left: 15px;
+            margin-left: 20px;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(245, 167, 6, 0.3);
+            transition: all 0.3s ease;
+            border: none;
         }
+        
+        .header .get-a-quote:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(245, 167, 6, 0.4);
+        }
+        
         .main-content {
             display: flex;
             flex-direction: column;
-            height: calc(100vh - 71px); /* Full height minus header */
+            height: calc(100vh - 80px);
             color: white;
-            background-color: #2c2c2c;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2c2c2c 100%);
         }
+        
         .tabs-section {
             display: flex;
             flex-direction: column;
             width: 100%;
             height: 100%;
         }
+        
         .tabs {
             display: flex;
             width: 100%;
-            background-color: #222;
-            border-bottom: 1px solid #444;
+            background: linear-gradient(90deg, #222 0%, #2a2a2a 100%);
+            border-bottom: 2px solid #444;
+            padding: 0 20px;
+            flex-shrink: 0;
         }
+        
         .tab-button {
             flex: 1;
-            padding: 18px 16px;
+            padding: 20px 16px;
             cursor: pointer;
             border: none;
             border-bottom: 3px solid transparent;
-            background-color: transparent;
+            background: transparent;
             color: #ccc;
             text-align: center;
             font-size: 16px;
-            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+            font-weight: 500;
+            transition: all 0.3s ease;
             outline: none;
+            position: relative;
         }
+        
         .tab-button:hover {
-            background-color: #333;
+            background: linear-gradient(90deg, rgba(245, 167, 6, 0.1) 0%, rgba(245, 167, 6, 0.05) 100%);
             color: #fff;
         }
+        
         .tab-button.active {
             color: #fff;
             border-bottom: 3px solid #f5a706;
+            background: linear-gradient(90deg, rgba(245, 167, 6, 0.15) 0%, rgba(245, 167, 6, 0.08) 100%);
         }
+        
         .tab-content {
             display: none;
             flex-grow: 1;
             overflow: auto;
-            padding: 25px;
+            padding: 30px;
             color: #fff;
             text-align: left;
         }
+        
         .tab-content.active {
-            display: flex; 
+            display: flex;
             flex-direction: column;
         }
+        
         #Overview.active {
-             padding: 0;
+            padding: 0;
         }
+        
         .loading {
             font-size: 18px;
             color: #fff;
             width: 100%;
             text-align: center;
-            padding: 40px;
+            padding: 60px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            margin: 20px 0;
         }
-        .table-striped tbody tr:nth-of-type(odd) {
-             background-color: rgba(255, 255, 255, 0.05);
+        
+        .reviews-container {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
         }
-        .form-control {
-            background-color: #555;
-            color: #fff;
-            border-color: #777;
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
         }
-        /* Style for date input placeholder */
-        input[type="date"]::before {
-            content: attr(placeholder) !important;
-            color: #aaa;
-            margin-right: 0.5em;
+        
+        .stat-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.04) 100%);
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
-        input[type="date"]:focus::before,
-        input[type="date"]:valid::before {
-            display: none;
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #f5a706;
+            margin-bottom: 8px;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: #ccc;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
         .filter-section {
+            background: rgba(255,255,255,0.05);
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            align-items: end;
+        }
+        
+        .form-control {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            padding: 12px 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus {
+            background: rgba(255,255,255,0.15);
+            border-color: #f5a706;
+            box-shadow: 0 0 0 3px rgba(245, 167, 6, 0.2);
+            outline: none;
+        }
+        
+        .form-control::placeholder {
+            color: #999;
+        }
+        
+        select.form-control option {
+            background: #2c2c2c;
+            color: white;
+        }
+        
+        .btn {
+            border-radius: 8px;
+            padding: 12px 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+        }
+        
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+        }
+        
+        .table-container {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .table {
+            margin-bottom: 0;
+            color: #fff;
+            width: 100%;
+        }
+        
+        .table thead th {
+            background: linear-gradient(180deg, rgba(245, 167, 6, 0.2) 0%, rgba(245, 167, 6, 0.1) 100%);
+            color: #fff;
+            font-weight: 600;
+            padding: 16px;
+            border-bottom: 2px solid rgba(245, 167, 6, 0.3);
+        }
+        
+        .table tbody td {
+            padding: 16px;
+            vertical-align: middle;
+            border-color: rgba(255,255,255,0.1);
+        }
+
+        /********** CHANGE IS HERE **********/
+        .table tbody td strong {
+            color: #FFFFFF;
+        }
+        /************************************/
+        
+        .table-striped tbody tr:nth-of-type(odd) {
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+        
+        .table-striped tbody tr:hover {
+            background-color: rgba(245, 167, 6, 0.1);
+            transform: scale(1.01);
+            transition: all 0.2s ease;
+        }
+        
+        .stars {
+            color: #f5a706;
+            font-size: 1.1em;
+            letter-spacing: 1px;
+        }
+        
+        .review-comment {
+            color: #ccc;
+            line-height: 1.5;
+            max-width: 400px;
+        }
+        
+        .pagination {
+            margin: 30px 0 0 0;
+            justify-content: center;
+            display: flex;
+            flex-wrap: wrap;
+            padding-left: 0;
+            list-style: none;
+        }
+        
+        .page-item.active .page-link {
+            background: linear-gradient(135deg, #f5a706 0%, #e69500 100%);
+            border-color: #f5a706;
+        }
+        
+        .page-link {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #fff;
+            margin: 0 5px;
+            border-radius: 6px;
+        }
+        
+        .page-link:hover {
+            background: rgba(245, 167, 6, 0.2);
+            border-color: #f5a706;
+            color: #fff;
+        }
+        
+        .chart-container {
+            background: rgba(255,255,255,0.05);
+            padding: 20px;
+            border-radius: 12px;
             margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header {
+                padding: 10px 20px;
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .tabs {
+                flex-direction: column;
+            }
+            
+            .tab-button {
+                padding: 15px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .filter-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .tab-content {
+                padding: 15px;
+            }
+        }
+        
+        /* Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.05);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: rgba(245, 167, 6, 0.3);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(245, 167, 6, 0.5);
         }
     </style>
 </head>
@@ -168,22 +456,44 @@
 
             <!-- Reviews Tab -->
             <div id="Reviews" class="tab-content">
-                <div class="container-fluid">
-                    <h1 id="page-title"></h1>
-                    <p id="page-description"></p>
-            
+                <div class="reviews-container fade-in">
+                    <h1 id="page-title" class="mb-4" style="color: #f5a706; font-size: 2.2rem;"></h1>
+                    <p id="page-description" class="mb-4" style="color: #ccc; font-size: 1.1rem;"></p>
+
+                    <!-- Statistics Cards -->
+                    <div class="stats-grid" id="stats-container">
+                        <div class="stat-card">
+                            <div class="stat-value" id="total-reviews">0</div>
+                            <div class="stat-label">Total Reviews</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="avg-rating">0.0</div>
+                            <div class="stat-label">Average Rating</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="five-star">0</div>
+                            <div class="stat-label">5★ Reviews</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="locations-count">0</div>
+                            <div class="stat-label">Locations</div>
+                        </div>
+                    </div>
+
+                    <!-- Filter Section -->
                     <div class="filter-section">
-                        <!-- GRID LAYOUT MODIFIED TO INCLUDE DATE FILTERS -->
-                        <div class="row">
-                            <div class="col-md-3">
-                                <input type="text" id="search-input" class="form-control" placeholder="Search...">
+                        <div class="filter-grid">
+                            <div>
+                                <input type="text" id="search-input" class="form-control" placeholder="Search reviews...">
                             </div>
-                            <div class="col-md-2">
+                            <div>
+                                <label class="form-label" style="color: #ccc; font-size: 0.9rem;">Location</label>
                                 <select id="location-filter" class="form-control"></select>
                             </div>
-                            <div class="col-md-2">
+                            <div>
+                                <label class="form-label" style="color: #ccc; font-size: 0.9rem;">Rating</label>
                                 <select id="stars-filter" class="form-control">
-                                    <option value="">★ Stars</option>
+                                    <option value="">All Ratings</option>
                                     <option value="5">★★★★★</option>
                                     <option value="4">★★★★☆</option>
                                     <option value="3">★★★☆☆</option>
@@ -191,26 +501,34 @@
                                     <option value="1">★☆☆☆☆</option>
                                 </select>
                             </div>
-                            <!-- NEW DATE INPUTS -->
-                            <div class="col-md-2">
-                                <input type="date" id="start-date-filter" placeholder="Start Date" class="form-control">
+                            <div>
+                                <label class="form-label" style="color: #ccc; font-size: 0.9rem;">Start Date</label>
+                                <input type="date" id="start-date-filter" class="form-control" placeholder="Start Date">
                             </div>
-                            <div class="col-md-2">
-                                <input type="date" id="end-date-filter" placeholder="End Date" class="form-control">
+                            <div>
+                                <label class="form-label" style="color: #ccc; font-size: 0.9rem;">End Date</label>
+                                <input type="date" id="end-date-filter" class="form-control" placeholder="End Date">
                             </div>
-                            <div class="col-md-1">
-                                <button id="clear-filters-btn" class="btn btn-secondary w-100">Clear</button>
+                            <div>
+                                <label class="form-label" style="opacity: 0;">Clear</label>
+                                <button id="clear-filters-btn" class="btn btn-secondary w-100">
+                                    <i class="fas fa-sync-alt me-2"></i>Clear Filters
+                                </button>
                             </div>
                         </div>
                     </div>
-            
-                    <table class="table table-striped table-dark">
-                        <thead id="table-head">
-                        </thead>
-                        <tbody id="table-body">
-                        </tbody>
-                    </table>
-            
+
+                    <!-- Reviews Table -->
+                    <div class="table-container">
+                        <table class="table table-striped table-dark">
+                            <thead id="table-head">
+                            </thead>
+                            <tbody id="table-body">
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
                     <nav>
                         <ul class="pagination" id="pagination">
                         </ul>
@@ -248,11 +566,17 @@
         const searchInput = document.getElementById('search-input');
         const locationFilter = document.getElementById('location-filter');
         const starsFilter = document.getElementById('stars-filter');
-        // NEW ELEMENT REFERENCES
         const startDateFilter = document.getElementById('start-date-filter');
         const endDateFilter = document.getElementById('end-date-filter');
         const clearFiltersBtn = document.getElementById('clear-filters-btn');
         const paginationElement = document.getElementById('pagination');
+        const statsContainer = document.getElementById('stats-container');
+
+        // Statistics elements
+        const totalReviewsEl = document.getElementById('total-reviews');
+        const avgRatingEl = document.getElementById('avg-rating');
+        const fiveStarEl = document.getElementById('five-star');
+        const locationsCountEl = document.getElementById('locations-count');
 
         function openTab(evt, tabName) {
             let i, tabcontent, tablinks;
@@ -265,7 +589,7 @@
             for (i = 0; i < tablinks.length; i++) {
                 tablinks[i].className = tablinks[i].className.replace(" active", "");
             }
-            document.getElementById(tabName).style.display = "block";
+            document.getElementById(tabName).style.display = "flex";
             document.getElementById(tabName).classList.add("active");
             evt.currentTarget.className += " active";
 
@@ -294,7 +618,7 @@
                 })
                 .catch(error => {
                     console.error("Could not load config.json:", error);
-                    tableHead.innerHTML = '<tr><th>Location</th><th>Name</th><th>Stars</th><th>Review Date</th><th>Comment</th></tr>';
+                    tableHead.innerHTML = '<tr><th>Location</th><th>Name</th><th>Rating</th><th>Review Date</th><th>Comment</th></tr>';
                 });
 
             document.querySelector('.tab-button').click();
@@ -303,7 +627,7 @@
         function loadReviewsData() {
             const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxHVtT4zs1upveIiOYoBO_ilpYj4srDfz-RPGzDuwm89R4OHYMRxb8A9MuQ01G7_Lls/exec'; 
 
-            tableBody.innerHTML = `<tr><td colspan="5"><div class="loading">Loading review data...</div></td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="5"><div class="loading"><i class="fas fa-spinner fa-spin me-2"></i>Loading review data...</div></td></tr>`;
 
             fetch(GOOGLE_APPS_SCRIPT_URL)
                 .then(response => response.json())
@@ -311,13 +635,14 @@
                     reviewsData = data.sort((a, b) => new Date(b.ReviewDate) - new Date(a.ReviewDate));
                     filteredData = [...reviewsData];
                     populateLocationFilter();
+                    updateStatistics(reviewsData);
                     displayTable(currentPage);
                     setupPagination();
                     dataLoaded = true;
                 })
                 .catch(error => {
                     console.error('Error fetching data:', error);
-                    tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: red;">Error loading data. Please check the console for details.</td></tr>`;
+                    tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: red;"><i class="fas fa-exclamation-triangle me-2"></i>Error loading data. Please check the console for details.</td></tr>`;
                 });
         }
 
@@ -332,6 +657,20 @@
             });
         }
 
+        function updateStatistics(data) {
+            totalReviewsEl.textContent = data.length.toLocaleString();
+            
+            const totalStars = data.reduce((sum, review) => sum + (review.stars || 0), 0);
+            const avgRating = data.length > 0 ? (totalStars / data.length).toFixed(1) : '0.0';
+            avgRatingEl.textContent = avgRating;
+            
+            const fiveStarCount = data.filter(review => review.stars === 5).length;
+            fiveStarEl.textContent = fiveStarCount.toLocaleString();
+            
+            const uniqueLocations = new Set(data.map(item => item.location)).size;
+            locationsCountEl.textContent = uniqueLocations;
+        }
+
         function displayTable(page) {
             currentPage = page;
             tableBody.innerHTML = '';
@@ -340,7 +679,10 @@
             const paginatedItems = filteredData.slice(start, end);
 
             if (paginatedItems.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center;">No reviews found matching your criteria.</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 40px;">
+                    <i class="fas fa-search me-2" style="color: #f5a706;"></i>
+                    No reviews found matching your criteria.
+                </td></tr>`;
                 return;
             }
 
@@ -350,11 +692,11 @@
                 const starsDisplay = '★'.repeat(review.stars) + '☆'.repeat(5 - review.stars);
 
                 row.innerHTML = `
-                    <td>${review.location}</td>
+                    <td><strong>${review.location}</strong></td>
                     <td>${review.name}</td>
-                    <td>${starsDisplay}</td>
+                    <td><span class="stars">${starsDisplay}</span></td>
                     <td>${formattedDate}</td>
-                    <td>${review.comment}</td>
+                    <td class="review-comment">${review.comment}</td>
                 `;
                 tableBody.appendChild(row);
             });
@@ -363,28 +705,30 @@
         function setupPagination() {
             paginationElement.innerHTML = '';
             const pageCount = Math.ceil(filteredData.length / rowsPerPage);
+            
+            if (pageCount <= 1) return;
+            
+            const prevLi = document.createElement('li');
+            prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+            prevLi.innerHTML = `<a class="page-link" href="#" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a>`;
+            prevLi.addEventListener('click', (e) => { e.preventDefault(); if (currentPage > 1) { displayTable(currentPage - 1); setupPagination(); } });
+            paginationElement.appendChild(prevLi);
+
             for (let i = 1; i <= pageCount; i++) {
                 const li = document.createElement('li');
-                li.className = 'page-item' + (i === currentPage ? ' active' : '');
-                const a = document.createElement('a');
-                a.className = 'page-link';
-                a.href = '#';
-                a.innerText = i;
-                a.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    displayTable(i);
-                    const currentActive = paginationElement.querySelector('.active');
-                    if (currentActive) {
-                        currentActive.classList.remove('active');
-                    }
-                    li.classList.add('active');
-                });
-                li.appendChild(a);
+                li.className = `page-item ${i === currentPage ? 'active' : ''}`;
+                li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+                li.addEventListener('click', (e) => { e.preventDefault(); if (i !== currentPage) { displayTable(i); setupPagination(); } });
                 paginationElement.appendChild(li);
             }
+
+            const nextLi = document.createElement('li');
+            nextLi.className = `page-item ${currentPage === pageCount ? 'disabled' : ''}`;
+            nextLi.innerHTML = `<a class="page-link" href="#" aria-label="Next"><span aria-hidden="true">&raquo;</span></a>`;
+            nextLi.addEventListener('click', (e) => { e.preventDefault(); if (currentPage < pageCount) { displayTable(currentPage + 1); setupPagination(); } });
+            paginationElement.appendChild(nextLi);
         }
 
-        // FUNCTION MODIFIED TO INCLUDE DATE LOGIC
         function applyFilters() {
             const searchTerm = searchInput.value.toLowerCase();
             const selectedLocation = locationFilter.value;
@@ -392,7 +736,6 @@
             const startDate = startDateFilter.value ? new Date(startDateFilter.value) : null;
             const endDate = endDateFilter.value ? new Date(endDateFilter.value) : null;
             
-            // To make the end date inclusive, set the time to the end of the day
             if (endDate) {
                 endDate.setHours(23, 59, 59, 999);
             }
@@ -406,7 +749,6 @@
                 const matchesLocation = !selectedLocation || review.location === selectedLocation;
                 const matchesStars = !selectedStars || review.stars == selectedStars;
                 
-                // New date filtering logic
                 const matchesDate = (!startDate || (reviewDate && reviewDate >= startDate)) &&
                                     (!endDate || (reviewDate && reviewDate <= endDate));
 
@@ -414,11 +756,12 @@
             });
             
             filteredData.sort((a, b) => new Date(b.ReviewDate) - new Date(a.ReviewDate));
+            updateStatistics(filteredData);
             displayTable(1);
             setupPagination();
         }
         
-        // ADDED EVENT LISTENERS FOR NEW ELEMENTS
+        // Event listeners
         searchInput.addEventListener('input', applyFilters);
         locationFilter.addEventListener('change', applyFilters);
         starsFilter.addEventListener('change', applyFilters);
