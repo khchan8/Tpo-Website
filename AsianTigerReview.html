@@ -15,8 +15,12 @@
             margin: 0;
             padding: 0;
             font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
-            overflow: hidden;
+            overflow-x: hidden; /* Prevent horizontal scroll on body */
             background: linear-gradient(135deg, #1a1a1a 0%, #2c2c2c 100%);
+        }
+
+        body.menu-open {
+            overflow: hidden; /* Prevent body scroll when mobile menu is open */
         }
         
         .header {
@@ -28,6 +32,8 @@
             border-bottom: 2px solid #f5a706;
             box-shadow: 0 2px 20px rgba(0,0,0,0.1);
             flex-shrink: 0;
+            position: relative; /* Needed for z-index */
+            z-index: 1001; /* Above overlay */
         }
         
         .header .logo img {
@@ -86,6 +92,115 @@
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(245, 167, 6, 0.4);
         }
+
+        /* HAMBURGER & MOBILE MENU STYLES START HERE */
+
+        #hamburger-btn {
+            display: none; /* Hidden on desktop */
+            width: 30px;
+            height: 30px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            z-index: 1002;
+            flex-direction: column;
+            justify-content: space-around;
+        }
+
+        #hamburger-btn span {
+            display: block;
+            width: 100%;
+            height: 3px;
+            background-color: #333;
+            border-radius: 3px;
+        }
+
+        .mobile-nav-menu {
+            /* This will be the slide-out menu panel */
+            display: flex; /* Default for desktop */
+            align-items: center;
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 999;
+        }
+
+        .overlay.is-active {
+            display: block;
+        }
+        
+        /* RESPONSIVE STYLES (Mobile View) */
+        @media (max-width: 992px) {
+            .header {
+                padding: 10px 20px;
+            }
+
+            #hamburger-btn {
+                display: flex; /* Show hamburger on mobile */
+            }
+
+            .mobile-nav-menu {
+                position: fixed;
+                top: 0;
+                right: -300px; /* Start off-screen */
+                width: 300px;
+                height: 100%;
+                background: #ffffff;
+                box-shadow: -5px 0 15px rgba(0,0,0,0.2);
+                z-index: 1000;
+                transition: right 0.3s ease-in-out;
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 80px 20px 20px 20px;
+            }
+
+            .mobile-nav-menu.is-open {
+                right: 0; /* Slide in */
+            }
+
+            .mobile-nav-menu .navigation,
+            .mobile-nav-menu .contact-info {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                width: 100%;
+            }
+
+            .mobile-nav-menu a {
+                padding: 15px 10px;
+                width: 100%;
+                text-align: left;
+                border-bottom: 1px solid #eee;
+                margin: 0 !important;
+            }
+
+            .mobile-nav-menu .get-a-quote {
+                margin-top: 20px !important;
+                width: auto;
+                text-align: center;
+                border-bottom: none;
+            }
+            
+            /* Make tabs horizontally scrollable on mobile */
+            .tabs {
+                justify-content: flex-start;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+            .tab-button {
+                flex: 0 0 auto; /* Prevent shrinking */
+            }
+        }
+        /* END OF HAMBURGER & MOBILE MENU STYLES */
         
         .main-content {
             display: flex;
@@ -297,11 +412,9 @@
             border-color: rgba(255,255,255,0.1);
         }
 
-        /********** CHANGE IS HERE **********/
         .table tbody td strong {
             color: #FFFFFF;
         }
-        /************************************/
         
         .table-striped tbody tr:nth-of-type(odd) {
             background-color: rgba(255, 255, 255, 0.03);
@@ -361,36 +474,15 @@
             border: 1px solid rgba(255,255,255,0.1);
         }
         
-        /* Responsive Design */
         @media (max-width: 768px) {
-            .header {
-                padding: 10px 20px;
-                flex-direction: column;
-                gap: 15px;
-            }
-            
-            .tabs {
-                flex-direction: column;
-            }
-            
-            .tab-button {
-                padding: 15px;
-            }
-            
-            .stats-grid {
+            .stats-grid, .filter-grid {
                 grid-template-columns: 1fr;
             }
-            
-            .filter-grid {
-                grid-template-columns: 1fr;
-            }
-            
             .tab-content {
                 padding: 15px;
             }
         }
         
-        /* Animation */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
@@ -400,7 +492,6 @@
             animation: fadeIn 0.6s ease-out;
         }
         
-        /* Custom scrollbar */
         ::-webkit-scrollbar {
             width: 8px;
         }
@@ -425,18 +516,29 @@
         <div class="logo">
             <img src="assets/img/AsianTigersGroup-1024x286.webp" alt="Asian Tigers Group">
         </div>
-        <nav class="navigation">
-            <a href="#">SERVICES</a>
-            <a href="#">SOLUTIONS</a>
-            <a href="#">ABOUT US</a>
-            <a href="#">LOCATIONS</a>
-            <a href="#">NEWS</a>
-            <a href="#">RESOURCES</a>
-            <a href="#">AI</a>
-        </nav>
-        <div class="contact-info">
-            <a href="#">Contact Us</a>
-            <a href="#" class="get-a-quote">Get A Quote</a>
+        
+        <!-- NEW: Hamburger Button -->
+        <button id="hamburger-btn">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+
+        <!-- NEW: Wrapper for Mobile Menu -->
+        <div class="mobile-nav-menu">
+            <nav class="navigation">
+                <a href="#">SERVICES</a>
+                <a href="#">SOLUTIONS</a>
+                <a href="#">ABOUT US</a>
+                <a href="#">LOCATIONS</a>
+                <a href="#">NEWS</a>
+                <a href="#">RESOURCES</a>
+                <a href="#">AI</a>
+            </nav>
+            <div class="contact-info">
+                <a href="#">Contact Us</a>
+                <a href="#" class="get-a-quote">Get A Quote</a>
+            </div>
         </div>
     </header>
 
@@ -551,8 +653,28 @@
             </div>
         </div>
     </div>
+    
+    <!-- NEW: Overlay Element -->
+    <div id="overlay" class="overlay"></div>
 
     <script>
+        // NEW JAVASCRIPT FOR HAMBURGER MENU
+        document.addEventListener('DOMContentLoaded', () => {
+            const hamburgerBtn = document.getElementById('hamburger-btn');
+            const mobileNavMenu = document.querySelector('.mobile-nav-menu');
+            const overlay = document.getElementById('overlay');
+
+            const toggleMenu = () => {
+                mobileNavMenu.classList.toggle('is-open');
+                overlay.classList.toggle('is-active');
+                document.body.classList.toggle('menu-open');
+            };
+
+            hamburgerBtn.addEventListener('click', toggleMenu);
+            overlay.addEventListener('click', toggleMenu);
+        });
+        // END OF NEW JAVASCRIPT
+
         let reviewsData = [];
         let filteredData = [];
         let currentPage = 1;
@@ -598,32 +720,32 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            fetch('config.json')
-                .then(response => {
-                    if (!response.ok) throw new Error("config.json not found");
-                    return response.json();
-                })
-                .then(config => {
-                    const reviewsConfig = config.reviews_page;
-                    pageTitle.textContent = reviewsConfig.title;
-                    pageDescription.textContent = reviewsConfig.description;
-                    
-                    let headerHtml = '<tr>';
-                    reviewsConfig.table_headers.forEach(header => {
-                        headerHtml += `<th>${header}</th>`;
-                    });
-                    headerHtml += '</tr>';
-                    tableHead.innerHTML = headerHtml;
-                })
-                .catch(error => {
-                    console.error("Could not load config.json:", error);
-                    tableHead.innerHTML = '<tr><th>Location</th><th>Name</th><th>Rating</th><th>Review Date</th><th>Comment</th></tr>';
+        // Moved the original DOMContentLoaded listener content here to merge them
+        fetch('config.json')
+            .then(response => {
+                if (!response.ok) throw new Error("config.json not found");
+                return response.json();
+            })
+            .then(config => {
+                const reviewsConfig = config.reviews_page;
+                pageTitle.textContent = reviewsConfig.title;
+                pageDescription.textContent = reviewsConfig.description;
+                
+                let headerHtml = '<tr>';
+                reviewsConfig.table_headers.forEach(header => {
+                    headerHtml += `<th>${header}</th>`;
                 });
+                headerHtml += '</tr>';
+                tableHead.innerHTML = headerHtml;
+            })
+            .catch(error => {
+                console.error("Could not load config.json:", error);
+                tableHead.innerHTML = '<tr><th>Location</th><th>Name</th><th>Rating</th><th>Review Date</th><th>Comment</th></tr>';
+            });
 
-            document.querySelector('.tab-button').click();
-        });
-
+        document.querySelector('.tab-button').click();
+        
+        // ... (rest of your existing script for fetching and filtering reviews)
         function loadReviewsData() {
             const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxHVtT4zs1upveIiOYoBO_ilpYj4srDfz-RPGzDuwm89R4OHYMRxb8A9MuQ01G7_Lls/exec'; 
 
@@ -776,7 +898,6 @@
             endDateFilter.value = '';
             applyFilters();
         });
-
     </script>
 
 </body>
