@@ -1,0 +1,1474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moving Forward Plan - Revenue vs. All Financial Metrics</title>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Source Sans Pro', sans-serif;
+            overflow-y: auto;
+            background-color: #f5f7fa;
+        }
+        .slide {
+            width: 1280px;
+            min-height: 720px;
+            position: relative;
+            background-color: #ffffff;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+        }
+        .header {
+            background-color: #1a4f8a;
+            color: white;
+            padding: 20px 70px;
+        }
+        .title {
+            font-size: 40px;
+            font-weight: 700;
+        }
+        .content {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            padding: 20px 50px 80px 50px;
+        }
+        .controls-section {
+            margin-bottom: 15px;
+        }
+        .project-controls-toggle {
+            background-color: #1a4f8a;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 15px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            height: 40px;
+        }
+        .project-controls-toggle i {
+            margin-right: 8px;
+        }
+        .project-controls-panel {
+            background-color: #f8fafd;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+            position: relative;
+            z-index: 10;
+            opacity: 0;
+            max-height: 0;
+            padding: 0 15px;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+        .project-controls-panel.show {
+            opacity: 1;
+            max-height: 200px;
+            padding: 15px;
+        }
+        .project-controls-panel.overlay {
+            position: absolute;
+            top: 60px;
+            left: 50px;
+            right: 50px;
+            z-index: 1000;
+            background-color: rgba(248, 250, 253, 0.95);
+            backdrop-filter: blur(5px);
+            border: 2px solid #1a4f8a;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        .project-controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        .project-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            padding: 8px;
+            border-radius: 5px;
+            transition: background-color 0.2s;
+        }
+        .project-item:hover {
+            background-color: rgba(26, 79, 138, 0.05);
+        }
+        .project-name {
+            font-size: 14px;
+            color: #5a6a85;
+            margin-left: 8px;
+            font-weight: 500;
+        }
+        .toggle {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+        }
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 20px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #1a4f8a;
+        }
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+        .chart-section {
+            margin-bottom: 20px;
+            height: 450px;
+            transition: opacity 0.3s ease;
+        }
+        .chart-section.dimmed {
+            opacity: 0.2;
+        }
+        .chart-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        .metric-selector {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+        }
+        .metric-selector-toggle {
+            background-color: #1a4f8a;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 15px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            height: 40px;
+        }
+        .metric-selector-toggle i {
+            margin-left: 8px;
+        }
+        .utility-button {
+            padding: 10px 15px;
+            font-size: 14px;
+            font-weight: 600;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            height: 40px;
+        }
+        .utility-button i {
+            margin-right: 8px;
+        }
+        .utility-button.debug {
+            background-color: #6c757d;
+        }
+        .utility-button.reload {
+            background-color: #28a745;
+        }
+        .metric-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding: 15px;
+            width: 250px;
+            margin-top: 10px;
+            display: none;
+            z-index: 1000;
+        }
+        .metric-dropdown.show {
+            display: block;
+        }
+        .metric-options {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .metric-option {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+        }
+        .metric-option input {
+            margin-right: 10px;
+        }
+        .metric-option label {
+            font-size: 14px;
+            color: #333;
+            cursor: pointer;
+        }
+        .legend {
+            display: flex;
+            justify-content: center;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 0 15px 5px;
+            font-size: 14px;
+        }
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        .data-table-section {
+            margin-top: 20px;
+            background-color: #f8fafd;
+            border-radius: 10px;
+            padding: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        .data-table th,
+        .data-table td {
+            padding: 8px;
+            text-align: right;
+            border-bottom: 1px solid #ddd;
+        }
+        .data-table th {
+            background-color: #1a4f8a;
+            color: white;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+        .data-table th:first-child,
+        .data-table td:first-child {
+            text-align: left;
+            position: sticky;
+            left: 0;
+            background-color: inherit;
+        }
+        .data-table th:first-child {
+            background-color: #1a4f8a;
+        }
+        .data-table td:first-child {
+            background-color: #f8fafd;
+            font-weight: 600;
+        }
+        .historical-data {
+            background-color: #e8f4fd;
+        }
+        .projected-data {
+            background-color: #fff2e8;
+        }
+        .summary-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a4f8a;
+        }
+        .stat-value.profit-positive {
+            color: #4caf50;
+        }
+        .stat-value.profit-negative {
+            color: #f44336;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #5a6a85;
+        }
+        .navigation {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            z-index: 10;
+            background-color: rgba(26, 79, 138, 0.9);
+            padding: 12px 0;
+            border-radius: 10px 10px 0 0;
+        }
+        .nav-button {
+            background-color: #ffffff;
+            color: #1a4f8a;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .nav-button:hover:not(:disabled) {
+            background-color: #f0f5ff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        .nav-button i {
+            margin-right: 8px;
+        }
+        .nav-button.next i {
+            margin-right: 0;
+            margin-left: 8px;
+        }
+        .debug-info {
+            background-color: #f0f0f0;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide">
+        <div class="header">
+            <h1 class="title">TPO - Moving Forward Plan - Revenue vs. All Financial Metrics</h1>
+        </div>
+        <div class="content">
+            <!-- Controls Section -->
+            <div class="controls-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <div style="display: flex; gap: 10px;">
+                        <button class="project-controls-toggle" onclick="toggleProjectControls()">
+                            <i class="fas fa-tasks"></i>
+                            Project Selection
+                            <i class="fas fa-chevron-down" id="projectToggleIcon" style="margin-left: 8px;"></i>
+                        </button>
+                        
+                        <button class="metric-selector-toggle" onclick="toggleMetricSelector()" style="position: relative;">
+                            <i class="fas fa-chart-line"></i>
+                            Select Metrics
+                            <i class="fas fa-caret-down" style="margin-left: 8px;"></i>
+                        </button>
+                        
+                        <!-- Move metric dropdown here -->
+                        <div class="metric-dropdown" id="metricDropdown" style="position: absolute; top: 45px; left: 200px; z-index: 1000;">
+                            <div class="metric-options">
+                                <div class="metric-option">
+                                    <input type="checkbox" id="metric-revenue" checked onchange="updateChart()">
+                                    <label for="metric-revenue">Revenue</label>
+                                </div>
+                                <div class="metric-option">
+                                    <input type="checkbox" id="metric-admin-expenses" onchange="updateChart()">
+                                    <label for="metric-admin-expenses">Admin Expenses</label>
+                                </div>
+                                <div class="metric-option">
+                                    <input type="checkbox" id="metric-sales-expenses" onchange="updateChart()">
+                                    <label for="metric-sales-expenses">Sales Expenses</label>
+                                </div>
+                                <div class="metric-option">
+                                    <input type="checkbox" id="metric-cogs" onchange="updateChart()">
+                                    <label for="metric-cogs">COGS</label>
+                                </div>
+                                <div class="metric-option">
+                                    <input type="checkbox" id="metric-net-profit" onchange="updateChart()">
+                                    <label for="metric-net-profit">Net Profit/Loss</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="toggleDebugPanel()" class="utility-button debug">
+                            <i class="fas fa-bug"></i> Debug
+                        </button>
+                        
+                        <button onclick="loadData()" class="utility-button reload">
+                            <i class="fas fa-sync-alt"></i> Reload Data
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="project-controls-panel" id="projectControlsPanel">
+                    <div class="project-controls-grid" id="projectControlsGrid">
+                        <!-- Projects will be populated dynamically -->
+                    </div>
+                </div>
+                
+                <!-- Debug info - collapsible -->
+                <div class="debug-info" id="debugInfo" style="display: none;">
+                    Debug info will appear here...
+                </div>
+            </div>
+            
+            <!-- Chart Section -->
+            <div class="chart-section">
+                <div class="chart-container">
+                    <canvas id="projectionChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="legend" id="chartLegend"></div>
+            
+            <div class="data-table-section">
+                <table class="data-table" id="dataTable">
+                    <thead>
+                        <tr id="tableHeader">
+                            <th>Period</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="summary-stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="projectedRevenue">฿0M</div>
+                    <div class="stat-label">Projected Annual Revenue</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="projectedAdminExpenses">฿0M</div>
+                    <div class="stat-label">Projected Annual Admin Expenses</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="projectedSalesExpenses">฿0M</div>
+                    <div class="stat-label">Projected Annual Sales Expenses</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="projectedCOGS">฿0M</div>
+                    <div class="stat-label">Projected Annual COGS</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="projectedNetProfit">฿0M</div>
+                    <div class="stat-label">Projected Annual Net Profit/Loss</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Navigation buttons -->
+        <div class="navigation">
+            <button class="nav-button home" onclick="goHome()">
+                <i class="fas fa-home"></i> Home
+            </button>
+            <button class="nav-button prev" onclick="goPrev()">
+                <i class="fas fa-arrow-left"></i> Previous
+            </button>
+            <button class="nav-button next" onclick="goNext()">
+                Next <i class="fas fa-arrow-right"></i>
+            </button>
+        </div>
+    </div>
+    
+<script>
+    // Global variables
+    let financialData = [];
+    let chartInstance = null;
+    
+    // Debug function
+    function debugLog(message) {
+        console.log(message);
+        const debugDiv = document.getElementById('debugInfo');
+        if (debugDiv) {
+            debugDiv.innerHTML += new Date().toLocaleTimeString() + ': ' + message + '<br>';
+            debugDiv.scrollTop = debugDiv.scrollHeight;
+        }
+    }
+    
+    // Metric colors - historical vs projected
+    const metricColors = {
+        'Revenue': {
+            historical: '#4361ee',
+            projected: '#8fa4f3'  // Lighter blue
+        },
+        'Admin Expense': {
+            historical: '#ff6b6b', 
+            projected: '#ff9999'  // Lighter red
+        },
+        'Selling Expense': {
+            historical: '#ffa500',
+            projected: '#ffcc66'  // Lighter orange
+        },
+        'COGS': {
+            historical: '#2a9d8f',
+            projected: '#66c2c2'  // Lighter teal
+        },
+        'Profit & Loss': {
+            historical: '#f44336',
+            historicalPositive: '#4caf50',  // Green for historical profit
+            projectedNegative: '#ff69b4',
+            projectedPositive: '#4caf50'
+        }
+    };
+    
+    // Simple CSV parser - handles quoted fields properly
+    function parseCSV(csvText) {
+        debugLog('Starting CSV parse...');
+        
+        const lines = csvText.trim().split('\n');
+        debugLog(`Found ${lines.length} lines`);
+        
+        if (lines.length < 2) {
+            debugLog('ERROR: CSV has less than 2 lines');
+            return [];
+        }
+        
+        // Parse header
+        const headers = parseCSVRow(lines[0]);
+        debugLog(`Headers: ${headers.join(', ')}`);
+        
+        const data = [];
+        
+        for (let i = 1; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (!line) continue;
+            
+            const values = parseCSVRow(line);
+            
+            if (values.length !== headers.length) {
+                debugLog(`WARNING: Line ${i+1} has ${values.length} values, expected ${headers.length}`);
+                continue;
+            }
+            
+            const row = {};
+            headers.forEach((header, index) => {
+                const value = values[index];
+                
+                if (header === 'Month') {
+                    row[header] = value;
+                } else if (header === 'DataType') {
+                    row[header] = value;
+                } else if (header === 'Project') {
+                    // Clean up project name - remove quotes and newlines
+                    row[header] = value.replace(/"/g, '').replace(/\n/g, '').trim();
+                } else {
+                    // Parse numeric values - remove currency symbols and commas
+                    const cleanValue = value.replace(/[฿,"]/g, '').trim();
+                    row[header] = parseFloat(cleanValue) || 0;
+                }
+            });
+            
+            data.push(row);
+        }
+        
+        debugLog(`Parsed ${data.length} data rows`);
+        
+        // Show sample of parsed data
+        if (data.length > 0) {
+            debugLog(`Sample row: ${JSON.stringify(data[0])}`);
+        }
+        
+        return data;
+    }
+    
+    // Parse a single CSV row, handling quoted fields
+    function parseCSVRow(line) {
+        const result = [];
+        let current = '';
+        let inQuotes = false;
+        
+        for (let i = 0; i < line.length; i++) {
+            const char = line[i];
+            
+            if (char === '"') {
+                inQuotes = !inQuotes;
+            } else if (char === ',' && !inQuotes) {
+                result.push(current.trim());
+                current = '';
+            } else {
+                current += char;
+            }
+        }
+        
+        result.push(current.trim());
+        return result;
+    }
+    
+    // Load CSV data from external file
+    async function loadData() {
+        debugLog('Loading Financial-data.csv...');
+        
+        try {
+            const response = await fetch('Financial-data.csv');
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const csvText = await response.text();
+            debugLog(`CSV loaded: ${csvText.length} characters`);
+            
+            financialData = parseCSV(csvText);
+            
+            if (financialData.length === 0) {
+                throw new Error('No data parsed from CSV');
+            }
+            
+            debugLog(`Successfully loaded ${financialData.length} rows`);
+            
+            // Populate UI
+            populateProjectControls();
+            updateChart();
+            
+        } catch (error) {
+            debugLog(`ERROR: ${error.message}`);
+            
+            // Show error in UI with helpful message
+            const grid = document.getElementById('projectControlsGrid');
+            if (grid) {
+                grid.innerHTML = `
+                    <div style="color: red; padding: 20px;">
+                        <strong>Error loading CSV:</strong><br>
+                        ${error.message}<br><br>
+                        <div style="background: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 5px;">
+                            <strong>Local Development:</strong><br>
+                            • CORS error is normal when running from file:// protocol<br>
+                            • Upload both files to a web server to test properly<br><br>
+                            <strong>Production:</strong><br>
+                            • Make sure Financial-data.csv is in the same directory as this HTML file<br>
+                            • Both files should be accessible via HTTP/HTTPS
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Load sample data for local testing
+            loadSampleData();
+        }
+    }
+    
+    // Sample data for local testing when CSV fails to load
+    function loadSampleData() {
+        debugLog('Loading sample data for local testing...');
+        
+        financialData = [
+            // Current THC Products - Historical
+            {"Month": "01/2024", "DataType": "Historical", "Project": "Current THC Products", "Revenue": 55800, "COGS": 133712, "Admin Expense": 90979, "Selling Expense": 84732, "Total Expenses": 175711, "Profit & Loss": -253622},
+            {"Month": "02/2024", "DataType": "Historical", "Project": "Current THC Products", "Revenue": 152100, "COGS": 718, "Admin Expense": 129804, "Selling Expense": 84962, "Total Expenses": 214766, "Profit & Loss": -63383},
+            {"Month": "07/2025", "DataType": "Historical", "Project": "Current THC Products", "Revenue": 830435, "COGS": 466414, "Admin Expense": 1490633, "Selling Expense": 783667, "Total Expenses": 2274300, "Profit & Loss": -1910280},
+            
+            // Current THC Products - Projected
+            {"Month": "08/2025", "DataType": "Projected", "Project": "Current THC Products", "Revenue": 1686108, "COGS": 655925, "Admin Expense": 1418141, "Selling Expense": 807073, "Total Expenses": 2225213, "Profit & Loss": -1195030},
+            {"Month": "12/2026", "DataType": "Projected", "Project": "Current THC Products", "Revenue": 1939024, "COGS": 754314, "Admin Expense": 1418141, "Selling Expense": 807073, "Total Expenses": 2225213, "Profit & Loss": -1040503},
+            
+            // Creatine Powder - Projected
+            {"Month": "12/2025", "DataType": "Projected", "Project": "Creatine Powder", "Revenue": 150000, "COGS": 37500, "Admin Expense": 0, "Selling Expense": 40000, "Total Expenses": 40000, "Profit & Loss": 72500},
+            {"Month": "07/2026", "DataType": "Projected", "Project": "Creatine Powder", "Revenue": 700000, "COGS": 175000, "Admin Expense": 7143, "Selling Expense": 160000, "Total Expenses": 167143, "Profit & Loss": 357857},
+            {"Month": "12/2026", "DataType": "Projected", "Project": "Creatine Powder", "Revenue": 1000000, "COGS": 250000, "Admin Expense": 7143, "Selling Expense": 200000, "Total Expenses": 207143, "Profit & Loss": 542857},
+            
+            // CBD/CBN Sleep aid gummies - Projected  
+            {"Month": "12/2025", "DataType": "Projected", "Project": "CBD/CBN Sleep aid gummies", "Revenue": 150000, "COGS": 37500, "Admin Expense": 0, "Selling Expense": 40000, "Total Expenses": 40000, "Profit & Loss": 72500},
+            {"Month": "12/2026", "DataType": "Projected", "Project": "CBD/CBN Sleep aid gummies", "Revenue": 600000, "COGS": 150000, "Admin Expense": 7143, "Selling Expense": 120000, "Total Expenses": 127143, "Profit & Loss": 322857}
+        ];
+        
+        debugLog(`Loaded ${financialData.length} sample rows for testing`);
+        
+        // Populate UI
+        populateProjectControls();
+        updateChart();
+    }
+    
+    // Get unique projects from data
+    function getUniqueProjects() {
+        const projects = [...new Set(financialData.map(row => row.Project))];
+        debugLog(`Found projects: ${projects.join(', ')}`);
+        return projects.sort();
+    }
+    
+    // Get unique months from data
+    function getUniqueMonths() {
+        const months = [...new Set(financialData.map(row => row.Month))];
+        return months.sort((a, b) => {
+            const [monthA, yearA] = a.split('/').map(Number);
+            const [monthB, yearB] = b.split('/').map(Number);
+            return yearA - yearB || monthA - monthB;
+        });
+    }
+    
+    // Populate project controls
+    function populateProjectControls() {
+        const grid = document.getElementById('projectControlsGrid');
+        const projects = getUniqueProjects();
+        
+        debugLog(`Populating ${projects.length} projects`);
+        
+        grid.innerHTML = '';
+        
+        projects.forEach(project => {
+            const projectItem = document.createElement('div');
+            projectItem.className = 'project-item';
+            
+            // Check Current THC Products by default
+            const isDefault = project.toLowerCase().includes('thc') || project.toLowerCase().includes('current');
+            
+            projectItem.innerHTML = `
+                <label class="toggle">
+                    <input type="checkbox" ${isDefault ? 'checked' : ''} onchange="updateChart()" data-project="${project}">
+                    <span class="slider"></span>
+                </label>
+                <div class="project-name">${project}</div>
+            `;
+            
+            grid.appendChild(projectItem);
+        });
+    }
+    
+    // Get aggregated data for selected projects
+    function getAggregatedData(selectedProjects, dataType, metric) {
+        const months = getUniqueMonths();
+        const result = {};
+        
+        months.forEach(month => {
+            result[month] = 0;
+            
+            selectedProjects.forEach(project => {
+                const row = financialData.find(r => 
+                    r.Project === project && 
+                    r.DataType === dataType && 
+                    r.Month === month
+                );
+                
+                if (row && row[metric] !== undefined) {
+                    result[month] += row[metric];
+                }
+            });
+        });
+        
+        return result;
+    }
+    
+    // Update chart
+    function updateChart() {
+        const selectedProjects = Array.from(document.querySelectorAll('input[data-project]:checked'))
+            .map(cb => cb.dataset.project);
+        
+        debugLog(`Updating chart for projects: ${selectedProjects.join(', ')}`);
+        
+        if (selectedProjects.length === 0 || financialData.length === 0) {
+            debugLog('No projects selected or no data available');
+            return;
+        }
+        
+        const showRevenue = document.getElementById('metric-revenue').checked;
+        const showAdminExpenses = document.getElementById('metric-admin-expenses').checked;
+        const showSalesExpenses = document.getElementById('metric-sales-expenses').checked;
+        const showCOGS = document.getElementById('metric-cogs').checked;
+        const showNetProfit = document.getElementById('metric-net-profit').checked;
+        
+        const months = getUniqueMonths();
+        const datasets = [];
+        
+        debugLog(`Chart will show ${months.length} months`);
+        
+        // Revenue
+        if (showRevenue) {
+            const historicalRevenue = getAggregatedData(selectedProjects, 'Historical', 'Revenue');
+            const projectedRevenue = getAggregatedData(selectedProjects, 'Projected', 'Revenue');
+            
+            // Create connected data for smooth transition
+            const historicalData = months.map(month => historicalRevenue[month] || null);
+            const projectedData = months.map(month => projectedRevenue[month] || null);
+            
+            // Find connection point
+            const lastHistoricalIndex = historicalData.findLastIndex(val => val !== null);
+            const firstProjectedIndex = projectedData.findIndex(val => val !== null);
+            
+            // Connect the lines by extending historical to first projected point
+            if (lastHistoricalIndex >= 0 && firstProjectedIndex >= 0) {
+                historicalData[firstProjectedIndex] = projectedData[firstProjectedIndex];
+            }
+            
+            datasets.push({
+                label: 'Revenue (Historical)',
+                data: historicalData,
+                borderColor: metricColors.Revenue.historical,
+                backgroundColor: metricColors.Revenue.historical + '20',
+                borderWidth: 3,
+                fill: false,
+                tension: 0.4  // Smoother curves
+            });
+            
+            datasets.push({
+                label: 'Revenue (Projected)',
+                data: projectedData,
+                borderColor: metricColors.Revenue.projected,
+                backgroundColor: metricColors.Revenue.projected + '20',
+                borderWidth: 3,
+                fill: false,
+                tension: 0.4  // Smoother curves
+            });
+        }
+        
+        // Admin Expenses
+        if (showAdminExpenses) {
+            const historicalAdmin = getAggregatedData(selectedProjects, 'Historical', 'Admin Expense');
+            const projectedAdmin = getAggregatedData(selectedProjects, 'Projected', 'Admin Expense');
+            
+            // Create connected data
+            const historicalData = months.map(month => historicalAdmin[month] || null);
+            const projectedData = months.map(month => projectedAdmin[month] || null);
+            
+            // Connect the lines
+            const lastHistoricalIndex = historicalData.findLastIndex(val => val !== null);
+            const firstProjectedIndex = projectedData.findIndex(val => val !== null);
+            
+            if (lastHistoricalIndex >= 0 && firstProjectedIndex >= 0) {
+                historicalData[firstProjectedIndex] = projectedData[firstProjectedIndex];
+            }
+            
+            datasets.push({
+                label: 'Admin Expenses (Historical)',
+                data: historicalData,
+                borderColor: metricColors['Admin Expense'].historical,
+                backgroundColor: metricColors['Admin Expense'].historical + '20',
+                borderWidth: 3,
+                fill: false,
+                tension: 0.4
+            });
+            
+            datasets.push({
+                label: 'Admin Expenses (Projected)',
+                data: projectedData,
+                borderColor: metricColors['Admin Expense'].projected,
+                backgroundColor: metricColors['Admin Expense'].projected + '20',
+                borderWidth: 3,
+                fill: false,
+                tension: 0.4
+            });
+        }
+        
+        // Sales Expenses
+        if (showSalesExpenses) {
+            const historicalSales = getAggregatedData(selectedProjects, 'Historical', 'Selling Expense');
+            const projectedSales = getAggregatedData(selectedProjects, 'Projected', 'Selling Expense');
+            
+            // Create connected data
+            const historicalData = months.map(month => historicalSales[month] || null);
+            const projectedData = months.map(month => projectedSales[month] || null);
+            
+            // Connect the lines
+            const lastHistoricalIndex = historicalData.findLastIndex(val => val !== null);
+            const firstProjectedIndex = projectedData.findIndex(val => val !== null);
+            
+            if (lastHistoricalIndex >= 0 && firstProjectedIndex >= 0) {
+                historicalData[firstProjectedIndex] = projectedData[firstProjectedIndex];
+            }
+            
+            datasets.push({
+                label: 'Sales Expenses (Historical)',
+                data: historicalData,
+                borderColor: metricColors['Selling Expense'].historical,
+                backgroundColor: metricColors['Selling Expense'].historical + '20',
+                borderWidth: 3,
+                fill: false,
+                tension: 0.4
+            });
+            
+            datasets.push({
+                label: 'Sales Expenses (Projected)',
+                data: projectedData,
+                borderColor: metricColors['Selling Expense'].projected,
+                backgroundColor: metricColors['Selling Expense'].projected + '20',
+                borderWidth: 3,
+                fill: false,
+                tension: 0.4
+            });
+        }
+        
+        // COGS
+        if (showCOGS) {
+            const historicalCOGS = getAggregatedData(selectedProjects, 'Historical', 'COGS');
+            const projectedCOGS = getAggregatedData(selectedProjects, 'Projected', 'COGS');
+            
+            // Create connected data
+            const historicalData = months.map(month => historicalCOGS[month] || null);
+            const projectedData = months.map(month => projectedCOGS[month] || null);
+            
+            // Connect the lines
+            const lastHistoricalIndex = historicalData.findLastIndex(val => val !== null);
+            const firstProjectedIndex = projectedData.findIndex(val => val !== null);
+            
+            if (lastHistoricalIndex >= 0 && firstProjectedIndex >= 0) {
+                historicalData[firstProjectedIndex] = projectedData[firstProjectedIndex];
+            }
+            
+            datasets.push({
+                label: 'COGS (Historical)',
+                data: historicalData,
+                borderColor: metricColors.COGS.historical,
+                backgroundColor: metricColors.COGS.historical + '20',
+                borderWidth: 3,
+                fill: false,
+                tension: 0.4
+            });
+            
+            datasets.push({
+                label: 'COGS (Projected)',
+                data: projectedData,
+                borderColor: metricColors.COGS.projected,
+                backgroundColor: metricColors.COGS.projected + '20',
+                borderWidth: 3,
+                fill: false,
+                tension: 0.4
+            });
+        }
+        
+        // Net Profit/Loss - Smart single line with dynamic colors
+        if (showNetProfit) {
+            const historicalProfit = getAggregatedData(selectedProjects, 'Historical', 'Profit & Loss');
+            const projectedProfit = getAggregatedData(selectedProjects, 'Projected', 'Profit & Loss');
+            
+            debugLog(`Historical Profit data:`, historicalProfit);
+            debugLog(`Projected Profit data:`, projectedProfit);
+            debugLog(`Selected projects for profit calc:`, selectedProjects);
+            
+            // Create complete continuous data array - prioritize non-zero values
+            const allProfitData = months.map(month => {
+                // Check historical first (non-zero values)
+                if (historicalProfit[month] !== undefined && historicalProfit[month] !== 0) {
+                    return historicalProfit[month];
+                }
+                // Then check projected (non-zero values)  
+                else if (projectedProfit[month] !== undefined && projectedProfit[month] !== 0) {
+                    return projectedProfit[month];
+                }
+                // Include zeros if they exist in the data
+                else if (historicalProfit[month] === 0) {
+                    return 0;
+                }
+                else if (projectedProfit[month] === 0) {
+                    return 0;
+                }
+                return null;
+            });
+            
+            debugLog(`Complete profit data: ${allProfitData.filter(v => v !== null).length} points`);
+            debugLog(`Sample values: ${allProfitData.slice(0, 5).map(v => v !== null ? v.toLocaleString() : 'null').join(', ')}`);
+            
+            // Debug: Show which periods are historical vs projected
+            const periodTypes = months.map(month => {
+                const hasHistorical = historicalProfit[month] !== undefined && historicalProfit[month] !== 0;
+                const hasProjected = projectedProfit[month] !== undefined && projectedProfit[month] !== 0;
+                return `${month}: ${hasHistorical ? 'H' : ''}${hasProjected ? 'P' : ''}`;
+            });
+            debugLog(`Period types: ${periodTypes.slice(0, 10).join(', ')}`);
+            
+            // Create point colors - GREEN for positive, period-appropriate for negative
+            const pointColors = months.map((month, index) => {
+                const value = allProfitData[index];
+                if (value === null) return null;
+                
+                // Rule: If positive, always GREEN regardless of period
+                if (value > 0) {
+                    return metricColors['Profit & Loss'].historicalPositive; // Green
+                }
+                
+                // For negative/zero values, use period-appropriate color
+                const isHistorical = (historicalProfit[month] !== undefined && historicalProfit[month] !== 0) || 
+                                   (historicalProfit[month] === 0 && projectedProfit[month] === undefined);
+                
+                return isHistorical ? 
+                    metricColors['Profit & Loss'].historical : // Red for historical
+                    metricColors['Profit & Loss'].projectedNegative; // Pink for projected
+            });
+            
+            // Create single dataset with smart segment coloring
+            datasets.push({
+                label: 'Net Profit/Loss',
+                data: allProfitData,
+                backgroundColor: 'transparent',
+                borderWidth: 3,
+                fill: false,
+                tension: 0.4,
+                pointBackgroundColor: pointColors,
+                pointBorderColor: pointColors,
+                pointRadius: 5,
+                pointHoverRadius: 7,
+                segment: {
+                    borderColor: function(ctx) {
+                        const startIndex = ctx.p0DataIndex;
+                        const endIndex = ctx.p1DataIndex;
+                        
+                        const startValue = allProfitData[startIndex];
+                        const endValue = allProfitData[endIndex];
+                        const startMonth = months[startIndex];
+                        const endMonth = months[endIndex];
+                        
+                        // Debug logging for segment coloring
+                        if (startIndex < 5) { // Only log first few segments to avoid spam
+                            console.log(`Segment ${startIndex}-${endIndex}: Start=${startValue}, End=${endValue}, StartMonth=${startMonth}, EndMonth=${endMonth}`);
+                        }
+                        
+                        // RULE: Only if BOTH points are above zero, line segment is GREEN
+                        if (startValue > 0 && endValue > 0) {
+                            if (startIndex < 5) console.log(`-> GREEN (both positive)`);
+                            return metricColors['Profit & Loss'].historicalPositive; // Green
+                        }
+                        
+                        // Both points are at/below zero - use period-appropriate color
+                        const startIsHistorical = (historicalProfit[startMonth] !== undefined && historicalProfit[startMonth] !== 0) || 
+                                                (historicalProfit[startMonth] === 0 && projectedProfit[startMonth] === undefined);
+                        const endIsHistorical = (historicalProfit[endMonth] !== undefined && historicalProfit[endMonth] !== 0) || 
+                                              (historicalProfit[endMonth] === 0 && projectedProfit[endMonth] === undefined);
+                        
+                        // If both points are historical, use red
+                        if (startIsHistorical && endIsHistorical) {
+                            if (startIndex < 5) console.log(`-> RED (both historical, negative/zero)`);
+                            return metricColors['Profit & Loss'].historical; // Red
+                        }
+                        // If both points are projected, use pink
+                        else if (!startIsHistorical && !endIsHistorical) {
+                            if (startIndex < 5) console.log(`-> PINK (both projected, negative/zero)`);
+                            return metricColors['Profit & Loss'].projectedNegative; // Pink
+                        }
+                        // Transition between periods - use starting point's color
+                        else {
+                            if (startIndex < 5) console.log(`-> TRANSITION (${startIsHistorical ? 'RED' : 'PINK'})`);
+                            return startIsHistorical ? 
+                                metricColors['Profit & Loss'].historical : // Red
+                                metricColors['Profit & Loss'].projectedNegative; // Pink
+                        }
+                    }
+                }
+            });
+        }
+        
+        debugLog(`Created ${datasets.length} datasets`);
+        
+        // Create chart
+        const ctx = document.getElementById('projectionChart').getContext('2d');
+        
+        if (chartInstance) {
+            chartInstance.destroy();
+        }
+        
+        chartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: months,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.parsed.y;
+                                if (value === null) return null;
+                                return context.dataset.label + ': ฿' + value.toLocaleString();
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: true,
+                            color: 'rgba(0,0,0,0.1)'
+                        },
+                        ticks: {
+                            maxRotation: 45
+                        }
+                    },
+                    y: {
+                        grid: {
+                            display: true,
+                            color: 'rgba(0,0,0,0.1)'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return '฿' + (value / 1000000).toFixed(1) + 'M';
+                            }
+                        }
+                    }
+                },
+                elements: {
+                    point: {
+                        radius: 4,
+                        hoverRadius: 6
+                    }
+                },
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                }
+            }
+        });
+        
+        // Update legend and table
+        updateLegend(datasets);
+        updateDataTable(selectedProjects, months);
+        updateSummaryStats(selectedProjects);
+    }
+    
+    // Update legend
+    function updateLegend(datasets) {
+        const legend = document.getElementById('chartLegend');
+        legend.innerHTML = '';
+        
+        datasets.forEach(dataset => {
+            const legendItem = document.createElement('div');
+            legendItem.className = 'legend-item';
+            legendItem.innerHTML = `
+                <div class="legend-color" style="background-color: ${dataset.borderColor}"></div>
+                <span>${dataset.label}</span>
+            `;
+            legend.appendChild(legendItem);
+        });
+    }
+    
+    // Update data table
+    function updateDataTable(selectedProjects, months) {
+        const table = document.getElementById('dataTable');
+        const header = document.getElementById('tableHeader');
+        const body = document.getElementById('tableBody');
+        
+        // Clear existing content
+        header.innerHTML = '<th>Metric</th>';
+        body.innerHTML = '';
+        
+        // Add month headers
+        months.forEach(month => {
+            const th = document.createElement('th');
+            th.textContent = month;
+            
+            // Determine if historical or projected
+            const isHistorical = financialData.some(row => 
+                row.Month === month && row.DataType === 'Historical'
+            );
+            th.className = isHistorical ? 'historical-data' : 'projected-data';
+            
+            header.appendChild(th);
+        });
+        
+        // Add data rows for selected metrics
+        const metricsToShow = [];
+        
+        if (document.getElementById('metric-revenue').checked) {
+            metricsToShow.push({ key: 'Revenue', label: 'Revenue' });
+        }
+        if (document.getElementById('metric-admin-expenses').checked) {
+            metricsToShow.push({ key: 'Admin Expense', label: 'Admin Expenses' });
+        }
+        if (document.getElementById('metric-sales-expenses').checked) {
+            metricsToShow.push({ key: 'Selling Expense', label: 'Sales Expenses' });
+        }
+        if (document.getElementById('metric-cogs').checked) {
+            metricsToShow.push({ key: 'COGS', label: 'COGS' });
+        }
+        if (document.getElementById('metric-net-profit').checked) {
+            metricsToShow.push({ key: 'Profit & Loss', label: 'Net Profit/Loss' });
+        }
+        
+        metricsToShow.forEach(metric => {
+            const row = document.createElement('tr');
+            
+            const labelCell = document.createElement('td');
+            labelCell.textContent = metric.label;
+            row.appendChild(labelCell);
+            
+            months.forEach(month => {
+                const cell = document.createElement('td');
+                
+                // Determine if this month is historical or projected
+                const isHistorical = financialData.some(row => 
+                    row.Month === month && row.DataType === 'Historical'
+                );
+                const dataType = isHistorical ? 'Historical' : 'Projected';
+                
+                // Calculate aggregated value for this month, metric, and data type
+                let value = 0;
+                selectedProjects.forEach(project => {
+                    const dataRow = financialData.find(r => 
+                        r.Project === project && 
+                        r.Month === month && 
+                        r.DataType === dataType
+                    );
+                    if (dataRow && dataRow[metric.key] !== undefined) {
+                        value += dataRow[metric.key];
+                    }
+                });
+                
+                // Only show value if we found data for this month/datatype combination
+                if (value !== 0 || financialData.some(r => 
+                    selectedProjects.includes(r.Project) && 
+                    r.Month === month && 
+                    r.DataType === dataType && 
+                    r[metric.key] !== undefined
+                )) {
+                    cell.textContent = '฿' + value.toLocaleString();
+                } else {
+                    cell.textContent = '-';
+                }
+                
+                cell.className = isHistorical ? 'historical-data' : 'projected-data';
+                
+                row.appendChild(cell);
+            });
+            
+            body.appendChild(row);
+        });
+        
+        // Add Total Investment row if all three expense metrics are selected
+        const showAdminExpenses = document.getElementById('metric-admin-expenses').checked;
+        const showSalesExpenses = document.getElementById('metric-sales-expenses').checked;
+        const showCOGS = document.getElementById('metric-cogs').checked;
+        
+        if (showAdminExpenses && showSalesExpenses && showCOGS) {
+            const totalInvestmentRow = document.createElement('tr');
+            totalInvestmentRow.style.borderTop = '2px solid #1a4f8a';
+            totalInvestmentRow.style.fontWeight = 'bold';
+            totalInvestmentRow.style.backgroundColor = '#f0f5ff';
+            
+            const labelCell = document.createElement('td');
+            labelCell.textContent = 'Total Investment';
+            labelCell.style.fontWeight = 'bold';
+            labelCell.style.color = '#1a4f8a';
+            totalInvestmentRow.appendChild(labelCell);
+            
+            months.forEach(month => {
+                const cell = document.createElement('td');
+                
+                // Determine if this month is historical or projected
+                const isHistorical = financialData.some(row => 
+                    row.Month === month && row.DataType === 'Historical'
+                );
+                const dataType = isHistorical ? 'Historical' : 'Projected';
+                
+                // Calculate total investment (Admin + Sales + COGS)
+                let totalInvestment = 0;
+                const expenseMetrics = ['Admin Expense', 'Selling Expense', 'COGS'];
+                
+                expenseMetrics.forEach(expenseMetric => {
+                    selectedProjects.forEach(project => {
+                        const dataRow = financialData.find(r => 
+                            r.Project === project && 
+                            r.Month === month && 
+                            r.DataType === dataType
+                        );
+                        if (dataRow && dataRow[expenseMetric] !== undefined) {
+                            totalInvestment += dataRow[expenseMetric];
+                        }
+                    });
+                });
+                
+                // Only show value if we found data for this month/datatype combination
+                if (totalInvestment !== 0 || financialData.some(r => 
+                    selectedProjects.includes(r.Project) && 
+                    r.Month === month && 
+                    r.DataType === dataType && 
+                    (r['Admin Expense'] !== undefined || r['Selling Expense'] !== undefined || r['COGS'] !== undefined)
+                )) {
+                    cell.textContent = '฿' + totalInvestment.toLocaleString();
+                } else {
+                    cell.textContent = '-';
+                }
+                
+                cell.className = isHistorical ? 'historical-data' : 'projected-data';
+                cell.style.fontWeight = 'bold';
+                
+                totalInvestmentRow.appendChild(cell);
+            });
+            
+            body.appendChild(totalInvestmentRow);
+        }
+    }
+    
+    // Update summary stats
+    function updateSummaryStats(selectedProjects) {
+        const projectedMonths = getUniqueMonths().filter(month => 
+            financialData.some(row => row.Month === month && row.DataType === 'Projected')
+        );
+        
+        const metrics = ['Revenue', 'Admin Expense', 'Selling Expense', 'COGS', 'Profit & Loss'];
+        const totals = {};
+        
+        metrics.forEach(metric => {
+            totals[metric] = 0;
+            projectedMonths.forEach(month => {
+                selectedProjects.forEach(project => {
+                    const row = financialData.find(r => 
+                        r.Project === project && r.Month === month
+                    );
+                    if (row && row[metric] !== undefined) {
+                        totals[metric] += row[metric];
+                    }
+                });
+            });
+        });
+        
+        document.getElementById('projectedRevenue').textContent = formatCurrency(totals.Revenue);
+        document.getElementById('projectedAdminExpenses').textContent = formatCurrency(totals['Admin Expense']);
+        document.getElementById('projectedSalesExpenses').textContent = formatCurrency(totals['Selling Expense']);
+        document.getElementById('projectedCOGS').textContent = formatCurrency(totals.COGS);
+        
+        const netProfitElement = document.getElementById('projectedNetProfit');
+        netProfitElement.textContent = formatCurrency(totals['Profit & Loss']);
+        netProfitElement.className = 'stat-value ' + (totals['Profit & Loss'] >= 0 ? 'profit-positive' : 'profit-negative');
+    }
+    
+    // Format currency
+    function formatCurrency(value) {
+        const millions = value / 1000000;
+        return '฿' + millions.toFixed(1) + 'M';
+    }
+    
+    // Helper function for Net Profit colors
+    function getNetProfitColor(colorType) {
+        switch (colorType) {
+            case 'historicalNegative':
+                return {
+                    color: metricColors['Profit & Loss'].historical,
+                    label: 'Net Loss (Historical)'
+                };
+            case 'historicalPositive':
+                return {
+                    color: metricColors['Profit & Loss'].historicalPositive,
+                    label: 'Net Profit (Historical)'
+                };
+            case 'projectedNegative':
+                return {
+                    color: metricColors['Profit & Loss'].projectedNegative,
+                    label: 'Net Loss (Projected)'
+                };
+            case 'projectedPositive':
+                return {
+                    color: metricColors['Profit & Loss'].projectedPositive,
+                    label: 'Net Profit (Projected)'
+                };
+            default:
+                return {
+                    color: metricColors['Profit & Loss'].historical,
+                    label: 'Net Profit/Loss'
+                };
+        }
+    }
+    
+    // UI functions
+    function toggleProjectControls() {
+        const panel = document.getElementById('projectControlsPanel');
+        const icon = document.getElementById('projectToggleIcon');
+        
+        panel.classList.toggle('show');
+        
+        if (panel.classList.contains('show')) {
+            icon.classList.remove('fa-chevron-down');
+            icon.classList.add('fa-chevron-up');
+        } else {
+            icon.classList.remove('fa-chevron-up');
+            icon.classList.add('fa-chevron-down');
+        }
+    }
+    
+    function toggleMetricSelector() {
+        document.getElementById('metricDropdown').classList.toggle('show');
+    }
+    
+    // Close metric selector when clicking outside
+    document.addEventListener('click', function(event) {
+        const dropdown = document.getElementById('metricDropdown');
+        const toggle = event.target.closest('.metric-selector-toggle');
+        
+        if (!toggle && !dropdown.contains(event.target)) {
+            dropdown.classList.remove('show');
+        }
+    });
+    
+    function toggleDebugPanel() {
+        const debugPanel = document.getElementById('debugInfo');
+        const debugButton = event.target;
+        
+        if (debugPanel.style.display === 'none' || debugPanel.style.display === '') {
+            debugPanel.style.display = 'block';
+            debugButton.innerHTML = '<i class="fas fa-bug"></i> Hide Debug';
+        } else {
+            debugPanel.style.display = 'none';
+            debugButton.innerHTML = '<i class="fas fa-bug"></i> Debug';
+        }
+    }
+    
+    // Navigation functions
+    function goHome() {
+        window.location.href = 'index.html';
+    }
+    
+    function goPrev() {
+        window.location.href = '04-5-MovingForward-RevenueVsProfitLoss.html';
+    }
+    
+    function goNext() {
+        console.log('This is the last slide');
+    }
+    
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        debugLog('Page loaded, starting data load...');
+        loadData();
+    });
+</script>
+</body>
+</html>
