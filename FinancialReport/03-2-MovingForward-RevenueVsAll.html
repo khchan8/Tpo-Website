@@ -1272,70 +1272,7 @@
             
             body.appendChild(row);
         });
-        
-        // Add Total Investment row if all three expense metrics are selected
-        const showAdminExpenses = document.getElementById('metric-admin-expenses').checked;
-        const showSalesExpenses = document.getElementById('metric-sales-expenses').checked;
-        const showCOGS = document.getElementById('metric-cogs').checked;
-        
-        if (showAdminExpenses && showSalesExpenses && showCOGS) {
-            const totalInvestmentRow = document.createElement('tr');
-            totalInvestmentRow.style.borderTop = '2px solid #1a4f8a';
-            totalInvestmentRow.style.fontWeight = 'bold';
-            totalInvestmentRow.style.backgroundColor = '#f0f5ff';
-            
-            const labelCell = document.createElement('td');
-            labelCell.textContent = 'Total Investment';
-            labelCell.style.fontWeight = 'bold';
-            labelCell.style.color = '#1a4f8a';
-            totalInvestmentRow.appendChild(labelCell);
-            
-            months.forEach(month => {
-                const cell = document.createElement('td');
-                
-                // Determine if this month is historical or projected
-                const isHistorical = financialData.some(row => 
-                    row.Month === month && row.DataType === 'Historical'
-                );
-                const dataType = isHistorical ? 'Historical' : 'Projected';
-                
-                // Calculate total investment (Admin + Sales + COGS)
-                let totalInvestment = 0;
-                const expenseMetrics = ['Admin Expense', 'Selling Expense', 'COGS'];
-                
-                expenseMetrics.forEach(expenseMetric => {
-                    selectedProjects.forEach(project => {
-                        const dataRow = financialData.find(r => 
-                            r.Project === project && 
-                            r.Month === month && 
-                            r.DataType === dataType
-                        );
-                        if (dataRow && dataRow[expenseMetric] !== undefined) {
-                            totalInvestment += dataRow[expenseMetric];
-                        }
-                    });
-                });
-                
-                // Only show value if we found data for this month/datatype combination
-                if (totalInvestment !== 0 || financialData.some(r => 
-                    selectedProjects.includes(r.Project) && 
-                    r.Month === month && 
-                    r.DataType === dataType && 
-                    (r['Admin Expense'] !== undefined || r['Selling Expense'] !== undefined || r['COGS'] !== undefined)
-                )) {
-                    cell.textContent = '฿' + totalInvestment.toLocaleString();
-                } else {
-                    cell.textContent = '-';
-                }
-                
-                cell.className = isHistorical ? 'historical-data' : 'projected-data';
-                cell.style.fontWeight = 'bold';
-                
-                totalInvestmentRow.appendChild(cell);
-            });
-            
-            body.appendChild(totalInvestmentRow);
-        }
+
     }
     
     // Update summary stats
