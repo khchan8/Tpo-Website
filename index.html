@@ -54,6 +54,20 @@
        body.logged-in #topbar .user-info { display: flex !important; } /* Show user info */
     }
     /* Logout button styles removed */
+    
+    /* Sales Token Menu Visibility Styles */
+    .menu-sales-tools { display: block !important; }
+    .menu-performance, .menu-erp, .menu-crm, .menu-customer-portal {
+        transition: display 0.3s ease;
+    }
+
+    /* Hide non-sales items for sales-only users */
+    body.sales-only-user .menu-performance,
+    body.sales-only-user .menu-erp,
+    body.sales-only-user .menu-crm,
+    body.sales-only-user .menu-customer-portal {
+        display: none !important;
+    }
   </style>
 
 </head>
@@ -94,7 +108,7 @@
           <!-- Employee Portal Dropdown (Initially Hidden) -->
           <li class="dropdown" id="employeePortalDropdown" style="display: none;"><a href="#"><span>Employee Portal</span> <i class="bi bi-chevron-down"></i></a>
             <ul>
-              <li class="dropdown"><a href="#"><span>Sales Tools</span> <i class="bi bi-chevron-right"></i></a>
+              <li class="dropdown menu-sales-tools"><a href="#"><span>Sales Tools</span> <i class="bi bi-chevron-right"></i></a>
                 <ul>
                   <li><a href="AA-Sales-Tools.html">Auntie Aloha</a></li>
                   <li><a href="MC-Sales-Tools.html">Mana Cannabis</a></li>
@@ -102,15 +116,15 @@
                   <li><a href="TY-Sales-Tools.html">Tyson</a></li>
                 </ul>
               </li>
-              <li><a href="performance.html">Performance</a></li>
-              <li><a href="erp.html">ERP</a></li>
-              <li><a href="CRMv4.html">CRM</a></li>
-              <li class="dropdown"><a href="#"><span>Customer Portal</span> <i class="bi bi-chevron-right"></i></a>
+              <li class="menu-performance"><a href="performance.html">Performance</a></li>
+              <li class="menu-erp"><a href="erp.html">ERP</a></li>
+              <li class="menu-crm"><a href="CRMv4.html">CRM</a></li>
+              <li class="dropdown menu-customer-portal"><a href="#"><span>Customer Portal</span> <i class="bi bi-chevron-right"></i></a>
                  <ul>
                    <li><a href="Fuzzies-data.html">Fuzzies</a></li>
                    <li><a href="Tyson-data.html">Tyson</a></li>
                  </ul>
-              </li>
+               </li>
             </ul>
           </li>
           <!-- Dynamic Login/Logout Link -->
@@ -855,62 +869,130 @@
             // --- Helper: Redirect to Login (New Standard - Optional for index.html) ---
             // function redirectToLogin(reason) { ... } // Not strictly needed if index is public
 
+            // --- Enhanced Authorization Check with Sales Token Support ---
+            function checkAuthorizationWithSalesToken(grantedTokens, userEmail) {
+                console.log("Checking authorization with sales token support for index.html...");
+                
+                // Get UI elements for Navbar and Topbar
+                const loginLogoutLink = document.getElementById('loginLogoutLink');
+                const employeePortalDropdown = document.getElementById('employeePortalDropdown');
+                const loginStatusSpan = document.getElementById('loginStatus');
+                const bodyElement = document.body;
+ 
+                // Check if elements exist before manipulating
+                if (!loginLogoutLink || !employeePortalDropdown || !loginStatusSpan || !bodyElement) {
+                    console.error("Required UI elements for auth check not found (loginLogoutLink, employeePortalDropdown, loginStatusSpan, body).");
+                    return false;
+                }
+ 
+                // Ensure grantedTokens is an array
+                const tokensArray = Array.isArray(grantedTokens) ? grantedTokens : [];
+                
+                // Check if user has only tpoSalesToken
+                const hasOnlySalesToken = tokensArray.length === 1 && tokensArray.includes('tpoSalesToken');
+                
+                // Update UI based on token hierarchy
+                if (hasOnlySalesToken) {
+                    console.log("User has only tpoSalesToken - showing Sales Tools only");
+                    bodyElement.classList.add('sales-only-user');
+                    bodyElement.classList.add('logged-in');
+                    
+                    // Hide non-sales menu items
+                    const nonSalesItems = document.querySelectorAll('.menu-performance, .menu-erp, .menu-crm, .menu-customer-portal');
+                    nonSalesItems.forEach(item => {
+                        item.style.display = 'none';
+                    });
+                } else if (tokensArray.length > 0) {
+                    console.log("User has other tokens - showing all menu items");
+                    bodyElement.classList.remove('sales-only-user');
+                    bodyElement.classList.add('logged-in');
+                    
+                    // Show all menu items
+                    const allMenuItems = document.querySelectorAll('.menu-sales-tools, .menu-performance, .menu-erp, .menu-crm, .menu-customer-portal');
+                    allMenuItems.forEach(item => {
+                        item.style.display = 'block';
+                    });
+                }
+ 
+                // Update Top Bar Status
+                if (userEmail) {
+                    loginStatusSpan.textContent = `Logged in as: ${userEmail}`;
+                } else {
+                    loginStatusSpan.textContent = `Logged in`;
+                }
+ 
+                // Configure Logout link
+                loginLogoutLink.textContent = 'Logout';
+                loginLogoutLink.href = '#';
+                loginLogoutLink.onclick = (e) => {
+                    e.preventDefault();
+                    logout();
+                };
+ 
+                // Show Employee Portal
+                employeePortalDropdown.style.display = 'list-item';
+                
+                return true;
+            }
+ 
             // --- Authorization Check (New Standard - Relies on localStorage) ---
             function checkAuthorization() { // No specific requiredToken for index.html
                 console.log("Checking authorization for index.html...");
  
                 // --- Retrieve data from localStorage ---
                 const sessionToken = localStorage.getItem('tpoSessionToken');
-                const userEmail = localStorage.getItem('tpoUserEmail'); // Keep userEmail check for robustness
+                const userEmail = localStorage.getItem('tpoUserEmail');
+                const grantedTokensString = localStorage.getItem('tpoGrantedTokens');
  
                 // Get UI elements for Navbar and Topbar
                 const loginLogoutLink = document.getElementById('loginLogoutLink');
                 const employeePortalDropdown = document.getElementById('employeePortalDropdown');
-                const loginStatusSpan = document.getElementById('loginStatus'); // Re-add for top bar status
-                const bodyElement = document.body; // Needed for body class
+                const loginStatusSpan = document.getElementById('loginStatus');
+                const bodyElement = document.body;
  
                 // Check if elements exist before manipulating
                 if (!loginLogoutLink || !employeePortalDropdown || !loginStatusSpan || !bodyElement) {
                     console.error("Required UI elements for auth check not found (loginLogoutLink, employeePortalDropdown, loginStatusSpan, body).");
-                    return; // Stop if essential elements are missing
+                    return;
                 }
  
                 // Check if session token exists (and userEmail for extra check)
-                if (sessionToken && userEmail) {
+                if (sessionToken && userEmail && grantedTokensString) {
                     // User is logged in
                     console.log("User is logged in. Updating UI.");
-                    bodyElement.classList.add('logged-in'); // Add class for CSS rules
- 
-                    // Update Top Bar Status
-                    loginStatusSpan.textContent = `Logged in as: ${userEmail}`;
- 
-                    // Configure Logout link
-                    loginLogoutLink.textContent = 'Logout';
-                    loginLogoutLink.href = '#'; // Set href to # to prevent navigation
-                    loginLogoutLink.onclick = (e) => { // Add onclick handler
-                        e.preventDefault(); // Prevent default link behavior
-                        logout();
-                    };
- 
-                    // Show Employee Portal
-                    employeePortalDropdown.style.display = 'list-item';
- 
-                } else {
-                    // User is not logged in
-                    console.log("User is not logged in. Setting default UI.");
-                    bodyElement.classList.remove('logged-in'); // Remove class from body
- 
-                    // Clear Top Bar Status
-                    loginStatusSpan.textContent = '';
- 
-                    // Configure Login link
-                    loginLogoutLink.textContent = 'Login';
-                    loginLogoutLink.href = loginPage; // Link to the appropriate login page
-                    loginLogoutLink.onclick = null; // Remove any previous onclick handler
- 
-                    // Hide Employee Portal
-                    employeePortalDropdown.style.display = 'none';
+                    
+                    let grantedTokens = [];
+                    try {
+                        grantedTokens = JSON.parse(grantedTokensString);
+                        if (!Array.isArray(grantedTokens)) {
+                            console.error('Parsed grantedTokens is not an array:', grantedTokensString);
+                            // Fall through to logged out state
+                        } else {
+                            // Use enhanced authorization with sales token support
+                            checkAuthorizationWithSalesToken(grantedTokens, userEmail);
+                            return;
+                        }
+                    } catch (e) {
+                        console.error('Error parsing granted tokens from localStorage:', e);
+                        // Fall through to logged out state
+                    }
                 }
+                
+                // User is not logged in
+                console.log("User is not logged in. Setting default UI.");
+                bodyElement.classList.remove('logged-in'); // Remove class from body
+                bodyElement.classList.remove('sales-only-user'); // Remove sales-only class
+ 
+                // Clear Top Bar Status
+                loginStatusSpan.textContent = '';
+ 
+                // Configure Login link
+                loginLogoutLink.textContent = 'Login';
+                loginLogoutLink.href = loginPage; // Link to the appropriate login page
+                loginLogoutLink.onclick = null; // Remove any previous onclick handler
+ 
+                // Hide Employee Portal
+                employeePortalDropdown.style.display = 'none';
             }
 
             // --- Run Auth Check on Page Load ---

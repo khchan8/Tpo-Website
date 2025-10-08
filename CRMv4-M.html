@@ -380,7 +380,7 @@
               <!-- Employee Portal Dropdown (Added based on plan) -->
               <li class="dropdown" id="employeePortalDropdown" style="display: none;"><a href="#"><span>Employee Portal</span> <i class="bi bi-chevron-down"></i></a>
                 <ul>
-                  <li class="dropdown"><a href="#"><span>Sales Tools</span> <i class="bi bi-chevron-right"></i></a>
+                  <li class="dropdown menu-sales-tools"><a href="#"><span>Sales Tools</span> <i class="bi bi-chevron-right"></i></a>
                     <ul>
                       <li><a href="AA-Sales-Tools.html">Auntie Aloha</a></li>
                       <li><a href="MC-Sales-Tools.html">Mana Cannabis</a></li>
@@ -388,10 +388,10 @@
                       <li><a href="TY-Sales-Tools.html">Tyson</a></li>
                     </ul>
                   </li>
-                  <li><a href="performance.html">Performance</a></li>
-                  <li><a href="erp.html">ERP</a></li>
+                  <li class="menu-performance"><a href="performance.html">Performance</a></li>
+                  <li class="menu-erp"><a href="erp.html">ERP</a></li>
                   <li><a href="CRMv4.html">CRM</a></li>
-                  <li class="dropdown"><a href="#"><span>Customer Portal</span> <i class="bi bi-chevron-right"></i></a>
+                  <li class="dropdown menu-customer-portal"><a href="#"><span>Customer Portal</span> <i class="bi bi-chevron-right"></i></a>
                      <ul>
                        <li><a href="Fuzzies-data.html">Fuzzies</a></li>
                        <li><a href="Tyson-data.html">Tyson</a></li>
@@ -804,15 +804,15 @@
           const redirectUrl = `${loginPage}?redirectUrl=${encodeURIComponent(window.location.pathname + window.location.search)}&error=${encodeURIComponent(reason)}`;
           window.top.location.href = redirectUrl;
         }
-        // --- Authorization Check (New Standard - Relies on localStorage) ---
-        function checkAuthorization() { // No parameters needed - Updated for Nav Plan v6
+        // --- Authorization Check with Sales Token Blocking ---
+        function checkAuthorization() {
             console.log("Checking authorization for required token:", requiredToken);
  
             // --- Retrieve data from localStorage ---
             const sessionToken = localStorage.getItem('tpoSessionToken');
             const userEmail = localStorage.getItem('tpoUserEmail');
             const grantedTokensString = localStorage.getItem('tpoGrantedTokens');
-            let grantedTokens = []; // Default to empty array
+            let grantedTokens = [];
  
             // Get UI elements for Navbar and Topbar
             const loginLogoutLink = document.getElementById('loginLogoutLink');

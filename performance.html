@@ -175,7 +175,7 @@
           <!-- Employee Portal Dropdown (Initially Hidden) -->
           <li class="dropdown" id="employeePortalDropdown" style="display: none;"><a href="#"><span>Employee Portal</span> <i class="bi bi-chevron-down"></i></a>
             <ul>
-              <li class="dropdown"><a href="#"><span>Sales Tools</span> <i class="bi bi-chevron-right"></i></a>
+              <li class="dropdown menu-sales-tools"><a href="#"><span>Sales Tools</span> <i class="bi bi-chevron-right"></i></a>
                 <ul>
                   <li><a href="AA-Sales-Tools.html">Auntie Aloha</a></li>
                   <li><a href="MC-Sales-Tools.html">Mana Cannabis</a></li>
@@ -183,10 +183,10 @@
                   <li><a href="TY-Sales-Tools.html">Tyson</a></li>
                 </ul>
               </li>
-              <li><a href="performance.html">Performance</a></li>
-              <li><a href="erp.html">ERP</a></li>
-              <li><a href="CRMv4.html">CRM</a></li>
-              <li class="dropdown"><a href="#"><span>Customer Portal</span> <i class="bi bi-chevron-right"></i></a>
+              <li class="menu-performance"><a href="performance.html">Performance</a></li>
+              <li class="menu-erp"><a href="erp.html">ERP</a></li>
+              <li class="menu-crm"><a href="CRMv4.html">CRM</a></li>
+              <li class="dropdown menu-customer-portal"><a href="#"><span>Customer Portal</span> <i class="bi bi-chevron-right"></i></a>
                  <ul>
                    <li><a href="Fuzzies-data.html">Fuzzies</a></li>
                    <li><a href="Tyson-data.html">Tyson</a></li>
@@ -1263,12 +1263,12 @@
         window.top.location.href = loginPage;
     }
 
-    // --- Authorization Check (Runs on Load - LOCAL STORAGE ONLY) ---
-    function checkAuthorization(specificRequiredToken) { // Added parameter
+    // --- Authorization Check with Sales Token Blocking ---
+    function checkAuthorization(specificRequiredToken) {
       const sessionToken = localStorage.getItem('tpoSessionToken');
       const userEmail = localStorage.getItem('tpoUserEmail');
-      const grantedTokensString = localStorage.getItem('tpoGrantedTokens'); // Needed for token check
-      let grantedTokens = []; // Default to empty array
+      const grantedTokensString = localStorage.getItem('tpoGrantedTokens');
+      let grantedTokens = [];
  
       console.log(`Checking local authentication for Performance page, requiring: ${specificRequiredToken}`);
  

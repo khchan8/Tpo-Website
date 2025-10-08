@@ -163,7 +163,7 @@
 			  <!-- Employee Portal Dropdown (Added based on feedback) -->
 		            <li class="dropdown" id="employeePortalDropdown" style="display: none;"><a href="#"><span>Employee Portal</span> <i class="bi bi-chevron-down"></i></a>
 		              <ul>
-		                <li class="dropdown"><a href="#"><span>Sales Tools</span> <i class="bi bi-chevron-right"></i></a>
+		                <li class="dropdown menu-sales-tools"><a href="#"><span>Sales Tools</span> <i class="bi bi-chevron-right"></i></a>
 		                  <ul>
 		                    <li><a href="AA-Sales-Tools.html">Auntie Aloha</a></li>
 		                    <li><a href="MC-Sales-Tools.html">Mana Cannabis</a></li>
@@ -171,10 +171,10 @@
 		                    <li><a href="TY-Sales-Tools.html">Tyson</a></li>
 		                  </ul>
 		                </li>
-		                <li><a href="performance.html">Performance</a></li>
-		                <li><a href="erp.html">ERP</a></li> <!-- Link to current page -->
-		                <li><a href="CRMv4.html">CRM</a></li>
-		                <li class="dropdown"><a href="#"><span>Customer Portal</span> <i class="bi bi-chevron-right"></i></a>
+		                <li class="menu-performance"><a href="performance.html">Performance</a></li>
+		                <li class="menu-erp"><a href="erp.html">ERP</a></li> <!-- Link to current page -->
+		                <li class="menu-crm"><a href="CRMv4.html">CRM</a></li>
+		                <li class="dropdown menu-customer-portal"><a href="#"><span>Customer Portal</span> <i class="bi bi-chevron-right"></i></a>
 		                   <ul>
 		                     <li><a href="Fuzzies-data.html">Fuzzies</a></li>
 		                     <li><a href="Tyson-data.html">Tyson</a></li>
@@ -355,65 +355,74 @@
         window.top.location.href = loginPage;
     }
 
-    // --- Authorization Check (Runs after successful authentication) ---
+    // --- Authorization Check with Sales Token Blocking ---
     function checkAuthorization(grantedTokens, userEmail) {
         console.log("Checking authorization for:", requiredToken);
  
         // Get UI elements for Navbar and Topbar
         const loginLogoutLink = document.getElementById('loginLogoutLink');
         const employeePortalDropdown = document.getElementById('employeePortalDropdown');
-        const loginStatusSpan = document.getElementById('loginStatus'); // Re-add for top bar status
-        const bodyElement = document.body; // Needed for body class
+        const loginStatusSpan = document.getElementById('loginStatus');
+        const bodyElement = document.body;
  
         // Check if elements exist before manipulating
         if (!loginLogoutLink || !employeePortalDropdown || !loginStatusSpan || !bodyElement) {
             console.error("Required UI elements for auth check not found (loginLogoutLink, employeePortalDropdown, loginStatusSpan, body).");
-            return false; // Indicate failure but don't redirect (checkAuthentication handles redirect)
+            return false;
         }
  
-        // Ensure grantedTokens is an array before checking includes()
+        // Ensure grantedTokens is an array
         const tokensArray = Array.isArray(grantedTokens) ? grantedTokens : [];
- 
-        if (!tokensArray.includes(requiredToken)) {
-            // This path might not be strictly necessary if checkAuthentication handles redirects,
-            // but it ensures correct UI state if called directly with invalid tokens.
-            bodyElement.classList.remove('logged-in'); // Ensure logged-out state
-            loginStatusSpan.textContent = ''; // Clear status
-            // Configure Login link
+        
+        // Check if user has only tpoSalesToken (BLOCKED for this page)
+        const hasOnlySalesToken = tokensArray.length === 1 && tokensArray.includes('tpoSalesToken');
+        if (hasOnlySalesToken) {
+            console.log("Access denied. User has only tpoSalesToken which is not sufficient for ERP page.");
+            bodyElement.classList.remove('logged-in');
+            loginStatusSpan.textContent = '';
             loginLogoutLink.textContent = 'Login';
             loginLogoutLink.href = loginPage;
             loginLogoutLink.onclick = null;
-            // Hide Employee Portal
+            employeePortalDropdown.style.display = 'none';
+            redirectToLogin('Access denied. tpoSalesToken does not grant access to ERP page.');
+            return false;
+        }
+ 
+        if (!tokensArray.includes(requiredToken)) {
+            bodyElement.classList.remove('logged-in');
+            loginStatusSpan.textContent = '';
+            loginLogoutLink.textContent = 'Login';
+            loginLogoutLink.href = loginPage;
+            loginLogoutLink.onclick = null;
             employeePortalDropdown.style.display = 'none';
             redirectToLogin(`Access denied. Required permission (${requiredToken}) not found.`);
-            return false; // Indicate authorization failed
+            return false;
         }
+        
         console.log("Authorization successful.");
  
         // Update UI for logged-in state
-        bodyElement.classList.add('logged-in'); // Add class for CSS rules
+        bodyElement.classList.add('logged-in');
  
         // Update Top Bar Status
         if (userEmail) {
             loginStatusSpan.textContent = `Logged in as: ${userEmail}`;
         } else {
-            loginStatusSpan.textContent = `Logged in`; // Fallback
+            loginStatusSpan.textContent = `Logged in`;
         }
  
         // Configure Logout link
         loginLogoutLink.textContent = 'Logout';
-        loginLogoutLink.href = '#'; // Set href to # to prevent navigation
-        loginLogoutLink.onclick = (e) => { // Add onclick handler
-            e.preventDefault(); // Prevent default link behavior
+        loginLogoutLink.href = '#';
+        loginLogoutLink.onclick = (e) => {
+            e.preventDefault();
             logout();
         };
  
         // Show Employee Portal
         employeePortalDropdown.style.display = 'list-item';
  
-        // Top Bar UI status is managed above
- 
-        return true; // Indicate authorization succeeded
+        return true;
     }
 
     // --- Authentication Check Function (Runs on Load) ---
