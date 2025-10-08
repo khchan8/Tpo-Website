@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <!-- Updated Title -->
+  <title>TPO Wellness - ERP Links</title>
+  <meta content="TPO Wellness ERP Links For James" name="description">
+  <meta content="erp, mes, tpo wellness, links" name="keywords">
+
+  <!-- Add Content Security Policy Meta Tag -->
+  <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' https:;">
+
+  <!-- Favicons (from original erp.html) -->
+  <link href="assets/img/favicon.png" rel="icon">
+  <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+
+  <!-- Google Fonts (from tpologin.html) -->
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Raleway:300,300i,400,400i,500,500i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+
+  <!-- Vendor CSS Files (from tpologin.html) -->
+  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="assets/vendor/boxicons/css/boxicons.min.css" rel="stylesheet">
+
+  <!-- Main CSS File (from tpologin.html) -->
+  <link href="assets/css/style.css" rel="stylesheet">
+
+  <!-- Custom Styles specifically for ERP Link Buttons (from original erp.html) -->
+  <style>
+    /* Styles for the main content area of the ERP page */
+    .erp-content-section {
+      padding: 40px 0; /* Add padding */
+      width: 100%;
+      flex-grow: 1; /* Allow this section to fill space */
+      display: flex;
+      justify-content: center; /* Center the container horizontally */
+    }
+
+    /* Styles from the original erp.html <style> block */
+    .erp-container { /* Renamed from .container to avoid conflict with bootstrap */
+        max-width: 600px;
+        width: 100%;
+        /* Removed background-color, margin, padding, display flex as these are handled by parent/bootstrap */
+    }
+    .erp-header { /* Renamed from .header */
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .erp-logo { /* Renamed from .logo */
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-bottom: 10px; /* Added margin */
+    }
+    .erp-container h1 { /* Specific h1 style */
+        color: #333;
+        font-size: 24px;
+        margin: 10px 0;
+    }
+     .erp-container p { /* Style for the paragraph */
+        color: #555; /* Example color */
+        margin-bottom: 20px;
+     }
+    .section-title {
+        font-weight: bold;
+        margin-top: 20px;
+        margin-bottom: 10px;
+        color: #333; /* Added color */
+        font-size: 18px; /* Adjusted size */
+        border-bottom: 1px solid #eee; /* Added separator */
+        padding-bottom: 5px; /* Spacing for separator */
+    }
+    .erp-button { /* Renamed from .button to avoid conflict */
+        display: flex;
+        align-items: center;
+        background-color: #333; /* Dark background */
+        color: white;
+        padding: 10px 15px;
+        margin-bottom: 10px;
+        border-radius: 5px;
+        text-decoration: none;
+        transition: background-color 0.3s, transform 0.2s; /* Added transform transition */
+        font-size: 14px; /* Adjusted font size */
+        border: none; /* Ensure no default border */
+    }
+    .erp-button:hover {
+        background-color: #1e56a0; /* Use theme color on hover */
+        color: white; /* Ensure text stays white */
+        text-decoration: none; /* Ensure no underline */
+        transform: translateY(-2px); /* Slight lift effect */
+    }
+    .erp-button .icon { /* Style for emoji icons */
+        margin-right: 10px;
+        font-size: 20px; /* Keep icon size */
+        line-height: 1; /* Adjust line height */
+    }
+    /* Removed .icon-img style as it wasn't used in the provided erp.html */
+
+    /* Ensure body flex structure pushes footer down */
+    body {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+    }
+    main {
+        flex-grow: 1;
+        display: flex; /* Use flexbox */
+        flex-direction: column; /* Stack children vertically */
+    }
+    /* Top Bar Visibility Logic */
+    #topbar .user-info { display: none; } /* Hide user info by default */
+    #topbar .contact-info { display: flex; } /* Show contact info by default */
+    #topbar #loginStatus { /* Style for login status text */
+         font-size: 14px;
+         color: #fff; /* White text on dark top bar */
+         /* Add margin if needed, e.g., margin-right: 15px; */
+    }
+
+    /* Desktop: Logged in - Show both */
+    @media (min-width: 768px) { /* Adjust breakpoint as needed */
+       body.logged-in #topbar .contact-info { display: flex !important; } /* Ensure contact is shown */
+       body.logged-in #topbar .user-info { display: flex !important; } /* Ensure user info is shown */
+    }
+
+    /* Mobile: Logged in - Show only user info */
+    @media (max-width: 767.98px) { /* Adjust breakpoint as needed */
+       body.logged-in #topbar .contact-info { display: none !important; } /* Hide contact */
+       body.logged-in #topbar .user-info { display: flex !important; } /* Show user info */
+    }
+    /* Logout button styles removed */
+  </style>
+
+</head>
+<body>
+
+  <!-- ======= Top Bar ======= -->
+  <section id="topbar" class="d-flex align-items-center">
+    <div class="container d-flex justify-content-center justify-content-md-between">
+      <div class="contact-info d-flex align-items-center">
+        <i class="bi bi-envelope d-flex align-items-center"><a href="mailto:info@tpo-wellness.com">info@tpo-wellness.com</a></i>
+        <i class="bi bi-phone d-flex align-items-center ms-4"><span>+66 87 789 4950</span></i>
+      </div>
+      <!-- User Info (Re-added for status display) -->
+      <div class="user-info d-flex align-items-center" style="display: none;"> <!-- Initially hidden -->
+          <span id="loginStatus"></span>
+          <!-- Logout Button REMOVED from here -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ======= Header ======= -->
+  <header id="header" class="d-flex align-items-center">
+    <div class="container d-flex align-items-center justify-content-between">
+      <h1 class="logo"><a href="index.html"><img src="./assets/img/TPOLogo.png" alt="TPO Wellness Logo" class="img-fluid"></a></h1>
+		<nav id="navbar" class="navbar">
+			<ul>
+			  <!-- Standard Links -->
+			  <li><a class="nav-link scrollto" href="index.html#hero">Home</a></li>
+			  <li><a class="nav-link scrollto" href="index.html#about">About</a></li>
+			  <li><a class="nav-link scrollto" href="index.html#contact">Contact</a></li>
+			  <!-- Employee Portal Dropdown (Added based on feedback) -->
+		            <li class="dropdown" id="employeePortalDropdown" style="display: none;"><a href="#"><span>Employee Portal</span> <i class="bi bi-chevron-down"></i></a>
+		              <ul>
+		                <li class="dropdown"><a href="#"><span>Sales Tools</span> <i class="bi bi-chevron-right"></i></a>
+		                  <ul>
+		                    <li><a href="AA-Sales-Tools.html">Auntie Aloha</a></li>
+		                    <li><a href="MC-Sales-Tools.html">Mana Cannabis</a></li>
+		                    <li><a href="TF-Sales-Tools.html">Fuzzies</a></li>
+		                    <li><a href="TY-Sales-Tools.html">Tyson</a></li>
+		                  </ul>
+		                </li>
+		                <li><a href="performance.html">Performance</a></li>
+		                <li><a href="erp.html">ERP</a></li> <!-- Link to current page -->
+		                <li><a href="CRMv4.html">CRM</a></li>
+		                <li class="dropdown"><a href="#"><span>Customer Portal</span> <i class="bi bi-chevron-right"></i></a>
+		                   <ul>
+		                     <li><a href="Fuzzies-data.html">Fuzzies</a></li>
+		                     <li><a href="Tyson-data.html">Tyson</a></li>
+		                   </ul>
+		                </li>
+		              </ul>
+		            </li>
+			  <!-- Login Link (Initially Visible, hidden by JS if logged in) -->
+			  <!-- Dynamic Login/Logout Link -->
+			  <li id="loginLogoutItem"><a id="loginLogoutLink" class="nav-link" href="#">Login</a></li>
+			</ul>
+			<i class="bi bi-list mobile-nav-toggle"></i>
+		</nav><!-- .navbar -->
+    </div>
+  </header><!-- End Header -->
+
+  <main id="main">
+    <!-- ======= ERP Links Section ======= -->
+    <section class="erp-content-section">
+      <div class="container"> <!-- Use Bootstrap container for general layout -->
+        <div class="row justify-content-center"> <!-- Center the content column -->
+           <div class="col-md-8 col-lg-6"> <!-- Define column width -->
+
+            <!-- Start Content from original erp.html -->
+            <div class="erp-container"> <!-- Use the renamed class for specific styles -->
+                <div class="erp-header"> <!-- Use the renamed class -->
+                    <!-- Make sure the image path is correct relative to this new file location -->
+                    <img src="assets/img/Link3/TPO_Logo.png" alt="TPO Logo" class="erp-logo"> <!-- Use the renamed class -->
+                    <h1>TPO Wellness ERP System</h1>
+                    <p>TPO Wellness ERP Links</p>
+                </div>
+
+                <div class="section-title">Sales Tools</div>
+                <a href="https://script.google.com/macros/s/AKfycbx-QyoPBPxm7rXH4xMx0gaVHsWDRsL29gr_zR8zgxvnAJndJAQppu296ffgGVltk9EH/exec" target="_blank" rel="noopener noreferrer" class="erp-button"><span class="icon">✅</span>TPO Event Calendar</a>
+                <a href="https://forms.gle/uYPaMpv6nrSAiXu88" target="_blank" rel="noopener noreferrer" class="erp-button"><span class="icon">✅</span>TPO Customer Setup Form</a>
+                <a href="https://docs.google.com/spreadsheets/d/1hDBp9tfHWd1KfNiGrnVMTEsLRMhokCm0mnZdcGiQWR0" target="_blank" rel="noopener noreferrer" class="erp-button"><span class="icon">✅</span>TPO Sales Order Record 2025-James</a>
+            </div>
+            <!-- End Content from original erp.html -->
+
+           </div>
+        </div>
+      </div>
+    </section><!-- End ERP Links Section -->
+  </main><!-- End #main -->
+
+  <!-- ======= Footer ======= -->
+  <footer id="footer">
+    <div class="footer-top">
+      <div class="container">
+        <div class="row">
+
+          <div class="col-lg-4 col-md-6">
+            <div class="footer-info">
+              <h3>TPO Wellness</h3>
+              <p>
+                TPO Wellness Ltd. (Head Office)<br>
+                No. 122/7 Moo5, Pakkret Sub-District, Pakkret District.<br>
+                Nonthaburi Province 11120<br><br>
+                <strong>Tel:</strong> +662-687-7811,+6694-7365518<br>
+                <strong>Email:</strong> info@tpo-wellness.com<br>
+              </p>
+              <div class="social-links mt-3">
+                <a href="#" class="twitter"><i class="bx bxl-twitter"></i></a>
+                <a href="#" class="facebook"><i class="bx bxl-facebook"></i></a>
+                <a href="#" class="instagram"><i class="bx bxl-instagram"></i></a>
+                <a href="#" class="linkedin"><i class="bx bxl-linkedin"></i></a>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-2 col-md-6 footer-links">
+            <h4>Useful Links</h4>
+            <ul>
+              <li><i class="bx bx-chevron-right"></i> <a href="index.html#hero">Home</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="index.html#about">About us</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="index.html#services">Services</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="#">Terms of service</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="#">Privacy policy</a></li>
+            </ul>
+          </div>
+
+          <div class="col-lg-2 col-md-6 footer-links">
+            <h4>Our Services</h4>
+             <ul>
+               <li><i class="bx bx-chevron-right"></i> <a href="#">Edibles Manufacturing</a></li>
+               <li><i class="bx bx-chevron-right"></i> <a href="#">Pre-Roll Production</a></li>
+               <li><i class="bx bx-chevron-right"></i> <a href="#">Cannabis Flower Packaging</a></li>
+               <li><i class="bx bx-chevron-right"></i> <a href="#">R&D Services</a></li>
+               <li><i class="bx bx-chevron-right"></i> <a href="#">Quality Control & Assurance</a></li>
+             </ul>
+          </div>
+
+          <div class="col-lg-4 col-md-6 footer-newsletter">
+            <h4>Our Newsletter</h4>
+            <p>Subscribe to our newsletter for the latest updates</p>
+            <form action="" method="post"> <!-- Add action/method if needed -->
+              <input type="email" name="email"><input type="submit" value="Subscribe">
+            </form>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="copyright">
+        © Copyright <strong><span>TPO Wellness</span></strong>. All Rights Reserved
+      </div>
+      <div class="credits">
+        Designed by <a href="#">KH</a>
+      </div>
+    </div>
+  </footer><!-- End Footer -->
+
+  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+  <!-- <div id="preloader"></div> --> <!-- Preloader usually not needed -->
+
+  <!-- Vendor JS Files (from tpologin.html) -->
+  <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <!-- Optional Vendor JS Files -->
+  <!-- <script src="assets/vendor/aos/aos.js"></script> -->
+  <!-- <script src="assets/vendor/glightbox/js/glightbox.min.js"></script> -->
+  <!-- <script src="assets/vendor/isotope-layout/isotope.pkgd.min.js"></script> -->
+  <!-- <script src="assets/vendor/swiper/swiper-bundle.min.js"></script> -->
+
+  <!-- Template Main JS File (from tpologin.html, needed for mobile nav toggle) -->
+  <script src="assets/js/main.js"></script>
+
+  <!-- No login-specific script needed for this page -->
+
+  <!-- Corrected Authentication & Authorization Script -->
+  <script>
+    // --- Global Variables ---
+    const AUTH_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyIDeCYmpl5qzXQJoDmdaC2t7suZaky8Ug5y_cpPV56CHkI8Bu2i1_tJiHXP2-9Tc_Txw/exec'; // NewCode.gs URL
+    // Function to detect mobile devices
+    function isMobileDevice() {
+      return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    }
+    // Set login page based on device
+    const loginPage = isMobileDevice() ? 'tpologin-m.html' : 'tpologin.html';
+    const requiredToken = 'tpoEmployeeToken'; // Specific token needed for this page
+
+    // --- Helper: Redirect to Login ---
+    function redirectToLogin(reason) {
+      console.log(`Redirecting to login: ${reason}`);
+      // Clear ALL relevant tokens
+      localStorage.removeItem('tpoSessionToken');
+      localStorage.removeItem('tpoGrantedTokens');
+      localStorage.removeItem('tpoCrmApiToken');
+      localStorage.removeItem('tpoUserEmail'); // Clear email too
+      // Construct redirect URL, including the current page for post-login redirect
+      const redirectUrl = `${loginPage}?redirectUrl=${encodeURIComponent(window.location.pathname + window.location.search)}&error=${encodeURIComponent(reason)}`;
+      window.top.location.href = redirectUrl;
+    }
+
+    // --- Logout Function ---
+    function logout() {
+        console.log("Logging out...");
+        // Clear ALL relevant tokens
+        localStorage.removeItem('tpoSessionToken');
+        localStorage.removeItem('tpoGrantedTokens');
+        localStorage.removeItem('tpoCrmApiToken');
+        localStorage.removeItem('tpoUserEmail');
+        // Redirect to login page without error/redirectUrl
+        window.top.location.href = loginPage;
+    }
+
+    // --- Authorization Check (Runs after successful authentication) ---
+    function checkAuthorization(grantedTokens, userEmail) {
+        console.log("Checking authorization for:", requiredToken);
+ 
+        // Get UI elements for Navbar and Topbar
+        const loginLogoutLink = document.getElementById('loginLogoutLink');
+        const employeePortalDropdown = document.getElementById('employeePortalDropdown');
+        const loginStatusSpan = document.getElementById('loginStatus'); // Re-add for top bar status
+        const bodyElement = document.body; // Needed for body class
+ 
+        // Check if elements exist before manipulating
+        if (!loginLogoutLink || !employeePortalDropdown || !loginStatusSpan || !bodyElement) {
+            console.error("Required UI elements for auth check not found (loginLogoutLink, employeePortalDropdown, loginStatusSpan, body).");
+            return false; // Indicate failure but don't redirect (checkAuthentication handles redirect)
+        }
+ 
+        // Ensure grantedTokens is an array before checking includes()
+        const tokensArray = Array.isArray(grantedTokens) ? grantedTokens : [];
+ 
+        if (!tokensArray.includes(requiredToken)) {
+            // This path might not be strictly necessary if checkAuthentication handles redirects,
+            // but it ensures correct UI state if called directly with invalid tokens.
+            bodyElement.classList.remove('logged-in'); // Ensure logged-out state
+            loginStatusSpan.textContent = ''; // Clear status
+            // Configure Login link
+            loginLogoutLink.textContent = 'Login';
+            loginLogoutLink.href = loginPage;
+            loginLogoutLink.onclick = null;
+            // Hide Employee Portal
+            employeePortalDropdown.style.display = 'none';
+            redirectToLogin(`Access denied. Required permission (${requiredToken}) not found.`);
+            return false; // Indicate authorization failed
+        }
+        console.log("Authorization successful.");
+ 
+        // Update UI for logged-in state
+        bodyElement.classList.add('logged-in'); // Add class for CSS rules
+ 
+        // Update Top Bar Status
+        if (userEmail) {
+            loginStatusSpan.textContent = `Logged in as: ${userEmail}`;
+        } else {
+            loginStatusSpan.textContent = `Logged in`; // Fallback
+        }
+ 
+        // Configure Logout link
+        loginLogoutLink.textContent = 'Logout';
+        loginLogoutLink.href = '#'; // Set href to # to prevent navigation
+        loginLogoutLink.onclick = (e) => { // Add onclick handler
+            e.preventDefault(); // Prevent default link behavior
+            logout();
+        };
+ 
+        // Show Employee Portal
+        employeePortalDropdown.style.display = 'list-item';
+ 
+        // Top Bar UI status is managed above
+ 
+        return true; // Indicate authorization succeeded
+    }
+
+    // --- Authentication Check Function (Runs on Load) ---
+    function checkAuthentication() {
+      // Get sessionToken and userEmail from localStorage
+      const sessionToken = localStorage.getItem('tpoSessionToken');
+      const userEmail = localStorage.getItem('tpoUserEmail');
+      const grantedTokensString = localStorage.getItem('tpoGrantedTokens');
+
+      console.log('Checking local authentication...'); // Updated log
+
+      if (!sessionToken || !grantedTokensString) {
+        // If either session token or granted tokens are missing, set UI to logged out and redirect
+        const loginLogoutLink = document.getElementById('loginLogoutLink');
+        const employeePortalDropdown = document.getElementById('employeePortalDropdown');
+        const loginStatusSpan = document.getElementById('loginStatus'); // Get status span
+        const bodyElement = document.body; // Get body
+ 
+        if (bodyElement) bodyElement.classList.remove('logged-in'); // Ensure logged-out state
+        if (loginStatusSpan) loginStatusSpan.textContent = ''; // Clear status
+ 
+        if (loginLogoutLink) {
+            loginLogoutLink.textContent = 'Login';
+            loginLogoutLink.href = loginPage;
+            loginLogoutLink.onclick = null;
+        }
+        if (employeePortalDropdown) {
+            employeePortalDropdown.style.display = 'none';
+        }
+        redirectToLogin('Session or permissions not found locally. Please login.');
+        return; // Stop script execution
+      }
+
+      console.log('Session token and granted tokens found locally.');
+
+      let grantedTokens = [];
+      try {
+        grantedTokens = JSON.parse(grantedTokensString);
+        if (!Array.isArray(grantedTokens)) {
+           // If parsing succeeds but it's not an array, treat as invalid
+           console.error('Parsed grantedTokens is not an array:', grantedTokensString);
+           const loginLogoutLink = document.getElementById('loginLogoutLink'); // Ensure UI reset before redirect
+           const employeePortalDropdown = document.getElementById('employeePortalDropdown');
+           const loginStatusSpan = document.getElementById('loginStatus'); // Get status span
+           const bodyElement = document.body; // Get body
+           if (bodyElement) bodyElement.classList.remove('logged-in'); // Ensure logged-out state
+           if (loginStatusSpan) loginStatusSpan.textContent = ''; // Clear status
+           if (loginLogoutLink) {
+               loginLogoutLink.textContent = 'Login';
+               loginLogoutLink.href = loginPage;
+               loginLogoutLink.onclick = null;
+           }
+           if (employeePortalDropdown) {
+               employeePortalDropdown.style.display = 'none';
+           }
+           redirectToLogin('Invalid local permissions format. Please login again.');
+           return;
+        }
+      } catch (e) {
+        console.error('Error parsing granted tokens from localStorage:', e);
+        const loginLogoutLink = document.getElementById('loginLogoutLink'); // Ensure UI reset before redirect
+        const employeePortalDropdown = document.getElementById('employeePortalDropdown');
+        const loginStatusSpan = document.getElementById('loginStatus'); // Get status span
+        const bodyElement = document.body; // Get body
+        if (bodyElement) bodyElement.classList.remove('logged-in'); // Ensure logged-out state
+        if (loginStatusSpan) loginStatusSpan.textContent = ''; // Clear status
+        if (loginLogoutLink) {
+            loginLogoutLink.textContent = 'Login';
+            loginLogoutLink.href = loginPage;
+            loginLogoutLink.onclick = null;
+        }
+        if (employeePortalDropdown) {
+            employeePortalDropdown.style.display = 'none';
+        }
+        redirectToLogin('Error reading local permissions. Please login again.');
+        return;
+      }
+
+      // Proceed directly to Authorization Check using locally stored tokens
+      console.log('Local tokens parsed successfully, proceeding to authorization check.');
+      checkAuthorization(grantedTokens, userEmail);
+
+
+      /* --- COMMENTED OUT: JSONP Validation Call ---
+      console.log('Session token found in localStorage, validating...');
+
+      const callbackName = 'handleValidationResponse';
+      const scriptId = 'jsonp-' + callbackName + '-' + Date.now();
+      let script = null;
+      let timeoutId = null;
+
+      window[callbackName] = function(result) {
+          console.log('Validation response (JSONP):', result);
+          if (script && script.parentNode) { script.parentNode.removeChild(script); }
+          delete window[callbackName];
+          if (timeoutId) clearTimeout(timeoutId);
+
+          try {
+              if (result && result.valid === true && result.email && result.tokens) {
+                console.log('Session token validated successfully for user: ' + result.email);
+                localStorage.setItem('tpoGrantedTokens', JSON.stringify(result.tokens)); // Update tokens
+                console.log('Updated granted tokens in localStorage:', JSON.stringify(result.tokens));
+                checkAuthorization(result.tokens, result.email || userEmail);
+              } else {
+                redirectToLogin(result.message || 'Invalid or expired session. Please login again.');
+              }
+          } catch (error) {
+              console.error('Error processing validation response:', error);
+              redirectToLogin('Error processing validation: ' + error.message + '. Please login again.');
+          }
+      };
+
+      timeoutId = setTimeout(() => {
+          console.error('Validation JSONP request timed out.');
+          redirectToLogin('Session validation timed out. Please login again.');
+          if (script && script.parentNode) { script.parentNode.removeChild(script); }
+          delete window[callbackName];
+      }, 15000);
+
+      const validationUrl = new URL(AUTH_SCRIPT_URL);
+      validationUrl.searchParams.append('action', 'validateSessionToken');
+      validationUrl.searchParams.append('sessionToken', sessionToken);
+      validationUrl.searchParams.append('callback', callbackName);
+
+      script = document.createElement('script');
+      script.id = scriptId;
+      script.src = validationUrl.toString();
+      console.log('Requesting Validation JSONP URL:', script.src);
+      document.head.appendChild(script);
+      */
+    }
+
+    // --- Run Authentication Check on Page Load ---
+    document.addEventListener('DOMContentLoaded', checkAuthentication);
+
+  </script>
+
+</body>
+</html>
