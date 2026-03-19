@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Whey-TH | Pre-Feasibility Sandbox</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f3f4f6; }
+        .input-group { margin-bottom: 1rem; }
+        .slider-label { display: flex; justify-content: space-between; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; }
+        input[type=range] { width: 100%; accent-color: #2563eb; cursor: pointer; }
+        .kpi-card { background: white; border-radius: 0.5rem; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); transition: all 0.2s ease; }
+        .kpi-value { font-size: 1.875rem; font-weight: 700; color: #111827; }
+        .kpi-title { font-size: 0.875rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; }
+    </style>
+</head>
+<body class="p-6">
+
+    <div class="max-w-7xl mx-auto">
+        <header class="mb-8 flex justify-between items-end border-b pb-4">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Project Whey-TH</h1>
+                <p class="text-gray-500 mt-1">Interactive Financial & Margin Sandbox</p>
+            </div>
+            <div id="status-badge" class="px-4 py-2 rounded-full font-bold text-sm text-white bg-gray-500">
+                CALCULATING...
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <div class="lg:col-span-4 space-y-6 h-[80vh] overflow-y-auto pr-2">
+                
+                <div class="bg-white p-5 rounded-lg shadow-sm border border-gray-200">
+                    <h3 class="font-bold text-lg mb-4 text-blue-800 border-b pb-2">1. Raw Material & Volume</h3>
+                    <div class="input-group">
+                        <div class="slider-label"><span>Daily Liquid Whey (Liters)</span> <span id="val-volume">50,000</span></div>
+                        <input type="range" id="inp-volume" min="10000" max="200000" step="5000" value="50000" oninput="calculateModel()">
+                    </div>
+                    <div class="input-group">
+                        <div class="slider-label"><span>Operating Days / Year</span> <span id="val-days">300</span></div>
+                        <input type="range" id="inp-days" min="200" max="365" step="5" value="300" oninput="calculateModel()">
+                    </div>
+                    <div class="input-group">
+                        <div class="slider-label"><span>Raw Whey Cost ($/Liter)</span> <span id="val-rawCost">$0.05</span></div>
+                        <input type="range" id="inp-rawCost" min="0" max="0.20" step="0.01" value="0.05" oninput="calculateModel()">
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-lg shadow-sm border border-gray-200">
+                    <h3 class="font-bold text-lg mb-4 text-orange-600 border-b pb-2">2. Processing OpEx ($/Liter)</h3>
+                    <div class="input-group">
+                        <div class="slider-label"><span>Logistics & Cold Chain</span> <span id="val-logistics">$0.02</span></div>
+                        <input type="range" id="inp-logistics" min="0" max="0.10" step="0.01" value="0.02" oninput="calculateModel()">
+                    </div>
+                    <div class="input-group">
+                        <div class="slider-label"><span>Energy (Spray Drying)</span> <span id="val-energy">$0.05</span></div>
+                        <input type="range" id="inp-energy" min="0.01" max="0.20" step="0.01" value="0.05" oninput="calculateModel()">
+                    </div>
+                    <div class="input-group">
+                        <div class="slider-label"><span>Water & Wastewater</span> <span id="val-water">$0.02</span></div>
+                        <input type="range" id="inp-water" min="0.01" max="0.10" step="0.01" value="0.02" oninput="calculateModel()">
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-lg shadow-sm border border-gray-200">
+                    <h3 class="font-bold text-lg mb-4 text-green-600 border-b pb-2">3. Outputs & Wholesale Pricing</h3>
+                    <p class="text-xs text-gray-500 mb-3">Adjust WPI vs WPC production mix. Standard whey holds ~0.6% extractable protein and ~4.5% lactose.</p>
+                    <div class="input-group">
+                        <div class="slider-label"><span>WPI Yield (%)</span> <span id="val-wpiYield">0.60%</span></div>
+                        <input type="range" id="inp-wpiYield" min="0" max="1.0" step="0.05" value="0.6" oninput="calculateModel()">
+                    </div>
+                    <div class="input-group">
+                        <div class="slider-label"><span>WPI Price ($/kg)</span> <span id="val-wpiPrice">$15.00</span></div>
+                        <input type="range" id="inp-wpiPrice" min="5" max="30" step="0.5" value="15" oninput="calculateModel()">
+                    </div>
+                    <hr class="my-3">
+                    <div class="input-group">
+                        <div class="slider-label"><span>WPC Yield (%)</span> <span id="val-wpcYield">0.00%</span></div>
+                        <input type="range" id="inp-wpcYield" min="0" max="1.0" step="0.05" value="0" oninput="calculateModel()">
+                    </div>
+                    <div class="input-group">
+                        <div class="slider-label"><span>WPC Price ($/kg)</span> <span id="val-wpcPrice">$8.00</span></div>
+                        <input type="range" id="inp-wpcPrice" min="3" max="20" step="0.5" value="8" oninput="calculateModel()">
+                    </div>
+                    <hr class="my-3">
+                    <div class="input-group">
+                        <div class="slider-label"><span>Lactose Yield (%)</span> <span id="val-lactoseYield">4.50%</span></div>
+                        <input type="range" id="inp-lactoseYield" min="0" max="6.0" step="0.1" value="4.5" oninput="calculateModel()">
+                    </div>
+                    <div class="input-group">
+                        <div class="slider-label"><span>Lactose Price ($/kg)</span> <span id="val-lactosePrice">$1.20</span></div>
+                        <input type="range" id="inp-lactosePrice" min="0.5" max="4.0" step="0.1" value="1.2" oninput="calculateModel()">
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-lg shadow-sm border border-gray-200 mb-8">
+                    <h3 class="font-bold text-lg mb-4 text-purple-700 border-b pb-2">4. CapEx & Financing</h3>
+                    <div class="input-group">
+                        <div class="slider-label"><span>Total CapEx ($ Millions)</span> <span id="val-capex">$15.0 M</span></div>
+                        <input type="range" id="inp-capex" min="5" max="50" step="0.5" value="15" oninput="calculateModel()">
+                    </div>
+                    <div class="input-group">
+                        <div class="slider-label"><span>Amount Financed via Loan (%)</span> <span id="val-loan">50%</span></div>
+                        <input type="range" id="inp-loan" min="0" max="100" step="5" value="50" oninput="calculateModel()">
+                    </div>
+                    <div class="input-group">
+                        <div class="slider-label"><span>Annual Interest Rate (%)</span> <span id="val-interest">7.0%</span></div>
+                        <input type="range" id="inp-interest" min="2" max="15" step="0.5" value="7.0" oninput="calculateModel()">
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-8 space-y-6">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="kpi-card border-t-4 border-blue-500">
+                        <div class="kpi-title">Daily Revenue</div>
+                        <div class="kpi-value text-blue-600" id="out-dailyRev">$0</div>
+                    </div>
+                    <div class="kpi-card border-t-4 border-orange-500">
+                        <div class="kpi-title">Daily Total OpEx</div>
+                        <div class="kpi-value text-orange-600" id="out-dailyCost">$0</div>
+                    </div>
+                    <div class="kpi-card border-t-4 border-green-500">
+                        <div class="kpi-title">Gross Margin</div>
+                        <div class="kpi-value text-green-600" id="out-margin">0%</div>
+                    </div>
+                    <div class="kpi-card border-t-4 border-purple-500 bg-purple-50">
+                        <div class="kpi-title">ROI Payback Period</div>
+                        <div class="kpi-value text-purple-700" id="out-payback">0 Yrs</div>
+                    </div>
+                </div>
+
+                <div class="kpi-card bg-gray-900 text-white">
+                    <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
+                        <h3 class="font-bold text-xl">Annual Financial Projection</h3>
+                        <span class="text-sm text-gray-400">Based on <span id="out-days">300</span> operating days</span>
+                    </div>
+                    <div class="grid grid-cols-3 gap-4 text-center">
+                        <div>
+                            <div class="text-gray-400 text-sm uppercase tracking-wide">Gross Profit</div>
+                            <div class="text-2xl font-bold text-green-400" id="out-annualGross">$0</div>
+                        </div>
+                        <div>
+                            <div class="text-gray-400 text-sm uppercase tracking-wide">Annual Debt Service</div>
+                            <div class="text-2xl font-bold text-red-400" id="out-annualDebt">$0</div>
+                        </div>
+                        <div>
+                            <div class="text-gray-400 text-sm uppercase tracking-wide">Net Profit (Pre-Tax)</div>
+                            <div class="text-2xl font-bold text-blue-400" id="out-annualNet">$0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white p-5 rounded-lg shadow-sm border border-gray-200">
+                        <h3 class="font-bold text-gray-700 mb-4 text-center">Daily Revenue Breakdown</h3>
+                        <div class="relative h-64 w-full flex justify-center">
+                            <canvas id="revenueChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-lg shadow-sm border border-gray-200">
+                        <h3 class="font-bold text-gray-700 mb-4">Estimated Daily Production</h3>
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center border-b pb-2">
+                                <span class="font-medium text-gray-600">WPI Output (kg)</span>
+                                <span class="font-bold text-lg" id="out-wpiKg">0</span>
+                            </div>
+                            <div class="flex justify-between items-center border-b pb-2">
+                                <span class="font-medium text-gray-600">WPC Output (kg)</span>
+                                <span class="font-bold text-lg" id="out-wpcKg">0</span>
+                            </div>
+                            <div class="flex justify-between items-center border-b pb-2">
+                                <span class="font-medium text-gray-600">Lactose Output (kg)</span>
+                                <span class="font-bold text-lg" id="out-lactoseKg">0</span>
+                            </div>
+                            <div class="p-3 bg-blue-50 rounded text-sm text-blue-800">
+                                <strong>Note:</strong> Yield estimates assume optimal processing conditions. Membrane fouling and start/stop CIP cycles will affect actual daily throughput.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Formatting utilities
+        const formatCurrency = (num) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(num);
+        const formatNum = (num) => new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(num);
+
+        // Chart Instance setup
+        let revChart = null;
+
+        function initChart() {
+            // Check if Chart.js loaded successfully
+            if (typeof Chart === 'undefined') return;
+            
+            const ctx = document.getElementById('revenueChart').getContext('2d');
+            revChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['WPI Revenue', 'WPC Revenue', 'Lactose Revenue'],
+                    datasets: [{
+                        data: [0, 0, 0],
+                        backgroundColor: ['#3b82f6', '#10b981', '#f59e0b'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } },
+                    animation: { duration: 400 } // Smoother transitions when sliding
+                }
+            });
+        }
+
+        // Main Calculation Function - Triggered on input change
+        function calculateModel() {
+            try {
+                // 1. Get Values
+                const volume = parseFloat(document.getElementById('inp-volume').value);
+                const days = parseFloat(document.getElementById('inp-days').value);
+                const rawCost = parseFloat(document.getElementById('inp-rawCost').value);
+                
+                const logistics = parseFloat(document.getElementById('inp-logistics').value);
+                const energy = parseFloat(document.getElementById('inp-energy').value);
+                const water = parseFloat(document.getElementById('inp-water').value);
+                
+                const wpiYield = parseFloat(document.getElementById('inp-wpiYield').value) / 100;
+                const wpiPrice = parseFloat(document.getElementById('inp-wpiPrice').value);
+                const wpcYield = parseFloat(document.getElementById('inp-wpcYield').value) / 100;
+                const wpcPrice = parseFloat(document.getElementById('inp-wpcPrice').value);
+                const lactoseYield = parseFloat(document.getElementById('inp-lactoseYield').value) / 100;
+                const lactosePrice = parseFloat(document.getElementById('inp-lactosePrice').value);
+                
+                const capex = parseFloat(document.getElementById('inp-capex').value) * 1000000;
+                const loanPct = parseFloat(document.getElementById('inp-loan').value) / 100;
+                const interest = parseFloat(document.getElementById('inp-interest').value) / 100;
+
+                // 2. Update Label Texts next to sliders
+                document.getElementById('val-volume').innerText = formatNum(volume);
+                document.getElementById('val-days').innerText = days;
+                document.getElementById('val-rawCost').innerText = '$' + rawCost.toFixed(2);
+                document.getElementById('val-logistics').innerText = '$' + logistics.toFixed(2);
+                document.getElementById('val-energy').innerText = '$' + energy.toFixed(2);
+                document.getElementById('val-water').innerText = '$' + water.toFixed(2);
+                document.getElementById('val-wpiYield').innerText = (wpiYield*100).toFixed(2) + '%';
+                document.getElementById('val-wpiPrice').innerText = '$' + wpiPrice.toFixed(2);
+                document.getElementById('val-wpcYield').innerText = (wpcYield*100).toFixed(2) + '%';
+                document.getElementById('val-wpcPrice').innerText = '$' + wpcPrice.toFixed(2);
+                document.getElementById('val-lactoseYield').innerText = (lactoseYield*100).toFixed(2) + '%';
+                document.getElementById('val-lactosePrice').innerText = '$' + lactosePrice.toFixed(2);
+                document.getElementById('val-capex').innerText = '$' + (capex/1000000).toFixed(1) + ' M';
+                document.getElementById('val-loan').innerText = (loanPct*100).toFixed(0) + '%';
+                document.getElementById('val-interest').innerText = (interest*100).toFixed(1) + '%';
+
+                // 3. Core Math Calculations
+                const wpiKg = volume * wpiYield;
+                const wpcKg = volume * wpcYield;
+                const lactoseKg = volume * lactoseYield;
+
+                const wpiRev = wpiKg * wpiPrice;
+                const wpcRev = wpcKg * wpcPrice;
+                const lactoseRev = lactoseKg * lactosePrice;
+                const dailyRevenue = wpiRev + wpcRev + lactoseRev;
+
+                const totalOpexPerLiter = rawCost + logistics + energy + water;
+                const dailyCost = volume * totalOpexPerLiter;
+                
+                const dailyGross = dailyRevenue - dailyCost;
+                const marginPct = dailyRevenue > 0 ? (dailyGross / dailyRevenue) * 100 : 0;
+
+                const annualGross = dailyGross * days;
+                const annualDebtService = (capex * loanPct) * interest;
+                const annualNet = annualGross - annualDebtService;
+
+                const payback = annualNet > 0 ? capex / annualNet : 0;
+
+                // 4. Update Dashboard UI Elements
+                document.getElementById('out-wpiKg').innerText = formatNum(wpiKg);
+                document.getElementById('out-wpcKg').innerText = formatNum(wpcKg);
+                document.getElementById('out-lactoseKg').innerText = formatNum(lactoseKg);
+                
+                document.getElementById('out-dailyRev').innerText = formatCurrency(dailyRevenue);
+                document.getElementById('out-dailyCost').innerText = formatCurrency(dailyCost);
+                document.getElementById('out-margin').innerText = marginPct.toFixed(1) + '%';
+                
+                document.getElementById('out-days').innerText = days;
+                document.getElementById('out-annualGross').innerText = formatCurrency(annualGross);
+                document.getElementById('out-annualDebt').innerText = formatCurrency(annualDebtService);
+                document.getElementById('out-annualNet').innerText = formatCurrency(annualNet);
+
+                // RESTORED: Dynamic Status Badge and Payback UI Styling
+                const paybackEl = document.getElementById('out-payback');
+                const statusBadge = document.getElementById('status-badge');
+                
+                if (payback <= 0 || annualNet <= 0) {
+                    paybackEl.innerText = "Never";
+                    paybackEl.className = "kpi-value text-red-600";
+                    statusBadge.innerText = "UNPROFITABLE";
+                    statusBadge.className = "px-4 py-2 rounded-full font-bold text-sm text-white bg-red-500 shadow-sm";
+                } else {
+                    paybackEl.innerText = payback.toFixed(1) + ' Yrs';
+                    if (payback <= 5) {
+                        paybackEl.className = "kpi-value text-green-600";
+                        statusBadge.innerText = "HIGH VIABILITY";
+                        statusBadge.className = "px-4 py-2 rounded-full font-bold text-sm text-white bg-green-500 shadow-sm";
+                    } else if (payback <= 8) {
+                        paybackEl.className = "kpi-value text-yellow-600";
+                        statusBadge.innerText = "MODERATE VIABILITY";
+                        statusBadge.className = "px-4 py-2 rounded-full font-bold text-sm text-white bg-yellow-500 shadow-sm";
+                    } else {
+                        paybackEl.className = "kpi-value text-red-600";
+                        statusBadge.innerText = "HIGH RISK (8+ YRS)";
+                        statusBadge.className = "px-4 py-2 rounded-full font-bold text-sm text-white bg-red-500 shadow-sm";
+                    }
+                }
+
+                // Update Chart if it exists
+                if (revChart !== null) {
+                    revChart.data.datasets[0].data = [wpiRev, wpcRev, lactoseRev];
+                    revChart.update();
+                }
+                
+            } catch (error) {
+                console.error("Error in calculation model: ", error);
+            }
+        }
+
+        // Initialize on load
+        window.onload = () => {
+            initChart();
+            calculateModel();
+        };
+    </script>
+</body>
+</html>
