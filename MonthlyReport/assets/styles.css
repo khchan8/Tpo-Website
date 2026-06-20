@@ -1,0 +1,148 @@
+/* =========================================================
+   styles.css — Executive Briefing design accents.
+   Tailwind handles the bulk; this file owns the bespoke
+   touches (sawtooth divider, frosted low-season, hatched
+   partial bars, KPI tiles, briefing card).
+   ========================================================= */
+
+/* Sawtooth divider — subtle wave at section tops/bottoms */
+.sawtooth {
+  --c: #115E67;
+  height: 18px;
+  background-image:
+    radial-gradient(circle at 9px 18px, var(--c) 4px, transparent 4.5px),
+    linear-gradient(var(--c), var(--c));
+  background-size: 18px 18px, 100% 9px;
+  background-repeat: repeat-x, no-repeat;
+  background-position: 0 0, 0 0;
+}
+
+/* Section heading underline (a single teal rule + dot) */
+.heading-rule {
+  display: flex; align-items: center; gap: .75rem;
+}
+.heading-rule::after {
+  content: ""; flex: 1; height: 1px; background: #D9D2C0;
+}
+
+/* KPI tile */
+.kpi {
+  background: #fff;
+  border: 1px solid #D9D2C0;
+  border-radius: 6px;
+  padding: 14px 16px;
+  position: relative;
+  overflow: hidden;
+}
+.kpi .kpi-label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .12em; color: #5B6B7E;
+}
+.kpi .kpi-value {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 28px; line-height: 1.1; color: #0B1F3A; margin-top: 4px;
+}
+.kpi .kpi-sub { font-size: 12px; color: #5B6B7E; margin-top: 4px; }
+.kpi .kpi-bar {
+  position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: #115E67;
+}
+.kpi.kpi-warn .kpi-bar { background: #C9A24B; }
+.kpi.kpi-risk .kpi-bar { background: #A14B2A; }
+
+/* Briefing card (commentary) */
+.briefing {
+  background: #fff;
+  border: 1px solid #D9D2C0;
+  border-left: 3px solid #115E67;
+  border-radius: 4px;
+  padding: 18px 20px;
+  font-size: 15px; line-height: 1.65; color: #1a2a3f;
+}
+.briefing h3 {
+  font-family: 'Fraunces', Georgia, serif; font-weight: 700;
+  font-size: 13px; text-transform: uppercase; letter-spacing: .14em; color: #115E67;
+  margin-bottom: 8px;
+}
+
+/* WARN chip */
+.chip {
+  display: inline-flex; align-items: center; gap: .35rem;
+  padding: 3px 9px; border-radius: 999px;
+  font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+}
+.chip-warn   { background: #FBE9C9; color: #8A6512; border: 1px solid #E7C98A; }
+.chip-ok     { background: #DCEFE6; color: #1F6B3A; border: 1px solid #A9D6B9; }
+.chip-risk   { background: #F4D9CF; color: #8A3415; border: 1px solid #E0A990; }
+.chip-partial{ background: #FFF6E0; color: #6E5113; border: 1px dashed #C9A24B; }
+
+/* Reconciliation note (banner) */
+.note-warn {
+  background: #FBE9C9; border: 1px solid #E7C98A; color: #6E5113;
+  border-radius: 6px; padding: 10px 14px; font-size: 13px;
+  display: flex; gap: 10px; align-items: flex-start;
+}
+
+/* Hatched bar — Q2 "partial" overlay */
+.echarts-bar-partial {
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(255,255,255,0.0) 0,
+    rgba(255,255,255,0.0) 6px,
+    rgba(255,255,255,0.45) 6px,
+    rgba(255,255,255,0.45) 8px
+  );
+}
+
+/* Nav */
+#primary-nav a {
+  padding: 6px 10px; border-radius: 4px; color: #1a2a3f;
+}
+#primary-nav a:hover { background: #F3EEDD; }
+#primary-nav a.active { background: #0B1F3A; color: #fff; }
+
+/* Subnav for customers */
+#sub-nav {
+  display: flex; gap: 6px; flex-wrap: wrap;
+  padding: 8px 0 12px;
+  border-bottom: 1px dashed #D9D2C0;
+  margin-bottom: 20px;
+}
+#sub-nav a {
+  font-size: 12px; padding: 4px 9px; border-radius: 999px;
+  border: 1px solid #D9D2C0; color: #1a2a3f; background: #fff;
+}
+#sub-nav a.active { background: #115E67; color: #fff; border-color: #115E67; }
+
+/* Empty / loading */
+.state {
+  text-align: center; padding: 80px 20px; color: #5B6B7E;
+}
+.state h2 { font-family: 'Fraunces', Georgia, serif; color: #0B1F3A; font-size: 22px; }
+.state code { background: #fff; padding: 1px 6px; border-radius: 3px; border: 1px solid #D9D2C0; }
+
+/* Toast */
+#toast {
+  background: #fff; border: 1px solid #D9D2C0; border-left: 3px solid #A14B2A;
+  padding: 10px 14px; border-radius: 4px; font-size: 13px; max-width: 360px;
+  box-shadow: 0 12px 28px -16px rgba(11,31,58,.25);
+}
+
+/* Tables (board tables) */
+.board-table {
+  width: 100%; border-collapse: collapse; font-size: 13px;
+  background: #fff; border: 1px solid #D9D2C0; border-radius: 6px; overflow: hidden;
+}
+.board-table th, .board-table td {
+  padding: 9px 12px; border-bottom: 1px solid #EEEAE0; text-align: right;
+}
+.board-table th {
+  background: #F6F1E2; color: #0B1F3A; font-weight: 600;
+  font-size: 11px; text-transform: uppercase; letter-spacing: .08em; text-align: center;
+}
+.board-table th:first-child, .board-table td:first-child {
+  text-align: left; color: #0B1F3A; font-weight: 500;
+}
+.board-table tr:last-child td { border-bottom: 0; }
+.board-table tr.subtotal td {
+  background: #F6F1E2; font-weight: 600;
+}
+.board-table tr.partial td { color: #8A6512; font-style: italic; }

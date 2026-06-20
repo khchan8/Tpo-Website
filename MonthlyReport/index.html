@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TPO Wellness — Monthly Performance</title>
+  <meta name="description" content="TPO Wellness monthly performance report — board briefing." />
+
+  <!-- Tailwind (CDN, JIT) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- ECharts -->
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <script>
+    /* ---- Design tokens (Executive Briefing) ---- */
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ink:    '#0B1F3A',  // deep navy — headlines
+            sea:    '#115E67',  // teal — primary
+            tide:   '#1A8A96',  // lighter teal — accents
+            sand:   '#E9E2D0',  // parchment background tint
+            gold:   '#C9A24B',  // accent
+            rust:   '#A14B2A',  // risk accent (used sparingly)
+            mute:   '#5B6B7E',  // secondary text
+            rule:   '#D9D2C0',  // dividers
+            lowsea: 'rgba(17,94,103,0.08)', // frosted low-season band
+          },
+          fontFamily: {
+            serif: ['Fraunces', 'Georgia', 'serif'],
+            sans:  ['Inter', 'system-ui', 'sans-serif'],
+          },
+          boxShadow: {
+            brief: '0 1px 0 #D9D2C0, 0 12px 28px -16px rgba(11,31,58,0.25)',
+          },
+        },
+      },
+    };
+  </script>
+
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body class="font-sans bg-sand text-ink min-h-screen">
+
+  <!-- Top bar -->
+  <header class="border-b border-rule bg-white/70 backdrop-blur sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center gap-6">
+      <a href="#/" class="flex items-center gap-3 group">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+          <path d="M2 22 L6 14 L10 19 L14 9 L18 22 L22 12 L26 22" stroke="#115E67" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+        </svg>
+        <div class="leading-tight">
+          <div class="font-serif text-xl text-ink">TPO Wellness</div>
+          <div class="text-[11px] uppercase tracking-widest text-mute">Monthly Performance — Board Briefing</div>
+        </div>
+      </a>
+      <nav id="primary-nav" class="ml-auto flex items-center gap-1 text-sm"></nav>
+      <div id="health-chip" class="hidden"></div>
+    </div>
+  </header>
+
+  <!-- View host -->
+  <main id="view" class="max-w-7xl mx-auto px-6 py-8"></main>
+
+  <!-- Footer -->
+  <footer class="border-t border-rule mt-16">
+    <div class="max-w-7xl mx-auto px-6 py-6 text-xs text-mute flex items-center justify-between">
+      <div>Source: Google Sheet (live) · Reported in THB · <span id="as-of"></span></div>
+      <div class="flex items-center gap-3">
+        <a href="#/about" class="hover:text-ink">Glossary</a>
+        <span class="text-rule">·</span>
+        <span>Executive Briefing design system</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Toast (errors, WARN) -->
+  <div id="toast" class="fixed bottom-6 right-6 hidden"></div>
+
+  <!-- App -->
+  <script src="config.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/compute.js"></script>
+  <script src="js/views.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
