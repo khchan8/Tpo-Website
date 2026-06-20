@@ -3,6 +3,15 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <!--
+    Force the FULL page URL as the Referer on cross-origin requests
+    (e.g. the Sheets API fetch to sheets.googleapis.com). Without this,
+    browsers send only the origin (https://khchan8.github.io/) under their
+    default "strict-origin-when-cross-origin" policy, which does NOT match
+    the API key's referrer restriction (…/MonthlyReport/*) → 403 → no data.
+    Must be near the top of <head>, before any fetch fires.
+  -->
+  <meta name="referrer" content="no-referrer-when-downgrade" />
   <title>TPO Wellness — Monthly Performance</title>
   <meta name="description" content="TPO Wellness monthly performance report — board briefing." />
 
