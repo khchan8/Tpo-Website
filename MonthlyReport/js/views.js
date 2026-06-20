@@ -136,7 +136,7 @@
   /* ---------- chartCard (container + range control + safe init) ---------- */
   // data = { labels:[], series:[{name, values:[]}] }
   // buildOption(slicedData) -> ECharts option
-  function chartCard({ title, subtitle, rangeKey = "none", height = 320, data, buildOption }) {
+  function chartCard({ title, subtitle, rangeKey = "none", height = 320, data, buildOption, onClick }) {
     const header = el("div", { class: "chart-card-head" },
       el("div", {},
         el("h2", { class: "font-serif text-xl text-ink" }, title),
@@ -144,8 +144,11 @@
       ),
       rangeKey !== "none" ? rangeControl_(rangeKey) : null,
     );
-    const body = el("div", { style: `width:100%;height:${height}px;` });
-    const card = el("div", { class: "bg-white border border-rule rounded-md p-5 shadow-brief" },
+    // Body uses flex-grow + min-height so that in a grid row, sibling cards
+    // stretch to the same height and their chart baselines line up. ECharts
+    // is kept fitted by the ResizeObserver.
+    const body = el("div", { style: `width:100%;flex:1 1 auto;min-height:${height}px;` });
+    const card = el("div", { class: "bg-white border border-rule rounded-md p-5 shadow-brief flex flex-col" },
       header, body);
 
     let instance = null, ro = null, currentRange = "all";
@@ -174,6 +177,9 @@
       ro = new ResizeObserver(() => { try { instance.resize(); } catch (_) {} });
       ro.observe(body);
       chartRegistry_.push({ instance, ro });
+      if (typeof onClick === "function") {
+        instance.on("click", (p) => { try { onClick(p); } catch (_) {} });
+      }
       render();
       setTimeout(() => { try { instance.resize(); } catch (_) {} }, 60); // settle after fonts
     }));
@@ -278,21 +284,30 @@
       }),
     });
 
-    // Donut (snapshot — no range control, but still goes through chartCard for safe sizing)
+    // Donut (snapshot — no range control, but still goes through chartCard for safe sizing).
+    // Clicking a customer slice/label jumps to that customer's page.
     const donutCard = chartCard({
       title: "Customer mix",
-      subtitle: mixSource,
-      rangeKey: "none", height: 260,
+      subtitle: mixSource + " · click a segment to drill in",
+      rangeKey: "none", height: 320,
       data: { labels: mixItems.map(i => i.name),
               series: [{ name: "Revenue", values: mixItems.map(i => i.revenue) }] },
+      onClick: (p) => {
+        if (p && p.name) {
+          const slug = slugify(p.name);
+          if (slug) location.hash = "#/customers/" + slug;
+        }
+      },
       buildOption: () => ({
         ...ECHART_THEME,
         tooltip: { ...ECHART_THEME.tooltip, trigger: "item", valueFormatter: v => K.fmtMoneyFull(v) },
         legend: { ...ECHART_THEME.legend, bottom: 0 },
         series: [{
           type: "pie", radius: ["50%", "75%"], center: ["50%", "45%"],
+          cursor: "pointer",
           itemStyle: { borderColor: "#fff", borderWidth: 2 },
           label: { formatter: "{b}\n{d}%", color: "#0B1F3A", fontSize: 11 },
+          emphasis: { scale: true, scaleSize: 6 },
           data: mixItems.map(i => ({ name: i.name, value: i.revenue })),
         }],
       }),

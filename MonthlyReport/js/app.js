@@ -99,9 +99,12 @@
     if (!state.data) { mount(V.loading()); return; }
     const route = parseHash();
     if (route.name === "customer") {
-      // subnav for customers
-      renderCustomerSubnav(route.slug);
+      // Mount the view FIRST (mount() clears #view), then prepend the
+      // subnav. The old order (subnav then mount) let mount()'s innerHTML
+      // reset wipe the just-built subnav — so only the default customer
+      // (Mana) was ever visible and there was no way to switch.
       mount(V.customer(state, route.slug));
+      renderCustomerSubnav(route.slug);
     } else if (V[route.name]) {
       clearCustomerSubnav();
       mount(V[route.name](state));

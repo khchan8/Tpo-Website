@@ -91,11 +91,11 @@
   <!-- Toast (errors, WARN) -->
   <div id="toast" class="fixed bottom-6 right-6 hidden"></div>
 
-  <!-- App -->
-  <script src="config.js"></script>
-  <script src="js/data.js"></script>
-  <script src="js/compute.js"></script>
-  <script src="js/views.js"></script>
-  <script src="js/app.js"></script>
+  <!-- App (cache-bust with ?v= on every JS/CSS change so browsers re-fetch) -->
+  <script src="config.js?v=15"></script>
+  <script src="js/data.js?v=15"></script>
+  <script src="js/compute.js?v=15"></script>
+  <script src="js/views.js?v=15"></script>
+  <script src="js/app.js?v=15"></script>
 </body>
 </html>
