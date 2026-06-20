@@ -1,26 +1,33 @@
 /* =========================================================
-   views.js — render functions for every SPA view.
-   Each view returns an HTMLElement (or a DocumentFragment)
-   to be mounted by the router. No business logic here —
-   only layout + ECharts options + commentary display.
+   views.js — render functions for every SPA view.  (v1.4)
+   - chartCard(): chart container + per-chart range selector,
+     with deferred ECharts init (double rAF + resize + ResizeObserver)
+     so charts paint at the right size on FIRST view (no spillover).
+   - boardTable(): correct board-echo tables.
+   - disposeAllCharts(): frees ECharts instances on view change.
    ========================================================= */
 (function () {
   const C = window.TPO_CONFIG;
   const D = window.TPO_DATA;
   const K = window.TPO_COMPUTE;
+  const num  = D.num;
+  const pct  = D.pct;
+  const trim = D.trim;
+  const slugify = D.slugify;
 
-  /* ---------- helpers ---------- */
+  /* ---------- element helpers ---------- */
   function el(tag, attrs = {}, ...children) {
     const e = document.createElement(tag);
     for (const [k, v] of Object.entries(attrs || {})) {
+      if (v === null || v === undefined) continue;
       if (k === "class") e.className = v;
       else if (k === "html") e.innerHTML = v;
       else if (k.startsWith("on") && typeof v === "function") e.addEventListener(k.slice(2), v);
-      else if (v !== null && v !== undefined) e.setAttribute(k, v);
+      else e.setAttribute(k, v);
     }
     for (const c of children.flat()) {
       if (c === null || c === undefined || c === false) continue;
-      e.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
+      e.appendChild(typeof c === "string" || typeof c === "number" ? document.createTextNode(String(c)) : c);
     }
     return e;
   }
@@ -58,20 +65,9 @@
       el("span", {}, text),
     );
   }
-  function chartHost(height = 320) {
-    const d = el("div", { style: `width:100%;height:${height}px;` });
-    return d;
-  }
-  function ensureChart(host, opt) {
-    const inst = echarts.init(host);
-    inst.setOption(opt);
-    return inst;
-  }
-  function sawtoothDivider() {
-    return el("div", { class: "sawtooth my-8" });
-  }
+  function sawtoothDivider() { return el("div", { class: "sawtooth my-8" }); }
+
   function lowSeasonMarkArea(series) {
-    // Add low-season markArea to the LAST series in the chart (ECharts quirk)
     const low = [];
     let open = null;
     series.forEach((label, i) => {
@@ -83,6 +79,120 @@
     return low.map(([a, b]) => [{ xAxis: a.xAxis }, { xAxis: b.xAxis }]);
   }
 
+  /* ---------- chart lifecycle (kills first-paint spillover) ---------- */
+  const chartRegistry_ = []; // {instance, ro}
+  function disposeAllCharts() {
+    chartRegistry_.forEach(c => {
+      try { c.ro && c.ro.disconnect(); } catch (_) {}
+      try { c.instance && c.instance.dispose(); } catch (_) {}
+    });
+    chartRegistry_.length = 0;
+  }
+
+  /* ---------- range selector ---------- */
+  const RANGE_PRESETS = {
+    monthly:   [["all", "All"], ["12m", "12M"], ["6m", "6M"], ["ytd", "YTD"]],
+    quarterly: [["all", "All"], ["4q", "Last 4Q"], ["8q", "Last 8Q"]],
+    none:      [],
+  };
+  function rangeControl_(rangeKey) {
+    const wrap = el("div", { class: "range-control", "data-range-control": "" });
+    RANGE_PRESETS[rangeKey].forEach(([key, label], i) => {
+      wrap.appendChild(el("button", {
+        class: "range-btn" + (i === 0 ? " active" : ""),
+        type: "button", "data-range": key,
+      }, label));
+    });
+    return wrap;
+  }
+  // Slice {labels, series} by the active range preset.
+  function sliceByRange_(data, range, rangeKey) {
+    if (!data || rangeKey === "none" || range === "all") return data;
+    const labels = data.labels || [];
+    const n = labels.length;
+    let from = 0;
+    if (rangeKey === "monthly") {
+      if (range === "12m") from = Math.max(0, n - 12);
+      else if (range === "6m") from = Math.max(0, n - 6);
+      else if (range === "ytd") {
+        const lastYr = K.parseMonth(labels[n - 1])?.yr;
+        if (lastYr != null) {
+          for (let i = 0; i < n; i++) {
+            if (K.parseMonth(labels[i])?.yr === lastYr) { from = i; break; }
+          }
+        }
+      }
+    } else if (rangeKey === "quarterly") {
+      if (range === "4q") from = Math.max(0, n - 4);
+      else if (range === "8q") from = Math.max(0, n - 8);
+    }
+    if (from === 0) return data;
+    return {
+      labels: labels.slice(from),
+      series: data.series.map(s => ({ ...s, values: (s.values || []).slice(from) })),
+    };
+  }
+
+  /* ---------- chartCard (container + range control + safe init) ---------- */
+  // data = { labels:[], series:[{name, values:[]}] }
+  // buildOption(slicedData) -> ECharts option
+  function chartCard({ title, subtitle, rangeKey = "none", height = 320, data, buildOption }) {
+    const header = el("div", { class: "chart-card-head" },
+      el("div", {},
+        el("h2", { class: "font-serif text-xl text-ink" }, title),
+        subtitle ? el("div", { class: "text-xs text-mute mt-1" }, subtitle) : null,
+      ),
+      rangeKey !== "none" ? rangeControl_(rangeKey) : null,
+    );
+    const body = el("div", { style: `width:100%;height:${height}px;` });
+    const card = el("div", { class: "bg-white border border-rule rounded-md p-5 shadow-brief" },
+      header, body);
+
+    let instance = null, ro = null, currentRange = "all";
+
+    function render() {
+      if (!instance) return;                 // not yet inited; deferred rAF will call this
+      const sliced = sliceByRange_(data, currentRange, rangeKey);
+      instance.setOption(buildOption(sliced), true);
+    }
+    if (rangeKey !== "none") {
+      const control = header.querySelector("[data-range-control]");
+      control.addEventListener("click", (e) => {
+        const btn = e.target.closest("[data-range]");
+        if (!btn) return;
+        currentRange = btn.getAttribute("data-range");
+        control.querySelectorAll("[data-range]").forEach(b =>
+          b.classList.toggle("active", b === btn));
+        render();
+      });
+    }
+    // Defer init until the grid has laid the container out (double rAF), then
+    // fit + observe. This is what prevents the 0-width spillover on first paint.
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      if (!body.isConnected) return;        // host removed before init (e.g. metric switch)
+      instance = echarts.init(body);
+      ro = new ResizeObserver(() => { try { instance.resize(); } catch (_) {} });
+      ro.observe(body);
+      chartRegistry_.push({ instance, ro });
+      render();
+      setTimeout(() => { try { instance.resize(); } catch (_) {} }, 60); // settle after fonts
+    }));
+    return card;
+  }
+
+  /* ---------- boardTable ---------- */
+  // headers:[string]  rows:[{cells:[string|number], variant?}]
+  function boardTable(headers, rows) {
+    return el("table", { class: "board-table" },
+      el("thead", {}, el("tr", {}, headers.map(h => el("th", {}, h)))),
+      el("tbody", {}, rows.map(r =>
+        el("tr", { class: r.variant || "" },
+          r.cells.map(c => el("td", {}, (c === null || c === undefined || c === "") ? "—" : String(c)))
+        )
+      )),
+    );
+  }
+
   /* ---------- ECharts shared theme ---------- */
   const ECHART_THEME = {
     color: ["#115E67","#1A8A96","#C9A24B","#0B1F3A","#5B6B7E","#7FB7A6","#A14B2A"],
@@ -91,8 +201,7 @@
     legend: { textStyle: { color: "#5B6B7E" }, top: 4 },
     tooltip: {
       trigger: "axis",
-      backgroundColor: "#fff",
-      borderColor: "#D9D2C0",
+      backgroundColor: "#fff", borderColor: "#D9D2C0",
       textStyle: { color: "#0B1F3A" },
       valueFormatter: v => K.fmtMoneyFull(v),
     },
@@ -107,174 +216,259 @@
     },
   };
 
-  /* =========================================================
-     VIEWS
-     ========================================================= */
+  // =========================================================
+  //  VIEWS
+  // =========================================================
 
   // ---- Overview ----
   function viewOverview(state) {
     const { data } = state;
     const monthly = data.monthly;
     const last    = monthly[monthly.length - 1];
-    const prev    = monthly[monthly.length - 2] || last;
     const storyline = K.customerCountStoryline(data.customerCount);
     const concentration = K.concentrationLatest(data.customerRevenue, monthly);
-    const quarterly = K.rollupQuarterly(monthly);
     const currentQ  = last?.quarter || K.quarterOf(last?.month);
     const cordon    = K.quarterCordon(monthly, currentQ);
     const recon     = K.reconciliation(data.customerRevenueTotalByMonth, monthly);
     const reconLatest = recon.filter(r => r.month === last?.month);
 
-    // KPI tiles (Strategic Dashboard mirror)
-    const ytdRev = monthly.filter(m => m.month && K.parseMonth(m.month)?.yr === K.parseMonth(last.month)?.yr)
-                           .reduce((s, m) => s + (m.revenue || 0), 0);
-    const ytdGP  = monthly.filter(m => m.month && K.parseMonth(m.month)?.yr === K.parseMonth(last.month)?.yr)
-                           .reduce((s, m) => s + (m.gp || 0), 0);
-    const margin = ytdRev ? ytdGP / ytdRev : null;
+    const yr = K.parseMonth(last.month)?.yr;
+    const ytd = monthly.filter(m => K.parseMonth(m.month)?.yr === yr).reduce((s, m) => s + (m.revenue || 0), 0);
+    const ytdGP = monthly.filter(m => K.parseMonth(m.month)?.yr === yr).reduce((s, m) => s + (m.gp || 0), 0);
+    const margin = ytd ? ytdGP / ytd : null;
+
+    // Active customers: prefer the CustomerCount tab (reliable); fall back to mix length.
+    const lastCount = data.customerCount.length ? data.customerCount[data.customerCount.length - 1] : null;
+
+    // Customer mix: prefer latest-month concentration; fall back to Customer
+    // Economics (all 5 customers) when the monthly series is sparse.
+    let mixItems = concentration.items;
+    let mixSource = `Latest month · ${concentration.latest || ""}`;
+    if (!mixItems.length && data.customerEcon && data.customerEcon.customers.length) {
+      mixItems = data.customerEcon.customers.map(c => ({ name: c.name, revenue: c.revenue }));
+      mixSource = "Q1 2026 · Customer Economics";
+    }
 
     const kpis = el("div", { class: "grid grid-cols-2 md:grid-cols-4 gap-4 mb-8" },
       kpiTile("Latest month revenue", K.fmtMoneyFull(last?.revenue), last?.month || ""),
-      kpiTile("YTD revenue", K.fmtMoney(ytdRev), `${K.parseMonth(last.month)?.yr || ""} YTD`),
+      kpiTile("YTD revenue", K.fmtMoney(ytd), `${yr || ""} YTD`),
       kpiTile("YTD gross margin", K.fmtPct(margin), "GP / Revenue"),
-      kpiTile("Active customers (latest)", concentration.total ? `${concentration.items.length}` : "—",
-              concentration.latest ? `as of ${concentration.latest}` : ""),
+      kpiTile("Active customers (latest)", lastCount ? `${lastCount.count}` : "—",
+              lastCount?.month || ""),
     );
 
-    // Revenue trend chart (sawtooth with low-season band)
-    const months = monthly.map(m => m.month);
-    const rev    = monthly.map(m => m.revenue);
-    const trendChart = chartHost(320);
-    const trendOpt = {
-      ...ECHART_THEME,
-      legend: { ...ECHART_THEME.legend, data: ["Revenue"] },
-      xAxis: { ...ECHART_THEME.xAxis, type: "category", data: months },
-      yAxis: { ...ECHART_THEME.yAxis, type: "value" },
-      series: [{
-        name: "Revenue", type: "line", smooth: false, symbol: "circle", symbolSize: 5,
-        lineStyle: { color: "#115E67", width: 2 },
-        itemStyle: { color: "#115E67" },
-        areaStyle: { color: "rgba(17,94,103,0.08)" },
-        data: rev,
-        markArea: {
-          silent: true,
-          itemStyle: { color: "rgba(201,162,75,0.10)" },
-          label: { show: false },
-          data: lowSeasonMarkArea(months),
-        },
-      }],
-    };
+    const trendCard = chartCard({
+      title: "Monthly revenue — sawtooth & low season",
+      subtitle: cordon.isPartial ? `${cordon.quarter} — ${cordon.monthCount} months (partial)` : "Full quarter",
+      rangeKey: "monthly", height: 320,
+      data: { labels: monthly.map(m => m.month), series: [{ name: "Revenue", values: monthly.map(m => m.revenue) }] },
+      buildOption: (s) => ({
+        ...ECHART_THEME,
+        legend: { ...ECHART_THEME.legend, data: ["Revenue"] },
+        xAxis: { ...ECHART_THEME.xAxis, type: "category", data: s.labels },
+        yAxis: { ...ECHART_THEME.yAxis, type: "value" },
+        series: [{
+          name: "Revenue", type: "line", smooth: false, symbol: "circle", symbolSize: 5,
+          lineStyle: { color: "#115E67", width: 2 }, itemStyle: { color: "#115E67" },
+          areaStyle: { color: "rgba(17,94,103,0.08)" },
+          data: s.series[0].values,
+          markArea: { silent: true, itemStyle: { color: "rgba(201,162,75,0.10)" }, label: { show: false },
+            data: lowSeasonMarkArea(s.labels) },
+        }],
+      }),
+    });
 
-    // Concentration donut
-    const donutChart = chartHost(260);
-    const donutOpt = {
-      ...ECHART_THEME,
-      tooltip: { ...ECHART_THEME.tooltip, trigger: "item", valueFormatter: v => K.fmtMoneyFull(v) },
-      legend: { ...ECHART_THEME.legend, bottom: 0 },
-      series: [{
-        type: "pie", radius: ["50%", "75%"], center: ["50%", "45%"],
-        itemStyle: { borderColor: "#fff", borderWidth: 2 },
-        label: { formatter: "{b}\n{d}%", color: "#0B1F3A", fontSize: 11 },
-        data: concentration.items.map(i => ({ name: i.name, value: i.revenue })),
-      }],
-    };
+    // Donut (snapshot — no range control, but still goes through chartCard for safe sizing)
+    const donutCard = chartCard({
+      title: "Customer mix",
+      subtitle: mixSource,
+      rangeKey: "none", height: 260,
+      data: { labels: mixItems.map(i => i.name),
+              series: [{ name: "Revenue", values: mixItems.map(i => i.revenue) }] },
+      buildOption: () => ({
+        ...ECHART_THEME,
+        tooltip: { ...ECHART_THEME.tooltip, trigger: "item", valueFormatter: v => K.fmtMoneyFull(v) },
+        legend: { ...ECHART_THEME.legend, bottom: 0 },
+        series: [{
+          type: "pie", radius: ["50%", "75%"], center: ["50%", "45%"],
+          itemStyle: { borderColor: "#fff", borderWidth: 2 },
+          label: { formatter: "{b}\n{d}%", color: "#0B1F3A", fontSize: 11 },
+          data: mixItems.map(i => ({ name: i.name, value: i.revenue })),
+        }],
+      }),
+    });
 
     const layout = el("div", {},
       section("Strategic Dashboard", "Overview", "Top-line performance and customer mix at a glance."),
-      recon.length ? warnBanner(`Customer-level revenue and P&L revenue disagree on ${recon.length} month(s) — e.g. ${reconLatest[0]?.month || ""}: Σ customer ${K.fmtMoneyFull(reconLatest[0]?.sumCustomer)} vs P&L ${K.fmtMoneyFull(reconLatest[0]?.pnl)}. Site continues with a WARN indicator; reconcile in the sheet.`) : null,
+      recon.length ? warnBanner(`Customer-level revenue and P&L revenue disagree on ${recon.length} month(s) — e.g. ${reconLatest[0]?.month || ""}: Σ customer ${K.fmtMoneyFull(reconLatest[0]?.sumCustomer)} vs P&L ${K.fmtMoneyFull(reconLatest[0]?.pnl)}. The site continues with a note; reconcile in the sheet.`) : null,
       kpis,
       el("div", { class: "grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8" },
-        el("div", { class: "lg:col-span-2 bg-white border border-rule rounded-md p-5 shadow-brief" },
-          el("div", { class: "flex items-center justify-between mb-2" },
-            el("h2", { class: "font-serif text-xl text-ink" }, "Monthly revenue — sawtooth & low season"),
-            el("div", { class: "flex items-center gap-2" },
-              el("span", { class: "chip chip-partial" }, cordon.isPartial ? `${cordon.quarter} — ${cordon.monthCount} months` : "Full quarter"),
-            ),
-          ),
-          trendChart,
-        ),
-        el("div", { class: "bg-white border border-rule rounded-md p-5 shadow-brief" },
-          el("h2", { class: "font-serif text-xl text-ink mb-2" }, "Customer mix"),
-          el("div", { class: "text-xs text-mute mb-2" }, `Latest month · ${concentration.latest}`),
-          donutChart,
-        ),
+        el("div", { class: "lg:col-span-2" }, trendCard),
+        el("div", {}, donutCard),
       ),
       sawtoothDivider(),
       el("div", { class: "grid grid-cols-1 md:grid-cols-2 gap-6 mb-8" },
-        el("div", {},
-          el("div", { class: "bg-white border border-rule rounded-md p-5 shadow-brief" },
-            el("h2", { class: "font-serif text-xl text-ink mb-3" }, "Customer count — peak & trough"),
-            el("p", { class: "text-sm text-mute mb-4" }, "The seasonal contraction — from peak to trough — anchors the turnaround storyline."),
-            el("div", { class: "grid grid-cols-3 gap-3" },
-              kpiTile("Peak",    storyline.peak   ? `${storyline.peak.count}`   : "—", storyline.peak?.month   || ""),
-              kpiTile("Trough",  storyline.trough ? `${storyline.trough.count}` : "—", storyline.trough?.month || ""),
-              kpiTile("Δ",       K.fmtPctDelta(storyline.delta), "trough vs peak"),
-            ),
+        el("div", { class: "bg-white border border-rule rounded-md p-5 shadow-brief" },
+          el("h2", { class: "font-serif text-xl text-ink mb-3" }, "Customer count — peak & trough"),
+          el("p", { class: "text-sm text-mute mb-4" }, "The seasonal contraction — from peak to trough — anchors the turnaround storyline."),
+          el("div", { class: "grid grid-cols-3 gap-3" },
+            kpiTile("Peak",   storyline.peak   ? `${storyline.peak.count}`   : "—", storyline.peak?.month   || ""),
+            kpiTile("Trough", storyline.trough ? `${storyline.trough.count}` : "—", storyline.trough?.month || ""),
+            kpiTile("Δ",      K.fmtPctDelta(storyline.delta), "trough vs peak"),
           ),
         ),
         briefingCard("overview", data.commentary,
           "Q2 2026 is a partial quarter — figures shown are Through May only and must not be annualized."),
       ),
     );
-
-    // Mount + init charts
-    queueMicrotask(() => {
-      ensureChart(trendChart, trendOpt);
-      ensureChart(donutChart, donutOpt);
-    });
-
     return layout;
+  }
+
+  // ---- Strategic Dashboard (NEW) ----
+  function viewDashboard(state) {
+    const { data } = state;
+    const dash = data.dashboard || { periods: [], metrics: [] };
+    const periods = dash.periods;
+
+    // KPI matrix table (metrics × periods)
+    const headers = ["Strategic Metric", ...periods];
+    const rows = dash.metrics.map(m => ({
+      cells: [m.label, ...m.values.map(v => fmtDashCell_(v))],
+      variant: "",
+    }));
+
+    // Pick a metric to chart across periods. Default to Active Customers.
+    function numericMetric(m) {
+      const vals = m.values.map(v => num(v));
+      return { label: m.label, vals, sample: m.values.find(v => v !== null && v !== undefined && v !== "") };
+    }
+    const chartable = dash.metrics.map(numericMetric).filter(m => m.vals.some(v => v !== null));
+    let defaultMetric = chartable.find(m => /active customer/i.test(m.label)) || chartable[0];
+
+    const metricSelect = el("select", { class: "dash-select", "data-role": "metric" },
+      ...chartable.map(m => el("option", { value: m.label, selected: defaultMetric && m.label === defaultMetric.label }, m.label))
+    );
+
+    function detectKind(sample) {
+      const s = String(sample == null ? "" : sample);
+      if (s.includes("%")) return "pct";
+      if (s.includes("฿")) return "money";
+      return "count";
+    }
+    function chartFor(metric) {
+      const kind = detectKind(metric.sample);
+      return chartCard({
+        title: metric.label + " — across periods",
+        rangeKey: "none", height: 300,
+        data: { labels: periods, series: [{ name: metric.label, values: metric.vals }] },
+        buildOption: (s) => {
+          const yFmt = kind === "pct" ? (v => K.fmtPct(v))
+                     : kind === "money" ? (v => K.fmtMoney(v))
+                     : (v => v);
+          return {
+            ...ECHART_THEME,
+            legend: { show: false },
+            tooltip: { ...ECHART_THEME.tooltip, valueFormatter: v => yFmt(v) },
+            xAxis: { ...ECHART_THEME.xAxis, type: "category", data: s.labels },
+            yAxis: { ...ECHART_THEME.yAxis, type: "value", axisLabel: { ...ECHART_THEME.yAxis.axisLabel, formatter: v => yFmt(v) } },
+            series: [{
+              type: "bar", itemStyle: { color: "#115E67", borderRadius: [4, 4, 0, 0] },
+              label: { show: true, position: "top", color: "#0B1F3A", fontSize: 11, formatter: p => kind === "count" ? p.value : yFmt(p.value) },
+              data: s.series[0].values,
+            }],
+          };
+        },
+      });
+    }
+
+    const chartHolder = el("div", { class: "mt-4", "data-role": "chart-holder" });
+    function paintChart() {
+      chartHolder.innerHTML = "";
+      disposeHolderCharts_(chartHolder);
+      const m = chartable.find(x => x.label === metricSelect.value) || defaultMetric;
+      if (m) chartHolder.appendChild(chartFor(m));
+    }
+    metricSelect.addEventListener("change", paintChart);
+
+    const layout = el("div", {},
+      section("Strategic Dashboard", "Strategic Dashboard",
+        "The headline KPI matrix across four reference periods. Q2 2026 is shown Through May only."),
+      el("div", { class: "mb-8" },
+        el("h2", { class: "font-serif text-xl text-ink mb-3" }, "KPI matrix"),
+        boardTable(headers, rows),
+      ),
+      el("div", { class: "bg-white border border-rule rounded-md p-5 shadow-brief mb-8" },
+        el("div", { class: "flex items-center justify-between gap-3 flex-wrap" },
+          el("h2", { class: "font-serif text-xl text-ink" }, "Metric across periods"),
+          metricSelect,
+        ),
+        chartHolder,
+      ),
+      briefingCard("strategic-dashboard", data.commentary,
+        "Strategic dashboard commentary pending — generate via the Google Sheet menu (View: strategic-dashboard)."),
+    );
+    // paint after mount
+    requestAnimationFrame(() => requestAnimationFrame(paintChart));
+    return layout;
+  }
+
+  // dispose only the charts whose DOM is inside a given holder (used by dashboard repaint)
+  function disposeHolderCharts_(holder) {
+    for (let i = chartRegistry_.length - 1; i >= 0; i--) {
+      const c = chartRegistry_[i];
+      if (c.instance && holder.contains(c.instance.getDom())) {
+        try { c.ro && c.ro.disconnect(); } catch (_) {}
+        try { c.instance.dispose(); } catch (_) {}
+        chartRegistry_.splice(i, 1);
+      }
+    }
   }
 
   // ---- Seasonality ----
   function viewSeasonality(state) {
     const { data } = state;
     const monthly = data.monthly;
-    const months  = monthly.map(m => m.month);
-    const rev     = monthly.map(m => m.revenue);
-    const gp      = monthly.map(m => m.gp);
-    const ct      = data.customerCount;
+    const ct = data.customerCount;
 
-    const chart = chartHost(360);
-    const opt = {
-      ...ECHART_THEME,
-      legend: { ...ECHART_THEME.legend, data: ["Revenue","Gross Profit"] },
-      xAxis: { ...ECHART_THEME.xAxis, type: "category", data: months },
-      yAxis: { ...ECHART_THEME.yAxis, type: "value" },
-      series: [
-        { name: "Revenue",     type: "bar",  stack: null, itemStyle: { color: "#115E67" }, data: rev,
-          markArea: { silent: true, itemStyle: { color: "rgba(201,162,75,0.10)" }, label: { show: false },
-            data: lowSeasonMarkArea(months) } },
-        { name: "Gross Profit", type: "line", smooth: true, itemStyle: { color: "#C9A24B" }, lineStyle: { color: "#C9A24B", width: 2 }, data: gp },
-      ],
-    };
+    const revCard = chartCard({
+      title: "Monthly revenue & gross profit", rangeKey: "monthly", height: 360,
+      data: { labels: monthly.map(m => m.month),
+              series: [{ name: "Revenue", values: monthly.map(m => m.revenue) },
+                       { name: "Gross Profit", values: monthly.map(m => m.gp) }] },
+      buildOption: (s) => ({
+        ...ECHART_THEME,
+        legend: { ...ECHART_THEME.legend, data: ["Revenue", "Gross Profit"] },
+        xAxis: { ...ECHART_THEME.xAxis, type: "category", data: s.labels },
+        yAxis: { ...ECHART_THEME.yAxis, type: "value" },
+        series: [
+          { name: "Revenue", type: "bar", itemStyle: { color: "#115E67" }, data: s.series[0].values,
+            markArea: { silent: true, itemStyle: { color: "rgba(201,162,75,0.10)" }, label: { show: false }, data: lowSeasonMarkArea(s.labels) } },
+          { name: "Gross Profit", type: "line", smooth: true, itemStyle: { color: "#C9A24B" }, lineStyle: { color: "#C9A24B", width: 2 }, data: s.series[1].values },
+        ],
+      }),
+    });
 
-    const ctChart = chartHost(260);
-    const ctOpt = {
-      ...ECHART_THEME,
-      legend: { ...ECHART_THEME.legend, data: ["Active customers"] },
-      xAxis: { ...ECHART_THEME.xAxis, type: "category", data: ct.map(c => c.month) },
-      yAxis: { ...ECHART_THEME.yAxis, type: "value", axisLabel: { ...ECHART_THEME.yAxis.axisLabel, formatter: v => v } },
-      series: [{ name: "Active customers", type: "line", smooth: true, step: false,
-        itemStyle: { color: "#1A8A96" }, lineStyle: { color: "#1A8A96", width: 2 }, data: ct.map(c => c.count),
-        markArea: { silent: true, itemStyle: { color: "rgba(201,162,75,0.10)" }, label: { show: false },
-          data: lowSeasonMarkArea(ct.map(c => c.month)) } }],
-    };
+    const ctCard = chartCard({
+      title: "Active customers", rangeKey: "monthly", height: 260,
+      data: { labels: ct.map(c => c.month), series: [{ name: "Active customers", values: ct.map(c => c.count) }] },
+      buildOption: (s) => ({
+        ...ECHART_THEME,
+        legend: { ...ECHART_THEME.legend, data: ["Active customers"] },
+        xAxis: { ...ECHART_THEME.xAxis, type: "category", data: s.labels },
+        yAxis: { ...ECHART_THEME.yAxis, type: "value", axisLabel: { ...ECHART_THEME.yAxis.axisLabel, formatter: v => v } },
+        series: [{ name: "Active customers", type: "line", smooth: true, itemStyle: { color: "#1A8A96" }, lineStyle: { color: "#1A8A96", width: 2 },
+          data: s.series[0].values,
+          markArea: { silent: true, itemStyle: { color: "rgba(201,162,75,0.10)" }, label: { show: false }, data: lowSeasonMarkArea(s.labels) } }],
+      }),
+    });
 
-    const layout = el("div", {},
+    return el("div", {},
       section("Seasonality", "Revenue Seasonality",
-        "The business is structurally seasonal — Jun through Oct is the low season. Charts use a frosted band so the contraction is impossible to miss."),
-      el("div", { class: "bg-white border border-rule rounded-md p-5 shadow-brief mb-6" },
-        el("h2", { class: "font-serif text-xl text-ink mb-3" }, "Monthly revenue & gross profit"),
-        chart,
-      ),
-      el("div", { class: "bg-white border border-rule rounded-md p-5 shadow-brief mb-8" },
-        el("h2", { class: "font-serif text-xl text-ink mb-3" }, "Active customers"),
-        ctChart,
-      ),
+        "The business is structurally seasonal — Jun through Oct is the low season. Frosted bands mark the contraction."),
+      el("div", { class: "mb-6" }, revCard),
+      el("div", { class: "mb-8" }, ctCard),
       briefingCard("seasonality", data.commentary),
     );
-    queueMicrotask(() => { ensureChart(chart, opt); ensureChart(ctChart, ctOpt); });
-    return layout;
   }
 
   // ---- Working Capital ----
@@ -282,64 +476,66 @@
     const { data } = state;
     const wc = K.nwcSeries(data.workingCapital);
     const months = wc.map(w => w.month);
-    const nwcChart = chartHost(320);
-    const nwcOpt = {
-      ...ECHART_THEME,
-      legend: { ...ECHART_THEME.legend, data: ["Cash","AR","Inventory","AP","Net Working Capital"] },
-      xAxis: { ...ECHART_THEME.xAxis, type: "category", data: months },
-      yAxis: { ...ECHART_THEME.yAxis, type: "value" },
-      series: [
-        { name: "Cash",       type: "line", smooth: true, itemStyle: { color: "#115E67" }, data: wc.map(w => w.cash) },
-        { name: "AR",         type: "line", smooth: true, itemStyle: { color: "#1A8A96" }, data: wc.map(w => w.ar) },
-        { name: "Inventory",  type: "line", smooth: true, itemStyle: { color: "#7FB7A6" }, data: wc.map(w => w.inventory) },
-        { name: "AP",         type: "line", smooth: true, itemStyle: { color: "#A14B2A" }, data: wc.map(w => w.ap) },
-        { name: "Net Working Capital", type: "bar", itemStyle: { color: "#0B1F3A" },
-          data: wc.map(w => w.nwc) },
-      ],
-    };
 
-    const latest = wc[wc.length - 1];
+    const nwcCard = chartCard({
+      title: "Working capital components", rangeKey: "monthly", height: 320,
+      data: { labels: months, series: [
+        { name: "Cash",      values: wc.map(w => w.cash) },
+        { name: "AR",        values: wc.map(w => w.ar) },
+        { name: "Inventory", values: wc.map(w => w.inventory) },
+        { name: "AP",        values: wc.map(w => w.ap) },
+        { name: "Net Working Capital", values: wc.map(w => w.nwc) },
+      ] },
+      buildOption: (s) => ({
+        ...ECHART_THEME,
+        legend: { ...ECHART_THEME.legend, data: ["Cash", "AR", "Inventory", "AP", "Net Working Capital"] },
+        xAxis: { ...ECHART_THEME.xAxis, type: "category", data: s.labels },
+        yAxis: { ...ECHART_THEME.yAxis, type: "value" },
+        series: [
+          { name: "Cash",      type: "line", smooth: true, itemStyle: { color: "#115E67" }, data: s.series[0].values },
+          { name: "AR",        type: "line", smooth: true, itemStyle: { color: "#1A8A96" }, data: s.series[1].values },
+          { name: "Inventory", type: "line", smooth: true, itemStyle: { color: "#7FB7A6" }, data: s.series[2].values },
+          { name: "AP",        type: "line", smooth: true, itemStyle: { color: "#A14B2A" }, data: s.series[3].values },
+          { name: "Net Working Capital", type: "bar", itemStyle: { color: "#0B1F3A" }, data: s.series[4].values },
+        ],
+      }),
+    });
+
+    const latest = wc[wc.length - 1] || {};
     const kpis = el("div", { class: "grid grid-cols-2 md:grid-cols-5 gap-4 mb-6" },
-      kpiTile("Cash",       K.fmtMoneyFull(latest.cash),       latest.month),
-      kpiTile("AR",         K.fmtMoneyFull(latest.ar),         latest.month),
-      kpiTile("Inventory",  K.fmtMoneyFull(latest.inventory),  latest.month),
-      kpiTile("AP",         K.fmtMoneyFull(latest.ap),         latest.month, "warn"),
-      kpiTile("NWC",        K.fmtMoneyFull(latest.nwc),        "Cash + AR + Inv − AP"),
+      kpiTile("Cash",      K.fmtMoneyFull(latest.cash),      latest.month || ""),
+      kpiTile("AR",        K.fmtMoneyFull(latest.ar),        latest.month || ""),
+      kpiTile("Inventory", K.fmtMoneyFull(latest.inventory), latest.month || ""),
+      kpiTile("AP",        K.fmtMoneyFull(latest.ap),        latest.month || "", "warn"),
+      kpiTile("NWC",       K.fmtMoneyFull(latest.nwc),       "Cash + AR + Inv − AP"),
     );
 
-    // Board table (echo of the sheet)
-    const tbl = el("table", { class: "board-table" },
-      el("thead", {}, el("tr", {}, data.workingCapital.months.map(m => el("th", {}, m)))),
-      el("tbody", {}, data.workingCapital.rows.map(r =>
-        el("tr", { class: r.label.toLowerCase().includes("net working capital") ? "subtotal" : "" },
-          el("td", {}, r.label),
-          ...r.values.map(v => el("td", {}, v === null ? "—" : K.fmtMoneyFull(v))),
-        )
-      )),
-    );
+    // Board table echo — correct "Reporting Month" first column header.
+    const headers = (data.workingCapital.tableHeaders && data.workingCapital.tableHeaders.length)
+      ? data.workingCapital.tableHeaders
+      : ["Reporting Month", "Cash Balance", "AR", "Inventory Value", "AP", "Net Working Capital"];
+    const rows = (data.workingCapital.tableRows || []).map(r => ({
+      cells: [r.label, ...r.values.map(v => K.fmtMoneyFull(v))],
+      variant: "subtotal",
+    }));
 
-    const layout = el("div", {},
+    return el("div", {},
       section("Liquidity", "Working Capital", "Cash, receivables, inventory and payables — and the resulting Net Working Capital."),
       kpis,
-      el("div", { class: "bg-white border border-rule rounded-md p-5 shadow-brief mb-8" },
-        el("h2", { class: "font-serif text-xl text-ink mb-3" }, "Working capital components"),
-        nwcChart,
-      ),
+      el("div", { class: "mb-8" }, nwcCard),
       el("div", { class: "mb-8" },
         el("h2", { class: "font-serif text-xl text-ink mb-3" }, "Board table"),
-        tbl,
+        boardTable(headers, rows),
       ),
       briefingCard("working-capital", data.commentary),
     );
-    queueMicrotask(() => ensureChart(nwcChart, nwcOpt));
-    return layout;
   }
 
-  // ---- Financial Performance ----
+  // ---- Financials ----
   function viewFinancials(state) {
     const { data } = state;
     const fc = K.financialComparison(data.monthly, data.quarterly);
-    const { byQuarter, q1_25, q1_26, q2_26, q2_25, deltaQ1YoY, deltaQ2YoY, q2_26Months } = fc;
+    const { byQuarter, q1_25, q1_26, q2_26, q2_25, deltaQ1YoY, q2_26Months } = fc;
     const cordon = K.quarterCordon(data.monthly, q2_26?.quarter);
 
     const kpis = el("div", { class: "grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" },
@@ -351,109 +547,111 @@
               cordon.isPartial ? "warn" : ""),
     );
 
-    // Comparison chart
     const quarters = byQuarter.map(q => q.quarter);
-    const rev = byQuarter.map(q => q.revenue);
     const isPartial = quarters.map(q => q === q2_26?.quarter && (q2_26Months?.length || 0) < 3);
-    const chart = chartHost(340);
-    const opt = {
-      ...ECHART_THEME,
-      legend: { ...ECHART_THEME.legend, data: ["Quarterly revenue"] },
-      xAxis: { ...ECHART_THEME.xAxis, type: "category", data: quarters },
-      yAxis: { ...ECHART_THEME.yAxis, type: "value" },
-      series: [{
-        name: "Quarterly revenue", type: "bar",
-        itemStyle: {
-          color: (params) => isPartial[params.dataIndex] ? "#C9A24B" : "#115E67",
-          borderColor: "#fff", borderWidth: 1,
-        },
-        data: rev,
-        label: {
-          show: true, position: "top", color: "#0B1F3A", fontSize: 11,
-          formatter: (p) => isPartial[p.dataIndex] ? `${K.fmtMoney(p.value)} *` : K.fmtMoney(p.value),
-        },
-      }],
-    };
 
-    // Quarter detail table
-    const tbl = el("table", { class: "board-table" },
-      el("thead", {}, el("tr", {},
-        el("th", {}, "Quarter"),
-        ...["Revenue","COGS","GP","SG&A","EBIT","Net Income"].map(h => el("th", {}, h)),
-      )),
-      el("tbody", {}, byQuarter.map(q => {
-        const partial = q === q2_26?.quarter && (q2_26Months?.length || 0) < 3;
-        return el("tr", { class: partial ? "partial" : "" },
-          el("td", {}, q.quarter + (partial ? " *" : "")),
-          el("td", {}, K.fmtMoneyFull(q.revenue)),
-          el("td", {}, K.fmtMoneyFull(q.cogs)),
-          el("td", {}, K.fmtMoneyFull(q.gp)),
-          el("td", {}, K.fmtMoneyFull(q.sga)),
-          el("td", {}, K.fmtMoneyFull(q.ebit)),
-          el("td", {}, K.fmtMoneyFull(q.netIncome)),
-        );
-      })),
-    );
+    const revCard = chartCard({
+      title: "Quarterly revenue (Q1'25 → Q2'26)",
+      subtitle: "Amber bar = partial quarter (Q2 2026, Through May).",
+      rangeKey: "quarterly", height: 340,
+      data: { labels: quarters, series: [{ name: "Quarterly revenue", values: byQuarter.map(q => q.revenue) }] },
+      buildOption: (s) => ({
+        ...ECHART_THEME,
+        legend: { ...ECHART_THEME.legend, data: ["Quarterly revenue"] },
+        xAxis: { ...ECHART_THEME.xAxis, type: "category", data: s.labels },
+        yAxis: { ...ECHART_THEME.yAxis, type: "value" },
+        series: [{
+          name: "Quarterly revenue", type: "bar",
+          itemStyle: { color: (p) => isPartial[p.dataIndex] ? "#C9A24B" : "#115E67", borderColor: "#fff", borderWidth: 1 },
+          data: s.series[0].values,
+          label: { show: true, position: "top", color: "#0B1F3A", fontSize: 11,
+                   formatter: (p) => {
+                     const origIdx = quarters.indexOf(s.labels[p.dataIndex]);
+                     return (origIdx >= 0 && isPartial[origIdx]) ? `${K.fmtMoney(p.value)} *` : K.fmtMoney(p.value);
+                   } },
+        }],
+      }),
+    });
 
-    const layout = el("div", {},
+    const headers = ["Quarter", "Revenue", "COGS", "GP", "SG&A", "EBIT", "Net Income"];
+    const rows = byQuarter.map(q => {
+      const partial = q === q2_26?.quarter && (q2_26Months?.length || 0) < 3;
+      return {
+        cells: [q.quarter + (partial ? " *" : ""), K.fmtMoneyFull(q.revenue), K.fmtMoneyFull(q.cogs),
+                K.fmtMoneyFull(q.gp), K.fmtMoneyFull(q.sga), K.fmtMoneyFull(q.ebit), K.fmtMoneyFull(q.netIncome)],
+        variant: partial ? "partial" : "",
+      };
+    });
+
+    return el("div", {},
       section("Financial Performance", "Quarterly performance",
         "Q1 2025 vs Q1 2026 is the primary comparison. Q2 2026 is shown as a partial period and is never annualized."),
       cordon.isPartial ? warnBanner(`Q2 2026 covers ${cordon.monthCount} months only (through ${cordon.latestMonth}). Treat Q2 2026 figures as a partial read; do not extrapolate.`) : null,
       kpis,
-      el("div", { class: "bg-white border border-rule rounded-md p-5 shadow-brief mb-8" },
-        el("h2", { class: "font-serif text-xl text-ink mb-3" }, "Quarterly revenue (Q1'25 → Q2'26)"),
-        el("div", { class: "text-xs text-mute mb-3" }, "Amber bar = partial quarter (Q2 2026, Through May)."),
-        chart,
-      ),
+      el("div", { class: "mb-8" }, revCard),
       el("div", { class: "mb-8" },
         el("h2", { class: "font-serif text-xl text-ink mb-3" }, "Quarterly P&L"),
-        tbl,
+        boardTable(headers, rows),
       ),
       briefingCard("financial-performance", data.commentary),
     );
-    queueMicrotask(() => ensureChart(chart, opt));
-    return layout;
   }
 
-  // ---- Forward Looking ----
+  // ---- Forward-Looking (redesign) ----
   function viewForwardLooking(state) {
     const { data } = state;
+    const fl = data.forwardLooking || { lineNames: [], periods: [] };
+    const periods = fl.periods || [];
     const monthly = data.monthly;
     const last = monthly[monthly.length - 1];
-    const isJuneMonth = last && K.parseMonth(last.month)?.mon === 5; // May=4, June=5
-    const nextMonthIsLow = last && (() => {
-      const p = K.parseMonth(last.month); if (!p) return false;
-      let m = p.mon + 1, y = p.yr; if (m > 12) { m = 1; y++; }
-      return ["Jun","Jul","Aug","Sep","Oct"].includes(["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][m-1]);
-    })();
 
-    const cards = el("div", { class: "grid grid-cols-1 md:grid-cols-2 gap-4 mb-8" },
-      ...data.forwardLooking.items.map(item => {
-        const status = item.status.toLowerCase();
-        const variant = status.includes("high") || status.includes("critical") || status.includes("amber") ? "risk"
-                      : status.includes("watch") || status.includes("monitor") ? "warn"
-                      : "";
-        return el("div", { class: `kpi ${variant ? "kpi-" + variant : ""}` },
-          el("div", { class: "kpi-bar" }),
-          el("div", { class: "kpi-label" }, item.label),
-          el("div", { class: "kpi-value text-lg" }, item.status || "—"),
-          item.mitigation ? el("div", { class: "kpi-sub mt-2" }, item.mitigation) : null,
-        );
-      }),
-    );
+    // Comparison table: rows = P&L lines, columns = periods (+ Δ when 2 periods)
+    const lines = [
+      { label: "Revenue",      get: p => p.revenue },
+      { label: "COGS",         get: p => p.cogs },
+      { label: "Gross Profit", get: p => p.gp },
+      { label: "SG&A",         get: p => p.sga },
+      { label: "Net Income",   get: p => p.netIncome },
+    ];
+    const twoP = periods.length === 2;
+    const headers = ["Line", ...periods.map(p => p.label), ...(twoP ? ["Δ"] : [])];
+    const rows = lines.map(ln => {
+      const cells = [ln.label, ...periods.map(p => K.fmtMoneyFull(ln.get(p)))];
+      if (twoP) {
+        const a = ln.get(periods[0]), b = ln.get(periods[1]);
+        const d = (a && b) ? K.fmtPctDelta((b - a) / Math.abs(a || 1)) : "—";
+        cells.push(d);
+      }
+      return { cells, variant: ln.label === "Gross Profit" ? "subtotal" : "" };
+    });
+
+    // Risk-status chips per period
+    const riskCards = periods.filter(p => p.riskStatus).map(p => {
+      const high = /high|critical|amber|incomplete/i.test(p.riskStatus);
+      return kpiTile(p.label, p.riskStatus, "Risk status", high ? "risk" : "warn");
+    });
 
     const layout = el("div", {},
       section("Forward-looking", "Risk & Outlook",
-        "Risk register from the sheet, plus a banner for the seasonal inflection."),
-      (nextMonthIsLow && last) ? warnBanner(`June risk: the report ends in ${last.month}, and the next reporting month enters the low season (Jun–Oct). Expect a step-down in revenue and active customers.`) : null,
-      cards,
-      sawtoothDivider(),
+        "Q2 2025 (full) vs Q2 2026 (Apr & May, partial) with the board's risk read."),
+      (nextMonthIsLow_(last)) ? warnBanner(`Seasonal inflection: the report ends in ${last?.month}, and the next reporting month enters the low season (Jun–Oct). Expect a step-down in revenue and active customers.`) : null,
+      riskCards.length ? el("div", { class: "grid grid-cols-1 md:grid-cols-2 gap-4 mb-8" }, ...riskCards) : null,
+      el("div", { class: "mb-8" },
+        el("h2", { class: "font-serif text-xl text-ink mb-3" }, "Forward-looking P&L comparison"),
+        boardTable(headers, rows),
+      ),
       briefingCard("forward-looking", data.commentary),
     );
     return layout;
   }
+  function nextMonthIsLow_(last) {
+    if (!last) return false;
+    const p = K.parseMonth(last.month); if (!p) return false;
+    let m = p.mon + 1, y = p.yr; if (m > 12) { m = 1; y++; }
+    return ["Jun", "Jul", "Aug", "Sep", "Oct"].includes(["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][m - 1]);
+  }
 
-  // ---- Customer (data-driven) ----
+  // ---- Customers (data-driven; quarterly from Customer Economics) ----
   function viewCustomer(state, slug) {
     const { data } = state;
     const customers = data.assumptions.customers;
@@ -465,84 +663,90 @@
         el("p", { class: "mt-4 text-sm" }, el("a", { href: "#/", class: "text-sea underline" }, "← Back to overview")),
       );
     }
-    const series = data.customerRevenue[c.slug]?.series || [];
-    const marginByName = Object.fromEntries(customers.map(cu => [cu.name, cu.margin]));
-    const rolled = K.rollupCustomerQuarterly({ [c.slug]: { name: c.name, slug: c.slug, series } }, marginByName)[c.slug];
-    const concentration = K.concentrationLatest(data.customerRevenue, data.monthly);
-    const myShare = concentration.items.find(i => i.slug === c.slug);
 
-    const months = series.map(s => s.month);
-    const rev    = series.map(s => s.revenue);
-    const gp     = series.map(s => s.margin !== null ? s.revenue * s.margin : null);
+    // Quarterly economics from "2. Customer Economics" (reliable for all customers).
+    const econ = (data.customerEcon && data.customerEcon.customers) || [];
+    const myEcon = econ.filter(r => slugify(r.name) === slug)
+      .sort((a, b) => cmpQuarter_(a.quarter, b.quarter));
+    const latestEcon = myEcon[myEcon.length - 1] || null;
 
-    // M-to-M chart
-    const mmChart = chartHost(300);
-    const mmOpt = {
-      ...ECHART_THEME,
-      legend: { ...ECHART_THEME.legend, data: ["Revenue","Gross Profit (est.)"] },
-      xAxis: { ...ECHART_THEME.xAxis, type: "category", data: months },
-      yAxis: { ...ECHART_THEME.yAxis, type: "value" },
-      series: [
-        { name: "Revenue", type: "bar", itemStyle: { color: "#115E67" }, data: rev,
-          markArea: { silent: true, itemStyle: { color: "rgba(201,162,75,0.10)" }, label: { show: false },
-            data: lowSeasonMarkArea(months) } },
-        { name: "Gross Profit (est.)", type: "line", smooth: true, itemStyle: { color: "#C9A24B" }, data: gp },
-      ],
-    };
+    // Monthly detail from CustomerRevenueMonthly (where present).
+    const monthlySeries = (data.customerRevenue[c.slug]?.series || []).filter(s => s.revenue !== null && s.revenue !== undefined);
 
-    // Q-to-Q chart
-    const qQs = rolled.quarterly;
-    const qqChart = chartHost(260);
-    const qqOpt = {
-      ...ECHART_THEME,
-      legend: { ...ECHART_THEME.legend, data: ["Quarterly revenue","Quarterly GP (est.)"] },
-      xAxis: { ...ECHART_THEME.xAxis, type: "category", data: qQs.map(q => q.quarter) },
-      yAxis: { ...ECHART_THEME.yAxis, type: "value" },
-      series: [
-        { name: "Quarterly revenue", type: "bar", itemStyle: { color: "#1A8A96" }, data: qQs.map(q => q.revenue) },
-        { name: "Quarterly GP (est.)", type: "line", smooth: true, itemStyle: { color: "#C9A24B" }, data: qQs.map(q => q.gp) },
-      ],
-    };
-
-    // KPI tiles
-    const ytd = months.filter(m => K.parseMonth(m)?.yr === K.parseMonth(months[months.length-1])?.yr)
-                      .reduce((s, m, _, arr) => s + (series.find(x => x.month === m)?.revenue || 0), 0);
-    const lastQ = qQs[qQs.length - 1];
-    const prevQ = qQs[qQs.length - 2];
     const kpis = el("div", { class: "grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" },
-      kpiTile("Latest month revenue", K.fmtMoneyFull(rev[rev.length-1]), months[months.length-1]),
-      kpiTile("YTD revenue", K.fmtMoney(ytd), `${K.parseMonth(months[months.length-1])?.yr || ""}`),
-      kpiTile("Mix share (latest)", K.fmtPct(myShare?.share), concentration.latest ? `as of ${concentration.latest}` : ""),
+      kpiTile("Quarter revenue",  latestEcon ? K.fmtMoneyFull(latestEcon.revenue) : "—", latestEcon?.quarter || ""),
+      kpiTile("Gross profit",     latestEcon ? K.fmtMoneyFull(latestEcon.gp) : "—", "From Customer Economics"),
       kpiTile("Contribution margin", K.fmtPct(c.margin), "From Assumptions tab"),
+      kpiTile("Revenue concentration", latestEcon ? K.fmtPct(latestEcon.concentration) : "—", latestEcon?.quarter || ""),
     );
 
-    const layout = el("div", {},
+    // Q-to-Q chart (from econ; degrades gracefully to a single bar)
+    const qqCard = chartCard({
+      title: "Quarter-to-quarter", subtitle: latestEcon ? `Source: Customer Economics · ${latestEcon.quarter}` : "",
+      rangeKey: "quarterly", height: 300,
+      data: { labels: myEcon.map(r => r.quarter),
+              series: [{ name: "Quarterly revenue", values: myEcon.map(r => r.revenue) },
+                       { name: "Quarterly GP",      values: myEcon.map(r => r.gp) }] },
+      buildOption: (s) => ({
+        ...ECHART_THEME,
+        legend: { ...ECHART_THEME.legend, data: ["Quarterly revenue", "Quarterly GP"] },
+        xAxis: { ...ECHART_THEME.xAxis, type: "category", data: s.labels },
+        yAxis: { ...ECHART_THEME.yAxis, type: "value" },
+        series: [
+          { name: "Quarterly revenue", type: "bar", itemStyle: { color: "#1A8A96" }, data: s.series[0].values },
+          { name: "Quarterly GP", type: "line", smooth: true, itemStyle: { color: "#C9A24B" }, data: s.series[1].values },
+        ],
+      }),
+    });
+
+    // M-to-M chart (only where monthly data exists)
+    let monthBlock;
+    if (monthlySeries.length) {
+      monthBlock = chartCard({
+        title: "Month-to-month", subtitle: "Source: CustomerRevenueMonthly (where entered)",
+        rangeKey: "monthly", height: 300,
+        data: { labels: monthlySeries.map(s => s.month),
+                series: [{ name: "Revenue", values: monthlySeries.map(s => s.revenue) },
+                         { name: "Gross Profit (est.)", values: monthlySeries.map(s => s.margin !== null ? s.revenue * s.margin : null) }] },
+        buildOption: (s) => ({
+          ...ECHART_THEME,
+          legend: { ...ECHART_THEME.legend, data: ["Revenue", "Gross Profit (est.)"] },
+          xAxis: { ...ECHART_THEME.xAxis, type: "category", data: s.labels },
+          yAxis: { ...ECHART_THEME.yAxis, type: "value" },
+          series: [
+            { name: "Revenue", type: "bar", itemStyle: { color: "#115E67" }, data: s.series[0].values,
+              markArea: { silent: true, itemStyle: { color: "rgba(201,162,75,0.10)" }, label: { show: false }, data: lowSeasonMarkArea(s.labels) } },
+            { name: "Gross Profit (est.)", type: "line", smooth: true, itemStyle: { color: "#C9A24B" }, data: s.series[1].values },
+          ],
+        }),
+      });
+    } else {
+      monthBlock = el("div", { class: "bg-white border border-dashed border-rule rounded-md p-5" },
+        el("h2", { class: "font-serif text-xl text-ink mb-2" }, "Month-to-month"),
+        el("p", { class: "text-sm text-mute" }, "Monthly detail is not entered for this customer in the CustomerRevenueMonthly tab. Quarterly figures above come from the Customer Economics tab."),
+      );
+    }
+
+    return el("div", {},
       section("Customer", c.name,
-        `Monthly and quarterly performance · contribution margin ${K.fmtPct(c.margin)}`),
+        `Quarterly performance · contribution margin ${K.fmtPct(c.margin)}`),
       kpis,
-      el("div", { class: "grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8" },
-        el("div", { class: "bg-white border border-rule rounded-md p-5 shadow-brief" },
-          el("h2", { class: "font-serif text-xl text-ink mb-3" }, "Month-to-month"),
-          mmChart,
-        ),
-        el("div", { class: "bg-white border border-rule rounded-md p-5 shadow-brief" },
-          el("h2", { class: "font-serif text-xl text-ink mb-3" }, "Quarter-to-quarter"),
-          qqChart,
-        ),
-      ),
-      lastQ ? el("div", { class: "bg-white border border-rule rounded-md p-5 shadow-brief mb-8" },
-        el("h2", { class: "font-serif text-xl text-ink mb-3" }, `Latest quarter: ${lastQ.quarter}`),
-        el("div", { class: "grid grid-cols-3 gap-3" },
-          kpiTile("Quarter revenue", K.fmtMoneyFull(lastQ.revenue), lastQ.quarter),
-          kpiTile("Quarter GP (est.)", K.fmtMoneyFull(lastQ.gp), `margin ${K.fmtPct(c.margin)}`),
-          prevQ ? kpiTile("Δ vs prior Q", K.fmtPctDelta((lastQ.revenue - prevQ.revenue) / (prevQ.revenue || 1)), `${prevQ.quarter} → ${lastQ.quarter}`) : kpiTile("Prior Q", "—", ""),
-        ),
-      ) : null,
+      el("div", { class: "grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8" }, qqCard, monthBlock),
       briefingCard(c.slug, data.commentary,
         "Customer-level commentary pending — generate via the Google Sheet menu."),
     );
-    queueMicrotask(() => { ensureChart(mmChart, mmOpt); ensureChart(qqChart, qqOpt); });
-    return layout;
+  }
+  function cmpQuarter_(a, b) {
+    const pa = /^Q([1-4])\s+(\d{4})$/.exec(a || ""), pb = /^Q([1-4])\s+(\d{4})$/.exec(b || "");
+    const A = pa ? { y: +pa[2], q: +pa[1] } : { y: 9999, q: 9 };
+    const B = pb ? { y: +pb[2], q: +pb[1] } : { y: 9999, q: 9 };
+    return A.y - B.y || A.q - B.q;
+  }
+
+  // ---- Dashboard cell formatter (keep sheet's formatting verbatim) ----
+  function fmtDashCell_(v) {
+    if (v === null || v === undefined || v === "") return "—";
+    return trim(v);
   }
 
   // ---- About / Glossary ----
@@ -553,7 +757,7 @@
       ["Active customers",       "Count at the first month of the quarter (documented in the Assumptions tab)."],
       ["Net Working Capital",    "Cash + Accounts Receivable + Inventory − Accounts Payable."],
       ["Contribution margin",    "Per-customer gross margin assumption used to estimate gross profit."],
-      ["WARN (data note)",       "When Σ customer revenue diverges from the P&L total by > 0.5%, a non-blocking note + chip surface so the board knows."],
+      ["Data note (WARN)",       "When Σ customer revenue diverges from the P&L total by > 0.5%, a non-blocking note + chip surface so the board knows."],
       ["Turnaround storyline",   "Q1 2025 trough → Q1 2026 recovery, framed by the swing in active customers."],
     ];
     return el("div", {},
@@ -566,9 +770,6 @@
             el("div", { class: "text-sm text-mute" }, def),
           )
         ),
-      ),
-      el("div", { class: "mt-8 text-sm text-mute" },
-        "TPO Wellness · Monthly Performance · ", "Source: live Google Sheet.",
       ),
     );
   }
@@ -606,6 +807,7 @@
 
   window.TPO_VIEWS = {
     overview: viewOverview,
+    dashboard: viewDashboard,
     seasonality: viewSeasonality,
     "working-capital": viewWorkingCapital,
     financials: viewFinancials,
@@ -614,5 +816,6 @@
     about: viewAbout,
     empty: viewEmpty,
     loading: viewLoading,
+    disposeAllCharts,
   };
 })();

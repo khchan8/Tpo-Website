@@ -119,22 +119,22 @@
     return { latest, total, items };
   }
 
-  /** NWC from board rows (works whether NWC is a provided column or we recompute). */
+  /** NWC series from the shaped Working Capital object.
+   *  workingCapital = { months:[], series:[{key:'cash',values:[]}, ...] }.
+   *  If the sheet provides an NWC column we use it; otherwise recompute
+   *  Cash + AR + Inventory − AP. */
   function nwcSeries(workingCapital) {
-    // Find rows by label
-    const find = (lbl) => workingCapital.rows.find(r => r.label.toLowerCase().includes(lbl.toLowerCase()));
-    const cash = find("Cash");
-    const ar   = find("Accounts Receivable") || find("AR");
-    const inv  = find("Inventory");
-    const ap   = find("Accounts Payable") || find("AP");
-    // If NWC row exists, prefer it
-    const nwcRow = workingCapital.rows.find(r => r.label.toLowerCase().includes("net working capital") || r.label.toLowerCase() === "nwc");
-    return workingCapital.months.map((mo, idx) => {
-      const c = cash?.values[idx] ?? 0;
-      const a = ar?.values[idx] ?? 0;
-      const i = inv?.values[idx] ?? 0;
-      const p = ap?.values[idx] ?? 0;
-      const nwc = nwcRow ? nwcRow.values[idx] : (c + a + i - p);
+    const wc = workingCapital || { months: [], series: [] };
+    const get = (key) => (wc.series.find(s => s.key === key) || {}).values || [];
+    const cash = get("cash"), ar = get("ar"), inv = get("inventory"),
+          ap = get("ap"), nwcRow = get("nwc");
+    return (wc.months || []).map((mo, idx) => {
+      const c = cash[idx] ?? 0;
+      const a = ar[idx] ?? 0;
+      const i = inv[idx] ?? 0;
+      const p = ap[idx] ?? 0;
+      const provided = nwcRow[idx];
+      const nwc = (provided !== undefined && provided !== null) ? provided : (c + a + i - p);
       return { month: mo, cash: c, ar: a, inventory: i, ap: p, nwc };
     });
   }

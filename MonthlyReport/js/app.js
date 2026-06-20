@@ -15,10 +15,11 @@
     nav.innerHTML = "";
     const links = [
       ["Overview",         "#/"],
+      ["Dashboard",        "#/dashboard"],
       ["Seasonality",      "#/seasonality"],
       ["Customers",        "#/customers"],            // special: opens first customer
-      ["Working Capital",  "#/working-capital"],
       ["Financials",       "#/financials"],
+      ["Working Capital",  "#/working-capital"],
       ["Forward-looking",  "#/forward-looking"],
       ["Glossary",         "#/about"],
     ];
@@ -83,6 +84,11 @@
   }
 
   function mount(node) {
+    // Free ECharts instances from the outgoing view before we wipe the DOM,
+    // so we never leak instances or carry spillover across views.
+    if (window.TPO_VIEWS && typeof window.TPO_VIEWS.disposeAllCharts === "function") {
+      window.TPO_VIEWS.disposeAllCharts();
+    }
     const view = document.getElementById("view");
     view.innerHTML = "";
     view.appendChild(node);

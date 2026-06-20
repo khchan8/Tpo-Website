@@ -92,12 +92,46 @@
   );
 }
 
-/* Nav */
+/* Nav — single non-wrapping row; horizontally scrolls on narrow widths */
+#primary-nav {
+  display: flex; align-items: center; gap: .25rem;
+  overflow-x: auto; scrollbar-width: none;
+  -ms-overflow-style: none; flex-shrink: 0;
+}
+#primary-nav::-webkit-scrollbar { display: none; }
 #primary-nav a {
   padding: 6px 10px; border-radius: 4px; color: #1a2a3f;
+  white-space: nowrap;            /* keep two-word labels on one line */
+  flex-shrink: 0;
 }
 #primary-nav a:hover { background: #F3EEDD; }
 #primary-nav a.active { background: #0B1F3A; color: #fff; }
+
+/* chart card header (title + range control) */
+.chart-card-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: .75rem; flex-wrap: wrap; margin-bottom: .75rem;
+}
+
+/* Range selector (segmented control) */
+.range-control {
+  display: inline-flex; border: 1px solid #D9D2C0; border-radius: 6px;
+  overflow: hidden; background: #fff; flex-shrink: 0;
+}
+.range-btn {
+  font: 600 11px/1 'Inter', sans-serif; padding: 6px 10px;
+  color: #5B6B7E; background: transparent; border: 0; cursor: pointer;
+}
+.range-btn:not(:last-child) { border-right: 1px solid #EEEAE0; }
+.range-btn:hover { background: #F3EEDD; }
+.range-btn.active { background: #0B1F3A; color: #fff; }
+
+/* Dashboard metric <select> */
+.dash-select {
+  font: 500 13px 'Inter', sans-serif; color: #0B1F3A;
+  border: 1px solid #D9D2C0; border-radius: 6px; background: #fff;
+  padding: 6px 10px; max-width: 260px;
+}
 
 /* Subnav for customers */
 #sub-nav {

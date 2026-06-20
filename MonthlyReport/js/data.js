@@ -120,12 +120,10 @@
   }
 
   // Quarterly Financials (board table, precomputed in Sheets):
-  //   Title row, header row, then 6 line-items × 5 quarters.
-  //   Rows are labeled like "Total Revenue", "Gross Profit", etc.
+  //   THIS tab genuinely has a title row (r0 "DERIVED — P&L by quarter…"),
+  //   header row r1, then line-items. So header = rows[1], data from i=2.
   function shapeQuarterlyBoard(rows) {
     if (!rows.length) return { quarters: [], lines: [] };
-    // First row is the big title (e.g. "Quarterly Financials (THB)")
-    // Second row is the header: Line Item | Q1 2025 | Q2 2025 | ... | Q2 2026
     const header = rows[1] || rows[0];
     const quarters = header.slice(1).map(trim).filter(Boolean);
     const lines = [];
@@ -139,67 +137,105 @@
     return { quarters, lines };
   }
 
-  // "1. Working Capital" board table:
-  //   Row1 title, Row2 header (Reporting Month | Cash | AR | Inv | AP | NWC),
-  //   then 6 month rows. (NWC is computed in the sheet: B+C+D-E.)
+  // "1. Working Capital" — header IS row 0 (no title row), data from row 1.
+  //   Returns: months[], named component series[], plus explicit table headers
+  //   and rows so the board-table echo renders a correct "Reporting Month"
+  //   column. Drops the "<add month>" placeholder.
   function shapeWorkingCapitalBoard(rows) {
-    if (!rows.length) return { months: [], rows: [] };
-    const header = rows[1] || rows[0];
-    const months = header.slice(1).map(trim).filter(Boolean);
-    const dataRows = [];
-    for (let i = 2; i < rows.length; i++) {
+    const empty = { months: [], series: [], tableHeaders: [], tableRows: [] };
+    if (!rows.length) return empty;
+    const headers = (rows[0] || []).map(trim);
+    const compDefs = [
+      { key: "cash",      label: "Cash",                col: 1 },
+      { key: "ar",        label: "AR",                  col: 2 },
+      { key: "inventory", label: "Inventory",           col: 3 },
+      { key: "ap",        label: "AP",                  col: 4 },
+      { key: "nwc",       label: "Net Working Capital", col: 5 },
+    ];
+    const months = [];
+    const series = compDefs.map(d => ({ key: d.key, name: d.label, values: [] }));
+    const tableRows = [];
+    for (let i = 1; i < rows.length; i++) {
       const r = rows[i];
-      const label = trim(r[0]); if (!label) continue;
-      const vals = [];
-      for (let m = 0; m < months.length; m++) vals.push(num(r[m + 1]));
-      dataRows.push({ label, values: vals });
+      const label = trim(r[0]);
+      if (!label) continue;
+      if (/add\s*month/i.test(label)) continue; // placeholder, not real data
+      const vals = compDefs.map(d => num(r[d.col]));
+      // skip a row that is entirely empty
+      if (vals.every(v => v === null || v === undefined)) continue;
+      months.push(label);
+      compDefs.forEach((d, idx) => series[idx].values.push(vals[idx]));
+      tableRows.push({ label, values: vals });
     }
-    return { months, rows: dataRows };
+    return { months, series, tableHeaders: headers, tableRows };
   }
 
-  // "2. Customer Economics" board table:
-  //   Row1 title, Row2 sub-title, Row3 header (Customer | Revenue | GP | Margin | Mix),
-  //   then 5 customer rows + a Total row.
+  // "2. Customer Economics" — header IS row 0, data from row 1.
+  //   Returns per-customer records {name, quarter, revenue, concentration, gp, margin}
+  //   plus the Total Portfolio row separated out. Primary source for Customers views.
   function shapeCustomerEconBoard(rows) {
-    if (!rows.length) return { customers: [], totals: null };
-    const header = rows[2] || rows[1] || rows[0];
-    const customerNames = header.slice(1).map(trim).filter(Boolean);
-    const matrix = {}; // label -> [vals...]
-    for (let i = 3; i < rows.length; i++) {
+    if (!rows.length) return { headers: [], customers: [], total: null };
+    const headers = (rows[0] || []).map(trim);
+    const customers = [];
+    let total = null;
+    for (let i = 1; i < rows.length; i++) {
       const r = rows[i];
-      const label = trim(r[0]); if (!label) continue;
-      const vals = [];
-      for (let c = 0; c < customerNames.length; c++) vals.push(r[c + 1]);
-      matrix[label] = vals;
+      const name = trim(r[0]); if (!name) continue;
+      const rec = {
+        name,
+        quarter: trim(r[1]),
+        revenue: num(r[2]),
+        concentration: pct(r[3]),
+        gp: num(r[4]),
+        margin: pct(r[5]),
+      };
+      if (/total/i.test(name)) total = rec;
+      else customers.push(rec);
     }
-    return { customers: customerNames, matrix };
+    return { headers, customers, total };
   }
 
-  // "3. Strategic Dashboard" — single-column KPI stack
-  //   Row1 title, Row2 subtitle, Row3 header (KPI | Value), then N KPI rows.
+  // "3. Strategic Dashboard" — header IS row 0, data from row 1.
+  //   Returns periods[] (column headers) + metric rows {label, values:[per period]}.
+  //   Values are kept raw (the sheet stores formatted strings like "76", "85.00%",
+  //   "฿95,136") so the KPI matrix table can show them verbatim; charting code
+  //   parses them with num()/pct() as needed.
   function shapeDashboardBoard(rows) {
-    if (!rows.length) return { items: [] };
-    const items = [];
-    for (let i = 3; i < rows.length; i++) {
+    if (!rows.length) return { periods: [], metrics: [] };
+    const headers = (rows[0] || []).map(trim);
+    const periods = headers.slice(1).filter(Boolean);
+    const metrics = [];
+    for (let i = 1; i < rows.length; i++) {
       const r = rows[i];
       const label = trim(r[0]); if (!label) continue;
-      items.push({ label, value: trim(r[1]), note: trim(r[2] || "") });
+      const values = periods.map((_, p) => (r[p + 1] === undefined ? null : r[p + 1]));
+      metrics.push({ label, values });
     }
-    return { items };
+    return { periods, metrics };
   }
 
-  // "4. Forward-Looking Risk" — 2-column risk rows
-  //   Row1 title, Row2 subtitle, Row3 header (Risk | Status | Mitigation),
-  //   then N risk rows.
+  // "4. Forward-Looking Risk" — header IS row 0, data from row 1.
+  //   Real shape: Reporting Period | Revenue | COGS | Gross Profit | SG&A | Net Income | Risk Status
+  //   Returns periods[] each {label, revenue, cogs, gp, sga, netIncome, riskStatus}.
   function shapeForwardLookingBoard(rows) {
-    if (!rows.length) return { items: [] };
-    const items = [];
-    for (let i = 3; i < rows.length; i++) {
+    if (!rows.length) return { headers: [], lineNames: [], periods: [] };
+    const headers = (rows[0] || []).map(trim);
+    const lineNames = headers.slice(1, headers.length - 1); // Revenue … Net Income
+    const periods = [];
+    for (let i = 1; i < rows.length; i++) {
       const r = rows[i];
       const label = trim(r[0]); if (!label) continue;
-      items.push({ label, status: trim(r[1] || ""), mitigation: trim(r[2] || "") });
+      periods.push({
+        label,
+        revenue:   num(r[1]),
+        cogs:      num(r[2]),
+        gp:        num(r[3]),
+        sga:       num(r[4]),
+        netIncome: num(r[5]),
+        riskStatus: trim(r[6]),
+      });
     }
-    return { items };
+    return { headers, lineNames, periods };
   }
 
   // Commentary: View | Text | Status | Started | Error | Attempts | Thinking Info
