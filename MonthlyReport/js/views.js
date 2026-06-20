@@ -679,37 +679,54 @@
       );
     }
 
-    // Quarterly economics from "2. Customer Economics" (reliable for all customers).
-    const econ = (data.customerEcon && data.customerEcon.customers) || [];
-    const myEcon = econ.filter(r => slugify(r.name) === slug)
-      .sort((a, b) => cmpQuarter_(a.quarter, b.quarter));
-    const latestEcon = myEcon[myEcon.length - 1] || null;
+    // Quarterly revenue trend from CustomerRevenueQuarterly (all quarters, all customers).
+    const crq = data.customerRevenueQuarterly || {};
+    const myQ = (crq[c.slug] && crq[c.slug].quarterly) || [];      // [{quarter, revenue}]
+    const myQValued = myQ.filter(p => p.revenue !== null && p.revenue !== undefined);
+    const latestPt = myQValued.length ? myQValued[myQValued.length - 1] : null;
+
+    // Mix share in the latest quarter (across all customers with a value that quarter).
+    let mixShare = null;
+    if (latestPt) {
+      let total = 0;
+      for (const sl in crq) {
+        const pt = (crq[sl].quarterly || []).find(p => p.quarter === latestPt.quarter);
+        if (pt && pt.revenue !== null && pt.revenue !== undefined) total += pt.revenue;
+      }
+      mixShare = total ? latestPt.revenue / total : null;
+    }
+    const latestGpEst = (latestPt && latestPt.revenue != null && c.margin != null) ? latestPt.revenue * c.margin : null;
 
     // Monthly detail from CustomerRevenueMonthly (where present).
     const monthlySeries = (data.customerRevenue[c.slug]?.series || []).filter(s => s.revenue !== null && s.revenue !== undefined);
 
     const kpis = el("div", { class: "grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" },
-      kpiTile("Quarter revenue",  latestEcon ? K.fmtMoneyFull(latestEcon.revenue) : "—", latestEcon?.quarter || ""),
-      kpiTile("Gross profit",     latestEcon ? K.fmtMoneyFull(latestEcon.gp) : "—", "From Customer Economics"),
+      kpiTile("Quarter revenue",     latestPt ? K.fmtMoneyFull(latestPt.revenue) : "—", latestPt?.quarter || ""),
+      kpiTile("Gross profit (est.)", latestGpEst !== null ? K.fmtMoneyFull(latestGpEst) : "—", "Revenue × margin"),
       kpiTile("Contribution margin", K.fmtPct(c.margin), "From Assumptions tab"),
-      kpiTile("Revenue concentration", latestEcon ? K.fmtPct(latestEcon.concentration) : "—", latestEcon?.quarter || ""),
+      kpiTile("Mix share (latest)",  K.fmtPct(mixShare), latestPt?.quarter || ""),
     );
 
-    // Q-to-Q chart (from econ; degrades gracefully to a single bar)
+    // Q-to-Q chart — full multi-quarter trend from CustomerRevenueQuarterly.
+    const isPartialQ = (q) => /^Q2\s+2026$/.test((q || "").trim()); // Apr & May only
     const qqCard = chartCard({
-      title: "Quarter-to-quarter", subtitle: latestEcon ? `Source: Customer Economics · ${latestEcon.quarter}` : "",
+      title: "Quarter-to-quarter",
+      subtitle: "Source: CustomerRevenueQuarterly" +
+        (isPartialQ(latestPt?.quarter) ? ` · ${latestPt.quarter} is partial (Apr & May)` : ""),
       rangeKey: "quarterly", height: 300,
-      data: { labels: myEcon.map(r => r.quarter),
-              series: [{ name: "Quarterly revenue", values: myEcon.map(r => r.revenue) },
-                       { name: "Quarterly GP",      values: myEcon.map(r => r.gp) }] },
+      data: { labels: myQ.map(p => p.quarter),
+              series: [{ name: "Quarterly revenue",   values: myQ.map(p => p.revenue) },
+                       { name: "Quarterly GP (est.)", values: myQ.map(p => (p.revenue != null && c.margin != null) ? p.revenue * c.margin : null) }] },
       buildOption: (s) => ({
         ...ECHART_THEME,
-        legend: { ...ECHART_THEME.legend, data: ["Quarterly revenue", "Quarterly GP"] },
+        legend: { ...ECHART_THEME.legend, data: ["Quarterly revenue", "Quarterly GP (est.)"] },
         xAxis: { ...ECHART_THEME.xAxis, type: "category", data: s.labels },
         yAxis: { ...ECHART_THEME.yAxis, type: "value" },
         series: [
-          { name: "Quarterly revenue", type: "bar", itemStyle: { color: "#1A8A96" }, data: s.series[0].values },
-          { name: "Quarterly GP", type: "line", smooth: true, itemStyle: { color: "#C9A24B" }, data: s.series[1].values },
+          { name: "Quarterly revenue", type: "bar",
+            itemStyle: { color: (p) => isPartialQ(s.labels[p.dataIndex]) ? "#C9A24B" : "#1A8A96" },
+            data: s.series[0].values },
+          { name: "Quarterly GP (est.)", type: "line", smooth: true, itemStyle: { color: "#C9A24B" }, data: s.series[1].values },
         ],
       }),
     });

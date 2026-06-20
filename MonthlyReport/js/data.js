@@ -107,6 +107,27 @@
     return { byCustomer, totalsByMonth };
   }
 
+  // CustomerRevenueQuarterly: Customer, Quarter, Revenue (long format).
+  // Returns { slug -> { name, slug, quarterly: [{quarter, revenue}] } },
+  // each customer's quarters sorted chronologically. Revenue may be null
+  // (early quarters without sales) — the chart shows those as gaps.
+  function shapeCustomerRevenueQuarterly(rows) {
+    const byCustomer = {};
+    for (let i = 1; i < rows.length; i++) {
+      const r = rows[i];
+      const cust = trim(r[0]); const q = trim(r[1]); const rev = num(r[2]);
+      if (!cust || !q) continue;
+      const slug = slugify(cust);
+      (byCustomer[slug] = byCustomer[slug] || { name: cust, slug, quarterly: [] })
+        .quarterly.push({ quarter: q, revenue: rev });
+    }
+    const parse = (q) => { const m = /^Q([1-4])\s+(\d{4})$/.exec(q || ""); return m ? { y: +m[2], q: +m[1] } : { y: 9999, q: 9 }; };
+    for (const slug in byCustomer) {
+      byCustomer[slug].quarterly.sort((a, b) => { const A = parse(a.quarter), B = parse(b.quarter); return A.y - B.y || A.q - B.q; });
+    }
+    return byCustomer;
+  }
+
   // CustomerCount: Month, count
   function shapeCustomerCount(rows) {
     const out = [];
@@ -289,6 +310,7 @@
     const assumptions = shapeAssumptions(map.Assumptions || []);
     const monthly     = shapeMonthly(map["MonthlyFinancials"] || []);
     const customerRev = shapeCustomerRevenue(map["CustomerRevenueMonthly"] || []);
+    const customerRevQ = shapeCustomerRevenueQuarterly(map["CustomerRevenueQuarterly"] || []);
     const customerCt  = shapeCustomerCount(map["CustomerCount"] || []);
     const quarterly   = shapeQuarterlyBoard(map["Quarterly Financials"] || []);
     const workingCap  = shapeWorkingCapitalBoard(map["1. Working Capital"] || []);
@@ -304,6 +326,7 @@
       monthly,
       customerRevenue: customerRev.byCustomer,
       customerRevenueTotalByMonth: customerRev.totalsByMonth,
+      customerRevenueQuarterly: customerRevQ,
       customerCount: customerCt,
       quarterly,
       workingCapital: workingCap,

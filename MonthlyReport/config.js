@@ -17,6 +17,7 @@ window.TPO_CONFIG = {
     "Assumptions",
     "MonthlyFinancials",
     "CustomerRevenueMonthly",
+    "CustomerRevenueQuarterly",
     "CustomerCount",
     "Quarterly Financials",
     "1. Working Capital",

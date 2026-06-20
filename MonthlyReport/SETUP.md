@@ -23,10 +23,13 @@ the prose commentary with Gemini.
 ### Step 1 — Create the Google Sheet
 1. Open Google Sheets → **Blank spreadsheet**.
 2. **File → Import → Upload** `pipeline/inputs/TPO_Monthly_Input.xlsx` → **Replace spreadsheet**.
-3. Confirm 11 tabs are present:
-   `README`, `Assumptions`, `MonthlyFinancials`, `CustomerRevenueMonthly`, `CustomerCount`,
-   `Quarterly Financials`, `1. Working Capital`, `2. Customer Economics`,
-   `3. Strategic Dashboard`, `4. Forward-Looking Risk`, `Commentary`.
+3. Confirm 12 tabs are present:
+   `README`, `Assumptions`, `MonthlyFinancials`, `CustomerRevenueMonthly`,
+   `CustomerRevenueQuarterly`, `CustomerCount`, `Quarterly Financials`,
+   `1. Working Capital`, `2. Customer Economics`, `3. Strategic Dashboard`,
+   `4. Forward-Looking Risk`, `Commentary`.
+   (`CustomerRevenueQuarterly` = `Customer | Quarter | Revenue`, one row per customer per
+   quarter — drives each customer's Quarter-to-Quarter chart.)
 4. (Optional, security switch) Share → **Anyone with the link → Viewer** when the board
    should see the site. Unshare to hide. This is the on/off switch for the data.
 
