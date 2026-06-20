@@ -708,11 +708,19 @@
     );
 
     // Q-to-Q chart — full multi-quarter trend from CustomerRevenueQuarterly.
-    const isPartialQ = (q) => /^Q2\s+2026$/.test((q || "").trim()); // Apr & May only
+    // A quarter is "partial" ONLY while the current quarter is incomplete
+    // (< 3 months present in MonthlyFinancials). This is data-driven, so the
+    // moment June is added the latest month becomes Jun (= end of Q2) and the
+    // bar automatically turns back to its normal colour — no code change needed.
+    const latestMonth = data.monthly.length ? data.monthly[data.monthly.length - 1].month : null;
+    const cordon = latestMonth ? K.quarterCordon(data.monthly, K.quarterOf(latestMonth)) : null;
+    const partialQuarter = (cordon && cordon.isPartial) ? cordon.quarter : null;
+    const partialMonthCount = cordon ? cordon.monthCount : 0;
+    const isPartialQ = (q) => !!q && q === partialQuarter;
     const qqCard = chartCard({
       title: "Quarter-to-quarter",
       subtitle: "Source: CustomerRevenueQuarterly" +
-        (isPartialQ(latestPt?.quarter) ? ` · ${latestPt.quarter} is partial (Apr & May)` : ""),
+        (isPartialQ(latestPt?.quarter) ? ` · ${latestPt.quarter} partial (${partialMonthCount} of 3 months)` : ""),
       rangeKey: "quarterly", height: 300,
       data: { labels: myQ.map(p => p.quarter),
               series: [{ name: "Quarterly revenue",   values: myQ.map(p => p.revenue) },
