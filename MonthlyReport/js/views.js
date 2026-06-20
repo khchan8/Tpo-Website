@@ -546,51 +546,93 @@
     );
   }
 
-  // ---- Financials ----
+  // ---- Financials (monthly + quarterly) ----
   function viewFinancials(state) {
     const { data } = state;
-    const fc = K.financialComparison(data.monthly, data.quarterly);
-    const { byQuarter, q1_25, q1_26, q2_26, q2_25, deltaQ1YoY, q2_26Months } = fc;
-    const cordon = K.quarterCordon(data.monthly, q2_26?.quarter);
+    const monthly = data.monthly;
+    const quarters = (data.quarterly && data.quarterly.quarters) || [];
+    const last = monthly[monthly.length - 1];
+    const latestMonth = last ? last.month : null;
+
+    // Partial-quarter flag is driven by how many months of the current quarter
+    // exist in MonthlyFinancials (so it auto-clears when June is added).
+    const cordon = latestMonth ? K.quarterCordon(monthly, K.quarterOf(latestMonth)) : null;
+    const partialQuarter = (cordon && cordon.isPartial) ? cordon.quarter : null;
+    const isPartialQ = (q) => !!q && q === partialQuarter;
+
+    // KPIs (monthly + quarterly)
+    const yr = latestMonth ? K.parseMonth(latestMonth).yr : null;
+    const ytdRev = monthly.filter(m => K.parseMonth(m.month).yr === yr).reduce((s, m) => s + (m.revenue || 0), 0);
+    const ytdGP  = monthly.filter(m => K.parseMonth(m.month).yr === yr).reduce((s, m) => s + (m.gp || 0), 0);
+    const ytdMargin = ytdRev ? ytdGP / ytdRev : null;
+    const lastQ = quarters[quarters.length - 1];
+    const prevQ = quarters[quarters.length - 2];
+    const qoq = (lastQ && prevQ && prevQ.revenue) ? (lastQ.revenue - prevQ.revenue) / prevQ.revenue : null;
 
     const kpis = el("div", { class: "grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" },
-      kpiTile("Q1 2025 revenue", K.fmtMoneyFull(q1_25?.revenue), "Baseline"),
-      kpiTile("Q1 2026 revenue", K.fmtMoneyFull(q1_26?.revenue), "Year-over-year", deltaQ1YoY >= 0 ? "" : "warn"),
-      kpiTile("Δ Q1 YoY", K.fmtPctDelta(deltaQ1YoY), "Q1'26 vs Q1'25"),
-      kpiTile("Q2 2026 (partial)", K.fmtMoneyFull(q2_26?.revenue),
-              cordon.isPartial ? `${cordon.monthCount} months through ${cordon.latestMonth}` : "Full quarter",
-              cordon.isPartial ? "warn" : ""),
+      kpiTile("Latest month revenue", K.fmtMoneyFull(last ? last.revenue : null), latestMonth || ""),
+      kpiTile("YTD gross margin", K.fmtPct(ytdMargin), (yr != null ? yr + " YTD" : "")),
+      kpiTile("Latest quarter revenue", K.fmtMoneyFull(lastQ ? lastQ.revenue : null), lastQ ? lastQ.quarter : ""),
+      kpiTile("Δ QoQ", K.fmtPctDelta(qoq), (prevQ && lastQ) ? `${prevQ.quarter} → ${lastQ.quarter}` : ""),
     );
 
-    const quarters = byQuarter.map(q => q.quarter);
-    const isPartial = quarters.map(q => q === q2_26?.quarter && (q2_26Months?.length || 0) < 3);
-
-    const revCard = chartCard({
-      title: "Quarterly revenue (Q1'25 → Q2'26)",
-      subtitle: "Amber bar = partial quarter (Q2 2026, Through May).",
-      rangeKey: "quarterly", height: 340,
-      data: { labels: quarters, series: [{ name: "Quarterly revenue", values: byQuarter.map(q => q.revenue) }] },
+    // ---- Monthly performance ----
+    const months = monthly.map(m => m.month);
+    const monthlyChart = chartCard({
+      title: "Monthly revenue, gross profit & EBIT", rangeKey: "monthly", height: 340,
+      data: { labels: months, series: [
+        { name: "Revenue",      values: monthly.map(m => m.revenue) },
+        { name: "Gross Profit", values: monthly.map(m => m.gp) },
+        { name: "EBIT",         values: monthly.map(m => m.ebit) },
+      ] },
       buildOption: (s) => ({
         ...ECHART_THEME,
-        legend: { ...ECHART_THEME.legend, data: ["Quarterly revenue"] },
+        legend: { ...ECHART_THEME.legend, data: ["Revenue", "Gross Profit", "EBIT"] },
         xAxis: { ...ECHART_THEME.xAxis, type: "category", data: s.labels },
         yAxis: { ...ECHART_THEME.yAxis, type: "value" },
-        series: [{
-          name: "Quarterly revenue", type: "bar",
-          itemStyle: { color: (p) => isPartial[p.dataIndex] ? "#C9A24B" : "#115E67", borderColor: "#fff", borderWidth: 1 },
-          data: s.series[0].values,
-          label: { show: true, position: "top", color: "#0B1F3A", fontSize: 11,
-                   formatter: (p) => {
-                     const origIdx = quarters.indexOf(s.labels[p.dataIndex]);
-                     return (origIdx >= 0 && isPartial[origIdx]) ? `${K.fmtMoney(p.value)} *` : K.fmtMoney(p.value);
-                   } },
-        }],
+        series: [
+          { name: "Revenue", type: "bar", itemStyle: { color: "#115E67" }, data: s.series[0].values,
+            markArea: { silent: true, itemStyle: { color: "rgba(201,162,75,0.10)" }, label: { show: false }, data: lowSeasonMarkArea(s.labels) } },
+          { name: "Gross Profit", type: "line", smooth: true, itemStyle: { color: "#C9A24B" }, lineStyle: { color: "#C9A24B", width: 2 }, data: s.series[1].values },
+          { name: "EBIT", type: "line", smooth: true, itemStyle: { color: "#A14B2A" }, lineStyle: { color: "#A14B2A", width: 2 }, data: s.series[2].values },
+        ],
       }),
     });
 
-    const headers = ["Quarter", "Revenue", "COGS", "GP", "SG&A", "EBIT", "Net Income"];
-    const rows = byQuarter.map(q => {
-      const partial = q === q2_26?.quarter && (q2_26Months?.length || 0) < 3;
+    const monthlyHeaders = ["Month", "Revenue", "COGS", "GP", "SG&A", "EBIT", "Net Income"];
+    const monthlyRows = monthly.map(m => ({
+      cells: [m.month, K.fmtMoneyFull(m.revenue), K.fmtMoneyFull(m.cogs), K.fmtMoneyFull(m.gp),
+              K.fmtMoneyFull(m.sga), K.fmtMoneyFull(m.ebit), K.fmtMoneyFull(m.netIncome)],
+    }));
+
+    // ---- Quarterly performance (read from the Quarterly Financials tab) ----
+    const quarterlyChart = chartCard({
+      title: "Quarterly revenue (from Quarterly Financials tab)",
+      subtitle: partialQuarter ? `Amber = ${partialQuarter} (partial, ${cordon.monthCount} of 3 months)` : "",
+      rangeKey: "quarterly", height: 340,
+      data: { labels: quarters.map(q => q.quarter), series: [
+        { name: "Revenue", values: quarters.map(q => q.revenue) },
+        { name: "Gross Profit", values: quarters.map(q => q.gp) },
+      ] },
+      buildOption: (s) => ({
+        ...ECHART_THEME,
+        legend: { ...ECHART_THEME.legend, data: ["Revenue", "Gross Profit"] },
+        xAxis: { ...ECHART_THEME.xAxis, type: "category", data: s.labels },
+        yAxis: { ...ECHART_THEME.yAxis, type: "value" },
+        series: [
+          { name: "Revenue", type: "bar",
+            itemStyle: { color: (p) => isPartialQ(s.labels[p.dataIndex]) ? "#C9A24B" : "#115E67", borderColor: "#fff", borderWidth: 1 },
+            data: s.series[0].values,
+            label: { show: true, position: "top", color: "#0B1F3A", fontSize: 11,
+                     formatter: (p) => isPartialQ(s.labels[p.dataIndex]) ? `${K.fmtMoney(p.value)} *` : K.fmtMoney(p.value) } },
+          { name: "Gross Profit", type: "line", smooth: true, itemStyle: { color: "#C9A24B" }, data: s.series[1].values },
+        ],
+      }),
+    });
+
+    const qHeaders = ["Quarter", "Revenue", "COGS", "GP", "SG&A", "EBIT", "Net Income"];
+    const qRows = quarters.map(q => {
+      const partial = isPartialQ(q.quarter);
       return {
         cells: [q.quarter + (partial ? " *" : ""), K.fmtMoneyFull(q.revenue), K.fmtMoneyFull(q.cogs),
                 K.fmtMoneyFull(q.gp), K.fmtMoneyFull(q.sga), K.fmtMoneyFull(q.ebit), K.fmtMoneyFull(q.netIncome)],
@@ -599,14 +641,24 @@
     });
 
     return el("div", {},
-      section("Financial Performance", "Quarterly performance",
-        "Q1 2025 vs Q1 2026 is the primary comparison. Q2 2026 is shown as a partial period and is never annualized."),
-      cordon.isPartial ? warnBanner(`Q2 2026 covers ${cordon.monthCount} months only (through ${cordon.latestMonth}). Treat Q2 2026 figures as a partial read; do not extrapolate.`) : null,
+      section("Financial Performance", "Monthly & quarterly P&L",
+        "Monthly figures come from MonthlyFinancials; quarterly figures come from the Quarterly Financials tab. Q2 2026 is partial (Apr & May) and is never annualized."),
+      (cordon && cordon.isPartial)
+        ? warnBanner(`Q2 2026 covers ${cordon.monthCount} months only (through ${cordon.latestMonth}). Treat as a partial read; do not extrapolate.`)
+        : null,
       kpis,
-      el("div", { class: "mb-8" }, revCard),
+      el("h2", { class: "font-serif text-2xl text-ink mb-3" }, "Monthly performance"),
+      el("div", { class: "mb-6" }, monthlyChart),
+      el("div", { class: "mb-10" },
+        el("h3", { class: "font-serif text-xl text-ink mb-3" }, "Monthly P&L"),
+        boardTable(monthlyHeaders, monthlyRows),
+      ),
+      sawtoothDivider(),
+      el("h2", { class: "font-serif text-2xl text-ink mb-3" }, "Quarterly performance"),
+      el("div", { class: "mb-6" }, quarterlyChart),
       el("div", { class: "mb-8" },
-        el("h2", { class: "font-serif text-xl text-ink mb-3" }, "Quarterly P&L"),
-        boardTable(headers, rows),
+        el("h3", { class: "font-serif text-xl text-ink mb-3" }, "Quarterly P&L"),
+        boardTable(qHeaders, qRows),
       ),
       briefingCard("financial-performance", data.commentary),
     );

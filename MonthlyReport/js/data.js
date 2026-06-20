@@ -65,27 +65,25 @@
     return { customers, params };
   }
 
-  // MonthlyFinancials: Month, Quarter, Revenue, COGS, GP, SG&A, EBIT, Net Income
+  // MonthlyFinancials ACTUAL layout (verified against the sheet):
+  //   A Month | B Total Revenue | C COGS | D Gross Profit | E SG&A | F EBIT | G Net Income | H Quarter
+  // (Quarter is in column H, NOT B — the previous version read the wrong columns,
+  //  showing COGS as Revenue everywhere. Quarter may be blank; compute.js derives
+  //  it from the month label when it is.)
   function shapeMonthly(rows) {
     const out = [];
     for (let i = 1; i < rows.length; i++) {
       const r = rows[i];
       const month = trim(r[0]); if (!month) continue;
-      // Sheets can hand back Date objects for the Quarter cell if it was
-      // mis-typed as a date — coerce to string defensively.
-      const quarterRaw = r[1];
-      const quarter = (quarterRaw instanceof Date)
-        ? ""  // let compute.js derive it from the month label
-        : trim(quarterRaw);
       out.push({
         month,
-        quarter,
-        revenue: num(r[2]),
-        cogs:    num(r[3]),
-        gp:      num(r[4]),
-        sga:     num(r[5]),
-        ebit:    num(r[6]),
-        netIncome: num(r[7]),
+        revenue:   num(r[1]),
+        cogs:      num(r[2]),
+        gp:        num(r[3]),
+        sga:       num(r[4]),
+        ebit:      num(r[5]),
+        netIncome: num(r[6]),
+        quarter:   (r && r[7] instanceof Date) ? "" : trim(r[7]),
       });
     }
     return out;
@@ -140,22 +138,71 @@
     return out;
   }
 
-  // Quarterly Financials (board table, precomputed in Sheets):
-  //   THIS tab genuinely has a title row (r0 "DERIVED — P&L by quarter…"),
-  //   header row r1, then line-items. So header = rows[1], data from i=2.
+  // Quarterly Financials — supports TWO layouts (auto-detected):
+  //   LONG (preferred, consistent with MonthlyFinancials):
+  //       Quarter | Total Revenue | COGS | Gross Profit | SG&A | EBIT | Net Income
+  //       Q1 2025 | ...   (header row has "Quarter" in column A; data below)
+  //   WIDE (legacy/board matrix):
+  //       [title row] then  Line | Q1 2025 | Q2 2025 | …   (line items as rows)
+  // Returns { quarters: [{quarter, revenue, cogs, gp, sga, ebit, netIncome}] }
+  // sorted chronologically. Works before AND after the user transposes their sheet.
   function shapeQuarterlyBoard(rows) {
-    if (!rows.length) return { quarters: [], lines: [] };
-    const header = rows[1] || rows[0];
-    const quarters = header.slice(1).map(trim).filter(Boolean);
-    const lines = [];
-    for (let i = 2; i < rows.length; i++) {
-      const r = rows[i];
-      const label = trim(r[0]); if (!label) continue;
-      const vals = [];
-      for (let q = 0; q < quarters.length; q++) vals.push(num(r[q + 1]));
-      lines.push({ label, values: vals });
+    const empty = { quarters: [] };
+    if (!rows || !rows.length) return empty;
+    const parseQ = (q) => { const m = /^Q([1-4])\s+(\d{4})$/.exec(trim(q)); return m ? { y: +m[2], q: +m[1] } : { y: 9999, q: 9 }; };
+    const sortQ = (a, b) => { const A = parseQ(a.quarter), B = parseQ(b.quarter); return A.y - B.y || A.q - B.q; };
+    const isQ = (q) => /^Q[1-4]\s+\d{4}/.test(trim(q));
+
+    // detect LONG: a row in the first 4 whose col A == "Quarter"
+    let longHeader = -1;
+    for (let i = 0; i < Math.min(rows.length, 4); i++) {
+      if (trim(rows[i][0]).toLowerCase() === "quarter") { longHeader = i; break; }
     }
-    return { quarters, lines };
+    if (longHeader >= 0) {
+      const out = [];
+      for (let i = longHeader + 1; i < rows.length; i++) {
+        const r = rows[i]; const q = trim(r[0]);
+        if (!isQ(q)) continue;
+        out.push({
+          quarter: q,
+          revenue: num(r[1]), cogs: num(r[2]), gp: num(r[3]),
+          sga: num(r[4]), ebit: num(r[5]), netIncome: num(r[6]),
+        });
+      }
+      out.sort(sortQ);
+      return { quarters: out };
+    }
+
+    // WIDE (legacy): header row whose col A == "Line"
+    let wideHeader = -1;
+    for (let i = 0; i < Math.min(rows.length, 4); i++) {
+      if (trim(rows[i][0]).toLowerCase() === "line") { wideHeader = i; break; }
+    }
+    if (wideHeader < 0) return empty;
+    const hdr = rows[wideHeader];
+    const qLabels = hdr.slice(1).map(trim).filter(isQ);
+    // map line-item label (lowercased) -> the row
+    const lineRow = {};
+    for (let i = wideHeader + 1; i < rows.length; i++) {
+      const lbl = trim(rows[i][0]).toLowerCase();
+      if (lbl) lineRow[lbl] = rows[i];
+    }
+    const colFor = (qLabel) => { for (let c = 1; c < hdr.length; c++) if (trim(hdr[c]) === qLabel) return c; return -1; };
+    const getv = (label, qLabel) => {
+      const r = lineRow[label]; if (!r) return null;
+      const c = colFor(qLabel); return c < 0 ? null : num(r[c]);
+    };
+    const out = qLabels.map(q => ({
+      quarter: q,
+      revenue:   getv("total revenue", q),
+      cogs:      getv("cogs", q),
+      gp:        getv("gross profit", q),
+      sga:       getv("sg&a", q),
+      ebit:      getv("ebit", q),
+      netIncome: getv("net income", q),
+    }));
+    out.sort(sortQ);
+    return { quarters: out };
   }
 
   // "1. Working Capital" — header IS row 0 (no title row), data from row 1.
