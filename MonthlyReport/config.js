@@ -25,6 +25,8 @@ window.TPO_CONFIG = {
     "3. Strategic Dashboard",
     "4. Forward-Looking Risk",
     "Commentary",
+    "Glossary",
+    "Content",
   ],
 
   // Site identity (purely cosmetic).

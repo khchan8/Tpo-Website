@@ -49,11 +49,16 @@
       sub ? el("div", { class: "kpi-sub" }, sub) : null,
     );
   }
-  function briefingCard(viewKey, commentary, fallback) {
-    const text = commentary?.[viewKey];
+  function content(data, key, fallback) {
+    return data?.content?.[key] || fallback;
+  }
+
+  function briefingCard(viewKey, data, fallback) {
+    const text = data?.commentary?.[viewKey];
+    const defFallback = content(data, "briefing.fallback", "Commentary pending — click “Generate Commentary” in the Google Sheet menu.");
     const body = text && text.trim()
       ? text
-      : (fallback || "Commentary pending — click “Generate Commentary” in the Google Sheet menu.");
+      : (fallback || defFallback);
     return el("div", { class: "briefing" },
       el("h3", {}, "Briefing"),
       el("div", {}, body),
@@ -174,7 +179,11 @@
     requestAnimationFrame(() => requestAnimationFrame(() => {
       if (!body.isConnected) return;        // host removed before init (e.g. metric switch)
       instance = echarts.init(body);
-      ro = new ResizeObserver(() => { try { instance.resize(); } catch (_) {} });
+      let resizeTimeout;
+      ro = new ResizeObserver(() => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => { try { instance.resize(); } catch (_) {} }, 100);
+      });
       ro.observe(body);
       chartRegistry_.push({ instance, ro });
       if (typeof onClick === "function") {
@@ -314,7 +323,7 @@
     });
 
     const layout = el("div", {},
-      section("Strategic Dashboard", "Overview", "Top-line performance and customer mix at a glance."),
+      section("Strategic Dashboard", "Overview", content(data, "overview.subtitle", "Top-line performance and customer mix at a glance.")),
       recon.length ? warnBanner(`Customer-level revenue and P&L revenue disagree on ${recon.length} month(s) — e.g. ${reconLatest[0]?.month || ""}: Σ customer ${K.fmtMoneyFull(reconLatest[0]?.sumCustomer)} vs P&L ${K.fmtMoneyFull(reconLatest[0]?.pnl)}. The site continues with a note; reconcile in the sheet.`) : null,
       kpis,
       el("div", { class: "grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8" },
@@ -332,8 +341,8 @@
             kpiTile("Δ",      K.fmtPctDelta(storyline.delta), "trough vs peak"),
           ),
         ),
-        briefingCard("overview", data.commentary,
-          "Q2 2026 is a partial quarter — figures shown are Through May only and must not be annualized."),
+        briefingCard("overview", data,
+          (cordon && cordon.isPartial) ? `${cordon.quarter} covers ${cordon.monthCount} month(s) only (through ${cordon.latestMonth}) and must not be annualized.` : undefined),
       ),
     );
     return layout;
@@ -407,7 +416,7 @@
 
     const layout = el("div", {},
       section("Strategic Dashboard", "Strategic Dashboard",
-        "The headline KPI matrix across four reference periods. Q2 2026 is shown Through May only."),
+        content(data, "dashboard.subtitle", "The headline KPI matrix across four reference periods. Q2 2026 is shown Through May only.")),
       el("div", { class: "mb-8" },
         el("h2", { class: "font-serif text-xl text-ink mb-3" }, "KPI matrix"),
         boardTable(headers, rows),
@@ -419,7 +428,7 @@
         ),
         chartHolder,
       ),
-      briefingCard("strategic-dashboard", data.commentary,
+      briefingCard("strategic-dashboard", data,
         "Strategic dashboard commentary pending — generate via the Google Sheet menu (View: strategic-dashboard)."),
     );
     // paint after mount
@@ -479,10 +488,10 @@
 
     return el("div", {},
       section("Seasonality", "Revenue Seasonality",
-        "The business is structurally seasonal — Jun through Oct is the low season. Frosted bands mark the contraction."),
+        content(data, "seasonality.subtitle", "The business is structurally seasonal — Jun through Oct is the low season. Frosted bands mark the contraction.")),
       el("div", { class: "mb-6" }, revCard),
       el("div", { class: "mb-8" }, ctCard),
-      briefingCard("seasonality", data.commentary),
+      briefingCard("seasonality", data),
     );
   }
 
@@ -535,14 +544,14 @@
     }));
 
     return el("div", {},
-      section("Liquidity", "Working Capital", "Cash, receivables, inventory and payables — and the resulting Net Working Capital."),
+      section("Liquidity", "Working Capital", content(data, "workingcapital.subtitle", "Cash, receivables, inventory and payables — and the resulting Net Working Capital.")),
       kpis,
       el("div", { class: "mb-8" }, nwcCard),
       el("div", { class: "mb-8" },
         el("h2", { class: "font-serif text-xl text-ink mb-3" }, "Board table"),
         boardTable(headers, rows),
       ),
-      briefingCard("working-capital", data.commentary),
+      briefingCard("working-capital", data),
     );
   }
 
@@ -642,7 +651,7 @@
 
     return el("div", {},
       section("Financial Performance", "Monthly & quarterly P&L",
-        "Monthly figures come from MonthlyFinancials; quarterly figures come from the Quarterly Financials tab. Q2 2026 is partial (Apr & May) and is never annualized."),
+        content(data, "financials.subtitle", "Monthly figures come from MonthlyFinancials; quarterly figures come from the Quarterly Financials tab. Q2 2026 is partial (Apr & May) and is never annualized.")),
       (cordon && cordon.isPartial)
         ? warnBanner(`Q2 2026 covers ${cordon.monthCount} months only (through ${cordon.latestMonth}). Treat as a partial read; do not extrapolate.`)
         : null,
@@ -660,7 +669,7 @@
         el("h3", { class: "font-serif text-xl text-ink mb-3" }, "Quarterly P&L"),
         boardTable(qHeaders, qRows),
       ),
-      briefingCard("financial-performance", data.commentary),
+      briefingCard("financial-performance", data),
     );
   }
 
@@ -700,14 +709,14 @@
 
     const layout = el("div", {},
       section("Forward-looking", "Risk & Outlook",
-        "Q2 2025 (full) vs Q2 2026 (Apr & May, partial) with the board's risk read."),
+        content(data, "forwardlooking.subtitle", "Q2 2025 (full) vs Q2 2026 (Apr & May, partial) with the board's risk read.")),
       (nextMonthIsLow_(last)) ? warnBanner(`Seasonal inflection: the report ends in ${last?.month}, and the next reporting month enters the low season (Jun–Oct). Expect a step-down in revenue and active customers.`) : null,
       riskCards.length ? el("div", { class: "grid grid-cols-1 md:grid-cols-2 gap-4 mb-8" }, ...riskCards) : null,
       el("div", { class: "mb-8" },
         el("h2", { class: "font-serif text-xl text-ink mb-3" }, "Forward-looking P&L comparison"),
         boardTable(headers, rows),
       ),
-      briefingCard("forward-looking", data.commentary),
+      briefingCard("forward-looking", data),
     );
     return layout;
   }
@@ -824,7 +833,7 @@
         `Quarterly performance · contribution margin ${K.fmtPct(c.margin)}`),
       kpis,
       el("div", { class: "grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8" }, qqCard, monthBlock),
-      briefingCard(c.slug, data.commentary,
+      briefingCard(c.slug, data,
         "Customer-level commentary pending — generate via the Google Sheet menu."),
     );
   }
@@ -842,8 +851,9 @@
   }
 
   // ---- About / Glossary ----
-  function viewAbout() {
-    const items = [
+  function viewAbout(state) {
+    const data = state.data || {};
+    const items = (data.glossary && data.glossary.length) ? data.glossary.map(g => [g.term, g.definition]) : [
       ["Low season (Jun – Oct)", "The seasonal trough — outside this window, revenue and active customers step up materially."],
       ["Q2 2026 cordon",         "Through May only — never label as a complete quarter, never annualize or extrapolate."],
       ["Active customers",       "Count at the first month of the quarter (documented in the Assumptions tab)."],

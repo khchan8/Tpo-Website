@@ -4,7 +4,13 @@
    ========================================================= */
 (function () {
   const MONTH_NAMES = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  const LOW_SEASON = new Set(["Jun","Jul","Aug","Sep","Oct"]);
+  let LOW_SEASON = new Set(["Jun","Jul","Aug","Sep","Oct"]);
+
+  function setLowSeason(monthsArray) {
+    if (monthsArray && monthsArray.length) {
+      LOW_SEASON = new Set(monthsArray);
+    }
+  }
 
   /** Parse "May-26" → {mon:5, yr:2026, idx: <months since anchor>} */
   function parseMonth(label) {
@@ -209,7 +215,7 @@
   }
 
   window.TPO_COMPUTE = {
-    parseMonth, isLowSeason, quarterOf,
+    parseMonth, isLowSeason, setLowSeason, quarterOf,
     fmtMoney, fmtMoneyFull, fmtPct, fmtPctDelta,
     rollupQuarterly, rollupCustomerQuarterly,
     concentrationLatest, nwcSeries,

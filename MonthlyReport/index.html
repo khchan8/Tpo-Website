@@ -12,7 +12,7 @@
     Must be near the top of <head>, before any fetch fires.
   -->
   <meta name="referrer" content="no-referrer-when-downgrade" />
-  <title>TPO Wellness — Monthly Performance</title>
+  <title id="page-title">TPO Wellness — Monthly Performance</title>
   <meta name="description" content="TPO Wellness monthly performance report — board briefing." />
 
   <!-- Tailwind (CDN, JIT) -->
@@ -64,8 +64,8 @@
           <path d="M2 22 L6 14 L10 19 L14 9 L18 22 L22 12 L26 22" stroke="#115E67" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
         </svg>
         <div class="leading-tight">
-          <div class="font-serif text-xl text-ink">TPO Wellness</div>
-          <div class="text-[11px] uppercase tracking-widest text-mute">Monthly Performance — Board Briefing</div>
+          <div id="header-brand" class="font-serif text-xl text-ink">TPO Wellness</div>
+          <div id="header-title" class="text-[11px] uppercase tracking-widest text-mute">Monthly Performance — Board Briefing</div>
         </div>
       </a>
       <nav id="primary-nav" class="ml-auto flex items-center gap-1 text-sm"></nav>
@@ -79,7 +79,7 @@
   <!-- Footer -->
   <footer class="border-t border-rule mt-16">
     <div class="max-w-7xl mx-auto px-6 py-6 text-xs text-mute flex items-center justify-between">
-      <div>Reported in THB · <span id="as-of"></span></div>
+      <div><span id="footer-note">Reported in THB</span> · <span id="as-of"></span></div>
       <div class="flex items-center gap-3">
         <a href="#/about" class="hover:text-ink">Glossary</a>
         <span class="text-rule">·</span>
@@ -92,10 +92,10 @@
   <div id="toast" class="fixed bottom-6 right-6 hidden"></div>
 
   <!-- App (cache-bust with ?v= on every JS/CSS change so browsers re-fetch) -->
-  <script src="config.js?v=18"></script>
-  <script src="js/data.js?v=18"></script>
-  <script src="js/compute.js?v=18"></script>
-  <script src="js/views.js?v=18"></script>
-  <script src="js/app.js?v=18"></script>
+  <script src="config.js?v=19"></script>
+  <script src="js/data.js?v=19"></script>
+  <script src="js/compute.js?v=19"></script>
+  <script src="js/views.js?v=19"></script>
+  <script src="js/app.js?v=19"></script>
 </body>
 </html>

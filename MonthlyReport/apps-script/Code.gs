@@ -36,6 +36,7 @@ const TABS = {
   ASSUMPTIONS:   "Assumptions",
   MONTHLY:       "MonthlyFinancials",
   CUST_REV:      "CustomerRevenueMonthly",
+  CUST_REV_Q:    "CustomerRevenueQuarterly",
   CUST_COUNT:    "CustomerCount",
   QUARTERLY:     "Quarterly Financials",
   WORKING_CAP:   "1. Working Capital",
@@ -193,6 +194,8 @@ function onOpen() {
     .addItem("Pause Commentary",               "menuPauseCommentary")
     .addItem("Reset Commentary Status",       "menuResetCommentaryStatus")
     .addSeparator()
+    .addItem("Add Customer…",                 "menuAddCustomer")
+    .addSeparator()
     .addItem("Test Gemini Connection",        "testGeminiConnection")
     .addSeparator()
     .addSubMenu(SpreadsheetApp.getUi().createMenu("Settings")
@@ -275,9 +278,12 @@ function getRows_(tabName) {
 function toNumber_(v) {
   if (v === "" || v === null || v === undefined) return null;
   if (typeof v === "number") return v;
-  const s = String(v).replace(/[฿,\s]/g, "").replace(/^\((.*)\)$/, "-$1");
+  const s = String(v).replace(/[฿,\s%]/g, "").replace(/^\((.*)\)$/, "-$1");
   const n = parseFloat(s);
   return Number.isFinite(n) ? n : null;
+}
+function slugify_(s) {
+  return String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 function fmtTHB_(n) {
   if (n === null || !Number.isFinite(n)) return "—";
@@ -304,13 +310,7 @@ function quarterOf_(label) {
 }
 
 // ---------- LLM dispatcher ----------
-// Knobs (tuned for free-tier Gemini quotas, which throttle at ~5 req/min/model):
-const LLM_MAX_OUTPUT_TOKENS = 1024;    // was 600 — free-tier can truncate mid-sentence at 600
-const LLM_MAX_RETRIES       = 5;        // retries per request on 429 / 5xx
-const LLM_BASE_BACKOFF_MS   = 1500;     // initial backoff; doubles each attempt
-const LLM_MAX_BACKOFF_MS    = 60000;    // cap on a single backoff sleep
-const LLM_CONCURRENCY       = 2;        // in-flight requests (free tier: 2 keeps us safely under 5/min)
-const LLM_STAGGER_MS        = 250;      // pause between starting each concurrent slot
+const LLM_MAX_OUTPUT_TOKENS = 1024;
 
 // Single entry point used by Generate Commentary. Dispatches to the
 // provider-specific call below, sharing the retry/backoff loop.
@@ -329,7 +329,25 @@ function callLLM_(prompt, opts) {
   return callGemini_(prompt, opts);
 }
 
-// ---------- Gemini ----------
+const POLICIES = {
+  gemini: {
+    label: "Gemini",
+    maxRetries: 5,
+    backoffBaseMs: 1500,
+    backoffCapMs: 60000,
+    retryOnTruncation: true,
+    retryHintMs: (res, body) => parseGeminiRetryMs_(body),
+  },
+  openai_compat: {
+    label: "OpenAI-compatible",
+    maxRetries: 3,
+    backoffBaseMs: 0,
+    backoffCapMs: 30000,
+    retryOnTruncation: false,
+    retryHintMs: (res, body) => parseRetryAfterHeaderMs_(res),
+  },
+};
+
 function callGemini_(prompt, opts) {
   opts = opts || {};
   const model = getModel_();
@@ -339,18 +357,14 @@ function callGemini_(prompt, opts) {
     contents: [{ parts: [{ text: prompt }] }],
     generationConfig: { temperature: 0.4, maxOutputTokens: LLM_MAX_OUTPUT_TOKENS },
   };
-  return runWithRetry_(model, body, /*requestFn*/ () => UrlFetchApp.fetch(url, {
+  return requestWithPolicy_(model, /*requestFn*/ () => UrlFetchApp.fetch(url, {
     method: "post",
     contentType: "application/json",
     payload: JSON.stringify(body),
     muteHttpExceptions: true,
-  }), opts);
+  }), POLICIES.gemini, opts);
 }
 
-// ---------- OpenAI-compatible (MiniMax, OpenAI, Groq, Together, …) ----------
-// POST {endpoint}/chat/completions
-// Headers: Authorization: Bearer <key>
-// Body:    { model, messages: [{role:"user", content}], temperature, max_tokens }
 function callOpenAICompat_(prompt, opts) {
   opts = opts || {};
   const provider = getProvider_();
@@ -366,35 +380,31 @@ function callOpenAICompat_(prompt, opts) {
     max_tokens: LLM_MAX_OUTPUT_TOKENS,
     stream: false,
   };
-  return runWithRetry_(model, body, /*requestFn*/ () => UrlFetchApp.fetch(url, {
+  return requestWithPolicy_(model, /*requestFn*/ () => UrlFetchApp.fetch(url, {
     method: "post",
     contentType: "application/json",
     headers: { "Authorization": "Bearer " + key },
     payload: JSON.stringify(body),
     muteHttpExceptions: true,
-  }), opts);
+  }), POLICIES.openai_compat, opts);
 }
 
-// ---------- shared retry/backoff loop ----------
-// `label` is the model id (used in logs/errors/toasts).
-// `requestFn()` returns UrlFetchApp.HTTPResponse.
-// `extractText(json)` returns the assistant text or throws if malformed.
-function runWithRetry_(label, requestBody, requestFn, opts) {
+function requestWithPolicy_(label, requestFn, policy, opts) {
   opts = opts || {};
-  const maxRetries = (opts.maxRetries != null) ? opts.maxRetries : LLM_MAX_RETRIES;
+  const maxRetries = (opts.maxRetries != null) ? opts.maxRetries : policy.maxRetries;
   const onRetry = typeof opts.onRetry === "function" ? opts.onRetry : null;
-  // Rate-limit sequence: when OFF, base backoff is 0 (retry immediately) but
-  // we still honor the server's Retry-After hint and the absolute cap.
-  const rateLimited = getRateLimit_() === "on";
-  const baseMs = rateLimited ? LLM_BASE_BACKOFF_MS : 0;
 
-  const sleepWithBackoff_ = (attempt, code, detail) => {
-    let backoffMs = baseMs * Math.pow(2, attempt);
-    const hintMs = parseRetryDelayMs_(detail);
+  const forceFast = getRateLimit_() === "off";
+  const baseMs = forceFast ? 0 : policy.backoffBaseMs;
+  const truncation = forceFast ? false : policy.retryOnTruncation;
+
+  const sleepWithBackoff_ = (attempt, code, detail, res) => {
+    let backoffMs = baseMs === 0 ? 0 : baseMs * Math.pow(2, attempt);
+    const hintMs = policy.retryHintMs(res, detail);
     if (hintMs !== null) backoffMs = Math.max(backoffMs, hintMs);
-    backoffMs = Math.min(backoffMs, LLM_MAX_BACKOFF_MS);
-    if (onRetry) onRetry({ attempt: attempt + 1, maxRetries, code, sleepMs: backoffMs, rateLimited });
-    Logger.log(`… ${label} HTTP ${code}; attempt ${attempt + 1}/${maxRetries}, sleeping ${backoffMs}ms (rateLimit=${rateLimited})`);
+    backoffMs = Math.min(backoffMs, policy.backoffCapMs);
+    if (onRetry) onRetry({ attempt: attempt + 1, maxRetries, code, sleepMs: backoffMs, rateLimited: !forceFast });
+    Logger.log(`… ${label} HTTP ${code}; attempt ${attempt + 1}/${maxRetries}, sleeping ${backoffMs}ms`);
     Utilities.sleep(backoffMs);
   };
 
@@ -402,33 +412,32 @@ function runWithRetry_(label, requestBody, requestFn, opts) {
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     const res = requestFn();
     const code = res.getResponseCode();
+    const detail = res.getContentText();
 
     if (code === 200) {
-      const json = JSON.parse(res.getContentText());
+      const json = JSON.parse(detail);
       const text = extractAssistantText_(json);
-      if (!text) throw new Error(`Empty ${label} response: ` + JSON.stringify(json).slice(0, 400));
+      if (!text) throw new Error(`Empty ${label} response: ` + detail.slice(0, 400));
       const trimmed = text.trim();
-      // Truncation guard: if the model ran out of tokens, retry once with a
-      // wider budget instead of letting half a sentence land in the sheet.
+
       const finishReason = extractFinishReason_(json);
       const looksTruncated = /MAX_TOKENS|TRUNCATED|LENGTH/i.test(finishReason)
         || (!/[.!?。]\s*$/.test(trimmed) && trimmed.length > 400);
-      if (looksTruncated && attempt < maxRetries) {
+      if (looksTruncated && attempt < maxRetries && truncation) {
         Logger.log(`… ${label} truncated (${finishReason || "no-terminator"}); retrying`);
-        sleepWithBackoff_(attempt, /*synthetic*/ 499, `truncated (${finishReason || "no-terminator"})`);
+        sleepWithBackoff_(attempt, 499, `truncated`, res);
         continue;
       }
       return trimmed;
     }
 
-    const detail = res.getContentText().slice(0, 400);
     const retryable = code === 429 || code === 408 || (code >= 500 && code < 600);
     if (!retryable || attempt === maxRetries) {
-      throw new Error(`${label} HTTP ${code}: ${detail}`);
+      throw new Error(`${label} HTTP ${code}: ${detail.slice(0, 400)}`);
     }
 
-    sleepWithBackoff_(attempt, code, detail);
-    lastErr = new Error(`${label} HTTP ${code}: ${detail}`);
+    sleepWithBackoff_(attempt, code, detail.slice(0, 400), res);
+    lastErr = new Error(`${label} HTTP ${code}: ${detail.slice(0, 400)}`);
   }
   throw lastErr || new Error(`${label} retries exhausted`);
 }
@@ -493,8 +502,16 @@ function extractFinishReason_(json) {
   return json?.candidates?.[0]?.finishReason || "";
 }
 
-// Extract "retry in 6.788s" from a Gemini/MiniMax error body. Returns ms or null.
-function parseRetryDelayMs_(body) {
+function parseRetryAfterHeaderMs_(res) {
+  const headers = res.getHeaders();
+  const raw = headers["Retry-After"] || headers["retry-after"];
+  if (!raw) return null;
+  const sec = parseInt(raw, 10);
+  if (!isNaN(sec)) return sec * 1000;
+  return null;
+}
+
+function parseGeminiRetryMs_(body) {
   const m = /retry in\s+([\d.]+)\s*s/i.exec(body || "");
   if (!m) return null;
   const sec = parseFloat(m[1]);
@@ -609,36 +626,8 @@ function buildSeasonalityFigures_(monthly, custCount) {
     `Current month: ${last[0]} → ${isLowSeason_(last[0]) ? "in low season" : "outside low season"}.`,
   ].join("\n");
 }
-function buildCustomerFigures_(name, custRev) {
-  const series = [];
-  for (let i = 1; i < custRev.length; i++) {
-    if (custRev[i][0] === name) series.push({ month: String(custRev[i][1] || "").trim(), revenue: toNumber_(custRev[i][2]) });
-  }
-  // Chronological sort by parsed year + month number (not alpha).
-  series.sort((a, b) => {
-    const parse = (lbl) => {
-      const m = /^([A-Za-z]{3})-(\d{2})$/.exec(String(lbl || ""));
-      if (!m) return { y: 9999, mon: 99 };
-      const mon = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"].indexOf(m[1]);
-      return { y: 2000 + +m[2], mon: mon < 0 ? 99 : mon };
-    };
-    const A = parse(a.month), B = parse(b.month);
-    return A.y - B.y || A.mon - B.mon;
-  });
-  if (!series.length) return `Customer: ${name}.\nNo revenue rows found.`;
-  const last = series[series.length - 1];
-  const ytdRev = series
-    .filter(p => p.month && quarterOf_(p.month) && quarterOf_(p.month).endsWith("20" + String(last.month).slice(-2)))
-    .reduce((s, p) => s + (p.revenue || 0), 0);
-  return [
-    `Customer: ${name}.`,
-    `Latest month (${last.month}): Revenue ${fmtTHB_(last.revenue)}.`,
-    `YTD revenue: ${fmtTHB_(ytdRev)}.`,
-    `Months reported: ${series.length}.`,
-  ].join("\n");
-}
 function buildWorkingCapitalFigures_(wcRows) {
-  const header = wcRows[1];
+  const header = wcRows[0];
   const months = header.slice(1);
   const findRow = (substr) => wcRows.find(r => String(r[0]).toLowerCase().includes(substr));
   const last = months.length - 1;
@@ -647,6 +636,35 @@ function buildWorkingCapitalFigures_(wcRows) {
     `As of ${months[last]}: Cash ${fmtTHB_(val(findRow("cash")))}, AR ${fmtTHB_(val(findRow("accounts receivable")))}, Inventory ${fmtTHB_(val(findRow("inventory")))}, AP ${fmtTHB_(val(findRow("accounts payable")))}.`,
     `Net Working Capital: ${fmtTHB_(val(findRow("net working capital")))}.`,
     `NWC formula: Cash + AR + Inventory − AP.`,
+  ].join("\n");
+}
+
+function buildCustomerFigures_(c, custRevQ) {
+  const series = [];
+  for (let i = 1; i < custRevQ.length; i++) {
+    if (custRevQ[i][0] === c.name) {
+      const q = String(custRevQ[i][1] || "").trim();
+      const rev = toNumber_(custRevQ[i][2]);
+      if (q) series.push({ quarter: q, revenue: rev });
+    }
+  }
+  series.sort((a, b) => {
+    const parse = (q) => {
+      const m = /^Q([1-4])\s+(\d{4})$/.exec(String(q || ""));
+      return m ? { y: +m[2], q: +m[1] } : { y: 9999, q: 9 };
+    };
+    const A = parse(a.quarter), B = parse(b.quarter);
+    return A.y - B.y || A.q - B.q;
+  });
+  if (!series.length) return `Customer: ${c.name}.\nNo revenue rows found in CustomerRevenueQuarterly.`;
+  const valued = series.filter(p => p.revenue !== null);
+  const last = valued.length ? valued[valued.length - 1] : null;
+  const gpEst = (last && last.revenue !== null && c.margin !== null) ? last.revenue * c.margin : null;
+  return [
+    `Customer: ${c.name}.`,
+    `Latest quarter (${last ? last.quarter : 'N/A'}): Revenue ${fmtTHB_(last ? last.revenue : null)}.`,
+    `Estimated GP: ${fmtTHB_(gpEst)} (Margin: ${fmtPct_(c.margin)}).`,
+    `Quarters reported: ${valued.length}.`,
   ].join("\n");
 }
 function buildFinancialsFigures_(quarterly) {
@@ -735,15 +753,18 @@ function writeCommentaryCol_(row, sheetCol, value) {
 // Build the full ordered list of (view, prompt). Independent of sheet state.
 function buildAllTasks_() {
   const monthly    = getRows_(TABS.MONTHLY);
-  const custRev    = getRows_(TABS.CUST_REV);
+  const custRevQ   = getRows_(TABS.CUST_REV_Q);
   const custCount  = getRows_(TABS.CUST_COUNT);
   const quarterly  = rollupQuarterly_(monthly);
   const dashRows   = getRows_(TABS.DASHBOARD);
   const forwardRows= getRows_(TABS.FORWARD);
   const wcRows     = getRows_(TABS.WORKING_CAP);
-  const customers  = getRows_(TABS.ASSUMPTIONS).slice(1)
-                       .map(r => String(r[0] || "").trim()).filter(Boolean)
-                       .filter((v, i, a) => a.indexOf(v) === i);
+  const custRev    = getRows_(TABS.CUST_REV);
+  
+  const customers = getRows_(TABS.ASSUMPTIONS).slice(1)
+    .map(r => ({ name: String(r[0] || "").trim(), margin: toNumber_(r[1]) }))
+    .filter(c => c.name)
+    .filter((v, i, a) => a.findIndex(x => x.name === v.name) === i);
 
   return [
     ["overview",              buildPrompt_("Overview",              buildOverviewFigures_(monthly, custRev, dashRows))],
@@ -751,9 +772,9 @@ function buildAllTasks_() {
     ["working-capital",       buildPrompt_("Working Capital",       buildWorkingCapitalFigures_(wcRows))],
     ["financial-performance", buildPrompt_("Financial Performance", buildFinancialsFigures_(quarterly))],
     ["forward-looking",       buildPrompt_("Forward-Looking",       buildForwardLookingFigures_(forwardRows))],
-    ...customers.map(name => [
-      name.toLowerCase().replace(/\s+/g, "-"),
-      buildPrompt_(name, buildCustomerFigures_(name, custRev)),
+    ...customers.map(c => [
+      slugify_(c.name),
+      buildPrompt_(c.name, buildCustomerFigures_(c, custRevQ)),
     ]),
   ];
 }
@@ -1343,11 +1364,11 @@ function renderSettingsHtml_() {
   <div class="row" id="rateLimitRow">
     <label style="display:flex; align-items:center; gap:8px; text-transform:none; letter-spacing:0; color:var(--ink); font-size:13px; margin-bottom:0;">
       <input id="rateLimit" type="checkbox" style="width:auto; margin:0;" />
-      <span>Rate-limit sequence (synthetic backoff between retries)
+      <span>Enable synthetic backoff (Free Tier rate limits)
         <span id="rateLimitDefault" class="pill">default: —</span>
       </span>
     </label>
-    <div class="hint">ON for Gemini free tier (1.5s → 3s → 6s …). OFF for MiniMax / paid tier (retry immediately, respect server's <code>Retry-After</code>).</div>
+    <div class="hint">Check this box to enable artificial delays between retries for Free-tier APIs. Uncheck for paid APIs to retry immediately and honor <code>Retry-After</code> headers.</div>
   </div>
 
   <div id="confirmSlot"></div>
@@ -1657,7 +1678,11 @@ function renderSettingsHtml_() {
       renderModels();
       showStatus("Fetched " + models.length + " models · default = " + def, "ok");
     } catch (err) {
-      showStatus("Fetch error: " + (err.message || err), "err");
+      const sel = $("model");
+      sel.innerHTML = "";
+      state.modelsByProvider[state.provider] = [];
+      state.currentModels = [];
+      showStatus("Failed to fetch models: " + (err.message || err), "err");
     } finally {
       $("btnFetchModels").disabled = false;
       $("btnFetchModels").textContent = "Fetch models";
@@ -1810,4 +1835,110 @@ function testCandidateKey_(candidate, provider, endpoint, model) {
   } catch (e) {
     return { ok: false, code: 0, message: e.message || String(e) };
   }
+}
+
+// ---------- Add Customer Wizard ----------
+function menuAddCustomer() {
+  const html = HtmlService.createHtmlOutput(renderAddCustomerHtml_())
+    .setWidth(420)
+    .setHeight(400)
+    .setTitle("📊 TPO · Add Customer");
+  SpreadsheetApp.getUi().showModalDialog(html, "📊 TPO · Add Customer");
+}
+
+function processAddCustomer(payload) {
+  const name = String(payload.name || "").trim();
+  const margin = parseFloat(payload.margin);
+  const seedRows = !!payload.seed;
+  if (!name) throw new Error("Customer name is required.");
+  if (isNaN(margin)) throw new Error("Contribution margin must be a number.");
+  
+  const slug = slugify_(name);
+  const shAsmp = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(TABS.ASSUMPTIONS);
+  const existing = shAsmp.getRange(2, 1, Math.max(1, shAsmp.getLastRow() - 1), 1).getValues();
+  if (existing.some(r => slugify_(r[0]) === slug)) {
+    throw new Error(`Customer "${name}" already exists.`);
+  }
+  
+  shAsmp.appendRow([name, margin]);
+  
+  if (seedRows) {
+    const shCRQ = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(TABS.CUST_REV_Q);
+    const crqData = shCRQ.getDataRange().getValues();
+    const quarters = new Set();
+    for (let i = 1; i < crqData.length; i++) {
+      const q = String(crqData[i][1]).trim();
+      if (q) quarters.add(q);
+    }
+    const qArr = Array.from(quarters).sort((a, b) => {
+      const pa = /^Q([1-4])\s+(\d{4})$/.exec(a), pb = /^Q([1-4])\s+(\d{4})$/.exec(b);
+      const A = pa ? { y: +pa[2], q: +pa[1] } : { y: 9999, q: 9 };
+      const B = pb ? { y: +pb[2], q: +pb[1] } : { y: 9999, q: 9 };
+      return A.y - B.y || A.q - B.q;
+    });
+    for (const q of qArr) {
+      shCRQ.appendRow([name, q, ""]);
+    }
+  }
+  
+  ensureCommentarySchema_();
+  const shComm = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(TABS.COMMENTARY);
+  shComm.appendRow([slug, "", "", "", "", 0, ""]);
+  
+  return { ok: true, name };
+}
+
+function renderAddCustomerHtml_() {
+  return `<!doctype html>
+<html><head>
+<base target="_top">
+<style>
+  :root { --ink: #0B1F3A; --sea: #115E67; --sand: #E9E2D0; --rule: #D9D2C0; --mute: #5B6B7E; }
+  body { font: 14px/1.5 'Inter', sans-serif; color: var(--ink); background: var(--sand); margin: 0; padding: 22px; }
+  h1 { font-family: 'Fraunces', serif; font-size: 22px; margin: 0 0 16px; }
+  label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .12em; color: var(--mute); margin-bottom: 6px; }
+  input[type=text], input[type=number] { width: 100%; padding: 10px 12px; border: 1px solid var(--rule); border-radius: 4px; margin-bottom: 16px; }
+  .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 24px; }
+  button { padding: 9px 16px; border-radius: 4px; cursor: pointer; font: 600 13px 'Inter', sans-serif; border: 1px solid transparent; }
+  .btn-primary { background: var(--sea); color: #fff; }
+  .btn-ghost { background: transparent; border-color: var(--rule); }
+  .status { padding: 10px; border-radius: 4px; margin-bottom: 16px; display: none; }
+  .status-err { background: #F4D9CF; color: #8A3415; border: 1px solid #E0A990; }
+</style>
+</head><body>
+  <h1>Add Customer</h1>
+  <div id="status" class="status status-err"></div>
+  <label>Customer Name</label>
+  <input type="text" id="name" placeholder="e.g. Acme Corp" />
+  <label>Contribution Margin (e.g. 0.45 for 45%)</label>
+  <input type="number" id="margin" step="0.01" placeholder="0.45" />
+  <label style="display:flex; align-items:center; gap:8px; text-transform:none; letter-spacing:0;">
+    <input type="checkbox" id="seed" checked style="width:auto; margin:0;" />
+    Seed rows in CustomerRevenueQuarterly
+  </label>
+  <div class="actions">
+    <button class="btn-ghost" onclick="google.script.host.close()">Cancel</button>
+    <button class="btn-primary" id="btnSave">Add Customer</button>
+  </div>
+  <script>
+    document.getElementById("btnSave").onclick = () => {
+      const btn = document.getElementById("btnSave");
+      btn.disabled = true; btn.textContent = "Saving...";
+      document.getElementById("status").style.display = "none";
+      google.script.run
+        .withSuccessHandler(() => google.script.host.close())
+        .withFailureHandler(err => {
+          btn.disabled = false; btn.textContent = "Add Customer";
+          const st = document.getElementById("status");
+          st.textContent = err.message || err;
+          st.style.display = "block";
+        })
+        .processAddCustomer({
+          name: document.getElementById("name").value,
+          margin: document.getElementById("margin").value,
+          seed: document.getElementById("seed").checked
+        });
+    };
+  </script>
+</body></html>`;
 }

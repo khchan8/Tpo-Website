@@ -48,6 +48,30 @@
 
   /** ---------- per-tab shapers ---------- */
 
+  // Glossary: Term | Definition
+  function shapeGlossary(rows) {
+    const out = [];
+    for (let i = 1; i < rows.length; i++) {
+      const r = rows[i];
+      const term = trim(r[0]);
+      const definition = trim(r[1]);
+      if (term) out.push({ term, definition });
+    }
+    return out;
+  }
+
+  // Content: Key | Value
+  function shapeContent(rows) {
+    const out = {};
+    for (let i = 1; i < rows.length; i++) {
+      const r = rows[i];
+      const key = trim(r[0]);
+      const val = trim(r[1]);
+      if (key) out[key] = val;
+    }
+    return out;
+  }
+
   // Assumptions: rows of {customer, margin} + {key, value} params in cols D-E
   function shapeAssumptions(rows) {
     const customers = [];
@@ -367,6 +391,24 @@
     const commentaryShape = shapeCommentary(map.Commentary || []);
     const commentary          = commentaryShape.out;
     const commentaryThinking  = commentaryShape.thinking;
+    const glossary            = shapeGlossary(map.Glossary || []);
+    const content             = shapeContent(map.Content || []);
+
+    const lowSeasonParam = assumptions.params?.["Low season"];
+    if (lowSeasonParam) {
+      const arr = lowSeasonParam.split(/[-–—]/).map(s => s.trim()).filter(Boolean);
+      if (arr.length === 2 && window.TPO_COMPUTE) {
+        const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+        const getIdx = m => MONTHS.findIndex(x => m.substring(0,3).toLowerCase() === x.toLowerCase());
+        const start = getIdx(arr[0]); const end = getIdx(arr[1]);
+        if (start >= 0 && end >= 0) {
+          const expanded = [];
+          for (let i = start; i !== end; i = (i + 1) % 12) expanded.push(MONTHS[i]);
+          expanded.push(MONTHS[end]);
+          window.TPO_COMPUTE.setLowSeason(expanded);
+        }
+      }
+    }
 
     return {
       assumptions,
@@ -382,6 +424,8 @@
       forwardLooking: forwardLook,
       commentary,
       commentaryThinking,
+      glossary,
+      content,
       _errors: errors,        // non-fatal tab fetch failures
       _loadedAt: new Date(),
     };

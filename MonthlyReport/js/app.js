@@ -138,10 +138,25 @@
   }
 
   /* ---------- boot ---------- */
+  function applyContent(state) {
+    const content = (key, fallback) => state.data?.content?.[key] || fallback;
+    const companyName = content("company.name", C.COMPANY);
+    const reportTitle = content("report.title", C.REPORT_TITLE);
+    const currency = state.data?.assumptions?.params?.Currency || content("currency", C.CURRENCY);
+    const footerNoteTpl = content("footer.note", "Reported in {currency}");
+    const footerNote = footerNoteTpl.replace("{currency}", currency);
+
+    const pt = document.getElementById("page-title"); if (pt) pt.textContent = `${companyName} — ${reportTitle}`;
+    const hb = document.getElementById("header-brand"); if (hb) hb.textContent = companyName;
+    const ht = document.getElementById("header-title"); if (ht) ht.textContent = reportTitle;
+    const fn = document.getElementById("footer-note"); if (fn) fn.textContent = footerNote;
+  }
+
   async function boot() {
     primaryNav(state);
     try {
       state.data = await D.load();
+      applyContent(state);
       primaryNav(state);
       render();
     } catch (e) {
