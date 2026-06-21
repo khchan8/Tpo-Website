@@ -858,7 +858,8 @@
         const d = (a && b) ? K.fmtPctDelta((b - a) / Math.abs(a || 1)) : "—";
         cells.push(d);
       }
-      return { cells, variant: ln.label === "Gross Profit" ? "subtotal" : "" };
+      const isSubtotal = ["Gross Profit", "EBIT", "Net Income"].includes(ln.label);
+      return { cells, variant: isSubtotal ? "subtotal" : "" };
     });
 
     // Risk-status chips per period
