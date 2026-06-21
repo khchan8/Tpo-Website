@@ -139,10 +139,14 @@
   padding: 8px 0 12px;
   border-bottom: 1px dashed #D9D2C0;
   margin-bottom: 20px;
+  justify-content: center;
 }
 #sub-nav a {
-  font-size: 12px; padding: 4px 9px; border-radius: 999px;
+  font-size: 12px; padding: 6px 9px; border-radius: 999px;
   border: 1px solid #D9D2C0; color: #1a2a3f; background: #fff;
+  flex: 1 1 0%;
+  text-align: center;
+  min-width: 120px;
 }
 #sub-nav a.active { background: #115E67; color: #fff; border-color: #115E67; }
 
