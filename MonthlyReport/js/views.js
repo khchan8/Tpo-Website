@@ -853,15 +853,34 @@
   // ---- About / Glossary ----
   function viewAbout(state) {
     const data = state.data || {};
-    const items = (data.glossary && data.glossary.length) ? data.glossary.map(g => [g.term, g.definition]) : [
+    
+    // Calculate gaps for Data note
+    const recon = (data.monthly && window.TPO_COMPUTE) 
+      ? window.TPO_COMPUTE.reconciliation(data.customerRevenueTotalByMonth, data.monthly) 
+      : [];
+      
+    const dataNoteTerm = recon.length ? `Data note · ${recon.length} gaps` : "Data healthy";
+    const dataNoteDef = recon.length 
+      ? `There are ${recon.length} month(s) where the sum of individual customer revenue diverges from the total P&L revenue by > 0.5%. Please review and fix the revenue data in the "CustomerRevenueMonthly" and "MonthlyFinancials" tabs in your Google Sheet.`
+      : "The sum of individual customer revenue matches the total P&L revenue across all months.";
+
+    let items = (data.glossary && data.glossary.length) ? data.glossary.map(g => [g.term, g.definition]) : [
       ["Low season (Jun – Oct)", "The seasonal trough — outside this window, revenue and active customers step up materially."],
       ["Q2 2026 cordon",         "Through May only — never label as a complete quarter, never annualize or extrapolate."],
       ["Active customers",       "Count at the first month of the quarter (documented in the Assumptions tab)."],
       ["Net Working Capital",    "Cash + Accounts Receivable + Inventory − Accounts Payable."],
       ["Contribution margin",    "Per-customer gross margin assumption used to estimate gross profit."],
-      ["Data note (WARN)",       "When Σ customer revenue diverges from the P&L total by > 0.5%, a non-blocking note + chip surface so the board knows."],
       ["Turnaround storyline",   "Q1 2025 trough → Q1 2026 recovery, framed by the swing in active customers."],
     ];
+
+    // Replace the existing Data note if present from the sheet, otherwise insert at a similar position
+    const noteIndex = items.findIndex(i => i[0].toLowerCase().includes("data note") || i[0].toLowerCase().includes("data healthy"));
+    if (noteIndex >= 0) {
+      items[noteIndex] = [dataNoteTerm, dataNoteDef];
+    } else {
+      items.splice(5, 0, [dataNoteTerm, dataNoteDef]);
+    }
+
     return el("div", {},
       section("Glossary", "About this report",
         "The terms used in this report and how the numbers are calculated."),

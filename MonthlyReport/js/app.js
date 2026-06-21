@@ -2,10 +2,10 @@
    app.js — router, nav, boot.
    ========================================================= */
 (function () {
-  const C  = window.TPO_CONFIG;
-  const D  = window.TPO_DATA;
-  const K  = window.TPO_COMPUTE;
-  const V  = window.TPO_VIEWS;
+  const C = window.TPO_CONFIG;
+  const D = window.TPO_DATA;
+  const K = window.TPO_COMPUTE;
+  const V = window.TPO_VIEWS;
 
   const state = { data: null, error: null };
 
@@ -14,14 +14,14 @@
     const nav = document.getElementById("primary-nav");
     nav.innerHTML = "";
     const links = [
-      ["Overview",         "#/"],
-      ["Dashboard",        "#/dashboard"],
-      ["Seasonality",      "#/seasonality"],
-      ["Customers",        "#/customers"],            // special: opens first customer
-      ["Financials",       "#/financials"],
-      ["Working Capital",  "#/working-capital"],
-      ["Forward-looking",  "#/forward-looking"],
-      ["Glossary",         "#/about"],
+      ["Overview", "#/"],
+      ["Dashboard", "#/dashboard"],
+      ["Seasonality", "#/seasonality"],
+      ["Customers", "#/customers"],            // special: opens first customer
+      ["Financials", "#/financials"],
+      ["Working Capital", "#/working-capital"],
+      ["Forward-looking", "#/forward-looking"],
+      ["Glossary", "#/about"],
     ];
     for (const [label, href] of links) {
       const a = document.createElement("a");
@@ -31,24 +31,12 @@
     }
     setActiveLink();
 
-    // Health chip (WARN if reconciliation gap)
+    // Health chip logic moved to Glossary view.
+    // Ensure it is hidden from the primary nav.
     const chip = document.getElementById("health-chip");
-    chip.innerHTML = "";
-    if (state.data) {
-      const recon = K.reconciliation(state.data.customerRevenueTotalByMonth, state.data.monthly);
-      if (recon.length) {
-        const c = document.createElement("span");
-        c.className = "chip chip-warn";
-        c.textContent = `Data note · ${recon.length} gap${recon.length>1?"s":""}`;
-        chip.appendChild(c);
-        chip.classList.remove("hidden");
-      } else {
-        const c = document.createElement("span");
-        c.className = "chip chip-ok";
-        c.textContent = "Data healthy";
-        chip.appendChild(c);
-        chip.classList.remove("hidden");
-      }
+    if (chip) {
+      chip.innerHTML = "";
+      chip.classList.add("hidden");
     }
 
     // As-of
