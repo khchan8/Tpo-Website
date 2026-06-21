@@ -170,7 +170,7 @@
 }
 .board-table th {
   background: #F6F1E2; color: #0B1F3A; font-weight: 600;
-  font-size: 11px; text-transform: uppercase; letter-spacing: .08em; text-align: center;
+  font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
 }
 .board-table th:first-child, .board-table td:first-child {
   text-align: left; color: #0B1F3A; font-weight: 500;
