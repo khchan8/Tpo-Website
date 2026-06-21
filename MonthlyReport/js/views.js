@@ -846,6 +846,7 @@
       { label: "COGS",         get: p => p.cogs },
       { label: "Gross Profit", get: p => p.gp },
       { label: "SG&A",         get: p => p.sga },
+      { label: "EBIT",         get: p => p.ebit },
       { label: "Net Income",   get: p => p.netIncome },
     ];
     const twoP = periods.length === 2;
