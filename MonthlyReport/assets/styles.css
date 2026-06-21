@@ -184,3 +184,28 @@
   background: #F6F1E2; font-weight: 600;
 }
 .board-table tr.partial td { color: #8A6512; font-style: italic; }
+
+/* 
+ * Bidirectional Chart & Table Interactions
+ */
+tr.hover-highlight, 
+th.hover-highlight, 
+td.hover-highlight {
+    background-color: #f0f7f9 !important; /* Soft blue/grey highlight */
+    transition: background-color 0.2s ease;
+}
+.board-table tbody tr {
+    transition: background-color 0.2s ease;
+}
+.board-table tbody tr:hover {
+    cursor: pointer;
+}
+
+@keyframes pulse-click {
+    0% { background-color: #e0f0f5; transform: scale(0.99); }
+    50% { background-color: #d1e8f0; transform: scale(1.01); }
+    100% { background-color: #f0f7f9; transform: scale(1); }
+}
+.click-pulse {
+    animation: pulse-click 0.3s ease-out;
+}

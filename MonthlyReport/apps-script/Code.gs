@@ -772,11 +772,18 @@ function buildAllTasks_() {
     ["working-capital",       buildPrompt_("Working Capital",       buildWorkingCapitalFigures_(wcRows))],
     ["financial-performance", buildPrompt_("Financial Performance", buildFinancialsFigures_(quarterly))],
     ["forward-looking",       buildPrompt_("Forward-Looking",       buildForwardLookingFigures_(forwardRows))],
+    ["strategic-dashboard",   buildPrompt_("Strategic Dashboard",   buildStrategicDashboardFigures_(dashRows))],
     ...customers.map(c => [
       slugify_(c.name),
       buildPrompt_(c.name, buildCustomerFigures_(c, custRevQ)),
     ]),
   ];
+}
+
+function buildStrategicDashboardFigures_(dashRows) {
+  const items = dashRows.slice(1).filter(r => r[0]).slice(0, 5)
+    .map(r => `${r[0]}: ${r.slice(1).filter(Boolean).join(" | ")}`);
+  return [`Strategic KPI Matrix across recent periods:`, ...items].join("\n");
 }
 
 // Make sure every task has a row in the Commentary tab.
@@ -971,7 +978,9 @@ function menuResumeCommentary() {
 
   // Process one immediately, then ensure the trigger is installed for the rest.
   const result = runOnePending_({ silent: false });
-  if (!result.done) installResumableTrigger_();
+  if (result.done) return; // runOnePending_ already toasted the completion.
+  
+  installResumableTrigger_();
   ui.alert(
     "📊 TPO · Commentary",
     result.ok
@@ -1065,6 +1074,7 @@ function humanViewName_(slug) {
     "working-capital":       "Working Capital",
     "financial-performance": "Financial Performance",
     "forward-looking":       "Forward-Looking",
+    "strategic-dashboard":   "Strategic Dashboard",
   };
   if (map[slug]) return map[slug];
   // customer slugs come in lowercased with dashes; render them Title Case

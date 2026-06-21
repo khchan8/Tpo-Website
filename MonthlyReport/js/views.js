@@ -186,9 +186,26 @@
       });
       ro.observe(body);
       chartRegistry_.push({ instance, ro });
+      
       if (typeof onClick === "function") {
         instance.on("click", (p) => { try { onClick(p); } catch (_) {} });
       }
+      // Added interaction bindings
+      if (card._onHover) {
+        instance.on("mouseover", (p) => { try { card._onHover(p.name); } catch (_) {} });
+        instance.on("mouseout", () => { try { card._onHoverOut(); } catch (_) {} });
+      }
+      if (card._onClick) {
+        instance.on("click", (p) => { try { card._onClick(p.name); } catch (_) {} });
+      }
+      
+      card._highlightChart = (name) => {
+        if (instance && !instance.isDisposed()) instance.dispatchAction({ type: "highlight", name });
+      };
+      card._downplayChart = () => {
+        if (instance && !instance.isDisposed()) instance.dispatchAction({ type: "downplay" });
+      };
+
       render();
       setTimeout(() => { try { instance.resize(); } catch (_) {} }, 60); // settle after fonts
     }));
@@ -199,13 +216,122 @@
   // headers:[string]  rows:[{cells:[string|number], variant?}]
   function boardTable(headers, rows) {
     return el("table", { class: "board-table" },
-      el("thead", {}, el("tr", {}, headers.map(h => el("th", {}, h)))),
+      el("thead", {}, el("tr", {}, headers.map(h => el("th", { "data-col-name": h }, h)))),
       el("tbody", {}, rows.map(r =>
-        el("tr", { class: r.variant || "" },
+        el("tr", { class: r.variant || "", "data-row-name": r.cells[0] },
           r.cells.map(c => el("td", {}, (c === null || c === undefined || c === "") ? "—" : String(c)))
         )
       )),
     );
+  }
+
+  /* ---------- Interaction Helpers ---------- */
+  function pulseElement(el) {
+    el.classList.remove("click-pulse");
+    void el.offsetWidth; // trigger reflow
+    el.classList.add("click-pulse");
+    setTimeout(() => el.classList.remove("click-pulse"), 300);
+  }
+
+  function bindChartTableByRow(chartNode, tableNode) {
+    tableNode._boundChartNodeRow = chartNode;
+
+    chartNode._onHover = (name) => {
+      tableNode.querySelectorAll("tr").forEach(tr => {
+        tr.classList.toggle("hover-highlight", tr.getAttribute("data-row-name") === name);
+      });
+    };
+    chartNode._onHoverOut = () => {
+      tableNode.querySelectorAll("tr").forEach(tr => tr.classList.remove("hover-highlight"));
+    };
+    chartNode._onClick = (name) => {
+      tableNode.querySelectorAll("tr").forEach(tr => {
+        if (tr.getAttribute("data-row-name") === name) pulseElement(tr);
+      });
+    };
+
+    if (tableNode._hasRowBinding) return;
+    tableNode._hasRowBinding = true;
+
+    tableNode.addEventListener("mouseover", e => {
+      if (!tableNode._boundChartNodeRow) return;
+      const tr = e.target.closest("tr");
+      if (tr && tr.getAttribute("data-row-name")) {
+        tableNode._boundChartNodeRow._highlightChart(tr.getAttribute("data-row-name"));
+      }
+    });
+    tableNode.addEventListener("mouseout", () => {
+      if (tableNode._boundChartNodeRow) tableNode._boundChartNodeRow._downplayChart();
+    });
+    tableNode.addEventListener("click", e => {
+      if (!tableNode._boundChartNodeRow) return;
+      const tr = e.target.closest("tr");
+      if (tr && tr.getAttribute("data-row-name")) {
+        pulseElement(tr);
+        tableNode._boundChartNodeRow._highlightChart(tr.getAttribute("data-row-name"));
+      }
+    });
+  }
+
+  function bindChartTableByColumn(chartNode, tableNode) {
+    tableNode._boundChartNodeCol = chartNode;
+
+    chartNode._onHover = (name) => {
+      const ths = Array.from(tableNode.querySelectorAll("th"));
+      const colIndex = ths.findIndex(th => th.getAttribute("data-col-name") === name);
+      tableNode.querySelectorAll("th, td").forEach(cell => cell.classList.remove("hover-highlight"));
+      if (colIndex > -1) {
+        tableNode.querySelectorAll("tr").forEach(tr => {
+          if (tr.children[colIndex]) tr.children[colIndex].classList.add("hover-highlight");
+        });
+      }
+    };
+    chartNode._onHoverOut = () => {
+      tableNode.querySelectorAll("th, td").forEach(cell => cell.classList.remove("hover-highlight"));
+    };
+    chartNode._onClick = (name) => {
+      const ths = Array.from(tableNode.querySelectorAll("th"));
+      const colIndex = ths.findIndex(th => th.getAttribute("data-col-name") === name);
+      if (colIndex > -1) {
+        tableNode.querySelectorAll("tr").forEach(tr => {
+          if (tr.children[colIndex]) pulseElement(tr.children[colIndex]);
+        });
+      }
+    };
+
+    if (tableNode._hasColBinding) return;
+    tableNode._hasColBinding = true;
+
+    tableNode.addEventListener("mouseover", e => {
+      if (!tableNode._boundChartNodeCol) return;
+      const cell = e.target.closest("td, th");
+      if (cell) {
+        const tr = cell.closest("tr");
+        const colIndex = Array.from(tr.children).indexOf(cell);
+        const th = tableNode.querySelector(`thead tr th:nth-child(${colIndex + 1})`);
+        if (th && th.getAttribute("data-col-name")) {
+          tableNode._boundChartNodeCol._highlightChart(th.getAttribute("data-col-name"));
+        }
+      }
+    });
+    tableNode.addEventListener("mouseout", () => {
+      if (tableNode._boundChartNodeCol) tableNode._boundChartNodeCol._downplayChart();
+    });
+    tableNode.addEventListener("click", e => {
+      if (!tableNode._boundChartNodeCol) return;
+      const cell = e.target.closest("td, th");
+      if (cell) {
+        const tr = cell.closest("tr");
+        const colIndex = Array.from(tr.children).indexOf(cell);
+        const th = tableNode.querySelector(`thead tr th:nth-child(${colIndex + 1})`);
+        if (th && th.getAttribute("data-col-name")) {
+          tableNode.querySelectorAll("tr").forEach(r => {
+            if (r.children[colIndex]) pulseElement(r.children[colIndex]);
+          });
+          tableNode._boundChartNodeCol._highlightChart(th.getAttribute("data-col-name"));
+        }
+      }
+    });
   }
 
   /* ---------- ECharts shared theme ---------- */
@@ -421,11 +547,17 @@
     }
 
     const chartHolder = el("div", { class: "mt-4", "data-role": "chart-holder" });
+    const matrixTable = boardTable(headers, rows);
+
     function paintChart() {
       chartHolder.innerHTML = "";
       disposeHolderCharts_(chartHolder);
       const m = chartable.find(x => x.label === metricSelect.value) || defaultMetric;
-      if (m) chartHolder.appendChild(chartFor(m));
+      if (m) {
+        const c = chartFor(m);
+        chartHolder.appendChild(c);
+        bindChartTableByColumn(c, matrixTable);
+      }
     }
     metricSelect.addEventListener("change", paintChart);
 
@@ -434,7 +566,7 @@
         content(data, "dashboard.subtitle", "The headline KPI matrix across four reference periods. Q2 2026 is shown Through May only.")),
       el("div", { class: "mb-8" },
         el("h2", { class: "font-serif text-xl text-ink mb-3" }, "KPI matrix"),
-        boardTable(headers, rows),
+        matrixTable,
       ),
       el("div", { class: "bg-white border border-rule rounded-md p-5 shadow-brief mb-8" },
         el("div", { class: "flex items-center justify-between gap-3 flex-wrap" },
@@ -564,7 +696,11 @@
       el("div", { class: "mb-8" }, nwcCard),
       el("div", { class: "mb-8" },
         el("h2", { class: "font-serif text-xl text-ink mb-3" }, "Board table"),
-        boardTable(headers, rows),
+        (() => {
+          const t = boardTable(headers, rows);
+          requestAnimationFrame(() => bindChartTableByRow(nwcCard, t));
+          return t;
+        })(),
       ),
       briefingCard("working-capital", data),
     );
@@ -675,14 +811,22 @@
       el("div", { class: "mb-6" }, monthlyChart),
       el("div", { class: "mb-10" },
         el("h3", { class: "font-serif text-xl text-ink mb-3" }, "Monthly P&L"),
-        boardTable(monthlyHeaders, monthlyRows),
+        (() => {
+          const t = boardTable(monthlyHeaders, monthlyRows);
+          requestAnimationFrame(() => bindChartTableByRow(monthlyChart, t));
+          return t;
+        })(),
       ),
       sawtoothDivider(),
       el("h2", { class: "font-serif text-2xl text-ink mb-3" }, "Quarterly performance"),
       el("div", { class: "mb-6" }, quarterlyChart),
       el("div", { class: "mb-8" },
         el("h3", { class: "font-serif text-xl text-ink mb-3" }, "Quarterly P&L"),
-        boardTable(qHeaders, qRows),
+        (() => {
+          const t = boardTable(qHeaders, qRows);
+          requestAnimationFrame(() => bindChartTableByRow(quarterlyChart, t));
+          return t;
+        })(),
       ),
       briefingCard("financial-performance", data),
     );
