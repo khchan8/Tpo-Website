@@ -307,8 +307,8 @@
   }
 
   // "4. Forward-Looking Risk" — header IS row 0, data from row 1.
-  //   Real shape: Reporting Period | Revenue | COGS | Gross Profit | SG&A | Net Income | Risk Status
-  //   Returns periods[] each {label, revenue, cogs, gp, sga, netIncome, riskStatus}.
+  //   Real shape: Reporting Period | Revenue | COGS | Gross Profit | SG&A | EBIT | Net Income | Risk Status
+  //   Returns periods[] each {label, revenue, cogs, gp, sga, ebit, netIncome, riskStatus}.
   function shapeForwardLookingBoard(rows) {
     if (!rows.length) return { headers: [], lineNames: [], periods: [] };
     const headers = (rows[0] || []).map(trim);
@@ -323,8 +323,9 @@
         cogs:      num(r[2]),
         gp:        num(r[3]),
         sga:       num(r[4]),
-        netIncome: num(r[5]),
-        riskStatus: trim(r[6]),
+        ebit:      num(r[5]),
+        netIncome: num(r[6]),
+        riskStatus: trim(r[7]),
       });
     }
     return { headers, lineNames, periods };
