@@ -373,6 +373,11 @@
       ...chartable.map(m => el("option", { value: m.label, selected: defaultMetric && m.label === defaultMetric.label }, m.label))
     );
 
+    const latestMonth = data.monthly?.length ? data.monthly[data.monthly.length - 1].month : null;
+    const cordon = latestMonth ? K.quarterCordon(data.monthly, K.quarterOf(latestMonth)) : null;
+    const partialQuarter = (cordon && cordon.isPartial) ? cordon.quarter : null;
+    const isPartialQ = (q) => !!q && q === partialQuarter;
+
     function detectKind(sample) {
       const s = String(sample == null ? "" : sample);
       if (s.includes("%")) return "pct";
@@ -396,8 +401,18 @@
             xAxis: { ...ECHART_THEME.xAxis, type: "category", data: s.labels },
             yAxis: { ...ECHART_THEME.yAxis, type: "value", axisLabel: { ...ECHART_THEME.yAxis.axisLabel, formatter: v => yFmt(v) } },
             series: [{
-              type: "bar", itemStyle: { color: "#115E67", borderRadius: [4, 4, 0, 0] },
-              label: { show: true, position: "top", color: "#0B1F3A", fontSize: 11, formatter: p => kind === "count" ? p.value : yFmt(p.value) },
+              type: "bar", 
+              itemStyle: { 
+                color: (p) => isPartialQ(s.labels[p.dataIndex]) ? "#C9A24B" : "#115E67", 
+                borderRadius: [4, 4, 0, 0] 
+              },
+              label: { 
+                show: true, position: "top", color: "#0B1F3A", fontSize: 11, 
+                formatter: p => {
+                  const valStr = kind === "count" ? p.value : yFmt(p.value);
+                  return isPartialQ(s.labels[p.dataIndex]) ? `${valStr} *` : valStr;
+                }
+              },
               data: s.series[0].values,
             }],
           };
