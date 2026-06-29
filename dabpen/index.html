@@ -207,12 +207,6 @@ ol.qs li b { color: var(--fg); font-weight: 700; }
 .back-grid p { margin: 6px 0 0; font-size: 15px; color: var(--fg); }
 .fineprint { font-size: 11px; color: var(--muted); line-height: 1.55; margin-top: 30px; padding-top: 16px; border-top: 1px solid var(--border-soft); }
 
-/* ---------- print bar (screen only) ---------- */
-.print-bar { position: fixed; bottom: 18px; right: 18px; z-index: 50; display: flex; align-items: center; gap: 12px; background: var(--ink); color: #fff; padding: 10px 12px 10px 14px; border-radius: var(--radius-pill); box-shadow: 0 10px 30px rgba(0,0,0,.30); font-size: 12.5px; max-width: 330px; }
-.print-bar button { background: var(--accent); color: #fff; border: 0; border-radius: var(--radius-pill); padding: 9px 16px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; font-size: 12px; cursor: pointer; font-family: inherit; transition: background var(--motion-fast) var(--ease-standard); }
-.print-bar button:hover { background: var(--accent-hover); }
-.print-bar span { line-height: 1.35; color: #c7d2df; }
-.print-bar span b { color: #fff; }
 
 /* ---------- responsive ---------- */
 @media (max-width: 720px) {
@@ -220,8 +214,6 @@ ol.qs li b { color: var(--fg); font-weight: 700; }
   .cover-toc { grid-template-columns: 1fr; }
   .anatomy { grid-template-columns: 1fr; }
   .back .back-grid { grid-template-columns: 1fr; }
-  .print-bar { right: 12px; bottom: 12px; max-width: 280px; }
-  .print-bar span { display: none; }
 }
 
 /* ---------- print ---------- */
@@ -231,7 +223,6 @@ ol.qs li b { color: var(--fg); font-weight: 700; }
   .cover { page: cover; min-height: 100vh; padding: 22mm 18mm; break-after: page; }
   .block { padding: 0; }
   .page-break { break-before: page; }
-  .print-bar { display: none !important; }
   figure, .callout, .quickstart, .pull, .anatomy, ol.steps li, ol.qs li { break-inside: avoid; }
   h2, h3 { break-after: avoid; }
   .hero-title { font-size: 56pt; }
@@ -245,11 +236,6 @@ ol.qs li b { color: var(--fg); font-weight: 700; }
 </style>
 </head>
 <body>
-
-<div class="print-bar" aria-hidden="true">
-  <button onclick="window.print()">Save as PDF</button>
-  <span>In the dialog choose <b>Letter</b> or <b>A4</b> as paper size, then save.</span>
-</div>
 
 <main class="manual">
 
