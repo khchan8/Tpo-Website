@@ -1,0 +1,173 @@
+{
+  "version": "1.0.0",
+  "project": {
+    "name": "Tpo-Website MonthlyReport",
+    "languages": ["javascript", "html", "css", "markdown"],
+    "frameworks": ["Apps Script"],
+    "description": "TPO Shop Monthly Report app",
+    "analyzedAt": "2026-06-24T23:51:00Z",
+    "gitCommitHash": "bdb63c8b3345300972c508fab7bbfd286963d683"
+  },
+  "nodes": [
+    {
+      "id": "file:apps-script/Code.gs",
+      "type": "file",
+      "name": "Code.gs",
+      "filePath": "apps-script/Code.gs",
+      "summary": "Google Apps Script backend for LLM commentary generation",
+      "tags": ["backend", "apps-script", "llm"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:index.html",
+      "type": "file",
+      "name": "index.html",
+      "filePath": "index.html",
+      "summary": "Main dashboard entry point",
+      "tags": ["frontend", "ui"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:js/app.js",
+      "type": "file",
+      "name": "app.js",
+      "filePath": "js/app.js",
+      "summary": "Frontend initialization and routing",
+      "tags": ["frontend", "javascript", "entry"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:js/compute.js",
+      "type": "file",
+      "name": "compute.js",
+      "filePath": "js/compute.js",
+      "summary": "Data transformation and calculations",
+      "tags": ["frontend", "javascript", "logic"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:js/data.js",
+      "type": "file",
+      "name": "data.js",
+      "filePath": "js/data.js",
+      "summary": "Data fetching and state management",
+      "tags": ["frontend", "javascript", "state"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:js/views.js",
+      "type": "file",
+      "name": "views.js",
+      "filePath": "js/views.js",
+      "summary": "UI rendering and view templates",
+      "tags": ["frontend", "javascript", "rendering"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:assets/styles.css",
+      "type": "file",
+      "name": "styles.css",
+      "filePath": "assets/styles.css",
+      "summary": "Application styling",
+      "tags": ["frontend", "css"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:config.js",
+      "type": "file",
+      "name": "config.js",
+      "filePath": "config.js",
+      "summary": "Frontend configuration",
+      "tags": ["frontend", "javascript", "config"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:README.md",
+      "type": "file",
+      "name": "README.md",
+      "filePath": "README.md",
+      "summary": "Project documentation",
+      "tags": ["documentation"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:index.html",
+      "target": "file:js/app.js",
+      "type": "imports"
+    },
+    {
+      "source": "file:index.html",
+      "target": "file:assets/styles.css",
+      "type": "imports"
+    },
+    {
+      "source": "file:js/app.js",
+      "target": "file:js/views.js",
+      "type": "calls"
+    },
+    {
+      "source": "file:js/app.js",
+      "target": "file:js/data.js",
+      "type": "calls"
+    },
+    {
+      "source": "file:js/data.js",
+      "target": "file:js/compute.js",
+      "type": "calls"
+    }
+  ],
+  "layers": [
+    {
+      "id": "layer:frontend-ui",
+      "name": "Frontend UI",
+      "description": "HTML, CSS, and Client-side JS rendering the dashboard",
+      "nodeIds": [
+        "file:index.html",
+        "file:assets/styles.css",
+        "file:js/app.js",
+        "file:js/views.js",
+        "file:js/data.js",
+        "file:js/compute.js",
+        "file:config.js"
+      ]
+    },
+    {
+      "id": "layer:backend",
+      "name": "Backend Services",
+      "description": "Google Apps Script providing LLM commentary generation",
+      "nodeIds": [
+        "file:apps-script/Code.gs"
+      ]
+    },
+    {
+      "id": "layer:documentation",
+      "name": "Documentation",
+      "description": "Project guides and specs",
+      "nodeIds": [
+        "file:README.md"
+      ]
+    }
+  ],
+  "tour": [
+    {
+      "order": 1,
+      "title": "Project Overview",
+      "description": "Start with the README to understand the TPO Monthly Report project.",
+      "nodeIds": ["file:README.md"]
+    },
+    {
+      "order": 2,
+      "title": "Apps Script Backend",
+      "description": "Code.gs acts as the backend for the Google Sheet, handling menu items, reading cell data, building prompts, and calling the Gemini API to generate commentary.",
+      "nodeIds": ["file:apps-script/Code.gs"]
+    },
+    {
+      "order": 3,
+      "title": "Frontend App",
+      "description": "The client-side dashboard loads its config, then initializes app routing to display various views, fetching processed data.",
+      "nodeIds": ["file:index.html", "file:js/app.js"]
+    }
+  ]
+}

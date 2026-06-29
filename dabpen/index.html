@@ -1,0 +1,480 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DabPen™ Oil Applicator — Introduction & User Guide</title>
+<style>
+:root {
+  --bg: #f7f8fa;
+  --surface: #ffffff;
+  --surface-warm: #eef3f8;
+  --fg: #111827;
+  --fg-2: #334155;
+  --muted: #64748b;
+  --meta: #0066b1;
+  --border: #d7dee8;
+  --border-soft: #edf1f6;
+  --accent: #0066b1;
+  --accent-on: #ffffff;
+  --accent-hover: color-mix(in oklab, var(--accent), black 8%);
+  --accent-active: color-mix(in oklab, var(--accent), black 14%);
+  --success: #16a34a;
+  --warn: #f59e0b;
+  --danger: #e4002b;
+  --font-display: "BMWTypeNext", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "BMWTypeNext", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "SF Mono", ui-monospace, Menlo, monospace;
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 16px;
+  --text-lg: 18px;
+  --text-xl: 24px;
+  --text-2xl: 36px;
+  --text-3xl: 56px;
+  --text-4xl: 78px;
+  --leading-body: 1.5;
+  --leading-tight: 1.02;
+  --tracking-display: -0.025em;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --section-y-desktop: 104px;
+  --section-y-tablet: 76px;
+  --section-y-phone: 52px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 14px;
+  --radius-pill: 9999px;
+  --elev-flat: none;
+  --elev-ring: 0 0 0 1px var(--border);
+  --elev-raised: 0 22px 56px rgba(17, 24, 39, 0.12);
+  --focus-ring: 0 0 0 4px rgba(0, 102, 177, 0.24);
+  --motion-fast: 130ms;
+  --motion-base: 220ms;
+  --ease-standard: cubic-bezier(0.16, 1, 0.3, 1);
+  --container-max: 1220px;
+  --container-gutter-desktop: 40px;
+  --container-gutter-tablet: 28px;
+  --container-gutter-phone: 18px;
+  /* BMW M tricolor — documented brand tokens */
+  --m-blue-light: #0066b1;
+  --m-blue-dark: #1c69d4;
+  --m-red: #e22718;
+  --ink: #0b0c10;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-body);
+  color: var(--fg);
+  background: #d9dfe8;
+  line-height: 1.7;
+  font-size: var(--text-base);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.manual {
+  max-width: 840px;
+  margin: 0 auto;
+  background: var(--bg);
+  box-shadow: 0 24px 70px rgba(13, 20, 38, 0.20);
+  overflow: hidden;
+}
+
+/* ---------- tricolor stripe ---------- */
+.m-stripe {
+  height: 4px;
+  width: 100%;
+  border: 0;
+  background: linear-gradient(90deg, var(--m-blue-light) 0, var(--m-blue-dark) 50%, var(--m-red) 100%);
+}
+.m-stripe-sm { width: 64px; height: 4px; }
+
+/* ---------- cover ---------- */
+.cover {
+  background: var(--ink);
+  color: #fff;
+  padding: 64px 60px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+}
+.cover::after {
+  content: "";
+  position: absolute;
+  right: -120px;
+  bottom: -120px;
+  width: 420px;
+  height: 420px;
+  border-radius: 50%;
+  background: radial-gradient(circle at center, rgba(0,102,177,.30), rgba(11,12,16,0) 65%);
+  pointer-events: none;
+}
+.cover-top { position: relative; z-index: 2; }
+.brand-mark { font-size: 15px; font-weight: 700; letter-spacing: .22em; }
+.brand-mark .tm { font-size: 9px; vertical-align: super; margin-left: 2px; }
+.cover-eyebrow { display: block; margin-top: 6px; font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: #9fb4c9; }
+.cover-mid { position: relative; z-index: 2; }
+.hero-title {
+  font-family: var(--font-display);
+  font-size: clamp(48px, 11vw, 104px);
+  font-weight: 300;
+  line-height: .98;
+  letter-spacing: -.02em;
+  margin: 22px 0 0;
+  text-transform: uppercase;
+}
+.hero-sub { max-width: 34ch; margin: 24px 0 0; font-size: 16px; line-height: 1.55; color: #c7d2df; }
+.cover-toc { position: relative; z-index: 2; display: grid; grid-template-columns: 1fr 1fr; gap: 0 32px; margin-top: 8px; }
+.cover-toc div { font-size: 14px; letter-spacing: .03em; color: #e7edf4; padding: 12px 0; border-top: 1px solid rgba(255,255,255,.16); }
+.cover-toc span { color: #6fb0ee; font-weight: 700; margin-right: 14px; letter-spacing: .08em; }
+.cover-foot { position: relative; z-index: 2; font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: #8090a6; }
+
+/* ---------- content blocks ---------- */
+.block { padding: 60px 60px; }
+.opener { margin-bottom: 6px; }
+.eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--accent); display: inline-block; }
+.sec-title {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: clamp(32px, 7vw, 50px);
+  line-height: 1.03;
+  letter-spacing: -.015em;
+  text-transform: uppercase;
+  margin: 8px 0 0;
+  color: var(--fg);
+}
+.kicker { font-size: 14px; color: var(--fg-2); margin: 8px 0 0; }
+.lead { font-size: 18px; line-height: 1.6; color: var(--fg-2); margin: 22px 0 6px; }
+
+h3.sub { font-size: 21px; font-weight: 600; letter-spacing: -.005em; margin: 34px 0 8px; color: var(--fg); }
+h3.sub .num { color: var(--accent); font-weight: 700; margin-right: 10px; }
+
+p { margin: 0 0 15px; color: var(--fg); }
+p.muted { color: var(--muted); }
+
+/* ---------- figures ---------- */
+figure { margin: 28px 0; break-inside: avoid; }
+figure img { width: 100%; height: auto; display: block; border: 1px solid var(--border); border-radius: var(--radius-md); }
+figure.fig-sm { max-width: 80%; margin-left: auto; margin-right: auto; }
+figcaption { margin-top: 9px; font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+figcaption b { color: var(--fg-2); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; font-size: 11px; margin-right: 6px; }
+
+/* ---------- anatomy ---------- */
+.anatomy { display: grid; grid-template-columns: 1.05fr 1fr; gap: 30px; align-items: center; margin-top: 24px; break-inside: avoid; }
+.anatomy img { width: 100%; border: 1px solid var(--border); border-radius: var(--radius-md); }
+.anatomy-list { list-style: none; counter-reset: anat; padding: 0; margin: 0; }
+.anatomy-list li { position: relative; padding: 12px 0 12px 42px; border-bottom: 1px solid var(--border-soft); counter-increment: anat; font-size: 15px; line-height: 1.45; }
+.anatomy-list li:last-child { border-bottom: 0; }
+.anatomy-list li::before { content: counter(anat); position: absolute; left: 0; top: 11px; width: 28px; height: 28px; background: var(--ink); color: #fff; font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-sm); }
+
+/* ---------- panels / callouts ---------- */
+.callout, .quickstart { position: relative; overflow: hidden; border-radius: var(--radius-lg); padding: 24px 26px 22px; margin: 28px 0; break-inside: avoid; }
+.callout { background: var(--surface-warm); }
+.quickstart { background: var(--surface); border: 1px solid var(--border); }
+.callout::before, .quickstart::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--m-blue-light), var(--m-blue-dark), var(--m-red)); }
+.callout .eyebrow, .quickstart .eyebrow { margin-bottom: 10px; }
+.pull-inline { font-size: 17px; font-weight: 500; color: var(--fg); margin: 2px 0 10px; line-height: 1.5; }
+
+/* ---------- ordered steps ---------- */
+ol.steps, ol.qs { list-style: none; counter-reset: step; margin: 14px 0 6px; padding: 0; }
+ol.steps li, ol.qs li { position: relative; padding-left: 44px; margin-bottom: 13px; break-inside: avoid; counter-increment: step; }
+ol.steps li::before, ol.qs li::before { content: counter(step); position: absolute; left: 0; top: 1px; width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; }
+ol.qs li b { color: var(--fg); font-weight: 700; }
+
+/* ---------- pull quote ---------- */
+.pull { font-family: var(--font-display); font-size: clamp(22px, 4.4vw, 30px); font-weight: 300; line-height: 1.24; letter-spacing: -.01em; color: var(--fg-2); margin: 40px 0 6px; }
+.pull::before { content: ""; display: block; width: 48px; height: 4px; margin-bottom: 18px; background: linear-gradient(90deg, var(--m-blue-light), var(--m-blue-dark), var(--m-red)); }
+
+/* ---------- back page ---------- */
+.back .back-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px 36px; margin-top: 32px; }
+.back-grid div { padding: 16px 0; border-top: 1px solid var(--border); }
+.back-grid p { margin: 6px 0 0; font-size: 15px; color: var(--fg); }
+.fineprint { font-size: 11px; color: var(--muted); line-height: 1.55; margin-top: 30px; padding-top: 16px; border-top: 1px solid var(--border-soft); }
+
+/* ---------- print bar (screen only) ---------- */
+.print-bar { position: fixed; bottom: 18px; right: 18px; z-index: 50; display: flex; align-items: center; gap: 12px; background: var(--ink); color: #fff; padding: 10px 12px 10px 14px; border-radius: var(--radius-pill); box-shadow: 0 10px 30px rgba(0,0,0,.30); font-size: 12.5px; max-width: 330px; }
+.print-bar button { background: var(--accent); color: #fff; border: 0; border-radius: var(--radius-pill); padding: 9px 16px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; font-size: 12px; cursor: pointer; font-family: inherit; transition: background var(--motion-fast) var(--ease-standard); }
+.print-bar button:hover { background: var(--accent-hover); }
+.print-bar span { line-height: 1.35; color: #c7d2df; }
+.print-bar span b { color: #fff; }
+
+/* ---------- responsive ---------- */
+@media (max-width: 720px) {
+  .cover, .block { padding-left: 26px; padding-right: 26px; }
+  .cover-toc { grid-template-columns: 1fr; }
+  .anatomy { grid-template-columns: 1fr; }
+  .back .back-grid { grid-template-columns: 1fr; }
+  .print-bar { right: 12px; bottom: 12px; max-width: 280px; }
+  .print-bar span { display: none; }
+}
+
+/* ---------- print ---------- */
+@media print {
+  body { background: #fff; font-size: 10.5pt; }
+  .manual { max-width: none; box-shadow: none; overflow: visible; }
+  .cover { page: cover; min-height: 100vh; padding: 22mm 18mm; break-after: page; }
+  .block { padding: 0; }
+  .page-break { break-before: page; }
+  .print-bar { display: none !important; }
+  figure, .callout, .quickstart, .pull, .anatomy, ol.steps li, ol.qs li { break-inside: avoid; }
+  h2, h3 { break-after: avoid; }
+  .hero-title { font-size: 56pt; }
+  .sec-title { font-size: 25pt; }
+  .lead { font-size: 12pt; }
+  p { font-size: 10.5pt; }
+  figcaption { font-size: 8.5pt; }
+  @page { margin: 15mm 14mm; }
+  @page cover { margin: 0; }
+}
+</style>
+</head>
+<body>
+
+<div class="print-bar" aria-hidden="true">
+  <button onclick="window.print()">Save as PDF</button>
+  <span>In the dialog choose <b>Letter</b> or <b>A4</b> as paper size, then save.</span>
+</div>
+
+<main class="manual">
+
+  <!-- ============ COVER ============ -->
+  <header class="cover">
+    <div class="cover-top">
+      <div class="brand-mark">DABPEN<span class="tm">™</span></div>
+      <span class="cover-eyebrow">Oil Applicator</span>
+    </div>
+    <div class="cover-mid">
+      <hr class="m-stripe m-stripe-sm">
+      <h1 class="hero-title">Dab. Infuse.<br>Twax.</h1>
+      <p class="hero-sub">Introduction &amp; User Guide for the DabPen™ Oil Applicator — precision dosing for mess-free dabbing, infusing, and twaxing.</p>
+    </div>
+    <div>
+      <div class="cover-toc">
+        <div><span>01</span> Anatomy &amp; Introduction</div>
+        <div><span>02</span> How to Dab in 2026</div>
+        <div><span>03</span> Infuse Food &amp; Drinks</div>
+        <div><span>04</span> Twaxing 101</div>
+      </div>
+      <p class="cover-foot" style="margin-top:18px;">A precision oil applicator · 0.6mL · 1.2mL · 2.7mL · 4.2mL</p>
+    </div>
+  </header>
+
+  <!-- ============ PART 01 — INTRO & ANATOMY ============ -->
+  <section class="block" id="intro">
+    <div class="opener">
+      <hr class="m-stripe m-stripe-sm">
+      <span class="eyebrow">Part 01 · Introduction</span>
+      <h2 class="sec-title">Meet the DabPen™<br>Oil Applicator</h2>
+    </div>
+    <p class="lead">The DabPen™ Oil Applicator is a precision dosing tool for cannabis oil — built for mess-free, repeatable application whether you are dabbing, infusing food and drinks, or twaxing. Twist to your dose, push to dispense, and re-cap to lock in the oil.</p>
+
+    <div class="quickstart">
+      <span class="eyebrow">Quick operation</span>
+      <ol class="qs">
+        <li><b>Twist</b> the dosage selector to your line.</li>
+        <li><b>Press</b> the button on top to dispense the oil.</li>
+        <li><b>Re-cap</b> to preserve the oil and eliminate any chance of mess.</li>
+      </ol>
+    </div>
+
+    <h3 class="sub"><span class="num">›</span>Anatomy of the applicator</h3>
+    <div class="anatomy">
+      <figure>
+        <img src="mqzd1cwp-Dabpen-01.jpg" alt="DabPen Oil Applicator anatomy diagram showing six numbered components">
+        <figcaption><b>Fig. 1</b> The DabPen™ Oil Applicator — six core components, from dosage selector to Direct Dab Tip™.</figcaption>
+      </figure>
+      <ol class="anatomy-list">
+        <li>Bi-directional twist-up dosage selector</li>
+        <li>Twist and push for a repeatable dose, with 25mg dosing lines</li>
+        <li>Area available for partner branding</li>
+        <li>Shatter-resistant, BPA-free tank available in 0.6mL, 1.2mL, 2.7mL and 4.2mL sizes</li>
+        <li>Brandable, snap-on cap that protects tip and prevents leakage</li>
+        <li>Heat-resistant, metal Direct Dab Tip™ for direct application of oil</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ============ PART 02 — DABBING ============ -->
+  <section class="block page-break" id="dab">
+    <div class="opener">
+      <hr class="m-stripe m-stripe-sm">
+      <span class="eyebrow">Part 02 · Dabbing</span>
+      <h2 class="sec-title">How to Dab in 2026</h2>
+      <p class="kicker">Dabbing techniques and tools</p>
+    </div>
+    <p class="lead">There are several things to consider when learning how to dab cannabis concentrates. Among other things, you should know where you can legally dab. You should also check your local laws and buy dab-specific tools. There are many resources on the web that can guide you through the process.</p>
+
+    <h3 class="sub"><span class="num">›</span>What is dabbing?</h3>
+    <p>Dabbing is a method of consuming cannabis concentrates that involves heating a “dab” of concentrate on a hot surface and inhaling the vapor. Dabbing is said to produce a more intense high versus other methods of consuming concentrates, such as smoking or using a vape pen.</p>
+
+    <h3 class="sub"><span class="num">›</span>How to dab</h3>
+    <p>There are several ways to dab, but the most common method is to use a “dab rig.” A dab rig looks similar to a bong, but it has a few key differences. First, dab rigs have a banger or nail instead of a bowl. The banger or nail is heated with a torch, and then the concentrate is placed on the hot banger or nail. The heat causes the concentrate to vaporize, and the user inhales the vapor through the dab rig. Also, dab rigs usually don’t have a water component like bongs.</p>
+    <figure>
+      <img src="mqzd1cxa-Dabpen-05.jpg" alt="A dab rig and vape setup on a counter">
+      <figcaption><b>Fig. 2</b> A dab rig with a heated banger or nail is the classic setup for vaporizing concentrates.</figcaption>
+    </figure>
+
+    <h3 class="sub"><span class="num">›</span>Alternatives to traditional dabbing</h3>
+    <p>Several alternatives to traditional dabbing are available, the most popular being e-rigs and dab pens. E-rigs, or electric rigs, use electric power to heat a concentrate chamber, so users don’t have to use a blowtorch. As long as the e-rig is charged and the chamber is loaded, it can vaporize concentrate with the press of a button. Many models come with additional technical components, such as mobile apps for viewing your vaping data, controlling temperature and saving customized settings. If you want to dab on the go, portable dab pens function similarly to pre-filled vape cartridges. But dab pens typically have more options for temperature control, and the ability to fill (and re-fill) the chamber with your preferred concentrate. Using dab pens ultimately cuts down on waste from pre-filled carts and disposable vapes while giving the user more control over their vaping experience.</p>
+    <figure class="fig-sm">
+      <img src="mqzd1cwz-Dabpen-03.jpg" alt="Hands holding a dab pen with an amber oil chamber">
+      <figcaption><b>Fig. 3</b> Portable dab pens vaporize concentrate at the press of a button — ideal for dabbing on the go.</figcaption>
+    </figure>
+
+    <h3 class="sub"><span class="num">›</span>Ideal temperature for dabbing</h3>
+    <p>There are many different opinions on the ideal temperature for dabbing. Ultimately, the ideal temperature depends on the user and their personal preferences. Generally, lower temperatures will result in more flavor, less potency, less vapor, and a higher potential for leaving cannabis oil behind. Higher temperatures will result in less flavor, higher potency, and more vapor, with less wasted product. There are trade-offs between the two but many dabbers prefer low temperature dabs to taste their concentrate better and avoid burning their dabs.</p>
+    <p>Generally, low temperature dabs are between 300–450°F while high temperature dabs are between 450–600°F. If you’re not sure what you prefer, as with many things in cannabis, experiment with your dabs by starting low and bringing the temperature up until you find a nice safe dabbing point.</p>
+
+    <h3 class="sub"><span class="num">›</span>Cleaning your rig with a pointed-tip cotton swab</h3>
+    <p>Pointed-tip cotton swabs, like a pointed-tip Q-Tip, are some of the best tools for cleaning your dab rig. A dabbing best practice is to clean your banger or nail after every use. This prevents residue from affecting the quality of your next dab. Many people choose dabbing for its flavor, and cleaning with a pointed-tip cotton swab will ensure your next dab is fresh and flavorful.</p>
+    <p>Using a pointed-tip cotton swab is not a luxury, but it is an essential part of dabbing. This tool can keep your banger or nail clean, prevents your rig from getting clogged, and ensures you get the best possible taste from your concentrate. It will also allow you to dab at low temperatures to preserve flavor.</p>
+
+    <h3 class="sub"><span class="num">›</span>Cold-start dabbing preserves terpenes</h3>
+    <p>When dabbers want to retain terpenes, cold-start dabbing is the way to go. This technique preserves the terpenes in concentrates without altering their taste or potency. Cold-start dabbing uses a banger to evenly distribute the heat throughout the concentrate. These bangers can be made of quartz, ceramic, or thermal nail material. The banger should be clean and free from any debris or residue.</p>
+    <p>The benefits of cold-start dabbing are numerous. First, it preserves terpenes and cannabinoids more than traditional dabbing. Moreover, this method doesn’t generate a large amount of harshness and thick vapor clouds. It also allows dabbers to enjoy more of the terpenes in their concentrates.</p>
+
+    <h3 class="sub"><span class="num">›</span>Dabbing tools</h3>
+    <p>If you’re looking to start dabbing, one of the first things you’ll want to consider is the cost of your dab tools. It’s important to purchase high-quality equipment, so you’ll be able to enjoy your dabbing experience for many years to come. Look for dab rigs that are sturdy and quartz, titanium, or ceramic bangers or nails. E-rigs and portable dab pens are also great options. Look for e-rigs or dab pens with multiple temperature choices that are easy to clean. Cheaper dab rigs don’t last as long and will need to be replaced more often.</p>
+    <figure>
+      <img src="mqzd1cx4-Dabpen-04.jpg" alt="Filling a vape cartridge with a syringe-style applicator">
+      <figcaption><b>Fig. 4</b> Precision tools and consistent dosing keep every fill clean and repeatable.</figcaption>
+    </figure>
+
+    <div class="callout">
+      <span class="eyebrow">Why the DabPen™</span>
+      <p class="pull-inline">Dabbing tools come in a variety of shapes and sizes. The most common tools are the scoop and pick, but these do not provide consistent or easy dosing. With the DabPen™ Oil Applicator, everyone can dab easily and efficiently at home.</p>
+      <p class="muted">And the DabPen™ Oil Applicator isn’t only for dabbing. Whether you prefer to use oil for dabbing, infusing or twaxing, the DabPen™ Oil Applicator ensures you have a mess-free and repeatedly-dosed experience every time. Consumers and wholesalers can learn more about the DabPen™ Oil Applicator on our website.</p>
+    </div>
+  </section>
+
+  <!-- ============ PART 03 — INFUSING ============ -->
+  <section class="block page-break" id="infuse">
+    <div class="opener">
+      <hr class="m-stripe m-stripe-sm">
+      <span class="eyebrow">Part 03 · Infusing</span>
+      <h2 class="sec-title">Infuse Food &amp; Drinks</h2>
+      <p class="kicker">How to infuse food and drinks with THC using the DabPen™ Oil Applicator</p>
+    </div>
+    <p class="lead">There is lots to know before infusing edibles with cannabis oil. For instance, you can learn more about the lipid-soluble nature of cannabinoids, which bind to fats. You can also calculate how much THC will be contained in your infused oil or check out some recipes that incorporate different types of cannabis oil. Plus, learn how the DabPen™ Oil Applicator makes infusing easy, every time.</p>
+
+    <h3 class="sub"><span class="num">›</span>Cannabinoids are lipid soluble</h3>
+    <p>Cannabinoids are fat-soluble, which means they dissolve and break down in fats. They are extracted through distillation, winterizing, and butane systems. They are then delivered to the body through a carrier oil. Cannabinoids are also water-soluble, and therefore can be added to food and beverages.</p>
+    <p>Cannabinoids are naturally occurring chemical compounds found in the cannabis plant. They are also found in several other plant species. Aside from cannabis, other plant species containing phytocannabinoids include Echinacea purpurea, Acmella oleracea, Helichrysum umbraculigerum, and Radula marginata. These compounds are naturally lipid-soluble and have the ability to dissolve in water and lipids.</p>
+
+    <h3 class="sub"><span class="num">›</span>Cannabinoids bind to fat</h3>
+    <p>One of the questions posed by a cannabis oil product is how it binds to fat. Fat is a key component of the human body, and dietary fat helps to increase the bioavailability of cannabinoids. These compounds are absorbed into the bloodstream via the gastrointestinal tract and act on the body’s endocannabinoid system. The higher the bioavailability of cannabidiol, the more it is available to the body.</p>
+    <p>Cannabis oil binds to fat in the body, and the fat can metabolize it into THC. Fat is also a great storage space for cannabinoids, such as THC. It can remain stored in the body for weeks or even months. However, the release of THC from fat cells is so slow that it is unlikely to produce significant effects on the user.</p>
+    <figure class="fig-sm">
+      <img src="mqzd1cxo-Dabpen-07.jpg" alt="Golden oil extracted from a softgel capsule with a dropper">
+      <figcaption><b>Fig. 5</b> Because cannabinoids bind to fat, oil-based carriers help maximize bioavailability.</figcaption>
+    </figure>
+
+    <h3 class="sub"><span class="num">›</span>How to calculate potency of infused oil</h3>
+    <p>A potency calculator is a handy tool when making homemade cannabis edibles or cannabis-infused things. It is not a replacement for lab testing, but it will give you an estimate of the potency of your infused items, such as butter or oil. It takes into account the losses from solvents, decarboxylation, and the oil extracted from cannabis.</p>
+    <p>First, calculate the amount of THC per serving. For example, if you want to make a batch of brownies, you would multiply the total THC content by the number of servings. If the recipe calls for four servings, then you would need to use five milligrams of THC per serving. You would also divide the amount of oil you want to use by the number of servings.</p>
+    <div class="callout">
+      <span class="eyebrow">Repeatable dosing with DabPen™</span>
+      <p class="pull-inline">Once you know your dosing, the DabPen™ is the perfect solution for repeatable dosing, as the measuring lines provide a 25mg of oil measurement per line on the plunger.</p>
+    </div>
+    <figure class="fig-sm">
+      <img src="mqzd1cxq-Dabpen-08.jpg" alt="A pen-style dropper dispensing a drop of golden oil onto a fingertip">
+      <figcaption><b>Fig. 6</b> Twist to your line for a repeatable, mess-free dose — every time.</figcaption>
+    </figure>
+
+    <h3 class="sub"><span class="num">›</span>Recipes that use infused oil</h3>
+    <p>If you’ve ever wanted to try cooking with marijuana, you’ll be excited to learn that you can create delicious recipes using cannabis oil and other cannabis-infused products. The first step is deciding what type of cannabis oil you’d like to use in your recipes. The next step is deciding how to apply.</p>
+    <p>The DabPen™ is a great option, because you can control your dose whether you’re infusing your tea, a treat or anything else! With the DabPen™ Oil Applicator, everyone can make their own potent pot creations at home. And the DabPen™ Oil Applicator is great for twaxing and infusing too! Whether you prefer to use oil for dabbing, infusing or twaxing, the DabPen™ Oil Applicator ensures you have a mess-free and precisely dosed experience every time.</p>
+    <figure>
+      <img src="mqzd1cxl-Dabpen-06.jpg" alt="Dressing a fresh salad with an oil dropper">
+      <figcaption><b>Fig. 7</b> A measured drop of oil transforms everyday food and drinks into infused creations.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ============ PART 04 — TWAXING ============ -->
+  <section class="block page-break" id="twax">
+    <div class="opener">
+      <hr class="m-stripe m-stripe-sm">
+      <span class="eyebrow">Part 04 · Twaxing</span>
+      <h2 class="sec-title">Twaxing 101</h2>
+      <p class="kicker">Things to consider when learning how to twax</p>
+    </div>
+    <p class="lead">Legalization has greatly expanded the hemp and cannabis community and the ways we all use the plant. With those changes also come new vocabulary to learn, and we’ve got another one for your cannabis lexicon: “twaxing” is the new word on the weed street. You might not recognize the word, but you probably already have experience performing the action it describes.</p>
+
+    <h3 class="sub"><span class="num">›</span>What is twaxing?</h3>
+    <p>Twaxing, a verb, is when you add any cannabis concentrate(s) to your joints, pipes or bongs, smoking the concentrate alongside regular flower. It can be mixed inside with flower or soaked, coated and dusted on the outside of joints.</p>
+    <p>Since concentrates can come in a variety of forms, from powdery kief to viscous oil to crystallized shatter, twaxing lets smokers express their creativity — while getting some supercharged hits, of course. Some of the most skilled twaxxers can create elaborate designs in oil or wax around the outside of their joints. Others take pride in mixing concentrates to create the most potent bowls and rolls imaginable.</p>
+
+    <h3 class="sub"><span class="num">›</span>How to twax</h3>
+    <p>Twaxing is a free art form. The only rule is the final product still needs to burn. Otherwise, your twax design can take whatever form and use whichever blend of concentrates and flower you desire.</p>
+    <p>However, due to the varying consistencies of different concentrates, each kind has to be handled in a specific way, or has to be prepared before it can be mixed with flower. Keep reading for twaxing instructions for specific concentrates:</p>
+    <figure>
+      <img src="mqzd1cxy-Dabpen-09.jpg" alt="A hand applying a line of cannabis oil to the outside of a rolled joint">
+      <figcaption><b>Fig. 8</b> Draw lines or freehand patterns of oil directly onto a rolled joint or blunt.</figcaption>
+    </figure>
+
+    <h3 class="sub"><span class="num">›</span>Twaxing with kief</h3>
+    <p>Kief consists of the trichome crystals from the cannabis plant. In plain language? It’s the green dust that falls off your bud. You might have seen it at the bottom of your grinder? Kief is rich in THC and burns well, which makes it a great addition to any joint or bowl. You can mix it in with the flower or dust it on top. The downside is that, because the powder is so fine, kief can get quite messy. It’s truly the glitter of the cannabis plant — once it spills, you’ll never get it totally cleaned up.</p>
+
+    <h3 class="sub"><span class="num">›</span>Twaxing with shatter</h3>
+    <p>Shatter is one of the hardest concentrates, with a consistency similar to hard candy. Shatter has to be carefully heated with a dab pen and torch or hot knife in order to be malleable enough to place in the center or outside of a joint. If you just put unheated shatter into a joint, your lighter won’t be hot enough to burn it. With all these blazing hot tools needed to add just a smidge of shatter to a bowl, twaxing with shatter is one of the most difficult ways to twax.</p>
+
+    <h3 class="sub"><span class="num">›</span>Twaxing with the DabPen™ Oil Applicator</h3>
+    <p>Using oils with a viscous consistency can make twaxing a messy challenge, but the DabPen™ Oil Applicator makes twaxing all types of cannabis oil easy! There’s no prep required before you add the concentrate to your infusions, joints, carts, or pipes, and no loose kief that can get everywhere. With a simple twist, click, and push, you’ll be twaxing in no time — you can try one out today, with brand partners across the country, like Cresco, Columbia Care, Jetty Extracts, and more.</p>
+
+    <h3 class="sub"><span class="num">›</span>Twaxing the outside of a joint or blunt</h3>
+    <p>With the DabPen™ Oil Applicator, anyone can be a twaxing artist. To create patterns and designs on the exterior of your joint or blunt, just follow these instructions. Roll your joint or blunt and seal it — but wait, don’t smoke yet!</p>
+    <ol class="steps">
+      <li>Remove the cap from the DabPen™ Oil Applicator, then twist the pen to your desired dose.</li>
+      <li>Press the button on top of the applicator to dispense the oil.</li>
+      <li>With the applicator in one hand and the joint or blunt in the other, draw patterns like criss-crosses and spirals, or freehand your own design. The oil will adhere to the outside of the wrap.</li>
+      <li>Re-cap the applicator to preserve the oil and eliminate any chance of mess.</li>
+      <li>Let your design harden for a moment — the ideal time to take a pic for the gram, so others can admire your creative genius.</li>
+    </ol>
+
+    <h3 class="sub"><span class="num">›</span>Twaxing the inside of a joint or blunt</h3>
+    <p>Interior twaxing is less showy than exterior twaxing, but just as potent (and maybe a little easier) — a great way to make your own infused joint or pre-roll. To twax the inside of a joint or blunt, just follow these instructions:</p>
+    <ol class="steps">
+      <li>Lay out your paper or wrap and fill with one layer of ground flower.</li>
+      <li>Remove the cap from the DabPen™ Oil Applicator, then twist the pen to your desired dose. Press the button on top of the applicator to dispense the oil in a line (or multiple lines) on top of the flower.</li>
+      <li>Re-cap the applicator to preserve the oil and eliminate any chance of mess.</li>
+      <li>Cover the oil with another layer of flower, then roll it up. Your twaxed joint or blunt is ready to smoke.</li>
+    </ol>
+
+    <div class="pull">One applicator. Three techniques. Dab, infuse, or twax — mess-free and precisely dosed, every time.</div>
+  </section>
+
+  <!-- ============ CLOSING ============ -->
+  <section class="block page-break back" id="back">
+    <hr class="m-stripe m-stripe-sm">
+    <span class="eyebrow">The DabPen™ Oil Applicator</span>
+    <h2 class="sec-title">Mess-free.<br>Repeatable.<br>Every time.</h2>
+    <p class="lead">Whether you prefer to use oil for dabbing, infusing or twaxing, the DabPen™ Oil Applicator ensures a mess-free and precisely dosed experience — every time.</p>
+    <div class="back-grid">
+      <div><span class="eyebrow">Techniques</span><p>Dabbing · Infusing · Twaxing</p></div>
+      <div><span class="eyebrow">Tank sizes</span><p>0.6mL · 1.2mL · 2.7mL · 4.2mL</p></div>
+      <div><span class="eyebrow">Dosing</span><p>Bi-directional twist-up selector with dosing lines</p></div>
+      <div><span class="eyebrow">Tip</span><p>Heat-resistant metal Direct Dab Tip™</p></div>
+    </div>
+    <p class="fineprint">For education and product guidance only. Check your local laws before purchasing or using cannabis products, and keep all cannabis products out of the reach of children and pets.</p>
+  </section>
+
+</main>
+
+</body>
+</html>

@@ -1,0 +1,193 @@
+{
+  "schema": "open-design.design-manifest.v1",
+  "title": "d33843d6-6d0e-4911-a5b3-9150ce5dd49a",
+  "entryFile": "dabpen-manual.html",
+  "sourceFiles": {
+    "all": [
+      "dabpen-manual.html",
+      "mqzd1cwp-Dabpen-01.jpg",
+      "mqzd1cwz-Dabpen-01.txt",
+      "mqzd1cwz-Dabpen-03.jpg",
+      "mqzd1cx3-Dabpen-03-04-05.txt",
+      "mqzd1cx4-Dabpen-04.jpg",
+      "mqzd1cxa-Dabpen-05.jpg",
+      "mqzd1cxl-Dabpen-06.jpg",
+      "mqzd1cxn-Dabpen-06-07-08.txt",
+      "mqzd1cxo-Dabpen-07.jpg",
+      "mqzd1cxq-Dabpen-08.jpg",
+      "mqzd1cxy-Dabpen-09.jpg",
+      "mqzd1cy8-Dabpen-09-10-11.txt"
+    ],
+    "html": [
+      "dabpen-manual.html"
+    ],
+    "css": [],
+    "scriptsAndComponents": [],
+    "assets": [
+      "mqzd1cwp-Dabpen-01.jpg",
+      "mqzd1cwz-Dabpen-01.txt",
+      "mqzd1cwz-Dabpen-03.jpg",
+      "mqzd1cx3-Dabpen-03-04-05.txt",
+      "mqzd1cx4-Dabpen-04.jpg",
+      "mqzd1cxa-Dabpen-05.jpg",
+      "mqzd1cxl-Dabpen-06.jpg",
+      "mqzd1cxn-Dabpen-06-07-08.txt",
+      "mqzd1cxo-Dabpen-07.jpg",
+      "mqzd1cxq-Dabpen-08.jpg",
+      "mqzd1cxy-Dabpen-09.jpg",
+      "mqzd1cy8-Dabpen-09-10-11.txt"
+    ]
+  },
+  "screens": [
+    {
+      "file": "dabpen-manual.html",
+      "role": "screen",
+      "implementationNote": "Preserve visual hierarchy, responsive behavior, and interactive states from this screen."
+    }
+  ],
+  "screenFilePolicy": {
+    "mode": "screen-file-first",
+    "entryFileRole": "primary-screen",
+    "rules": [
+      "Each distinct user-facing screen or surface must be delivered and implemented as its own file/route.",
+      "If a landing page is present or requested, keep it in landing.html and do not merge it into the product app screen.",
+      "When multiple HTML screens exist, index.html is a launcher/overview only; it must not be treated as the combined final UI.",
+      "Keep product app screens, landing pages, platform screens, and OS widget surfaces separate in production code."
+    ]
+  },
+  "appModules": [
+    "Identify domain-specific in-app modules from the exported UI; do not reduce them to generic cards.",
+    "For each major module, implement purpose, default/loading/empty/error/success states, and responsive behavior.",
+    "Keep app modules separate from OS home-screen widgets in the production component model."
+  ],
+  "osWidgets": [
+    "If the export includes home-screen, lock-screen, Live Activity, tablet glance, or Android widget surfaces, implement them as platform quick-access surfaces outside the app UI.",
+    "If none are present, do not invent OS widgets unless the product requirements request them."
+  ],
+  "landingPage": {
+    "detection": "Inspect files and screen names for a marketing/landing page surface. If present, keep it separate from product app screens.",
+    "requiredSections": [
+      "hero",
+      "value props",
+      "product proof/screenshots",
+      "feature proof",
+      "CTA"
+    ]
+  },
+  "tokens": {
+    "source": [
+      "dabpen-manual.html"
+    ],
+    "required": [
+      "background",
+      "surface",
+      "foreground",
+      "muted text",
+      "border",
+      "accent",
+      "radius",
+      "shadow",
+      "spacing",
+      "type scale",
+      "motion"
+    ],
+    "note": "Extract/freeze tokens before framework implementation so coding tools do not substitute default theme colors or typography."
+  },
+  "interactions": {
+    "source": [
+      "dabpen-manual.html"
+    ],
+    "requiredStates": [
+      "default",
+      "hover",
+      "focus",
+      "active",
+      "disabled",
+      "loading",
+      "empty",
+      "error",
+      "success"
+    ],
+    "requiredBehaviors": [
+      "forms/validation where present",
+      "tabs/filters where present",
+      "dialogs/sheets/drawers where present",
+      "copy/generate/share actions where present",
+      "player or quick controls where present"
+    ],
+    "note": "If the prototype is static, derive missing behavior from visible controls and document it before coding."
+  },
+  "responsiveViewports": [
+    {
+      "name": "mobile-compact",
+      "width": 360,
+      "height": 800,
+      "category": "mobile",
+      "mustAvoidHorizontalScroll": true
+    },
+    {
+      "name": "mobile-standard",
+      "width": 390,
+      "height": 844,
+      "category": "mobile",
+      "mustAvoidHorizontalScroll": true
+    },
+    {
+      "name": "mobile-large",
+      "width": 430,
+      "height": 932,
+      "category": "mobile",
+      "mustAvoidHorizontalScroll": true
+    },
+    {
+      "name": "foldable-small-tablet",
+      "width": 600,
+      "height": 960,
+      "category": "foldable-tablet",
+      "mustAvoidHorizontalScroll": true
+    },
+    {
+      "name": "tablet-portrait",
+      "width": 820,
+      "height": 1180,
+      "category": "tablet",
+      "mustAvoidHorizontalScroll": true
+    },
+    {
+      "name": "tablet-landscape",
+      "width": 1024,
+      "height": 768,
+      "category": "tablet",
+      "mustAvoidHorizontalScroll": true
+    },
+    {
+      "name": "laptop",
+      "width": 1366,
+      "height": 768,
+      "category": "desktop",
+      "mustAvoidHorizontalScroll": true
+    },
+    {
+      "name": "desktop",
+      "width": 1440,
+      "height": 900,
+      "category": "desktop",
+      "mustAvoidHorizontalScroll": true
+    },
+    {
+      "name": "wide",
+      "width": 1920,
+      "height": 1080,
+      "category": "wide",
+      "mustAvoidHorizontalScroll": true
+    }
+  ],
+  "implementationChecklist": [
+    "Open entryFile first and map screens, modules, tokens, and interactions.",
+    "Extract tokens before writing framework components.",
+    "Implement app-specific modules with real states instead of generic card grids.",
+    "Preserve or rebuild JS interactions for meaningful UX actions.",
+    "Validate screenshots at desktop/tablet/mobile viewports with no horizontal overflow.",
+    "Keep landing pages, in-app modules, and OS widgets as separate implementation surfaces."
+  ]
+}
