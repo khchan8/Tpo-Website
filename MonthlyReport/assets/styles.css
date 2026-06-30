@@ -5,6 +5,14 @@
    partial bars, KPI tiles, briefing card).
    ========================================================= */
 
+/* Never let any element (non-wrapping nav, wide board tables, an
+   over-wide chart) push the page wider than the viewport. overflow-x:
+   clip stops horizontal overflow WITHOUT creating a scroll container,
+   so the sticky header still sticks. Without this, an overflowing
+   element expands the layout viewport past the screen width and the
+   page stops filling the screen (seen on wide foldables). */
+html, body { overflow-x: clip; }
+
 /* Sawtooth divider — subtle wave at section tops/bottoms */
 .sawtooth {
   --c: #115E67;
@@ -92,11 +100,15 @@
   );
 }
 
-/* Nav — single non-wrapping row; horizontally scrolls on narrow widths */
+/* Nav — single non-wrapping row; horizontally scrolls WITHIN the bar on
+   narrow widths. min-width:0 + flex-shrink let the bar shrink to fit the
+   header (instead of flex-shrink:0, which made the whole page as wide as
+   the 8 items and broke wide foldable screens). */
 #primary-nav {
   display: flex; align-items: center; gap: .25rem;
   overflow-x: auto; scrollbar-width: none;
-  -ms-overflow-style: none; flex-shrink: 0;
+  -ms-overflow-style: none;
+  flex: 0 1 auto; min-width: 0;
 }
 #primary-nav::-webkit-scrollbar { display: none; }
 #primary-nav a {
