@@ -155,12 +155,31 @@
   }
 
   window.addEventListener("hashchange", render);
-  window.addEventListener("resize", () => {
-    // ECharts resize on view change
+
+  // Re-fit charts on any viewport change — foldable unfold/flip, rotation,
+  // and browser-chrome show/hide. Some foldable webviews update the layout
+  // viewport on unfold WITHOUT triggering a CSS reflow, leaving the page
+  // laid out at the old (cover-screen) width with a blank strip on one side.
+  // The offsetWidth read forces such a stale layout to recompute, and we
+  // re-read the viewport width so any layout that depends on it (e.g. the
+  // responsive grids) picks up the new size.
+  function refitViewport() {
     document.querySelectorAll("[_echarts_instance_]").forEach(n => {
       const inst = echarts.getInstanceByDom(n);
       if (inst) inst.resize();
     });
-  });
+    // force a stale layout to reflow at the new viewport width
+    void document.documentElement.offsetWidth;
+  }
+  let refitTimer = null;
+  function scheduleRefit() {
+    clearTimeout(refitTimer);
+    refitTimer = setTimeout(refitViewport, 120);
+  }
+  window.addEventListener("resize", scheduleRefit);
+  window.addEventListener("orientationchange", scheduleRefit);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", scheduleRefit);
+  }
   boot();
 })();
