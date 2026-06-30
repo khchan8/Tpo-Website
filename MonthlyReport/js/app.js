@@ -181,5 +181,53 @@
   if (window.visualViewport) {
     window.visualViewport.addEventListener("resize", scheduleRefit);
   }
+  // ---- TEMPORARY foldable-layout diagnostic (remove once fixed) ----
+  // Invisible to normal visitors; only loads with ?debug=1 in the URL.
+  // Reports what the page actually computes so we can see why content
+  // doesn't fill the unfolded screen.
+  if (new URLSearchParams(location.search).get("debug") !== null) {
+    const box = document.createElement("div");
+    Object.assign(box.style, {
+      position: "fixed", left: "6px", bottom: "6px", zIndex: 99999,
+      background: "rgba(11,31,58,0.94)", color: "#fff",
+      font: "11px/1.5 ui-monospace, Menlo, Consolas, monospace",
+      padding: "7px 9px", borderRadius: "6px", maxWidth: "94vw",
+      pointerEvents: "none", whiteSpace: "pre", boxShadow: "0 4px 16px rgba(0,0,0,.3)",
+    });
+    document.body.appendChild(box);
+    const tick = () => {
+      const de = document.documentElement;
+      const v = document.getElementById("view");
+      const hd = document.querySelector("header > div");
+      const vr = v ? v.getBoundingClientRect() : {};
+      const hr = hd ? hd.getBoundingClientRect() : {};
+      const vv = window.visualViewport || {};
+      const msg =
+        "doc.clientWidth  = " + de.clientWidth + "\n" +
+        "doc.scrollWidth  = " + de.scrollWidth + "   <-- >innerWidth = overflow\n" +
+        "window.innerWidth= " + window.innerWidth + "\n" +
+        "screen.width     = " + window.screen.width + "\n" +
+        "visualViewport.w = " + Math.round(vv.width || 0) +
+        "  scale=" + (vv.scale || 1).toFixed(2) +
+        "  left=" + Math.round(vv.offsetLeft || 0) + "\n" +
+        "devicePixelRatio = " + window.devicePixelRatio + "\n" +
+        "#view rect       = w " + Math.round(vr.width || 0) +
+        "  left " + Math.round(vr.left || 0) + "\n" +
+        "header rect      = w " + Math.round(hr.width || 0) +
+        "  left " + Math.round(hr.left || 0);
+      box.textContent = msg;
+      try { console.log("[TPO-debug]\n" + msg); } catch (_) {}
+    };
+    setInterval(tick, 600);
+    window.addEventListener("load", tick);
+    window.addEventListener("resize", tick);
+    window.addEventListener("scroll", tick, true);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", tick);
+      window.visualViewport.addEventListener("scroll", tick);
+    }
+    tick();
+  }
+
   boot();
 })();
