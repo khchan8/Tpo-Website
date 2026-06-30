@@ -119,6 +119,48 @@ html, body { overflow-x: clip; }
 #primary-nav a:hover { background: #F3EEDD; }
 #primary-nav a.active { background: #0B1F3A; color: #fff; }
 
+/* ---- Hamburger menu (below lg / 1024px) ---- */
+/* The 8-item nav can't sit beside the logo below ~1024px, so it collapses
+   into a tappable dropdown. At/above lg the nav stays inline. */
+#nav-toggle {
+  display: none;
+  margin-left: auto;
+  flex-shrink: 0;
+  width: 42px; height: 42px;
+  border: 1px solid #D9D2C0; border-radius: 6px;
+  background: #fff; cursor: pointer;
+  flex-direction: column; justify-content: center; align-items: center; gap: 4px;
+}
+#nav-toggle span { display: block; width: 18px; height: 2px; background: #0B1F3A; border-radius: 1px; }
+#nav-toggle:hover { background: #F3EEDD; }
+@media (max-width: 1023px) {
+  #nav-toggle { display: inline-flex; }
+  /* Inline nav hidden; revealed as a full-width dropdown under the header
+     when .open is toggled. position:absolute anchors it to the sticky header. */
+  #primary-nav {
+    display: none;
+    position: absolute;
+    top: 100%; left: 0; right: 0;
+    margin-left: 0;                 /* cancel Tailwind ml-auto */
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    background: #fff;
+    border-bottom: 1px solid #D9D2C0;
+    box-shadow: 0 12px 28px -16px rgba(11,31,58,.25);
+    padding: 8px;
+    max-height: 72vh;
+    overflow: auto;
+    z-index: 40;
+  }
+  #primary-nav.open { display: flex; }
+  #primary-nav a {
+    white-space: normal;            /* allow labels to wrap, no forced single line */
+    text-align: left;
+    padding: 11px 12px;
+  }
+}
+
 /* chart card header (title + range control) */
 .chart-card-head {
   display: flex; align-items: flex-start; justify-content: space-between;

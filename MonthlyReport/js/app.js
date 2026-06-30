@@ -181,5 +181,19 @@
   if (window.visualViewport) {
     window.visualViewport.addEventListener("resize", scheduleRefit);
   }
+  // Hamburger menu (narrow screens). Toggles the nav dropdown and closes
+  // it once the user picks a destination.
+  (function setupNavToggle() {
+    const toggle = document.getElementById("nav-toggle");
+    const nav = document.getElementById("primary-nav");
+    if (!toggle || !nav) return;
+    const setOpen = (open) => {
+      nav.classList.toggle("open", open);
+      toggle.setAttribute("aria-expanded", open ? "true" : "false");
+    };
+    toggle.addEventListener("click", () => setOpen(!nav.classList.contains("open")));
+    nav.addEventListener("click", (e) => { if (e.target.closest("a")) setOpen(false); });
+  })();
+
   boot();
 })();
