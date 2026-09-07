@@ -55,13 +55,16 @@
 
   function briefingCard(viewKey, data, fallback) {
     const text = data?.commentary?.[viewKey];
-    const defFallback = content(data, "briefing.fallback", "Commentary pending — click “Generate Commentary” in the Google Sheet menu.");
-    const body = text && text.trim()
+    const status=data?.commentaryStatus?.[viewKey] || '';
+    const current=!!text && status.includes('Validated v3') && status.includes('data '+data._fingerprint);
+    const defFallback = content(data, "briefing.fallback", "Commentary pending — use TPO → Prepare LLM Input in Google Sheets, then paste and import your AI response.");
+    const body = current && text.trim()
       ? text
       : (fallback || defFallback);
     return el("div", { class: "briefing" },
       el("h3", {}, "Briefing"),
       el("div", {}, body),
+      text && !current ? el('details',{class:'mt-4 text-sm'},el('summary',{},'Previous commentary — requires regeneration against current validated data'),el('p',{class:'mt-2'},text)) : null,
     );
   }
   function warnBanner(text) {
@@ -178,6 +181,7 @@
     // fit + observe. This is what prevents the 0-width spillover on first paint.
     requestAnimationFrame(() => requestAnimationFrame(() => {
       if (!body.isConnected) return;        // host removed before init (e.g. metric switch)
+      if (!window.echarts) { body.textContent="Chart unavailable. Figures remain available in the tables."; return; }
       instance = echarts.init(body);
       let resizeTimeout;
       ro = new ResizeObserver(() => {
@@ -373,10 +377,10 @@
     const recon     = K.reconciliation(data.customerRevenueTotalByMonth, monthly);
     const reconLatest = recon.filter(r => r.month === last?.month);
 
-    const yr = K.parseMonth(last.month)?.yr;
-    const ytd = monthly.filter(m => K.parseMonth(m.month)?.yr === yr).reduce((s, m) => s + (m.revenue || 0), 0);
-    const ytdGP = monthly.filter(m => K.parseMonth(m.month)?.yr === yr).reduce((s, m) => s + (m.gp || 0), 0);
-    const margin = ytd ? ytdGP / ytd : null;
+    const yr = K.parseMonth(last?.month)?.yr;
+    const ytd = window.TPOCore.sum(monthly.filter(m => K.parseMonth(m.month)?.yr === yr).map(m => m.revenue));
+    const ytdGP = window.TPOCore.sum(monthly.filter(m => K.parseMonth(m.month)?.yr === yr).map(m => m.gp));
+    const margin = ytd ? window.TPOCore.ratio(ytdGP, ytd) : null;
 
     // Active customers: prefer the CustomerCount tab (reliable); fall back to mix length.
     const lastCount = data.customerCount.length ? data.customerCount[data.customerCount.length - 1] : null;
@@ -386,8 +390,10 @@
     let mixItems = concentration.items;
     let mixSource = `Latest month · ${concentration.latest || ""}`;
     if (!mixItems.length && data.customerEcon && data.customerEcon.customers.length) {
-      mixItems = data.customerEcon.customers.map(c => ({ name: c.name, revenue: c.revenue }));
-      mixSource = "Q1 2026 · Customer Economics";
+      const available=data.customerEcon.customers.filter(c=>window.TPOCore.quarter(c.quarter)?.key<=window.TPOCore.quarter(last.quarter)?.key);
+      const latestQuarter=available.map(c=>c.quarter).sort((a,b)=>window.TPOCore.quarter(b).key-window.TPOCore.quarter(a).key)[0];
+      mixItems = available.filter(c=>c.quarter===latestQuarter).map(c => ({ name: c.name, revenue: c.revenue }));
+      mixSource = (latestQuarter || "Unavailable") + " · Customer Economics (listed customers)";
     }
 
     const kpis = el("div", { class: "grid grid-cols-2 md:grid-cols-4 gap-4 mb-8" },
@@ -459,8 +465,8 @@
       sawtoothDivider(),
       el("div", { class: "grid grid-cols-1 md:grid-cols-2 gap-6 mb-8" },
         el("div", { class: "bg-white border border-rule rounded-md p-5 shadow-brief" },
-          el("h2", { class: "font-serif text-xl text-ink mb-3" }, "Customer count — peak & trough"),
-          el("p", { class: "text-sm text-mute mb-4" }, "The seasonal contraction — from peak to trough — anchors the turnaround storyline."),
+          el("h2", { class: "font-serif text-xl text-ink mb-3" }, "Customer count — historical range"),
+          el("p", { class: "text-sm text-mute mb-4" }, "Highest and lowest counts across the available history, with their dates. This range alone does not establish a seasonal trend."),
           el("div", { class: "grid grid-cols-3 gap-3" },
             kpiTile("Peak",   storyline.peak   ? `${storyline.peak.count}`   : "—", storyline.peak?.month   || ""),
             kpiTile("Trough", storyline.trough ? `${storyline.trough.count}` : "—", storyline.trough?.month || ""),
@@ -483,7 +489,7 @@
     // KPI matrix table (metrics × periods)
     const headers = ["Strategic Metric", ...periods];
     const rows = dash.metrics.map(m => ({
-      cells: [m.label, ...m.values.map(v => fmtDashCell_(v))],
+      cells: [m.label, ...m.values.map(v => /retention|concentration/i.test(m.label) ? K.fmtPct(v) : /revenue|ebit|cash/i.test(m.label) ? K.fmtMoneyFull(v) : v==null ? "—" : /turns/i.test(m.label) ? v.toFixed(1)+"x" : fmtDashCell_(v))],
       variant: "",
     }));
 
@@ -502,7 +508,7 @@
     const latestMonth = data.monthly?.length ? data.monthly[data.monthly.length - 1].month : null;
     const cordon = latestMonth ? K.quarterCordon(data.monthly, K.quarterOf(latestMonth)) : null;
     const partialQuarter = (cordon && cordon.isPartial) ? cordon.quarter : null;
-    const isPartialQ = (q) => !!q && q === partialQuarter;
+    const isPartialQ = (q) => !!q && data.quarterly.quarters.some(x => x.quarter === q && !x.complete);
 
     function detectKind(sample) {
       const s = String(sample == null ? "" : sample);
@@ -511,7 +517,7 @@
       return "count";
     }
     function chartFor(metric) {
-      const kind = detectKind(metric.sample);
+      const kind = /retention|concentration/i.test(metric.label) ? "pct" : /revenue|ebit|cash/i.test(metric.label) ? "money" : "count";
       return chartCard({
         title: metric.label + " — across periods",
         rangeKey: "none", height: 300,
@@ -563,7 +569,7 @@
 
     const layout = el("div", {},
       section("Strategic Dashboard", "Strategic Dashboard",
-        content(data, "dashboard.subtitle", "The headline KPI matrix across four reference periods. Q2 2026 is shown Through May only.")),
+        content(data, "dashboard.subtitle", "Validated metrics by their stated quarter. Active customers follow the first-month rule; cash is quarter-end. Blank means unavailable.")),
       el("div", { class: "mb-8" },
         el("h2", { class: "font-serif text-xl text-ink mb-3" }, "KPI matrix"),
         matrixTable,
@@ -635,7 +641,7 @@
 
     return el("div", {},
       section("Seasonality", "Revenue Seasonality",
-        content(data, "seasonality.subtitle", "The business is structurally seasonal — Jun through Oct is the low season. Frosted bands mark the contraction.")),
+        content(data, "seasonality.subtitle", "Low season follows Assumptions: " + (data.assumptions.params['Low season'] || 'not configured') + ". Shaded bands identify those months; they are not a forecast.")),
       el("div", { class: "mb-6" }, revCard),
       el("div", { class: "mb-8" }, ctCard),
       briefingCard("seasonality", data),
@@ -718,16 +724,16 @@
     // exist in MonthlyFinancials (so it auto-clears when June is added).
     const cordon = latestMonth ? K.quarterCordon(monthly, K.quarterOf(latestMonth)) : null;
     const partialQuarter = (cordon && cordon.isPartial) ? cordon.quarter : null;
-    const isPartialQ = (q) => !!q && q === partialQuarter;
+    const isPartialQ = (q) => !!q && data.quarterly.quarters.some(x => x.quarter === q && !x.complete);
 
     // KPIs (monthly + quarterly)
     const yr = latestMonth ? K.parseMonth(latestMonth).yr : null;
-    const ytdRev = monthly.filter(m => K.parseMonth(m.month).yr === yr).reduce((s, m) => s + (m.revenue || 0), 0);
-    const ytdGP  = monthly.filter(m => K.parseMonth(m.month).yr === yr).reduce((s, m) => s + (m.gp || 0), 0);
-    const ytdMargin = ytdRev ? ytdGP / ytdRev : null;
+    const ytdRev = window.TPOCore.sum(monthly.filter(m => K.parseMonth(m.month).yr === yr).map(m => m.revenue));
+    const ytdGP  = window.TPOCore.sum(monthly.filter(m => K.parseMonth(m.month).yr === yr).map(m => m.gp));
+    const ytdMargin = ytdRev ? window.TPOCore.ratio(ytdGP, ytdRev) : null;
     const lastQ = quarters[quarters.length - 1];
     const prevQ = quarters[quarters.length - 2];
-    const qoq = (lastQ && prevQ && prevQ.revenue) ? (lastQ.revenue - prevQ.revenue) / prevQ.revenue : null;
+    const qoq = (lastQ?.complete && prevQ?.complete && lastQ.revenue !== null && prevQ.revenue) ? (lastQ.revenue - prevQ.revenue) / prevQ.revenue : null;
 
     const kpis = el("div", { class: "grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" },
       kpiTile("Latest month revenue", K.fmtMoneyFull(last ? last.revenue : null), latestMonth || ""),
@@ -767,7 +773,7 @@
 
     // ---- Quarterly performance (read from the Quarterly Financials tab) ----
     const quarterlyChart = chartCard({
-      title: "Quarterly revenue (from Quarterly Financials tab)",
+      title: "Quarterly revenue (validated monthly rollup)",
       subtitle: partialQuarter ? `Amber = ${partialQuarter} (partial, ${cordon.monthCount} of 3 months)` : "",
       rangeKey: "quarterly", height: 340,
       data: { labels: quarters.map(q => q.quarter), series: [
@@ -802,9 +808,9 @@
 
     return el("div", {},
       section("Financial Performance", "Monthly & quarterly P&L",
-        content(data, "financials.subtitle", "Monthly figures come from MonthlyFinancials; quarterly figures come from the Quarterly Financials tab. Q2 2026 is partial (Apr & May) and is never annualized.")),
+        content(data, "financials.subtitle", "Quarterly figures are calculated from validated monthly data. Empty future rows are ignored; partial quarters are never annualized.")),
       (cordon && cordon.isPartial)
-        ? warnBanner(`Q2 2026 covers ${cordon.monthCount} months only (through ${cordon.latestMonth}). Treat as a partial read; do not extrapolate.`)
+        ? warnBanner(`${cordon.quarter} covers ${cordon.monthCount} months only (through ${cordon.latestMonth}). Treat as a partial read; do not extrapolate.`)
         : null,
       kpis,
       el("h2", { class: "font-serif text-2xl text-ink mb-3" }, "Monthly performance"),
@@ -855,7 +861,7 @@
       const cells = [ln.label, ...periods.map(p => K.fmtMoneyFull(ln.get(p)))];
       if (twoP) {
         const a = ln.get(periods[0]), b = ln.get(periods[1]);
-        const d = (a && b) ? K.fmtPctDelta((b - a) / Math.abs(a || 1)) : "—";
+        const d = (a !== null && a !== 0 && b !== null) ? K.fmtPctDelta((b - a) / Math.abs(a)) : "—";
         cells.push(d);
       }
       const isSubtotal = ["Gross Profit", "EBIT", "Net Income"].includes(ln.label);
@@ -864,14 +870,13 @@
 
     // Risk-status chips per period
     const riskCards = periods.filter(p => p.riskStatus).map(p => {
-      const high = /high|critical|amber|incomplete/i.test(p.riskStatus);
-      return kpiTile(p.label, p.riskStatus, "Risk status", high ? "risk" : "warn");
+      return kpiTile(p.label, p.riskStatus, p.coverage || "Coverage unavailable", p.riskLevel === "high" ? "risk" : p.riskLevel === "low" ? "ok" : "warn");
     });
 
     const layout = el("div", {},
       section("Forward-looking", "Risk & Outlook",
-        content(data, "forwardlooking.subtitle", "Q2 2025 (full) vs Q2 2026 (Apr & May, partial) with the board's risk read.")),
-      (nextMonthIsLow_(last)) ? warnBanner(`Seasonal inflection: the report ends in ${last?.month}, and the next reporting month enters the low season (Jun–Oct). Expect a step-down in revenue and active customers.`) : null,
+        content(data, "forwardlooking.subtitle", "Latest-quarter results compared with the same available calendar months one year earlier. Historical comparison, not a forecast.")),
+      (nextMonthIsLow_(last)) ? warnBanner(`Seasonal inflection: the report ends in ${last?.month}, and the next reporting month enters the low season defined in Assumptions. This does not establish a forecast.`) : null,
       riskCards.length ? el("div", { class: "grid grid-cols-1 md:grid-cols-2 gap-4 mb-8" }, ...riskCards) : null,
       el("div", { class: "mb-8" },
         el("h2", { class: "font-serif text-xl text-ink mb-3" }, "Forward-looking P&L comparison"),
@@ -882,10 +887,9 @@
     return layout;
   }
   function nextMonthIsLow_(last) {
-    if (!last) return false;
-    const p = K.parseMonth(last.month); if (!p) return false;
-    let m = p.mon + 1, y = p.yr; if (m > 12) { m = 1; y++; }
-    return ["Jun", "Jul", "Aug", "Sep", "Oct"].includes(["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][m - 1]);
+    const p=last && window.TPOCore.month(last.month); if(!p)return false;
+    const next=window.TPOCore.month(new Date(Date.UTC(p.year,p.month,1)));
+    return !K.isLowSeason(last.month) && K.isLowSeason(next.display);
   }
 
   // ---- Customers (data-driven; quarterly from Customer Economics) ----
@@ -924,9 +928,9 @@
 
     const kpis = el("div", { class: "grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" },
       kpiTile("Quarter revenue",     latestPt ? K.fmtMoneyFull(latestPt.revenue) : "—", latestPt?.quarter || ""),
-      kpiTile("Gross profit (est.)", latestGpEst !== null ? K.fmtMoneyFull(latestGpEst) : "—", "Revenue × margin"),
+      kpiTile("Contribution (est.)", latestGpEst !== null ? K.fmtMoneyFull(latestGpEst) : "—", "Revenue × margin"),
       kpiTile("Contribution margin", K.fmtPct(c.margin), "From Assumptions tab"),
-      kpiTile("Mix share (latest)",  K.fmtPct(mixShare), latestPt?.quarter || ""),
+      kpiTile("Share of listed customers",  K.fmtPct(mixShare), latestPt?.quarter || ""),
     );
 
     // Q-to-Q chart — full multi-quarter trend from CustomerRevenueQuarterly.
@@ -938,7 +942,7 @@
     const cordon = latestMonth ? K.quarterCordon(data.monthly, K.quarterOf(latestMonth)) : null;
     const partialQuarter = (cordon && cordon.isPartial) ? cordon.quarter : null;
     const partialMonthCount = cordon ? cordon.monthCount : 0;
-    const isPartialQ = (q) => !!q && q === partialQuarter;
+    const isPartialQ = (q) => !!q && data.quarterly.quarters.some(x => x.quarter === q && !x.complete);
     const qqCard = chartCard({
       title: "Quarter-to-quarter",
       subtitle: "Source: CustomerRevenueQuarterly" +
@@ -946,17 +950,17 @@
       rangeKey: "quarterly", height: 300,
       data: { labels: myQ.map(p => p.quarter),
               series: [{ name: "Quarterly revenue",   values: myQ.map(p => p.revenue) },
-                       { name: "Quarterly GP (est.)", values: myQ.map(p => (p.revenue != null && c.margin != null) ? p.revenue * c.margin : null) }] },
+                       { name: "Quarterly contribution (est.)", values: myQ.map(p => (p.revenue != null && c.margin != null) ? p.revenue * c.margin : null) }] },
       buildOption: (s) => ({
         ...ECHART_THEME,
-        legend: { ...ECHART_THEME.legend, data: ["Quarterly revenue", "Quarterly GP (est.)"] },
+        legend: { ...ECHART_THEME.legend, data: ["Quarterly revenue", "Quarterly contribution (est.)"] },
         xAxis: { ...ECHART_THEME.xAxis, type: "category", data: s.labels },
         yAxis: { ...ECHART_THEME.yAxis, type: "value" },
         series: [
           { name: "Quarterly revenue", type: "bar",
             itemStyle: { color: (p) => isPartialQ(s.labels[p.dataIndex]) ? "#C9A24B" : "#1A8A96" },
             data: s.series[0].values },
-          { name: "Quarterly GP (est.)", type: "line", smooth: true, itemStyle: { color: "#C9A24B" }, data: s.series[1].values },
+          { name: "Quarterly contribution (est.)", type: "line", smooth: true, itemStyle: { color: "#C9A24B" }, data: s.series[1].values },
         ],
       }),
     });
@@ -969,23 +973,23 @@
         rangeKey: "monthly", height: 300,
         data: { labels: monthlySeries.map(s => s.month),
                 series: [{ name: "Revenue", values: monthlySeries.map(s => s.revenue) },
-                         { name: "Gross Profit (est.)", values: monthlySeries.map(s => s.margin !== null ? s.revenue * s.margin : null) }] },
+                         { name: "Contribution (est.)", values: monthlySeries.map(s => c.margin != null ? s.revenue * c.margin : null) }] },
         buildOption: (s) => ({
           ...ECHART_THEME,
-          legend: { ...ECHART_THEME.legend, data: ["Revenue", "Gross Profit (est.)"] },
+          legend: { ...ECHART_THEME.legend, data: ["Revenue", "Contribution (est.)"] },
           xAxis: { ...ECHART_THEME.xAxis, type: "category", data: s.labels },
           yAxis: { ...ECHART_THEME.yAxis, type: "value" },
           series: [
             { name: "Revenue", type: "bar", itemStyle: { color: "#115E67" }, data: s.series[0].values,
               markArea: { silent: true, itemStyle: { color: "rgba(201,162,75,0.10)" }, label: { show: false }, data: lowSeasonMarkArea(s.labels) } },
-            { name: "Gross Profit (est.)", type: "line", smooth: true, itemStyle: { color: "#C9A24B" }, data: s.series[1].values },
+            { name: "Contribution (est.)", type: "line", smooth: true, itemStyle: { color: "#C9A24B" }, data: s.series[1].values },
           ],
         }),
       });
     } else {
       monthBlock = el("div", { class: "bg-white border border-dashed border-rule rounded-md p-5" },
         el("h2", { class: "font-serif text-xl text-ink mb-2" }, "Month-to-month"),
-        el("p", { class: "text-sm text-mute" }, "Monthly detail is not entered for this customer in the CustomerRevenueMonthly tab. Quarterly figures above come from the Customer Economics tab."),
+        el("p", { class: "text-sm text-mute" }, "Monthly detail is not entered for this customer in the CustomerRevenueMonthly tab. Quarterly figures above come from CustomerRevenueQuarterly."),
       );
     }
 
@@ -1020,19 +1024,21 @@
       ? window.TPO_COMPUTE.reconciliation(data.customerRevenueTotalByMonth, data.monthly) 
       : [];
       
-    const dataNoteTerm = recon.length ? `Data note · ${recon.length} gaps` : "Data healthy";
-    const dataNoteDef = recon.length 
-      ? `There are ${recon.length} month(s) where the sum of individual customer revenue diverges from the total P&L revenue by > 0.5%. Please review and fix the revenue data in the "CustomerRevenueMonthly" and "MonthlyFinancials" tabs in your Google Sheet.`
-      : "The sum of individual customer revenue matches the total P&L revenue across all months.";
+    const findings=(data._issues||[]).filter(i=>i.level!=='info');
+    const dataNoteTerm = findings.length ? `Data notes · ${findings.length} findings` : 'Data checks';
+    const dataNoteDef = findings.length ? 'Review Setup & data health for missing values, reconciliation gaps and source-cell locations.' : 'No validation issues detected in the loaded data. This does not verify that every reporting month is finalized.';
 
     let items = (data.glossary && data.glossary.length) ? data.glossary.map(g => [g.term, g.definition]) : [
       ["Low season (Jun – Oct)", "The seasonal trough — outside this window, revenue and active customers step up materially."],
-      ["Q2 2026 cordon",         "Through May only — never label as a complete quarter, never annualize or extrapolate."],
+      ["Quarter coverage", "Unique populated monthly rows; missing months remain partial. Never annualize."],
       ["Active customers",       "Count at the first month of the quarter (documented in the Assumptions tab)."],
       ["Net Working Capital",    "Cash + Accounts Receivable + Inventory − Accounts Payable."],
-      ["Contribution margin",    "Per-customer gross margin assumption used to estimate gross profit."],
+      ["Contribution margin",    "Assumed margin used to estimate contribution; not audited gross profit."],
       ["Turnaround storyline",   "Q1 2025 trough → Q1 2026 recovery, framed by the swing in active customers."],
     ];
+
+    items=items.filter(([term])=>!/low season|cordon|turnaround storyline/i.test(term));
+    items.unshift(['Low season',data.assumptions.params['Low season']||'Not configured'],['Quarter coverage','Unique populated months; partial quarters compare with matching months only. No annualization.']);
 
     // Replace the existing Data note if present from the sheet, otherwise insert at a similar position
     const noteIndex = items.findIndex(i => i[0].toLowerCase().includes("data note") || i[0].toLowerCase().includes("data healthy"));
@@ -1087,7 +1093,19 @@
     );
   }
 
+  function viewSetup(state) {
+    const issues=state.data?._issues || [], a=state.data?._analysis;
+    const refresh=el("button",{class:"setup-button",type:"button"},"Reload data");
+    refresh.addEventListener("click",()=>location.reload());
+    return el("div",{}, section("Setup & data health","Report readiness","The latest period follows actual revenue in MonthlyFinancials. Blank future rows and expense-only pending months do not advance it. Enter 0 only when the actual amount is zero."),
+      state.error ? warnBanner(state.error.message || "Check config.js and Google Sheet read access.") : null,
+      el("p",{class:"mb-4"},"Latest financial month: "+(a?.latest?.month||"Unavailable")+" · "+issues.filter(i=>i.level==="error").length+" errors · "+issues.filter(i=>i.level==="warning").length+" warnings"),
+      el("p",{class:"mb-4"},"In Google Sheets, use TPO → Prepare Next Month Slots, then fill the raw inputs. Enter manual dashboard metrics in Dashboard Inputs. Derived formulas update automatically. Run Format & verify all sheets and review Data Validation. Prepare LLM Input, copy it into your AI chat, paste the JSON response into LLM Output, and Import LLM Output. Use Repair calculated sheets to restore formulas if needed."),
+      el("p",{class:"mb-4"},"Quarters roll up validated months. Working capital needs cash, AR, inventory and AP. Missing amounts remain unavailable. Customer mix is a share of listed customers unless it reconciles with the P&L."), refresh,
+      boardTable(["Severity","Sheet","Cell","Finding"],issues.map(i=>({cells:[i.level.toUpperCase(),i.sheet,i.cell,i.message]}))));
+  }
   window.TPO_VIEWS = {
+    setup: viewSetup,
     overview: viewOverview,
     dashboard: viewDashboard,
     seasonality: viewSeasonality,

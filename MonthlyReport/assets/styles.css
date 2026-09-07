@@ -119,9 +119,7 @@ html, body { overflow-x: clip; }
 #primary-nav a:hover { background: #F3EEDD; }
 #primary-nav a.active { background: #0B1F3A; color: #fff; }
 
-/* ---- Hamburger menu (below lg / 1024px) ---- */
-/* The 8-item nav can't sit beside the logo below ~1024px, so it collapses
-   into a tappable dropdown. At/above lg the nav stays inline. */
+/* Collapse before the nine report links can be clipped beside the logo. */
 #nav-toggle {
   display: none;
   margin-left: auto;
@@ -133,7 +131,7 @@ html, body { overflow-x: clip; }
 }
 #nav-toggle span { display: block; width: 18px; height: 2px; background: #0B1F3A; border-radius: 1px; }
 #nav-toggle:hover { background: #F3EEDD; }
-@media (max-width: 1023px) {
+@media (max-width: 1279px) {
   #nav-toggle { display: inline-flex; }
   /* Inline nav hidden; revealed as a full-width dropdown under the header
      when .open is toggled. position:absolute anchors it to the sticky header. */
@@ -263,3 +261,7 @@ td.hover-highlight {
 .click-pulse {
     animation: pulse-click 0.3s ease-out;
 }
+.data-health-banner {display:block;padding:12px 16px;margin-bottom:20px;border:1px solid #C9A24B;background:#fff9e8;color:#0B1F3A;border-radius:6px;text-decoration:underline;}
+.setup-button {background:#115E67;color:white;padding:10px 18px;border-radius:6px;margin-bottom:20px;cursor:pointer;}
+.skip-link {position:absolute;left:12px;top:-100px;z-index:100;background:white;padding:12px;}
+.skip-link:focus {top:8px;}

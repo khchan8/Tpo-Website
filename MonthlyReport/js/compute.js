@@ -7,19 +7,15 @@
   let LOW_SEASON = new Set(["Jun","Jul","Aug","Sep","Oct"]);
 
   function setLowSeason(monthsArray) {
-    if (monthsArray && monthsArray.length) {
+    if (Array.isArray(monthsArray)) {
       LOW_SEASON = new Set(monthsArray);
     }
   }
 
   /** Parse "May-26" → {mon:5, yr:2026, idx: <months since anchor>} */
   function parseMonth(label) {
-    const m = /^([A-Za-z]{3})-(\d{2})$/.exec((label || "").trim());
-    if (!m) return null;
-    const mon = MONTH_NAMES.indexOf(m[1][0].toUpperCase() + m[1].slice(1).toLowerCase());
-    if (mon < 0) return null;
-    const yr = 2000 + parseInt(m[2], 10);
-    return { mon, yr, key: label.trim() };
+    const p=window.TPOCore.month(label);
+    return p ? {mon:p.month-1,yr:p.year,key:p.display} : null;
   }
   function isLowSeason(label) {
     const p = parseMonth(label); return p ? LOW_SEASON.has(MONTH_NAMES[p.mon]) : false;
@@ -53,32 +49,13 @@
 
   /** Group monthly rows by quarter → quarter totals. */
   function rollupQuarterly(monthly) {
-    const byQ = {};
-    for (const m of monthly) {
-      if (!m || !m.month) continue;
-      // Coerce quarter to string — Sheets API can hand back Date/number
-      // in the Quarter column (e.g. if a row was mis-typed).
-      let q = m.quarter;
-      if (q !== null && q !== undefined && q !== "") q = String(q).trim();
-      if (!q) q = quarterOf(m.month);
-      if (!q) continue;
-      const slot = byQ[q] || (byQ[q] = { quarter: q, revenue: 0, cogs: 0, gp: 0, sga: 0, ebit: 0, netIncome: 0, months: [] });
-      for (const k of ["revenue","cogs","gp","sga","ebit","netIncome"]) {
-        if (m[k] !== null && m[k] !== undefined) slot[k] += m[k];
-      }
-      slot.months.push(m.month);
-    }
-    // Chronological sort by parsed year + quarter number (not alpha).
-    const parse = (q) => {
-      const m = /^Q([1-4])\s+(\d{4})$/.exec(String(q || ""));
-      return m ? { y: +m[2], q: +m[1] } : { y: 9999, q: 9 };
-    };
-    return Object.values(byQ).sort((a, b) => {
-      const A = parse(a.quarter), B = parse(b.quarter);
-      return A.y - B.y || A.q - B.q;
-    });
+    const groups=new Map();
+    monthly.forEach(r=>{const q=quarterOf(r.month);if(!q)return;const a=groups.get(q)||[];a.push(r);groups.set(q,a);});
+    return Array.from(groups,([quarter,rows])=>{
+      const r={quarter,months:rows.map(m=>m.month),complete:rows.length===3};
+      window.TPOCore.metrics.forEach(k=>r[k]=window.TPOCore.sum(rows.map(m=>m[k])));return r;
+    }).sort((a,b)=>window.TPOCore.quarter(a.quarter).key-window.TPOCore.quarter(b.quarter).key);
   }
-
   /** Roll-up customer revenue → per-customer quarterly totals + GP. */
   function rollupCustomerQuarterly(customerRevenue, marginByName) {
     const out = {}; // slug -> [{quarter, revenue, gp}]
@@ -118,7 +95,7 @@
     for (const slug in customerRevenue) {
       const c = customerRevenue[slug];
       const pt = c.series.find(p => p.month === latest);
-      if (pt) { items.push({ slug: c.slug, name: c.name, revenue: pt.revenue }); total += pt.revenue; }
+      if (pt && pt.revenue !== null) { items.push({ slug: c.slug, name: c.name, revenue: pt.revenue }); total += pt.revenue; }
     }
     items.sort((a, b) => b.revenue - a.revenue);
     items.forEach(i => { i.share = total > 0 ? i.revenue / total : 0; });
@@ -135,12 +112,12 @@
     const cash = get("cash"), ar = get("ar"), inv = get("inventory"),
           ap = get("ap"), nwcRow = get("nwc");
     return (wc.months || []).map((mo, idx) => {
-      const c = cash[idx] ?? 0;
-      const a = ar[idx] ?? 0;
-      const i = inv[idx] ?? 0;
-      const p = ap[idx] ?? 0;
+      const c = cash[idx] ?? null;
+      const a = ar[idx] ?? null;
+      const i = inv[idx] ?? null;
+      const p = ap[idx] ?? null;
       const provided = nwcRow[idx];
-      const nwc = (provided !== undefined && provided !== null) ? provided : (c + a + i - p);
+      const nwc = window.TPOCore.sum([c,a,i,p===null?null:-p]);
       return { month: mo, cash: c, ar: a, inventory: i, ap: p, nwc };
     });
   }
@@ -158,8 +135,9 @@
   function reconciliation(customerRevenueTotalByMonth, monthly) {
     const flags = [];
     for (const m of monthly) {
-      const sumCust = customerRevenueTotalByMonth[m.month] ?? 0;
-      const pnl     = m.revenue ?? 0;
+      const sumCust = customerRevenueTotalByMonth[m.month] ?? null;
+      const pnl = m.revenue ?? null;
+      if (sumCust===null || pnl===null) continue;
       const diff    = sumCust - pnl;
       // Allow tiny rounding tolerance
       if (Math.abs(diff) > Math.max(1, pnl * 0.005)) {

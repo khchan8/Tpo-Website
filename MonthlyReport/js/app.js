@@ -22,6 +22,7 @@
       ["Working Capital", "#/working-capital"],
       ["Forward-looking", "#/forward-looking"],
       ["Glossary", "#/about"],
+      ["Setup & data health", "#/setup"],
     ];
     for (const [label, href] of links) {
       const a = document.createElement("a");
@@ -80,11 +81,17 @@
     const view = document.getElementById("view");
     view.innerHTML = "";
     view.appendChild(node);
+    if (state.data?._issues?.some(i=>i.level!=="info") && location.hash!=="#/setup") {
+      const banner=document.createElement("a");banner.className="data-health-banner";banner.href="#/setup";
+      banner.textContent="Some source data needs attention. Review Setup & data health before using this report.";view.prepend(banner);
+    }
   }
 
   function render() {
-    if (state.error) { mount(V.empty(state.error.code)); return; }
+    if (parseHash().name === "setup") { mount(V.setup(state)); setActiveLink(); return; }
+    if (state.error) { mount(V.setup(state)); return; }
     if (!state.data) { mount(V.loading()); return; }
+    if (!state.data.monthly.length) { mount(V.setup(state)); return; }
     const route = parseHash();
     if (route.name === "customer") {
       // Mount the view FIRST (mount() clears #view), then prepend the
@@ -142,6 +149,7 @@
 
   async function boot() {
     primaryNav(state);
+    render();
     try {
       state.data = await D.load();
       applyContent(state);
@@ -150,7 +158,7 @@
     } catch (e) {
       console.error("[TPO] boot failed:", e);
       state.error = e;
-      mount(V.empty(e.code));
+      mount(V.setup(state));
     }
   }
 
@@ -165,7 +173,7 @@
   // responsive grids) picks up the new size.
   function refitViewport() {
     document.querySelectorAll("[_echarts_instance_]").forEach(n => {
-      const inst = echarts.getInstanceByDom(n);
+      const inst = window.echarts?.getInstanceByDom(n);
       if (inst) inst.resize();
     });
     // force a stale layout to reflow at the new viewport width

@@ -15,47 +15,20 @@
   <title id="page-title">TPO Wellness — Monthly Performance</title>
   <meta name="description" content="TPO Wellness monthly performance report — board briefing." />
 
-  <!-- Tailwind (CDN, JIT) -->
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="assets/utilities.css?v=28" />
   <!-- ECharts -->
-  <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <script>
-    /* ---- Design tokens (Executive Briefing) ---- */
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            ink:    '#0B1F3A',  // deep navy — headlines
-            sea:    '#115E67',  // teal — primary
-            tide:   '#1A8A96',  // lighter teal — accents
-            sand:   '#E9E2D0',  // parchment background tint
-            gold:   '#C9A24B',  // accent
-            rust:   '#A14B2A',  // risk accent (used sparingly)
-            mute:   '#5B6B7E',  // secondary text
-            rule:   '#D9D2C0',  // dividers
-            lowsea: 'rgba(17,94,103,0.08)', // frosted low-season band
-          },
-          fontFamily: {
-            serif: ['Fraunces', 'Georgia', 'serif'],
-            sans:  ['Inter', 'system-ui', 'sans-serif'],
-          },
-          boxShadow: {
-            brief: '0 1px 0 #D9D2C0, 0 12px 28px -16px rgba(11,31,58,0.25)',
-          },
-        },
-      },
-    };
-  </script>
-
-  <link rel="stylesheet" href="assets/styles.css?v=26" />
+<link rel="stylesheet" href="assets/styles.css?v=28" />
 </head>
 <body class="font-sans bg-sand text-ink min-h-screen">
 
+  <a class="skip-link" href="#view">Skip to report</a>
+  <noscript>This report requires JavaScript to read Google Sheets.</noscript>
   <!-- Top bar -->
   <header class="border-b border-rule bg-white/70 backdrop-blur sticky top-0 z-30">
     <div class="max-w-7xl mx-auto px-6 py-4 flex items-center gap-6">
@@ -93,10 +66,11 @@
   <div id="toast" class="fixed bottom-6 right-6 hidden"></div>
 
   <!-- App (cache-bust with ?v= on every JS/CSS change so browsers re-fetch) -->
-  <script src="config.js?v=26"></script>
-  <script src="js/data.js?v=26"></script>
-  <script src="js/compute.js?v=26"></script>
-  <script src="js/views.js?v=26"></script>
-  <script src="js/app.js?v=26"></script>
+  <script defer src="config.js?v=28"></script>
+  <script defer src="js/report-core.js?v=28"></script>
+  <script defer src="js/data.js?v=28"></script>
+  <script defer src="js/compute.js?v=28"></script>
+  <script defer src="js/views.js?v=28"></script>
+  <script defer src="js/app.js?v=28"></script>
 </body>
 </html>

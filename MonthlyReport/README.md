@@ -1,333 +1,93 @@
-# TPO Wellness — Monthly Performance Board Portal
+# TPO monthly report — manual AI workflow, v4
 
-A static, board-ready web portal that reads a **Google Sheet live** and renders the monthly
-briefing. It was originally prototyped with NotebookLM (see `Enhancing Board Report with
-NotebookLM.md`) but that path produced unreliable numbers, so the design pivoted to a
-**direct‑read architecture**: the Google Sheet is the single source of truth, a static SPA renders
-it, and an Apps Script generates the prose commentary with the LLM provider of your choice.
+The Apps Script, calculated Google Sheets cells, and website use the same calculation engine. The reporting period follows the latest month with valid actual revenue in MonthlyFinancials. Blank future rows such as Aug-27 and Sep-27 are allowed and ignored; an explicit zero is actual data. An expense-only future row remains pending until revenue is entered.
 
-> **This document supersedes `SETUP.md`** (kept for history). It reflects the current v1.5+ build.
+## Monthly workflow
 
----
+1. Run **Prepare Next Month Slots (Fill in the blanks)**. It reuses or creates the next calendar month's rows, supplies blank-safe GP/EBIT/NWC formulas, and adds missing quarter sections. Fill the raw source figures. Repeated runs preserve entered values and reuse existing slots.
+2. **📊 TPO → Format & verify all sheets**. This protects reporting month labels as explicit text, normalizes unambiguous numeric text, and applies amount/percentage formats, and writes **Data Validation**. It preserves blank inputs and formulas. Previous converted values are recorded in **Repair Backup**.
+3. Resolve errors. **Repair calculated sheets** installs or restores dynamic quarter totals, customer contribution/concentration, working capital, dashboard, matching-period comparisons, and as-of formulas. Month setup also performs this repair. Once installed, changing source figures recalculates these cells automatically. Run month setup to create new sections; no formula dragging is needed.
+4. **1. Prepare LLM Input + Copy… → Copy all**. Paste into Gemini, ChatGPT, DeepSeek, or another AI chat. The prompt contains all 6 report sections, every configured customer, calculated summaries, normalized supporting tables, quality notes, and a JSON response template.
+5. Copy the AI response. Use **Paste AI response…** to save it to **LLM Output**, or paste into that sheet starting at **A8**.
+6. **3. Import LLM Output** writes matching entries into **Commentary A:C**. Reload the website.
 
-## ⏱ Quick start (≈5 minutes)
+The prose style remains 2–4 English sentences, 50–90 words per section. No LLM API key is needed. The script does not send data to an AI provider; you choose where to paste it.
 
-The fastest path to a live portal. Details for each step are in §5.
+## Installation
 
-1. **Make a Google Sheet** — Google Sheets → *File → Import → Upload* `TPO_Monthly_Input.xlsx`
-   (this folder) → *Replace spreadsheet*. Confirm 13 tabs (§3).
-2. **Share it** — *Share → Anyone with the link → Viewer* (this is the data on/off switch).
-3. **Get a read‑only Sheets API key** — Google Cloud Console → enable **Sheets API** → create an
-   **API key** → restrict it to **HTTP referrers** `https://khchan8.github.io/*` **and**
-   `https://tpowellness.com/*`, and to the Sheets API only.
-4. **Fill `config.js`** — paste the **Sheet ID** (from the sheet URL) and the **API key**.
-5. **Install the commentary engine** — in the sheet: *Extensions → Apps Script* → delete the
-   placeholder → paste all of `apps-script/Code.gs` → Save → reload. Then **📊 TPO → Settings** →
-   pick your LLM provider (Gemini / MiniMax / OpenAI‑compatible), paste its key, **Test connection**
-   → **Save**.
-6. **Publish** — push the folder to GitHub and enable **Pages** (branch `main`, root). Visit
-   `https://khchan8.github.io/Tpo-Website/MonthlyReport/`.
+Replace the complete bound Apps Script with **Code.gs** (project delivery: **apps-script/Code.gs**). Do not append it or install multiple versions together. Save and reload Google Sheets, then run **Repair calculated sheets** once. Google may require authorization or identity verification on the first run. All dialogs are embedded in the file.
 
-Then each month: edit the data tabs → **📊 TPO → Generate Commentary (Resume)…** → reload. No code,
-no push. (Full workflow in §6.)
+Commentary uses **View | Commentary | Status** in A:C. It does not recreate the deleted D:G columns. The generated **LLM-Input** and **LLM Output** sheets use rows 1–7 for metadata and A8 onward for text. Use the copy dialog to concatenate prompt chunks; copying a spreadsheet range can introduce tabs/newlines.
 
----
+## Data contracts
 
-## 1. How it works
-
-```
- ┌──────────────────┐   Google Sheets API v4 (read‑only, key‑authed)   ┌──────────────────────┐
- │  Google Sheet    │ ◄────────────── batchGet ──────────────────────  │  Static SPA          │
- │  (13 tabs)       │                                                 │  index.html + js/    │
- │  source of truth │                                                 │  hosted on GitHub    │
- └────────┬─────────┘                                                 │  Pages → custom domain│
-          │                                                           └──────────▲───────────┘
-          │ bound Apps Script                                                    │ reads Commentary tab
-          ▼                                                                      │
- ┌──────────────────┐   LLM call (Gemini / MiniMax / OpenAI‑compatible)         │
- │  📊 TPO menu     │ ──writes Briefing text──►  Commentary tab  ───────────────┘
- │  Generate        │ ──writes Thinking trace──► Commentary tab (col G)
- │  Commentary      │
- └──────────────────┘
-```
-
-- **Deterministic math only.** Every total, margin, ratio, and quarter roll‑up is computed in the
-  browser (`js/compute.js`). The LLM never does arithmetic — it only writes prose from a pre‑built
-  figures block. (This is the lesson from the NotebookLM experiment.)
-- **No server.** The SPA is pure HTML/JS/CSS on GitHub Pages. The only "backend" is the Google Sheet
-  itself (read via the Sheets API) and the Apps Script (bound to the sheet) that writes commentary.
-
----
-
-## 2. Features
-
-### Portal (the website)
-- **8 views** with a single‑row nav: **Overview · Dashboard · Seasonality · Customers ▾ ·
-  Financials · Working Capital · Forward‑Looking · Glossary**.
-- **Data‑driven Customers** — every customer in the `Assumptions` tab gets its own view
-  (sub‑nav + dedicated page) automatically; no code change to add one.
-- **Per‑chart range selectors** — All / 12M / 6M / YTD (monthly charts) and All / Last 4Q /
-  Last 8Q (quarterly charts).
-- **Strategic Dashboard** view — the full KPI matrix across reference periods + a metric‑selector
-  bar chart.
-- **Financials** shows **both** monthly and quarterly P&L (chart + table); quarterly is read from
-  the `Quarterly Financials` tab.
-- **Partial‑quarter handling** — the current quarter is flagged amber while incomplete and turns
-  green automatically once its 3rd month is entered (data‑driven, no code edits).
-- **Reconciliation health indicator** — surfaces when Σ customer revenue ≠ P&L revenue.
-- **Click‑through** — click a customer segment in the Overview mix donut to jump to that customer.
-- **Executive‑Briefing design system** — Fraunces + Inter, ECharts, low‑season bands, hatched
-  partial bars, KPI tiles, briefing cards.
-
-### Content externalization (edit the sheet, not the code)
-- **`Glossary` tab** drives the Glossary view.
-- **`Content` tab** (key → value) drives subtitles, the briefing fallback message, brand/title, etc.
-  Unknown keys silently fall back to built‑in defaults, so a missing row never breaks the site.
-
-### Apps Script (commentary engine, `apps-script/Code.gs`)
-- **Multi‑provider**: Google Gemini, MiniMax (M‑series), or any OpenAI‑compatible endpoint —
-  chosen in a **Settings dialog** (provider, API key, endpoint URL, model, **Fetch models** button,
-  rate‑limit toggle). Keys live in Script Properties, never in code.
-- **Resumable generation** — processes one briefing per minute via a time‑driven trigger, safely
-  under the 6‑minute Apps Script cap. Toasts show progress; **Pause** / **Reset Status** controls.
-- **Thinking‑model support** — splits `<think>…</think>` traces into column G ("Thinking Info") so
-  the board‑facing commentary (column B) stays clean.
-- **Retry / backoff** — exponential backoff with server `retry`‑hint honoring (per‑provider policy
-  work is proposed in `PRDv1.5.md` §10).
-- **Add Customer… wizard** — adds a customer to `Assumptions`, seeds their `CustomerRevenueQuarterly`
-  rows, and creates the `Commentary` row — all from a menu dialog.
-- **Live model listing** — the **Fetch models** button pulls the model list straight from the
-  provider's `/models` endpoint.
-
-### Security & deployment
-- Read‑only, Sheets‑API‑only, **referrer‑restricted** API key.
-- Custom domain (`tpowellness.com`) on Cloudflare; optional **Cloudflare Zero Trust** login for
-  per‑email access control (see `PRDv1.6.md`).
-
----
-
-## 3. The Google Sheet (13 tabs)
-
-Maintained by you in Google Sheets. The latest seed is `TPO_Monthly_Input.xlsx` in this folder.
-
-| Tab | Purpose | Layout |
-|---|---|---|
-| `README` | Notes for the sheet maintainer | free text |
-| `Assumptions` | Customer list + margins; global params (Currency, Low season, Reporting period) | A‑B customers; D‑E params |
-| `Glossary` | Terms shown in the Glossary view | `Term \| Definition` |
-| `MonthlyFinancials` | Raw monthly P&L | `Month \| Total Revenue \| COGS \| GP \| SG&A \| EBIT \| Net Income \| Quarter` |
-| `Quarterly Financials` | Quarterly P&L (long format, SUMIF from monthly) | `Quarter \| Total Revenue \| COGS \| …` |
-| `CustomerRevenueMonthly` | Per‑customer monthly revenue (optional monthly detail) | `Customer \| Month \| Revenue` |
-| `CustomerRevenueQuarterly` | Per‑customer quarterly revenue — **drives each customer's Q‑to‑Q chart** | `Customer \| Quarter \| Revenue` |
-| `CustomerCount` | Active customer count by month | `Month \| Customer Count` |
-| `1. Working Capital` | Cash, AR, Inventory, AP, NWC by month | `Reporting Month \| …` |
-| `2. Customer Economics` | Per‑customer GP / concentration / margin | `Customer Brand \| Quarter \| …` |
-| `3. Strategic Dashboard` | KPI matrix across reference periods | `Strategic Metric \| Q1 2025 \| …` |
-| `4. Forward-Looking Risk` | Q2'25 vs Q2'26 partial P&L + Risk Status | `Reporting Period \| … \| Risk Status` |
-| `Commentary` | Generated briefings (written by the Apps Script) | `View \| Commentary \| Status \| … \| Thinking Info` |
-
-> Column layouts matter — the site reads by position. If you rename a column, update the matching
-> shaper in `js/data.js`.
-
----
-
-## 4. Prerequisites
-
-| # | Item | Where |
-|---|---|---|
-| 1 | A Google account | — |
-| 2 | The seed workbook `TPO_Monthly_Input.xlsx` (this folder) | local |
-| 3 | A **read‑only Google Sheets API key** (referrer‑restricted) | Google Cloud Console |
-| 4 | An **LLM API key** for commentary — Gemini (AI Studio), MiniMax, or any OpenAI‑compatible provider | provider dashboard |
-| 5 | A GitHub repo for the site (this folder) | GitHub |
-
----
-
-## 5. Setup (one‑time)
-
-### Step 1 — Create the Google Sheet
-1. Google Sheets → **Blank spreadsheet**.
-2. **File → Import → Upload** `TPO_Monthly_Input.xlsx` → **Replace spreadsheet**.
-3. Confirm all **13 tabs** from §3 are present.
-
-### Step 2 — Create the read‑only Sheets API key
-1. Google Cloud Console → **APIs & Services → Library** → enable **Google Sheets API**.
-2. **Credentials → Create credentials → API key**.
-3. **Edit the key**:
-   - **Application restrictions → HTTP referrers (web sites)** and add **both** origins you'll serve from:
-     - `https://khchan8.github.io/*`
-     - `https://tpowellness.com/*` (and `http://tpowellness.com/*` until HTTPS is enforced)
-   - **API restrictions → Restrict key → Google Sheets API**.
-4. Copy the key. (It is read‑only and referrer‑locked, so it's harmless if glimpsed.)
-
-### Step 3 — Share the sheet for API read access
-- **Share → Anyone with the link → Viewer**. (The Sheets API can only read a sheet via API key when
-  it's link‑shared. This is the data on/off switch — unshare to hide the report.)
-
-### Step 4 — Fill `config.js`
-Open `config.js` and set:
-```js
-SHEET_ID: "the-long-id-between-/d/-and-/edit-in-the-sheet-url",
-API_KEY:  "your-read-only-referrer-restricted-key",
-```
-`TABS`, `COMPANY`, `CURRENCY`, `REPORT_TITLE` are pre‑filled; edit only if you rename a tab or rebrand.
-
-### Step 5 — Install the Apps Script (commentary engine)
-1. In the sheet: **Extensions → Apps Script**. Delete the placeholder `Code.gs`.
-2. Open `apps-script/Code.gs` from this repo, copy the **entire** file, paste it in. Save.
-3. Reload the sheet — the **📊 TPO** menu appears.
-4. **📊 TPO → Settings → Open Settings…** and configure your provider:
-   - Pick **Gemini**, **MiniMax**, or **Custom OpenAI‑compatible**.
-   - Paste the API key. For non‑Gemini providers, set the **Endpoint URL**
-     (MiniMax default: `https://api.minimaxi.com/v1`) and pick a model (use **Fetch models** to pull
-     the live list).
-   - Click **Test connection** → then **Save**. (Keys are stored in Script Properties.)
-5. **📊 TPO → Generate Commentary (Resume)…** to generate the briefings into the `Commentary` tab.
-
-> Legacy: you can also set a `GEMINI_API_KEY` script property manually under
-> Project Settings → Script properties; the Settings dialog is the recommended path.
-
-### Step 6 — Publish the site
-From the repo root (`Tpo-Website/`):
-```bash
-git add .
-git commit -m "Publish TPO Monthly Report"
-git push
-```
-Enable **GitHub Pages** (repo Settings → Pages → branch `main` / root). Wait ~30s, then visit
-`https://khchan8.github.io/Tpo-Website/MonthlyReport/`.
-
-### Step 7 (optional) — Custom domain + Cloudflare
-- Point a CNAME (e.g. `tpowellness.com`) at your Pages site; enable it under repo Settings → Pages.
-- Because the site is served from the custom domain, the API‑key referrer restriction **must include
-  the custom domain** (Step 2 already covers it). `index.html` carries a
-  `<meta name="referrer" content="no-referrer-when-downgrade">` tag so the cross‑origin Sheets‑API
-  call sends a full‑path referer that matches the restriction.
-- For per‑email login gating, follow `PRDv1.6.md` (Cloudflare Zero Trust).
-
----
-
-## 6. Monthly workflow (sheet‑only, no code)
-
-1. Update the **data tabs**: `MonthlyFinancials`, `CustomerRevenueMonthly`/`CustomerRevenueQuarterly`,
-   `CustomerCount`, `1. Working Capital`, and the board tables (`2. Customer Economics`,
-   `3. Strategic Dashboard`, `4. Forward-Looking Risk`). `Quarterly Financials` recomputes from
-   monthly via SUMIF.
-2. (Optional) tweak wording in `Glossary` / `Content`.
-3. **📊 TPO → Generate Commentary (Resume)…** to refresh the prose.
-4. Reload the site. **Done — no git push.**
-
----
-
-## 7. Adding a customer
-
-**Easiest — the wizard:** **📊 TPO → Add Customer…** → enter name + contribution margin. It appends
-to `Assumptions`, seeds the customer's `CustomerRevenueQuarterly` rows (revenue blank — just type
-the numbers), and creates the `Commentary` row. Reload the site; the new customer appears under
-**Customers** and its Q‑to‑Q chart populates once you enter quarterly revenue.
-
-**Manual:** add the row to `Assumptions` (name + margin) and to `CustomerRevenueQuarterly`.
-
----
-
-## 8. LLM provider configuration (Apps Script)
-
-All via **📊 TPO → Settings → Open Settings…**:
-
-- **Provider**: Gemini / MiniMax / Custom OpenAI‑compatible.
-- **Endpoint URL**: required for non‑Gemini (MiniMax default `https://api.minimaxi.com/v1`).
-- **Model**: pick from the registry, or **Fetch models** to list what the key can access, or
-  **Custom…** to type any id.
-- **Rate‑limit sequence**: ON for Gemini free‑tier (synthetic 1.5s→3s→6s backoff); OFF for
-  MiniMax/paid (retry immediately, honor server `Retry‑After`). MiniMax is fast by default.
-- **Test connection** before saving.
-
-Thinking models (e.g. MiniMax‑M3): their `<think>…</think>` trace is auto‑split into column G.
-
----
-
-## 9. Security model
-
-- **Sheet sharing toggle is the master on/off switch.** Unshared → the site shows a graceful
-  "Report not available" state (no leaked numbers). "Anyone with link → Viewer" → renders.
-- **API key**: read‑only, Sheets‑API‑only, referrer‑restricted to your Pages + custom domain.
-- **`config.js` contains the API key**, so **the GitHub repo must be PRIVATE** (or rely solely on
-  the referrer restriction — recommended defense‑in‑depth is a private repo).
-- **Site URL = the secret** you share with the board.
-- **Optional hardening**: Cloudflare Zero Trust per‑email login (`PRDv1.6.md`).
-
----
-
-## 10. Caching & publishing updates
-
-- The site loads JS/CSS with a `?v=N` cache‑buster (`index.html`). **When you change any JS/CSS,
-  bump the `?v=` number** so browsers refetch. (Data‑only changes need no bump — the SPA reads the
-  sheet live.)
-- GitHub Pages caches assets (~4h) and serves via a CDN; after a push, hard‑reload
-  (**Ctrl/Cmd + Shift + R**) or wait out the CDN window.
-- Data updates (sheet only) are **instant** on reload — no CDN concern, because the SPA fetches the
-  sheet at runtime.
-
----
-
-## 11. File map
-
-```
-MonthlyReport/
-├── index.html              ← SPA shell (Tailwind + ECharts CDN), referrer meta, cache‑busted scripts
-├── config.js               ← SHEET_ID, API_KEY, TABS, COMPANY/CURRENCY/REPORT_TITLE  (edit once)
-├── README.md               ← this file
-├── SETUP.md                ← older condensed setup (superseded by README)
-├── PRDv1.4.md / 1.5 / 1.6  ← design history & open proposals
-├── TPO_Monthly_Input.xlsx  ← latest seed workbook (13 tabs) — import into Google Sheets
-├── assets/
-│   └── styles.css          ← Executive‑Briefing design accents (KPI tiles, range control, nav…)
-├── js/
-│   ├── data.js             ← Sheets API batchGet + shapers (incl. Glossary, Content, quarterly)
-│   ├── compute.js          ← deterministic math (no LLM): rollups, margins, cordon, reconciliation
-│   ├── views.js            ← every view's render fn + chartCard + boardTable + content() helper
-│   └── app.js              ← router, nav, boot, chart disposal
-└── apps-script/
-    └── Code.gs             ← paste into Extensions → Apps Script (commentary engine + Settings)
-```
-
----
-
-## 12. What the site computes vs. shows verbatim
-
-| Thing | Source |
+| Sheet | Expected columns in the original layout |
 |---|---|
-| Monthly P&L | `MonthlyFinancials` (raw) |
-| Quarterly P&L | `Quarterly Financials` (long, SUMIF) |
-| Working capital, Customer Economics, Dashboard, Forward‑Looking | board tabs (shown) |
-| Quarter roll‑ups, NWC, margins, concentration, seasonality bands, partial‑quarter flag, reconciliation | **computed in JS** |
-| Commentary prose | LLM (via Apps Script) → `Commentary` tab |
-| Charts | ECharts, fed by computed values |
+| MonthlyFinancials | Month, Total Revenue, COGS, Gross Profit, SG&A, EBIT, Net Income, Quarter |
+| Quarterly Financials | Quarter, Total Revenue, COGS, Gross Profit, SG&A, EBIT, Net Income |
+| CustomerRevenueMonthly | Customer, Month, Revenue |
+| CustomerRevenueQuarterly | Customer, Quarter, Revenue |
+| CustomerCount | Month, Customer Count |
+| 1. Working Capital | Reporting Month, Cash Balance, Accounts Receivable, Inventory Value, Accounts Payable, Net Working Capital |
+| 2. Customer Economics | Customer Brand, Quarter, Gross Revenue, Revenue Concentration, Estimated Contribution (legacy Gross Profit accepted), Contribution Margin |
+| 3. Strategic Dashboard | Strategic Metric, then quarter columns |
+| 4. Forward-Looking Risk | Reporting Period, Revenue, COGS, Gross Profit, SG&A, EBIT, Net Income, Risk Status |
+| Dashboard Inputs | Quarter, Metric, Value — manual new-account counts, retention, inventory turns, and custom metrics |
+| Report Model | Generated key/value spill; do not type into this sheet |
+| Assumptions | Customer and contribution margin in A:B; parameters in D:E |
 
----
+The tabular readers find columns by header. Missing required headers exclude that table and identify the problem. Month inputs include real dates, Sheets date serials, Jul-26, July-26, 27-Jul-26, and ISO dates. Ambiguous numeric text dates such as 07/08/26 are rejected. Numeric text accepts correctly grouped commas, the baht symbol, negative parentheses, and percentage notation for percentage fields.
 
-## 13. Troubleshooting
+Duplicate populated period/customer keys are excluded rather than summed. Scaffolding also rejects duplicate empty slots. Error-level findings block AI input preparation; repairs can replace broken derived formulas but stop on invalid primary inputs. Missing or malformed numbers remain unavailable. Monetary checks allow small whole-baht rounding differences. Blank or invalid GP/EBIT values do not silently become zero in quarterly or YTD totals.
 
-| Symptom | Likely cause / fix |
-|---|---|
-| Site loads but **no data / "Report not available"** | Sheet not link‑shared (Step 3), or API‑key referrer doesn't include the domain you're visiting (Step 2). |
-| Data loads on `github.io` but **not on the custom domain** | API‑key referrer restriction missing the custom domain — add `https://tpowellness.com/*`. |
-| **Numbers look shifted / COGS shown as revenue** | A board‑tab header row moved; check the column layout matches §3 and the shaper in `js/data.js`. |
-| **Charts spill over / wrong size on first click** | Stale cached JS — hard‑reload (`Ctrl/Cmd+Shift+R`); confirm `?v=` was bumped. |
-| **"Data note · N gaps" chip** | Σ customer revenue ≠ P&L revenue for N months — populate `CustomerRevenueMonthly`/`Quarterly` fully; informational, non‑blocking. |
-| **Commentary not generating** | No API key / wrong provider — **📊 TPO → Settings**; check the Error column in `Commentary`. |
-| **MiniMax 429 / rate‑limited** | Rate‑limit toggle or model quota; the engine backs off and retries; check toasts + Error column. |
+- Quarter totals derive from unique monthly rows. Partial quarters compare only with the same available months one year earlier. Three rows indicate coverage, not proof that individual months are finalized.
+- Working capital requires all four components: cash + AR + inventory − AP. Enter zero when a component is actually zero. An existing formula that treats blanks as zero is not accepted as a validated NWC result.
+- Customer mix shares refer to the listed customer total. Company-wide concentration requires reconciliation with the P&L; otherwise it is unavailable. Customer contribution is revenue × assumed margin, not audited gross profit.
+- Active customers follow the first month of a quarter. Cash uses quarter-end working-capital data. EBITDA is explicitly labelled an EBIT proxy because D&A is unavailable.
+- Low season follows Assumptions. The current workbook specifies May–October.
 
----
+**Report Model** contains one range-fed `TPO_REPORT_MODEL` custom function using the same `TPOCore` as the website. Derived sheet cells use keyed `INDEX/MATCH` lookups into that model, preserving real zeros and missing values. The function receives only primary inputs; derived outputs never feed back into it. Google recalculates when the referenced input ranges change. Month setup expands capacity as needed. If you manually add rows outside the generated range, rerun Repair calculated sheets. Allow Sheets to finish calculating before validation or AI export; a model error stays visible rather than displaying old totals.
 
-## 14. Roadmap / open proposals
+Existing manually maintained dashboard values migrate once into **Dashboard Inputs**. Edit them there afterward. Customer Economics revenue comes from **CustomerRevenueQuarterly**, with each portfolio total scoped to an explicit quarter. Source numbers and replaced formulas are recorded in **Repair Backup** before changes. Formula errors identify the source sheet/cell; failed writes attempt rollback.
 
-Implemented: v1.4 chart/UX rebuild, Strategic Dashboard, customer quarterly trend, content
-externalization (Glossary/Content), Add‑Customer wizard, multi‑provider commentary.
-Proposed (see `PRDv1.5.md`): §10 retry/rate‑limit decoupling, §11 Apps Script figure‑builder
-column fixes; `PRDv1.6.md`: Cloudflare Zero Trust access control.
+Forward risk is deterministic: negative current matched EBIT is **Operating Loss / High Risk**; positive improvement is **Improving / On Track**; a decline is **Contracting / Moderate Risk**; equal EBIT is **Stable / Monitor**. Missing EBIT or baseline is explicitly unavailable. Coverage is a separate column; missing prior-year months never become zero. This is historical comparison, not a forecast or AI classification.
 
----
+The supplied workbook's Q1 2026 customer revenue exceeds P&L revenue by **฿153,034** (฿11,355,290 − ฿11,202,256). It remains a reconciliation warning; timing differences are a possible explanation, not established by the data.
 
-*Reported in THB. The Google Sheet is the single source of truth; this portal only reads and
-renders it.*
+Supporting tables in the AI prompt are normalized and filtered; they are not a raw cell dump. Rows are labelled `normalized_row`. Error/warning notes identify original sheet cells. Unsafe derived figures and ambiguous duplicate rows are not supplied as authoritative inputs. Validate facts in the resulting prose before using them; the importer validates structure and routing, not the AI's reasoning.
+
+## Timezone and diagnostics
+
+This workbook has returned `""` from `getSpreadsheetTimeZone()` even after saving Bangkok in Settings. **v3.2 uses the explicit `TPO.timezone = 'Asia/Bangkok'` fallback** when that happens. Format & verify also tries `setSpreadsheetTimeZone('Asia/Bangkok')`. Data Validation records the reported and effective zones, including when fallback remains necessary. It never uses the computer's or script project's default timezone implicitly.
+
+**Run diagnostics…** checks timezone and source data. **Show last error…** reopens the latest per-user error, including build, action, function stack, sheet/cell context where available, actual timezone value/type, and error reference. Errors are also logged in Apps Script Executions.
+
+## Import protections
+
+Responses must contain the current batch ID, schema version, and each expected View exactly once. Invalid/incomplete JSON, unknown identifiers, formulas in pasted cells, and source changes after preparation are rejected before commentary writes. JSON inside one enclosing code fence is accepted. Long text is split safely into 30,000-character cells.
+
+Imports preserve unrelated Commentary rows and try to restore original values on a write failure. Repeating an unchanged import is a no-op. A document lock serializes script actions but does not prevent manual edits by other collaborators.
+
+The website marks commentary from an older workflow or different data snapshot as requiring regeneration and keeps it under a collapsed “Previous commentary” section. Newly imported commentary carries a period and a data checksum in Status. This checksum detects accidental data changes; it is not a security signature.
+
+## Website changes
+
+**Setup & data health** remains reachable when the data is blank or the connection fails. It lists validation findings and explains the monthly workflow. Dates and currency formatting do not control parsing: the Sheets reader requests unformatted values and date serials. Empty future periods do not advance the report date. Incomplete totals render as dashes.
+
+The existing visual style is retained. `index.html` uses compiled **assets/utilities.css** instead of the Tailwind runtime compiler. Scripts load with `defer`; charts have a fallback when ECharts fails to load. The existing API key configuration is retained, not copied into diagnostic reports or the AI prompt.
+
+## Maintenance and tests
+
+Source files are **js/report-core.js**, **tools/apps-script/workflow.gs**, and **tools/apps-script/validation.gs**. Run `node tools/build-apps-script.cjs` to regenerate apps-script/Code.gs. Do not edit generated copies separately.
+
+Run `node --test tests/*.test.cjs`. Tests cover dates/timezones, placeholders/zeroes, header mapping, malformed/duplicate inputs, null propagation, matched-period comparisons, long Unicode prompts, JSON import routing, stale batches, rollback, diagnostics, and shared website/script behavior.
+
+Static CSS rebuild command:
+
+```text
+npx --yes --package=tailwindcss@3.4.17 tailwindcss --config tools/tailwind.config.cjs --input tools/tailwind-input.css --output assets/utilities.css --minify
+```
+
+Google references: [date formatting](https://developers.google.com/apps-script/reference/utilities/utilities#formatdatedate,-timezone,-format), [spreadsheet timezone](https://developers.google.com/apps-script/reference/spreadsheet/spreadsheet#setSpreadsheetTimeZone(String)), [unformatted Sheets values](https://developers.google.com/workspace/sheets/api/reference/rest/v4/spreadsheets.values/get).
+
+Reporting-month safety: Sheets can interpret a label such as Jan-25 as January 25 of the current year when changing date formats. Version 3.2 writes the verified month-year label with plain-text format before other formatting or timezone repair. Conflicting month/quarter pairs are excluded and block AI export.
