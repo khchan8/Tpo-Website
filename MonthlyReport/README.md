@@ -1,13 +1,13 @@
-# TPO monthly report — manual AI workflow, v4
+# TPO monthly report — manual AI workflow, v5
 
-The Apps Script, calculated Google Sheets cells, and website use the same calculation engine. The reporting period follows the latest month with valid actual revenue in MonthlyFinancials. Blank future rows such as Aug-27 and Sep-27 are allowed and ignored; an explicit zero is actual data. An expense-only future row remains pending until revenue is entered.
+The Apps Script, calculated Google Sheets cells, and website use the same calculation engine. By default, the reporting period follows the latest month with valid actual revenue in MonthlyFinancials; Report settings can apply a historical cut-off. Blank future rows such as Aug-27 and Sep-27 are allowed and ignored; an explicit zero is actual data. An expense-only future row remains pending until revenue is entered.
 
 ## Monthly workflow
 
 1. Run **Prepare Next Month Slots (Fill in the blanks)**. It reuses or creates the next calendar month's rows, supplies blank-safe GP/EBIT/NWC formulas, and adds missing quarter sections. Fill the raw source figures. Repeated runs preserve entered values and reuse existing slots.
 2. **📊 TPO → Format & verify all sheets**. This protects reporting month labels as explicit text, normalizes unambiguous numeric text, and applies amount/percentage formats, and writes **Data Validation**. It preserves blank inputs and formulas. Previous converted values are recorded in **Repair Backup**.
 3. Resolve errors. **Repair calculated sheets** installs or restores dynamic quarter totals, customer contribution/concentration, working capital, dashboard, matching-period comparisons, and as-of formulas. Month setup also performs this repair. Once installed, changing source figures recalculates these cells automatically. Run month setup to create new sections; no formula dragging is needed.
-4. **1. Prepare LLM Input + Copy… → Copy all**. Paste into Gemini, ChatGPT, DeepSeek, or another AI chat. The prompt contains all 6 report sections, every configured customer, calculated summaries, normalized supporting tables, quality notes, and a JSON response template.
+4. **1. Prepare LLM Input + Copy… → Copy all**. Paste into Gemini, ChatGPT, DeepSeek, or another AI chat. The prompt requests the report sections and customers selected in shared Report settings, with calculated summaries, normalized supporting tables, quality notes, and a JSON response template.
 5. Copy the AI response. Use **Paste AI response…** to save it to **LLM Output**, or paste into that sheet starting at **A8**.
 6. **3. Import LLM Output** writes matching entries into **Commentary A:C**. Reload the website.
 
@@ -15,7 +15,7 @@ The prose style remains 2–4 English sentences, 50–90 words per section. No L
 
 ## Installation
 
-Replace the complete bound Apps Script with **Code.gs** (project delivery: **apps-script/Code.gs**). Do not append it or install multiple versions together. Save and reload Google Sheets, then run **Repair calculated sheets** once. Google may require authorization or identity verification on the first run. All dialogs are embedded in the file.
+Replace the complete bound Apps Script with **Code.gs** (project delivery: **apps-script/Code.gs**). Do not append it or install multiple versions together. Save and reload Google Sheets, then run **Repair calculated sheets** once. Google may require authorization or identity verification on the first run. All dialogs are embedded in the file. Copying this file into GitHub does not update the bound Google script; installation in Sheets is separate. See **SETUP.md** for the complete setup workflow.
 
 Commentary uses **View | Commentary | Status** in A:C. It does not recreate the deleted D:G columns. The generated **LLM-Input** and **LLM Output** sheets use rows 1–7 for metadata and A8 onward for text. Use the copy dialog to concatenate prompt chunks; copying a spreadsheet range can introduce tabs/newlines.
 
@@ -80,7 +80,7 @@ The **Setup & data health** (`#/setup`) view includes interactive **Report contr
   - **Hide**: Hides the section from the navigation bar and report exports. *Note: Hiding a customer or tab never excludes its revenue from company-wide P&L totals or calculations.*
   - **Auto**: Displays the section only when usable data exists (including actual zeroes).
   - **Label & Order**: Customize the display name or reorder navigation tabs.
-  - **AI input & Export**: Toggle whether a section is included in generated LLM prompts or print/CSV exports.
+  - **AI input & Export**: Select requested commentary sections or visible sections for print/CSV exports. AI selection uses shared settings; supporting source tables remain included for context.
 
 ### 2. General Controls
 - **Reporting cut-off**: Locks the report to a specific historical month (or defaults to the latest actual month).
@@ -89,23 +89,23 @@ The **Setup & data health** (`#/setup`) view includes interactive **Report contr
 - **Decimal places & Table spacing**: Control number precision and compact/comfortable table densities.
 
 ### 3. Personal Preferences vs. Shared Defaults
-- **Personal configuration (browser only)**: Clicking **Apply in this browser** saves your settings to browser `localStorage`. This creates a personal view for your browser session only without affecting other users. Click **Reset to shared defaults** to restore the default state.
+- **Personal configuration (browser only)**: Clicking **Apply in this browser** saves your settings to browser `localStorage`. Preferences persist across browser sessions and override shared defaults without affecting other users. Click **Reset to shared defaults** to restore the default state.
 - **Shared report defaults (for everyone / the board)**:
   1. Customize the controls on the website, then click **Prepare shared settings**.
   2. Copy the generated JSON configuration text.
   3. In Google Sheets, open **📊 TPO → Report settings…**.
   4. Paste the JSON into the box and click **Save pasted configuration** (or adjust controls in the dialog and click **Save shared controls**).
-  5. The settings are saved into the `Report Settings` sheet tab in Google Sheets. All visitors loading the website from GitHub Pages will receive these shared defaults automatically.
+  5. The settings are saved into the `Report Settings` sheet tab in Google Sheets. Visitors without personal overrides receive these shared defaults when they reload data.
 
 ### 4. Presets & Archiving
 - **Built-in presets**:
   - `@board` (Board meeting): Automatically hides Seasonality and Glossary, sets range to 12 months, and switches currency format to millions.
   - `@full` (Full management report): Shows all tabs and customer pages.
-- **Custom presets**: Enter a preset name and click **Save preset** to save reusable configurations in your browser.
+- **Custom presets**: Enter a preset name and click **Save preset** to save reusable configurations in your browser. The dropdown updates immediately and selects the saved preset. Reusing a name replaces that preset; other presets are preserved.
 - **Export & archive**:
   - **Print selected report**: Clean, print-formatted view omitting hidden sections.
   - **Download selected report data (CSV)**: Export visible data tables to CSV.
-  - **Save report snapshot**: Exports an offline JSON snapshot freeze of current data and settings. Use the file upload input to load and view past snapshots offline.
+  - **Save report snapshot**: Exports all loaded source data, including hidden customers, plus commentary, settings and capture time. Import uses captured data without refreshing Sheets and verifies its calculation version and fingerprint. Loading the website and external assets may still require a connection; this is not a fully offline application. A historical cut-off recalculates current data rather than restoring previous source revisions.
 
 ### 5. Data & Commentary Health
 - **Data readiness**: Filter validation issues by severity (`actionable`, `error`, `warning`, `info`, `all`) or search by period (e.g. `Jul-26`). Click cell links to jump straight to source cells in Google Sheets.

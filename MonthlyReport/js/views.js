@@ -503,10 +503,10 @@
       return { label: m.label, vals, sample: m.values.find(v => v !== null && v !== undefined && v !== "") };
     }
     const chartable = dash.metrics.map(numericMetric).filter(m => m.vals.some(v => v !== null));
-    let defaultMetric = chartable.find(m => /active customer/i.test(m.label)) || chartable[0];
+    const defaultMetric = chartable.find(m => /active customer/i.test(m.label)) || chartable[0];
 
     const metricSelect = el("select", { class: "dash-select", "data-role": "metric" },
-      ...chartable.map(m => el("option", { value: m.label, selected: defaultMetric && m.label === defaultMetric.label }, m.label))
+      ...chartable.map(m => el("option", { value: m.label, selected: m === defaultMetric ? "" : null }, m.label))
     );
 
     const latestMonth = data.monthly?.length ? data.monthly[data.monthly.length - 1].month : null;
