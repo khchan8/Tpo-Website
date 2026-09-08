@@ -250,4 +250,45 @@ var TPOCore = (function () {
   }
   return {months,metrics,number,month,quarter,sum,ratio,analyze,defs,col,fingerprint,metricKey,dashboardLabels,riskStatus,modelRows};
 })();
+/** Shared presentation contract. Financial inputs are never removed by visibility rules. */
+var TPOReportSettings=(function(){
+  const sections=[['overview','Overview','overview'],['dashboard','Dashboard','strategic-dashboard'],['seasonality','Seasonality','seasonality'],['customers','Customers',null],['financials','Financials','financial-performance'],['working-capital','Working Capital','working-capital'],['forward-looking','Forward-looking','forward-looking'],['about','Glossary',null]].map(([id,label,view],order)=>({id,label,view,order}));
+  const slug=s=>String(s).trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  function normalize(value){
+    if(value==null||value==='')value={};if(typeof value==='string')value=JSON.parse(value);
+    if(!value||typeof value!=='object'||Array.isArray(value))throw new Error('Report settings must be an object.');
+    if(value.version!=null&&value.version!==1)throw new Error('Unsupported report settings version.');
+    const choice=(v,list,fallback)=>{if(v==null)return fallback;if(!list.includes(v))throw new Error('Unsupported setting: '+v);return v;};
+    const row=(r={},label='',order=0)=>{
+      if(!r||typeof r!=='object'||Array.isArray(r))throw new Error('Invalid section setting.');
+      const out={mode:choice(r.mode,['show','hide','auto'],'show'),label:String(r.label??label).trim().slice(0,70),order:Number(r.order??order),commentary:r.commentary??true,export:r.export??true};
+      if(!Number.isFinite(out.order)||typeof out.commentary!=='boolean'||typeof out.export!=='boolean')throw new Error('Order must be numeric; commentary/export must be true or false.');return out;
+    };
+    const tabs=Object.fromEntries(sections.map(s=>[s.id,row(value.tabs?.[s.id],s.label,s.order)])),customers={};
+    Object.entries(value.customers||{}).forEach(([id,r],i)=>{if(!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id)||['__proto__','constructor','prototype'].includes(id))throw new Error('Invalid customer identifier.');customers[id]=row(r,id,i);});
+    const cutoff=value.cutoff||'latest';if(cutoff!=='latest'&&(!/^\d{4}-(0[1-9]|1[0-2])$/.test(cutoff)||!TPOCore.month(cutoff)))throw new Error('Reporting cut-off must be latest or YYYY-MM.');
+    const decimals=value.decimals??0;if(!Number.isInteger(decimals)||decimals<0||decimals>2)throw new Error('Decimals must be 0, 1 or 2.');
+    return {version:1,cutoff,tabs,customers,home:choice(value.home,sections.map(s=>s.id),'overview'),monthlyRange:choice(value.monthlyRange,['all','12m','6m','ytd'],'all'),quarterlyRange:choice(value.quarterlyRange,['all','4q','8q'],'all'),money:choice(value.money,['auto','full','thousands','millions'],'auto'),decimals,density:choice(value.density,['comfortable','compact'],'comfortable')};
+  }
+  function fromSources(sources){const s=sources.find(s=>s.name==='Report Settings');if(!s?.raw?.length)return normalize({});if(s.raw[0][0]!=='Setting'||s.raw[0][1]!=='Value'||s.raw[1]?.[0]!=='Configuration')throw new Error('Report Settings: expected Setting | Value, then Configuration in A2.');return normalize(s.raw[1][1]);}
+  function filterSources(sources,settings){
+    const cutoff=TPOCore.month(settings.cutoff);if(!cutoff)return sources;
+    // A later completed quarterly ledger cannot represent an earlier partial-quarter cut-off.
+    const excludeCurrentQuarter=cutoff.month%3!==0&&TPOCore.analyze(sources).monthly.some(r=>r.period.key>cutoff.key&&r.quarter===cutoff.quarter);
+    return sources.map(s=>{
+      const def=TPOCore.defs[s.name],raw=s.raw||[];if(!def||!raw.length)return s;
+      const period=def.findIndex(a=>a.includes('month')||a.includes('quarter'));if(period<0)return s;
+      const norm=v=>String(v).toLowerCase().replace(/[^a-z0-9]/g,''),col=raw[0].findIndex(h=>def[period].includes(norm(h)));
+      const quarter=def[period].includes('quarter'),limit=quarter?TPOCore.quarter(cutoff.quarter).key:cutoff.key;
+      return {...s,raw:raw.map((r,i)=>{const p=(quarter?TPOCore.quarter:TPOCore.month)(r[col]);return i&&p&&(p.key>limit||(quarter&&excludeCurrentQuarter&&p.key===limit))?r.map(()=>''):r;})};
+    });
+  }
+  function available(id,a){if(!a)return false;return ({overview:!!a.latest,financials:!!a.monthly.length,dashboard:!!a.dashboard.periods.length,seasonality:!!a.monthly.length,customers:a.cm.concat(a.cq).some(r=>r.values.some(Number.isFinite)),'working-capital':a.wc.some(r=>[r.cash,r.ar,r.inventory,r.ap,r.nwc].some(Number.isFinite)),'forward-looking':!!a.forward.length,about:true})[id]||false;}
+  function customerList(settings,a){return (a?.customers||[]).map((c,i)=>({...c,slug:slug(c.name),...rowSetting(settings,slug(c.name),c.name,i)})).filter(c=>c.mode!=='hide'&&(c.mode!=='auto'||a.cm.concat(a.cq).some(r=>slug(r.customer)===c.slug&&r.values.some(Number.isFinite)))).sort((a,b)=>a.order-b.order);}
+  function rowSetting(settings,id,name,i){return settings.customers[id]||{mode:'show',label:name,order:i,commentary:true,export:true};}
+  function visible(settings,a){return sections.map(s=>({...s,...settings.tabs[s.id]})).filter(s=>s.mode!=='hide'&&(s.mode!=='auto'||available(s.id,a))&&(s.id!=='customers'||customerList(settings,a).length)).sort((a,b)=>a.order-b.order);}
+  function commentaryViews(settings,a){const ids=sections.filter(s=>s.view&&settings.tabs[s.id].commentary).map(s=>s.view);a.customers.forEach((c,i)=>{if(rowSetting(settings,slug(c.name),c.name,i).commentary)ids.push(slug(c.name));});return ids.sort();}
+  return {sections,normalize,fromSources,filterSources,available,visible,customerList,rowSetting,commentaryViews,slug};
+})();
+TPOCore.settings=TPOReportSettings;
 if(typeof module==='object' && module.exports)module.exports=TPOCore;

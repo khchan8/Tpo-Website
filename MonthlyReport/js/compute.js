@@ -5,6 +5,15 @@
 (function () {
   const MONTH_NAMES = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
   let LOW_SEASON = new Set(["Jun","Jul","Aug","Sep","Oct"]);
+  let display={money:'auto',decimals:0},currency='THB';
+  function setFormat(settings,unit){display=settings;currency=/^[A-Z]{3}$/.test(unit)?unit:'THB';}
+  function moneyValue(n,compact){
+    if(!Number.isFinite(n))return '—';let mode=display.money;
+    if(mode==='auto')mode=compact?(Math.abs(n)>=1e6?'millions':Math.abs(n)>=1e3?'thousands':'full'):'full';
+    const divisor=mode==='millions'?1e6:mode==='thousands'?1e3:1,suffix=mode==='millions'?'M':mode==='thousands'?'K':'';
+    const digits=display.money==='auto'&&compact&&divisor>1?(divisor===1e6?2:1):display.decimals;
+    return new Intl.NumberFormat('en-GB',{style:'currency',currency,currencyDisplay:'narrowSymbol',minimumFractionDigits:digits,maximumFractionDigits:digits}).format(n/divisor)+suffix;
+  }
 
   function setLowSeason(monthsArray) {
     if (Array.isArray(monthsArray)) {
@@ -24,18 +33,9 @@
     const p = parseMonth(label); if (!p) return null;
     return `Q${Math.floor(p.mon / 3) + 1} ${p.yr}`;
   }
-  function fmtMoney(n) {
-    if (n === null || n === undefined || !Number.isFinite(n)) return "—";
-    const abs = Math.abs(n);
-    let s;
-    if (abs >= 1e6) s = "฿" + (n / 1e6).toFixed(2) + "M";
-    else if (abs >= 1e3) s = "฿" + (n / 1e3).toFixed(1) + "K";
-    else s = "฿" + Math.round(n).toLocaleString();
-    return s;
-  }
+  function fmtMoney(n) { return moneyValue(n,true); }
   function fmtMoneyFull(n) {
-    if (n === null || n === undefined || !Number.isFinite(n)) return "—";
-    return "฿" + Math.round(n).toLocaleString();
+    return moneyValue(n,false);
   }
   function fmtPct(n, digits = 1) {
     if (n === null || n === undefined || !Number.isFinite(n)) return "—";
@@ -193,6 +193,7 @@
   }
 
   window.TPO_COMPUTE = {
+    setFormat,
     parseMonth, isLowSeason, setLowSeason, quarterOf,
     fmtMoney, fmtMoneyFull, fmtPct, fmtPctDelta,
     rollupQuarterly, rollupCustomerQuarterly,

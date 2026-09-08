@@ -40,7 +40,7 @@ function writeValidation_(a) {
 }
 function menuValidateData() {
   uiAction_('Validate data',()=>locked_(()=>{
-    const sh=writeValidation_(TPOCore.analyze(readSources_()));SpreadsheetApp.getActiveSpreadsheet().setActiveSheet(sh);
+    const sh=writeValidation_(analyzeReportSources_(readSources_()));SpreadsheetApp.getActiveSpreadsheet().setActiveSheet(sh);
   }));
 }
 
@@ -142,7 +142,7 @@ function menuFormatVerify() {
     backupAndWrite_(formatPlan_(sources,a),'Normalize numeric text');
     repairTimezone_(SpreadsheetApp.getActiveSpreadsheet());
     applyFormats_(sources,a);setup_();SpreadsheetApp.flush();
-    const sh=writeValidation_(TPOCore.analyze(readSources_()));SpreadsheetApp.getActiveSpreadsheet().setActiveSheet(sh);
+    const sh=writeValidation_(analyzeReportSources_(readSources_()));SpreadsheetApp.getActiveSpreadsheet().setActiveSheet(sh);
   }));
 }
 
@@ -150,7 +150,7 @@ function menuFormatVerify() {
  * No dependent output sheets are read, so the model cannot reference itself.
  * @customfunction
  */
-function TPO_REPORT_MODEL(financials, assumptions, monthlyCustomers, quarterlyCustomers, counts, workingCapital, dashboardInputs, lowSeason, activeRule, currency, timezone) {
+function TPO_REPORT_MODEL(financials, assumptions, monthlyCustomers, quarterlyCustomers, counts, workingCapital, dashboardInputs, lowSeason, activeRule, currency, timezone, reportSettings) {
   const tz=typeof timezone==='string'&&timezone.trim()?timezone:TPO.timezone;
   const normalize=rows=>(Array.isArray(rows)?rows:[]).map(row=>row.map(v=>v instanceof Date?Utilities.formatDate(v,tz,'yyyy-MM-dd'):v));
   const as=normalize(assumptions).map(r=>r.slice(0,2));
@@ -160,7 +160,7 @@ function TPO_REPORT_MODEL(financials, assumptions, monthlyCustomers, quarterlyCu
   const names=['MonthlyFinancials','CustomerRevenueMonthly','CustomerRevenueQuarterly','CustomerCount','1. Working Capital','Dashboard Inputs'];
   const values=[financials,monthlyCustomers,quarterlyCustomers,counts,workingCapital,dashboardInputs];
   const sources=names.map((name,i)=>({name,raw:normalize(values[i])}));sources.push({name:'Assumptions',raw:as});
-  return TPOCore.modelRows(TPOCore.analyze(sources));
+  return TPOCore.modelRows(TPOCore.analyze(TPOReportSettings.filterSources(sources,TPOReportSettings.normalize(reportSettings))));
 }
 function calculatedMetric_(label) {
   return /activecustomers|revenuepercustomer|cashbalance|^ebit|concentration/.test(TPOCore.metricKey(label));
@@ -287,6 +287,7 @@ function repairPlan_(sources,a,next) {
   };
   const parameter=(name,fallback)=>{const i=assumptions.raw.findIndex(r=>String(r[3]||'').toLowerCase()===name.toLowerCase());return i<0?literal(fallback):'Assumptions!E'+(i+1);};
   const args=[range('MonthlyFinancials'),"Assumptions!A1:B"+Math.max(1000,sheet_('Assumptions').getMaxRows(),assumptions.raw.length+100),range('CustomerRevenueMonthly'),range('CustomerRevenueQuarterly'),range('CustomerCount'),range('1. Working Capital'),range('Dashboard Inputs'),parameter('Low season',''),parameter('Active Customers rule','count at first month of the quarter'),parameter('Currency','THB'),literal(TPO.timezone)];
+  args.push(sheet_('Report Settings')?"'Report Settings'!B2":'""');
   add('Report Model',1,1,'=TPO_REPORT_MODEL('+args.join(',')+')','One range-fed shared calculation engine',true);
   return Array.from(new Map(plan.map(p=>[p.sheet+'|'+p.row+'|'+p.col,p])).values());
 }
@@ -308,7 +309,7 @@ function repairAndScaffold_(nextMonth) {
   ['MonthlyFinancials','Assumptions','CustomerRevenueMonthly','CustomerRevenueQuarterly','CustomerCount','1. Working Capital','Dashboard Inputs'].forEach(name=>{const sh=sheet_(name);ensureSize_(sh,Math.max(1000,sh.getLastRow()+100),Math.max(2,sh.getLastColumn()));});
   backupAndWrite_(plan,next?'Prepare '+next.display+' slots':'Install dynamic calculations');
   SpreadsheetApp.flush();repairTimezone_(ss);
-  const updated=readSources_(),checked=TPOCore.analyze(updated);applyFormats_(updated,checked);
+  const updated=readSources_(),checked=analyzeReportSources_(updated);applyFormats_(updated,checked);
   ss.setActiveSheet(writeValidation_(checked));
   return next?next.display:null;
 }

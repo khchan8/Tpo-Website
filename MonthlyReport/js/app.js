@@ -1,207 +1,33 @@
-/* =========================================================
-   app.js — router, nav, boot.
-   ========================================================= */
-(function () {
-  const C = window.TPO_CONFIG;
-  const D = window.TPO_DATA;
-  const K = window.TPO_COMPUTE;
-  const V = window.TPO_VIEWS;
-
-  const state = { data: null, error: null };
-
-  /* ---------- nav ---------- */
-  function primaryNav(state) {
-    const nav = document.getElementById("primary-nav");
-    nav.innerHTML = "";
-    const links = [
-      ["Overview", "#/"],
-      ["Dashboard", "#/dashboard"],
-      ["Seasonality", "#/seasonality"],
-      ["Customers", "#/customers"],            // special: opens first customer
-      ["Financials", "#/financials"],
-      ["Working Capital", "#/working-capital"],
-      ["Forward-looking", "#/forward-looking"],
-      ["Glossary", "#/about"],
-      ["Setup & data health", "#/setup"],
-    ];
-    for (const [label, href] of links) {
-      const a = document.createElement("a");
-      a.href = href; a.textContent = label;
-      a.addEventListener("click", () => setActiveLink());
-      nav.appendChild(a);
-    }
-    setActiveLink();
-
-    // Health chip logic moved to Glossary view.
-    // Ensure it is hidden from the primary nav.
-    const chip = document.getElementById("health-chip");
-    if (chip) {
-      chip.innerHTML = "";
-      chip.classList.add("hidden");
-    }
-
-    // As-of
-    const asof = document.getElementById("as-of");
-    if (state.data?.monthly?.length) {
-      const last = state.data.monthly[state.data.monthly.length - 1];
-      asof.textContent = `As of ${last.month}`;
-    } else {
-      asof.textContent = "";
-    }
-  }
-  function setActiveLink() {
-    const cur = (location.hash || "#/").replace(/^#/, "");
-    document.querySelectorAll("#primary-nav a").forEach(a => {
-      const href = a.getAttribute("href").replace(/^#/, "");
-      a.classList.toggle("active", href === cur || (href === "/customers" && cur.startsWith("/customers/")));
-    });
-  }
-
-  /* ---------- router ---------- */
-  function parseHash() {
-    const h = (location.hash || "#/").replace(/^#/, "");
-    const parts = h.split("/").filter(Boolean);
-    if (parts.length === 0) return { name: "overview" };
-    if (parts[0] === "customers" && parts.length >= 2) return { name: "customer", slug: parts[1] };
-    if (parts[0] === "customers") {
-      // no slug → first customer
-      const first = state.data?.assumptions?.customers?.[0]?.slug;
-      if (first) location.replace("#/customers/" + first);
-      return { name: "overview" };
-    }
-    return { name: parts[0] };
-  }
-
-  function mount(node) {
-    // Free ECharts instances from the outgoing view before we wipe the DOM,
-    // so we never leak instances or carry spillover across views.
-    if (window.TPO_VIEWS && typeof window.TPO_VIEWS.disposeAllCharts === "function") {
-      window.TPO_VIEWS.disposeAllCharts();
-    }
-    const view = document.getElementById("view");
-    view.innerHTML = "";
-    view.appendChild(node);
-    if (state.data?._issues?.some(i=>i.level!=="info") && location.hash!=="#/setup") {
-      const banner=document.createElement("a");banner.className="data-health-banner";banner.href="#/setup";
-      banner.textContent="Some source data needs attention. Review Setup & data health before using this report.";view.prepend(banner);
-    }
-  }
-
-  function render() {
-    if (parseHash().name === "setup") { mount(V.setup(state)); setActiveLink(); return; }
-    if (state.error) { mount(V.setup(state)); return; }
-    if (!state.data) { mount(V.loading()); return; }
-    if (!state.data.monthly.length) { mount(V.setup(state)); return; }
-    const route = parseHash();
-    if (route.name === "customer") {
-      // Mount the view FIRST (mount() clears #view), then prepend the
-      // subnav. The old order (subnav then mount) let mount()'s innerHTML
-      // reset wipe the just-built subnav — so only the default customer
-      // (Mana) was ever visible and there was no way to switch.
-      mount(V.customer(state, route.slug));
-      renderCustomerSubnav(route.slug);
-    } else if (V[route.name]) {
-      clearCustomerSubnav();
-      mount(V[route.name](state));
-    } else {
-      mount(V.overview(state));
-    }
-    setActiveLink();
-  }
-
-  function renderCustomerSubnav(activeSlug) {
-    let sub = document.getElementById("sub-nav");
-    if (!sub) {
-      sub = document.createElement("div");
-      sub.id = "sub-nav";
-      sub.className = "";
-      const view = document.getElementById("view");
-      view.prepend(sub);
-    }
-    sub.innerHTML = "";
-    for (const c of state.data.assumptions.customers) {
-      const a = document.createElement("a");
-      a.href = "#/customers/" + c.slug;
-      a.textContent = c.name;
-      if (c.slug === activeSlug) a.classList.add("active");
-      sub.appendChild(a);
-    }
-  }
-  function clearCustomerSubnav() {
-    const sub = document.getElementById("sub-nav");
-    if (sub) sub.remove();
-  }
-
-  /* ---------- boot ---------- */
-  function applyContent(state) {
-    const content = (key, fallback) => state.data?.content?.[key] || fallback;
-    const companyName = content("company.name", C.COMPANY);
-    const reportTitle = content("report.title", C.REPORT_TITLE);
-    const currency = state.data?.assumptions?.params?.Currency || content("currency", C.CURRENCY);
-    const footerNoteTpl = content("footer.note", "Reported in {currency}");
-    const footerNote = footerNoteTpl.replace("{currency}", currency);
-
-    const pt = document.getElementById("page-title"); if (pt) pt.textContent = `${companyName} — ${reportTitle}`;
-    const hb = document.getElementById("header-brand"); if (hb) hb.textContent = companyName;
-    const ht = document.getElementById("header-title"); if (ht) ht.textContent = reportTitle;
-    const fn = document.getElementById("footer-note"); if (fn) fn.textContent = footerNote;
-  }
-
-  async function boot() {
-    primaryNav(state);
-    render();
-    try {
-      state.data = await D.load();
-      applyContent(state);
-      primaryNav(state);
-      render();
-    } catch (e) {
-      console.error("[TPO] boot failed:", e);
-      state.error = e;
-      mount(V.setup(state));
-    }
-  }
-
-  window.addEventListener("hashchange", render);
-
-  // Re-fit charts on any viewport change — foldable unfold/flip, rotation,
-  // and browser-chrome show/hide. Some foldable webviews update the layout
-  // viewport on unfold WITHOUT triggering a CSS reflow, leaving the page
-  // laid out at the old (cover-screen) width with a blank strip on one side.
-  // The offsetWidth read forces such a stale layout to recompute, and we
-  // re-read the viewport width so any layout that depends on it (e.g. the
-  // responsive grids) picks up the new size.
-  function refitViewport() {
-    document.querySelectorAll("[_echarts_instance_]").forEach(n => {
-      const inst = window.echarts?.getInstanceByDom(n);
-      if (inst) inst.resize();
-    });
-    // force a stale layout to reflow at the new viewport width
-    void document.documentElement.offsetWidth;
-  }
-  let refitTimer = null;
-  function scheduleRefit() {
-    clearTimeout(refitTimer);
-    refitTimer = setTimeout(refitViewport, 120);
-  }
-  window.addEventListener("resize", scheduleRefit);
-  window.addEventListener("orientationchange", scheduleRefit);
-  if (window.visualViewport) {
-    window.visualViewport.addEventListener("resize", scheduleRefit);
-  }
-  // Hamburger menu (narrow screens). Toggles the nav dropdown and closes
-  // it once the user picks a destination.
-  (function setupNavToggle() {
-    const toggle = document.getElementById("nav-toggle");
-    const nav = document.getElementById("primary-nav");
-    if (!toggle || !nav) return;
-    const setOpen = (open) => {
-      nav.classList.toggle("open", open);
-      toggle.setAttribute("aria-expanded", open ? "true" : "false");
-    };
-    toggle.addEventListener("click", () => setOpen(!nav.classList.contains("open")));
-    nav.addEventListener("click", (e) => { if (e.target.closest("a")) setOpen(false); });
-  })();
-
-  boot();
+/* Configurable report navigation, live refresh, and explicit exports. */
+(function(){
+  'use strict';
+  const C=window.TPO_CONFIG,D=window.TPO_DATA,V=window.TPO_VIEWS,S=window.TPOCore.settings,U=window.TPO_SETTINGS_UI;
+  const state={data:null,error:null,settings:S.normalize({}),fullAnalysis:null,snapshot:null,notice:'',busy:false};let liveData=null,refreshId=0;
+  const visible=()=>S.visible(state.settings,state.data?._analysis),customers=()=>S.customerList(state.settings,state.data?._analysis);
+  function home(){const sections=visible();return sections.some(s=>s.id===state.settings.home)?state.settings.home:sections[0]?.id||'setup';}
+  function nav(){const el=document.getElementById('primary-nav');el.replaceChildren();[...visible(),{id:'setup',label:'Setup & data health'}].forEach(s=>{const a=document.createElement('a');a.href='#/'+s.id;a.textContent=s.label||s.id;el.append(a);});document.getElementById('as-of').textContent=state.data?'As of '+(state.data._analysis.latest?.month||'unavailable')+(state.snapshot?' · Archived snapshot':''):'';document.body.classList.toggle('compact-report',state.settings.density==='compact');active();}
+  function active(){const cur=(location.hash||'#/').slice(1);document.querySelectorAll('#primary-nav a').forEach(a=>{const yes=cur===a.hash.slice(1)||(a.hash==='#/customers'&&cur.startsWith('/customers/'));a.classList.toggle('active',yes);if(yes)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});}
+  function route(){const parts=(location.hash||'#/').replace(/^#\/?/,'').split('/').filter(Boolean);return {name:parts[0]||home(),slug:parts[1]};}
+  function mount(node){V.disposeAllCharts();const view=document.getElementById('view');view.replaceChildren(node);if(state.notice){const n=document.createElement('p');n.className='data-health-banner';n.textContent=state.notice;view.prepend(n);}if(state.snapshot){const n=document.createElement('p');n.className='data-health-banner';n.textContent='Archived snapshot captured '+state.snapshot.capturedAt+'. Live data is not being refreshed.';view.prepend(n);}if(state.data?._issues.some(i=>i.level!=='info')&&route().name!=='setup'){const a=document.createElement('a');a.className='data-health-banner';a.href='#/setup';a.textContent='Some source data needs attention. Review Setup & data health.';view.prepend(a);}}
+  function page(id,slug){if(id!=='customers')return V[id](state);const root=V.customer(state,slug||customers()[0]?.slug),sub=document.createElement('nav');sub.id='sub-nav';sub.setAttribute('aria-label','Customer pages');customers().forEach(c=>{const a=document.createElement('a');a.href='#/customers/'+c.slug;a.textContent=c.label||c.name;if(c.slug===slug)a.className='active';sub.append(a);});root.prepend(sub);return root;}
+  function render(){const r=route();if(r.name==='setup'||state.error){mount(V.setup(state));active();return;}if(!state.data){mount(V.loading());return;}const section=visible().find(s=>s.id===r.name),list=customers();if(!section||(r.name==='customers'&&r.slug&&!list.some(c=>c.slug===r.slug))){state.notice='That section is hidden or unavailable in this report configuration.';history.replaceState(null,'','#/'+home());mount(home()==='setup'?V.setup(state):page(home()));active();return;}if(r.name==='customers'&&!r.slug){r.slug=list[0]?.slug;history.replaceState(null,'','#/customers/'+r.slug);}if(!state.data.monthly.length&&r.name!=='about'){mount(V.setup(state));return;}mount(page(r.name,r.slug));active();}
+  function applyData(data,settings){state.settings=S.normalize(settings);state.data=D.shape(data._rawMap,data._errorDetails||[],state.settings);state.data._loadedAt=data._loadedAt;state.fullAnalysis=window.TPOCore.analyze(Object.entries(data._rawMap).map(([name,raw])=>({name,raw})));window.TPO_COMPUTE.setFormat?.(state.settings,state.data.assumptions.params.Currency||C.CURRENCY||'THB');window.TPO_CHART_SETTINGS=state.settings;const company=state.data.content['company.name']||C.COMPANY||'TPO Wellness',title=state.data.content['report.title']||C.REPORT_TITLE||'Monthly Performance';document.getElementById('header-brand').textContent=company;document.getElementById('header-title').textContent=title;document.title=company+' — '+title;document.getElementById('footer-note').textContent='Reported in '+(state.data.assumptions.params.Currency||C.CURRENCY||'THB');nav();render();}
+  async function refresh(){if(state.snapshot)return;const id=++refreshId;state.busy=true;state.notice='';try{const data=await D.load();if(id!==refreshId)return;liveData=data;state.error=null;applyData(data,U.effective(data._sharedSettings));}catch(e){if(id!==refreshId)return;state.error=e;state.notice=state.data?'Refresh failed. Previously loaded data is retained.':'';render();}finally{state.busy=false;}}
+  function exportPages(){return visible().filter(s=>s.export).flatMap(s=>s.id==='customers'?customers().filter(c=>c.export).map(c=>({id:s.id,slug:c.slug,label:c.label||c.name})):[{id:s.id,label:s.label}]);}
+  function printReport(){if(!state.data)return;const pages=exportPages();if(!pages.length){state.notice='No visible sections are selected for export.';render();return;}const root=document.createElement('article');root.id='print-report';const heading=document.createElement('h1');heading.textContent=(C.COMPANY||'TPO')+' — '+(state.data._analysis.latest?.month||'Report');root.append(heading);pages.forEach(p=>{const src=p.id==='customers'?V.customer(state,p.slug):V[p.id](state),section=document.createElement('section'),h=document.createElement('h2');h.textContent=p.label;section.append(h);src.querySelectorAll('.kpi,.board-table,.briefing,.note-warn').forEach(n=>section.append(n.cloneNode(true)));root.append(section);});document.getElementById('print-report')?.remove();document.body.append(root);window.print();setTimeout(()=>root.remove(),1000);}
+  function exportCSV(){if(!state.data)return;const rows=[['Section','Field / period','Values']],a=state.data._analysis;exportPages().forEach(p=>{
+    if(p.id==='customers'){a.cq.filter(r=>S.slug(r.customer)===p.slug).forEach(r=>rows.push([p.label,r.period.label,r.values[0]]));a.cm.filter(r=>S.slug(r.customer)===p.slug).forEach(r=>rows.push([p.label,r.period.display,r.values[0]]));}
+    else if(['overview','financials','seasonality'].includes(p.id)){rows.push([p.label,'Month',...window.TPOCore.metrics]);a.monthly.forEach(r=>rows.push([p.label,r.month,...window.TPOCore.metrics.map(k=>r[k])]));}
+    else if(p.id==='dashboard'){rows.push([p.label,'Metric',...a.dashboard.periods]);a.dashboard.metrics.forEach(m=>rows.push([p.label,m.label,...m.values]));}
+    else if(p.id==='working-capital'){rows.push([p.label,'Month','Cash','AR','Inventory','AP','NWC']);a.wc.forEach(r=>rows.push([p.label,r.month,r.cash,r.ar,r.inventory,r.ap,r.nwc]));}
+    else if(p.id==='forward-looking'){rows.push([p.label,'Period',...window.TPOCore.metrics,'Risk','Coverage']);a.forward.forEach(r=>rows.push([p.label,r.label,...window.TPOCore.metrics.map(k=>r[k]),r.riskStatus,r.coverage]));}
+    else if(p.id==='about')state.data.glossary.forEach(r=>rows.push([p.label,r.term,r.definition]));
+  });const escape=v=>{let s=String(v??'');if(typeof v!=='number'&&/^[=+\-@\t\r]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"';};U.download('tpo-report-'+(a.latest?.period.label||'data')+'.csv','\ufeff'+rows.map(r=>r.map(escape).join(',')).join('\r\n'),'text/csv;charset=utf-8');}
+  function saveSnapshot(){if(state.data)U.download('tpo-snapshot-'+(state.data._analysis.latest?.period.label||'report')+'.json',JSON.stringify({schema:'tpo-report-snapshot-v1',engine:'tpo-v5',fingerprint:state.data._fingerprint,capturedAt:state.snapshot?.capturedAt||new Date().toISOString(),settings:state.settings,sources:state.data._rawMap},null,2));}
+  function openSnapshot(value){if(!value||value.schema!=='tpo-report-snapshot-v1'||!Number.isFinite(Date.parse(value.capturedAt))||!value.sources||typeof value.sources!=='object'||Array.isArray(value.sources))throw new Error('Invalid report snapshot.');let cells=0;Object.entries(value.sources).forEach(([key,rows])=>{if(['__proto__','constructor','prototype'].includes(key)||!Array.isArray(rows))throw new Error('Invalid snapshot source.');rows.forEach(r=>{if(!Array.isArray(r)||r.some(v=>v!==null&&!['string','number','boolean'].includes(typeof v)))throw new Error('Invalid snapshot cells.');cells+=r.length;});});if(cells>200000)throw new Error('Snapshot exceeds 200,000 cells.');const settings=S.normalize(value.settings),data=D.shape(value.sources,[],settings);if(value.engine!=='tpo-v5'||value.fingerprint!==data._fingerprint)throw new Error('Snapshot validation failed: the data or calculation version differs from the captured report.');state.snapshot=value;state.error=null;refreshId++;applyData(data,settings);}
+  window.TPO_APP={refresh,printReport,exportCSV,saveSnapshot,openSnapshot,applySnapshotSettings:s=>{if(state.snapshot)applyData(state.data,s);},returnLive:()=>{state.snapshot=null;if(liveData)applyData(liveData,U.effective(liveData._sharedSettings));else refresh();}};
+  window.addEventListener('tpo-settings-change',()=>{state.notice='';if(state.snapshot)applyData(state.data,state.snapshot.settings);else if(liveData)applyData(liveData,U.effective(liveData._sharedSettings));else{state.settings=U.effective(S.normalize({}));nav();render();}});window.addEventListener('hashchange',()=>{state.notice='';render();});
+  let resizeTimer;const resize=()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>document.querySelectorAll('[_echarts_instance_]').forEach(n=>window.echarts?.getInstanceByDom(n)?.resize()),120);};window.addEventListener('resize',resize);window.visualViewport?.addEventListener('resize',resize);
+  const toggle=document.getElementById('nav-toggle'),navigation=document.getElementById('primary-nav');const close=()=>{navigation.classList.remove('open');toggle.setAttribute('aria-expanded','false');};toggle.addEventListener('click',()=>{const open=navigation.classList.toggle('open');toggle.setAttribute('aria-expanded',String(open));});navigation.addEventListener('click',e=>{if(e.target.closest('a'))close();});document.addEventListener('keydown',e=>{if(e.key==='Escape'){close();toggle.focus();}});
+  nav();render();refresh();
 })();

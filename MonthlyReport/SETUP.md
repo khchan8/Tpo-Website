@@ -93,12 +93,15 @@ MonthlyReport/
 ├── index.html              ← SPA entry (Tailwind + ECharts CDN)
 ├── config.js               ← SHEET_ID + API_KEY (edit once)
 ├── assets/
-│   └── styles.css          ← Executive Briefing design accents
+│   ├── styles.css          ← Executive Briefing design accents
+│   └── utilities.css       ← Compiled utility styles
 ├── js/
+│   ├── report-core.js      ← Core calculation engine & settings normalizer
 │   ├── data.js             ← Sheets API batchGet + shaper
 │   ├── compute.js          ← deterministic math (no LLM)
+│   ├── settings.js         ← Report controls (hide/unhide tabs, presets, export)
 │   ├── views.js            ← every view's render function
-│   └── app.js              ← router + boot
+│   └── app.js              ← router, controller + boot
 ├── apps-script/
 │   └── Code.gs             ← paste into Extensions → Apps Script
 └── SETUP.md                ← this file

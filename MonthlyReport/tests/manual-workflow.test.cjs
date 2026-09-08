@@ -401,4 +401,21 @@ test('range-fed model respects Bangkok month boundary for real dates',()=>{
   assert.equal(model.get('meta|latest-month'),'Apr-27');assert.equal(model.get('quarter|Q2 2027|revenue'),0);
 });
 
+test('shared display changes preserve AI batch while scope changes invalidate it',()=>{
+  const rt=runtime();rt.ctx.ensureReportSettings_();rt.ctx.prepare_();const initial=rt.ctx.sourceHash_(rt.ctx.readSources_()),sh=rt.sheets.get('Report Settings');
+  const settings=rt.ctx.TPOReportSettings.normalize({money:'millions',tabs:{financials:{mode:'hide',label:'Financial overview'}}});sh.getRange(2,2).setValue(JSON.stringify(settings));
+  assert.equal(rt.ctx.sourceHash_(rt.ctx.readSources_()),initial);
+  settings.tabs.financials.commentary=false;sh.getRange(2,2).setValue(JSON.stringify(settings));assert.notEqual(rt.ctx.sourceHash_(rt.ctx.readSources_()),initial);
+  const analysis=rt.ctx.buildAnalysis_(rt.ctx.readSources_());assert.ok(!analysis.tasks.some(t=>t.view==='financial-performance'));assert.equal(analysis.tasks.length,7);
+});
+test('Apps Script and website use the same historical cutoff and model totals',()=>{
+  const data=fixture(),rt=runtime(data);rt.ctx.ensureReportSettings_();const settings=rt.ctx.TPOReportSettings.normalize({cutoff:'2027-01'});rt.sheets.get('Report Settings').getRange(2,2).setValue(JSON.stringify(settings));
+  const analysis=rt.ctx.buildAnalysis_(rt.ctx.readSources_());assert.equal(analysis.period,'2027-01');assert.equal(analysis.validation.quarterly.at(-1).revenue,100);
+  const model=new Map(rt.ctx.TPO_REPORT_MODEL(data.MonthlyFinancials,data.Assumptions,data.CustomerRevenueMonthly,data.CustomerRevenueQuarterly,data.CustomerCount,data['1. Working Capital'],[['Quarter','Metric','Value']],'May–October','','THB','Asia/Bangkok',JSON.stringify(settings)));
+  assert.equal(model.get('quarter|Q1 2027|revenue'),100);assert.equal(model.get('meta|latest-month'),'Jan-27');assert.ok(!model.has('customer|Q1 2027|acme corp|revenue'));
+});
+test('shared settings dialog scripts compile and unrelated sheet contents are protected',()=>{
+  const rt=runtime();rt.ctx.menuReportSettings();const html=rt.getHtml();assert.match(html,/Shared report settings/);for(const m of html.matchAll(/<script>([\s\S]*?)<\/script>/g))assert.doesNotThrow(()=>new vm.Script(m[1]));
+  rt.sheets.get('Report Settings').getRange(1,1).setValue('Other content');assert.throws(()=>rt.ctx.ensureReportSettings_(),/expected/);
+});
 module.exports = { runtime, fixture, sampleResponse };

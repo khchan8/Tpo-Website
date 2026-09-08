@@ -103,11 +103,11 @@
     quarterly: [["all", "All"], ["4q", "Last 4Q"], ["8q", "Last 8Q"]],
     none:      [],
   };
-  function rangeControl_(rangeKey) {
+  function rangeControl_(rangeKey,selected) {
     const wrap = el("div", { class: "range-control", "data-range-control": "" });
     RANGE_PRESETS[rangeKey].forEach(([key, label], i) => {
       wrap.appendChild(el("button", {
-        class: "range-btn" + (i === 0 ? " active" : ""),
+        class: "range-btn" + (key === selected ? " active" : ""),
         type: "button", "data-range": key,
       }, label));
     });
@@ -145,12 +145,15 @@
   // data = { labels:[], series:[{name, values:[]}] }
   // buildOption(slicedData) -> ECharts option
   function chartCard({ title, subtitle, rangeKey = "none", height = 320, data, buildOption, onClick }) {
+    const rangeId=rangeKey+':'+title,defaults=window.TPO_CHART_SETTINGS||{},fallback=rangeKey==='monthly'?defaults.monthlyRange:defaults.quarterlyRange;
+    let currentRange=window.TPO_SETTINGS_UI?.range(rangeId,fallback||'all')||'all';
+    if(!RANGE_PRESETS[rangeKey].some(r=>r[0]===currentRange))currentRange='all';
     const header = el("div", { class: "chart-card-head" },
       el("div", {},
         el("h2", { class: "font-serif text-xl text-ink" }, title),
         subtitle ? el("div", { class: "text-xs text-mute mt-1" }, subtitle) : null,
       ),
-      rangeKey !== "none" ? rangeControl_(rangeKey) : null,
+      rangeKey !== "none" ? rangeControl_(rangeKey,currentRange) : null,
     );
     // Body uses flex-grow + min-height so that in a grid row, sibling cards
     // stretch to the same height and their chart baselines line up. ECharts
@@ -159,7 +162,7 @@
     const card = el("div", { class: "bg-white border border-rule rounded-md p-5 shadow-brief flex flex-col" },
       header, body);
 
-    let instance = null, ro = null, currentRange = "all";
+    let instance = null, ro = null;
 
     function render() {
       if (!instance) return;                 // not yet inited; deferred rAF will call this
@@ -172,6 +175,7 @@
         const btn = e.target.closest("[data-range]");
         if (!btn) return;
         currentRange = btn.getAttribute("data-range");
+        window.TPO_SETTINGS_UI?.saveRange(rangeId,currentRange);
         control.querySelectorAll("[data-range]").forEach(b =>
           b.classList.toggle("active", b === btn));
         render();
@@ -1096,13 +1100,21 @@
   function viewSetup(state) {
     const issues=state.data?._issues || [], a=state.data?._analysis;
     const refresh=el("button",{class:"setup-button",type:"button"},"Reload data");
-    refresh.addEventListener("click",()=>location.reload());
-    return el("div",{}, section("Setup & data health","Report readiness","The latest period follows actual revenue in MonthlyFinancials. Blank future rows and expense-only pending months do not advance it. Enter 0 only when the actual amount is zero."),
+    refresh.disabled=!!state.snapshot;
+    refresh.addEventListener("click",async()=>{refresh.disabled=true;refresh.textContent='Refreshing…';await window.TPO_APP.refresh();refresh.disabled=false;refresh.textContent='Reload data';});
+    const findings=el('div',{class:'readiness-findings'}),severity=el('select',{'aria-label':'Filter findings by severity'},...['actionable','error','warning','all','info'].map(s=>el('option',{value:s},s))),period=el('input',{'aria-label':'Filter findings by month or quarter',placeholder:'Period or text, e.g. Jul-26'}),list=el('div',{});
+    function draw(){list.replaceChildren();const filtered=issues.filter(i=>(severity.value==='all'||(severity.value==='actionable'&&i.level!=='info')||i.level===severity.value)&&(!period.value||JSON.stringify(i).toLowerCase().includes(period.value.toLowerCase()))),groups=new Map();filtered.forEach(i=>{const rows=groups.get(i.sheet)||[];rows.push(i);groups.set(i.sheet,rows);});groups.forEach((rows,sheet)=>{const detail=el('details',{},el('summary',{},sheet+' · '+rows.length+' findings'));rows.forEach(i=>{const link=el('a',{href:'https://docs.google.com/spreadsheets/d/'+encodeURIComponent(window.TPO_CONFIG.SHEET_ID)+'/edit?range='+encodeURIComponent("'"+sheet.replace(/'/g,"''")+"'!"+(i.cell||'A1')),target:'_blank',rel:'noopener'},i.cell||'Open sheet');detail.append(el('p',{},i.level.toUpperCase()+' · ',link,' · '+i.message));});list.append(detail);});if(!filtered.length)list.append(el('p',{},'No matching findings.'));}severity.addEventListener('change',draw);period.addEventListener('input',draw);severity.value='actionable';draw();findings.append(el('h2',{},'Data readiness'),severity,period,list);
+    const statuses=el('div',{}),settings=state.settings||window.TPOCore.settings.normalize({}),analysis=a||{customers:[]};
+    const ids=window.TPOCore.settings.sections.filter(s=>s.view).map(s=>({id:s.view,label:s.label})).concat(analysis.customers.map(c=>({id:window.TPOCore.settings.slug(c.name),label:c.name})));
+    const meta=state.data?._rawMap?.['LLM-Input']||[],output=state.data?._rawMap?.['LLM Output']||[],selected=new Set(window.TPOCore.settings.commentaryViews(settings,analysis));
+    statuses.append(el('h2',{},'Commentary readiness'),boardTable(['Section','Status'],ids.map(s=>{const text=state.data?.commentary?.[s.id],status=state.data?.commentaryStatus?.[s.id]||'';let result=!selected.has(s.id)?'Excluded from next AI batch':text&&status.includes('data '+state.data?._fingerprint)?'Imported · current':text?'Outdated · regenerate':meta[2]?.[1]===a?.latest?.period.label?(meta[5]?.[1]&&meta[5][1]!==state.data?._fingerprint?'Prepared input is outdated':/Response saved/i.test(output[4]?.[1]||'')?'Response saved · ready to import':'Prepared · awaiting AI response'):'Prepare AI input';return {cells:[s.label,result]};})));
+    return el("div",{}, section("Setup & data health","Report setup","The latest period follows actual revenue in MonthlyFinancials. Blank future rows and expense-only pending months do not advance it. Enter 0 only when the actual amount is zero."),
       state.error ? warnBanner(state.error.message || "Check config.js and Google Sheet read access.") : null,
       el("p",{class:"mb-4"},"Latest financial month: "+(a?.latest?.month||"Unavailable")+" · "+issues.filter(i=>i.level==="error").length+" errors · "+issues.filter(i=>i.level==="warning").length+" warnings"),
       el("p",{class:"mb-4"},"In Google Sheets, use TPO → Prepare Next Month Slots, then fill the raw inputs. Enter manual dashboard metrics in Dashboard Inputs. Derived formulas update automatically. Run Format & verify all sheets and review Data Validation. Prepare LLM Input, copy it into your AI chat, paste the JSON response into LLM Output, and Import LLM Output. Use Repair calculated sheets to restore formulas if needed."),
       el("p",{class:"mb-4"},"Quarters roll up validated months. Working capital needs cash, AR, inventory and AP. Missing amounts remain unavailable. Customer mix is a share of listed customers unless it reconciles with the P&L."), refresh,
-      boardTable(["Severity","Sheet","Cell","Finding"],issues.map(i=>({cells:[i.level.toUpperCase(),i.sheet,i.cell,i.message]}))));
+      el('p',{},'Last loaded: '+(state.data?._loadedAt?.toLocaleString()||'Not loaded')),
+      window.TPO_SETTINGS_UI?.panel(state),statuses,findings);
   }
   window.TPO_VIEWS = {
     setup: viewSetup,

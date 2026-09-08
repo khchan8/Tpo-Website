@@ -265,3 +265,17 @@ td.hover-highlight {
 .setup-button {background:#115E67;color:white;padding:10px 18px;border-radius:6px;margin-bottom:20px;cursor:pointer;}
 .skip-link {position:absolute;left:12px;top:-100px;z-index:100;background:white;padding:12px;}
 .skip-link:focus {top:8px;}
+.report-settings{margin:24px 0;padding:24px;background:#fff;border:1px solid #D9D2C0;border-radius:8px}
+.report-settings h2,.readiness-findings h2{font:600 23px Fraunces,Georgia,serif;margin:0 0 12px}
+.report-settings h3{font-weight:600;margin:22px 0 10px}
+.report-settings p{margin:12px 0;line-height:1.6;color:#536274}
+.settings-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin:20px 0}
+.settings-fields label{display:flex;flex-direction:column;gap:6px;font-size:13px}
+.report-settings input,.report-settings select,.report-settings textarea,.readiness-findings input,.readiness-findings select{padding:8px;border:1px solid #ccd4d5;border-radius:5px;background:#fff;max-width:100%;color:#0B1F3A}
+.report-settings textarea{width:100%}.report-settings input[type=checkbox]{width:18px;height:18px;accent-color:#115E67}
+.report-settings section{overflow-x:auto}.settings-table{width:100%;font-size:13px;border-collapse:collapse}.settings-table th,.settings-table td{padding:9px;text-align:left;border-bottom:1px solid #eee}.settings-table th{white-space:nowrap}.settings-table input[type=number]{width:65px}.settings-table input:not([type]){min-width:120px;width:100%}
+.settings-actions{display:flex;flex-wrap:wrap;align-items:end;gap:10px;margin:14px 0}.settings-actions label{display:flex;flex-direction:column;gap:6px}.report-settings button{padding:10px 15px;background:#115E67;color:#fff;border-radius:5px;cursor:pointer}.report-settings button:disabled{opacity:.5;cursor:wait}
+.readiness-findings{margin-top:30px}.readiness-findings input,.readiness-findings select{margin:10px 10px 15px 0}.readiness-findings details{background:white;border:1px solid #ddd;border-radius:6px;padding:14px;margin:8px 0}.readiness-findings summary{cursor:pointer;font-weight:600}.readiness-findings p{font-size:13px;margin:12px 0}.readiness-findings a{text-decoration:underline;color:#115E67}
+.compact-report .board-table th,.compact-report .board-table td{padding:5px 9px;font-size:12px}
+#print-report{display:none}
+@media print{body>*:not(#print-report){display:none!important}#print-report{display:block;color:#111;background:white;font:11px Arial}#print-report section{break-before:page}#print-report section:first-of-type{break-before:auto}#print-report h1{font-size:23px}#print-report h2{font-size:18px}#print-report .board-table{font-size:10px;margin:14px 0}#print-report .board-table th,#print-report .board-table td{padding:5px}#print-report .kpi{display:inline-block;vertical-align:top;padding:10px;margin:4px;border:1px solid #ddd}#print-report .briefing{margin:16px 0}#print-report details{display:none}#print-report tr{break-inside:avoid}@page{size:A4 landscape;margin:14mm}

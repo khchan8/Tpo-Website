@@ -70,11 +70,48 @@ Imports preserve unrelated Commentary rows and try to restore original values on
 
 The website marks commentary from an older workflow or different data snapshot as requiring regeneration and keeps it under a collapsed “Previous commentary” section. Newly imported commentary carries a period and a data checksum in Status. This checksum detects accidental data changes; it is not a security signature.
 
-## Website changes
+## Website controls & page visibility
 
-**Setup & data health** remains reachable when the data is blank or the connection fails. It lists validation findings and explains the monthly workflow. Dates and currency formatting do not control parsing: the Sheets reader requests unformatted values and date serials. Empty future periods do not advance the report date. Incomplete totals render as dashes.
+The **Setup & data health** (`#/setup`) view includes interactive **Report controls** that govern report presentation, tab visibility, and export behavior:
 
-The existing visual style is retained. `index.html` uses compiled **assets/utilities.css** instead of the Tailwind runtime compiler. Scripts load with `defer`; charts have a fallback when ECharts fails to load. The existing API key configuration is retained, not copied into diagnostic reports or the AI prompt.
+### 1. Page & Customer Visibility (Hide / Show / Auto)
+- **Report tabs & Customer pages tables**: Each section (Overview, Dashboard, Seasonality, Customers, Financials, Working Capital, Forward-looking, Glossary) and each individual customer brand can be customized:
+  - **Show**: Always displays the section in the top navigation bar.
+  - **Hide**: Hides the section from the navigation bar and report exports. *Note: Hiding a customer or tab never excludes its revenue from company-wide P&L totals or calculations.*
+  - **Auto**: Displays the section only when usable data exists (including actual zeroes).
+  - **Label & Order**: Customize the display name or reorder navigation tabs.
+  - **AI input & Export**: Toggle whether a section is included in generated LLM prompts or print/CSV exports.
+
+### 2. General Controls
+- **Reporting cut-off**: Locks the report to a specific historical month (or defaults to the latest actual month).
+- **Opening tab**: Configures which tab loads when first opening the site.
+- **Chart ranges & Amount display**: Default to 6m/12m/YTD/All periods, and Full amounts / Thousands / Millions.
+- **Decimal places & Table spacing**: Control number precision and compact/comfortable table densities.
+
+### 3. Personal Preferences vs. Shared Defaults
+- **Personal configuration (browser only)**: Clicking **Apply in this browser** saves your settings to browser `localStorage`. This creates a personal view for your browser session only without affecting other users. Click **Reset to shared defaults** to restore the default state.
+- **Shared report defaults (for everyone / the board)**:
+  1. Customize the controls on the website, then click **Prepare shared settings**.
+  2. Copy the generated JSON configuration text.
+  3. In Google Sheets, open **📊 TPO → Report settings…**.
+  4. Paste the JSON into the box and click **Save pasted configuration** (or adjust controls in the dialog and click **Save shared controls**).
+  5. The settings are saved into the `Report Settings` sheet tab in Google Sheets. All visitors loading the website from GitHub Pages will receive these shared defaults automatically.
+
+### 4. Presets & Archiving
+- **Built-in presets**:
+  - `@board` (Board meeting): Automatically hides Seasonality and Glossary, sets range to 12 months, and switches currency format to millions.
+  - `@full` (Full management report): Shows all tabs and customer pages.
+- **Custom presets**: Enter a preset name and click **Save preset** to save reusable configurations in your browser.
+- **Export & archive**:
+  - **Print selected report**: Clean, print-formatted view omitting hidden sections.
+  - **Download selected report data (CSV)**: Export visible data tables to CSV.
+  - **Save report snapshot**: Exports an offline JSON snapshot freeze of current data and settings. Use the file upload input to load and view past snapshots offline.
+
+### 5. Data & Commentary Health
+- **Data readiness**: Filter validation issues by severity (`actionable`, `error`, `warning`, `info`, `all`) or search by period (e.g. `Jul-26`). Click cell links to jump straight to source cells in Google Sheets.
+- **Commentary readiness**: Verifies whether commentary in each section is current against the latest data fingerprint or requires regeneration.
+
+**Setup & data health** remains reachable even if data is blank or the connection fails. Incomplete totals render as dashes. Dates and currency formatting do not control parsing. Scripts load with `defer`; `index.html` uses compiled **assets/utilities.css**.
 
 ## Maintenance and tests
 

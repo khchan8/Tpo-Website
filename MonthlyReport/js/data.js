@@ -8,14 +8,16 @@
   async function fetchTab(name) {
     const c=window.TPO_CONFIG, controller=new AbortController(), timeout=setTimeout(()=>controller.abort(),20000);
     try {
-      const range=encodeURIComponent("'"+name.replace(/'/g,"''")+"'");
+      const range=encodeURIComponent("'"+name.replace(/'/g,"''")+"'"+(['LLM-Input','LLM Output'].includes(name)?'!A1:B7':''));
       const response=await fetch(`${c.SHEETS_ENDPOINT}/${c.SHEET_ID}/values/${range}?key=${encodeURIComponent(c.API_KEY)}&valueRenderOption=UNFORMATTED_VALUE&dateTimeRenderOption=SERIAL_NUMBER`,{signal:controller.signal});
       if(!response.ok){const e=new Error('Unable to read '+name+' (HTTP '+response.status+').');e.code=response.status;throw e;}
       return (await response.json()).values||[];
     } finally {clearTimeout(timeout);}
   }
-  function shape(map,errors=[]) {
-    const a=core.analyze(Object.entries(map).map(([name,raw])=>({name,raw}))), latest=a.latest;
+  function shape(map,errors=[],override) {
+    const sources=Object.entries(map).map(([name,raw])=>({name,raw}));let shared;
+    try{shared=core.settings.fromSources(sources);}catch(e){shared=core.settings.normalize({});errors=errors.concat([{sheet:'Report Settings',message:e.message}]);}
+    const settings=core.settings.normalize(override||shared),a=core.analyze(core.settings.filterSources(sources,settings)),latest=a.latest;
     const customerRevenue=Object.create(null), customerRevenueQuarterly=Object.create(null), totals=Object.create(null);
     const customers=a.customers.map(c=>({...c,slug:slugify(c.name)}));
     a.cm.filter(r=>!latest||r.period.key<=latest.period.key).forEach(r=>{
@@ -44,16 +46,22 @@
       customerEcon:{customers:a.econ,total:null},dashboard:a.dashboard,
       forwardLooking:{periods:a.forward,headers:[],lineNames:core.metrics},commentary,commentaryStatus,commentaryThinking:{},
       glossary:(map.Glossary||[]).slice(1).filter(r=>trim(r[0])).map(r=>({term:trim(r[0]),definition:trim(r[1])})),
-      content,_issues:issues,_errors:errors.map(e=>e.message),_loadedAt:new Date(),_analysis:a,_fingerprint:core.fingerprint(a)};
+      content,_issues:issues,_errors:errors.map(e=>e.message),_errorDetails:errors,_rawMap:map,_sharedSettings:shared,_settings:settings,_loadedAt:new Date(),_analysis:a,_fingerprint:core.fingerprint(a)};
   }
   async function load() {
     const c=window.TPO_CONFIG;
     if(!c.SHEET_ID||!c.API_KEY||c.SHEET_ID.startsWith('PUT_')||c.API_KEY.startsWith('PUT_')){
       const e=new Error('Configure the Google Sheet connection in config.js.');e.code='CONFIG_MISSING';throw e;
     }
-    const tabs=Array.from(new Set((c.TABS||Object.keys(core.defs).concat(['Assumptions','Commentary','Glossary'])).concat(['Dashboard Inputs'])));
-    const results=await Promise.allSettled(tabs.map(fetchTab)),map={},errors=[];
-    results.forEach((r,i)=>{if(r.status==='fulfilled')map[tabs[i]]=r.value;else errors.push({sheet:tabs[i],message:r.reason.message});});
+    const tabs=Array.from(new Set((c.TABS||Object.keys(core.defs).concat(['Assumptions','Commentary','Glossary'])).concat(['Dashboard Inputs','Report Settings','LLM-Input','LLM Output'])));
+    const optional=new Set(['Dashboard Inputs','Report Settings','LLM-Input','LLM Output','Content','Glossary']),primary=tabs.filter(n=>!optional.has(n)),map={},errors=[];
+    const batch=async()=>{const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),20000);try{
+      const url=new URL(c.SHEETS_ENDPOINT+'/'+c.SHEET_ID+'/values:batchGet',location.href);url.searchParams.set('key',c.API_KEY);url.searchParams.set('valueRenderOption','UNFORMATTED_VALUE');url.searchParams.set('dateTimeRenderOption','SERIAL_NUMBER');primary.forEach(n=>url.searchParams.append('ranges',"'"+n.replace(/'/g,"''")+"'"));
+      const r=await fetch(url,{signal:ctrl.signal});if(!r.ok)throw new Error('Batch read unavailable');const data=await r.json();if(!Array.isArray(data.valueRanges)||data.valueRanges.length!==primary.length)throw new Error('Incomplete batch response');data.valueRanges.forEach((v,i)=>map[primary[i]]=v.values||[]);
+    }finally{clearTimeout(timer);}};
+    try{await batch();}catch(e){/* Keep individual fallbacks for missing source sheets. */}
+    const remaining=tabs.filter(n=>!(n in map)),results=await Promise.allSettled(remaining.map(fetchTab));
+    results.forEach((r,i)=>{const name=remaining[i];if(r.status==='fulfilled')map[name]=r.value;else if(!(optional.has(name)&&r.reason.code===400))errors.push({sheet:name,message:r.reason.message});});
     if(!map.MonthlyFinancials||!map.Assumptions){const e=new Error(errors[0]?.message||'Required sheets unavailable.');e.code='SHEET_UNREACHABLE';throw e;}
     return shape(map,errors);
   }

@@ -8,16 +8,12 @@ const TPO = Object.freeze({
   input: 'LLM-Input', output: 'LLM Output', commentary: 'Commentary',
   startRow: 8, chunkSize: 30000, maxPrompt: 1500000, maxSourceCells: 200000,
   stateKey: 'TPO_MANUAL_V1_', version: 'tpo-commentary-v1',
-  build: '2026-09-07-v4', timezone: 'Asia/Bangkok',
+  build: '2026-09-07-v5', timezone: 'Asia/Bangkok',
   sources: ['Assumptions', 'MonthlyFinancials', 'CustomerRevenueMonthly',
     'CustomerRevenueQuarterly', 'CustomerCount', 'Quarterly Financials',
     '1. Working Capital', '2. Customer Economics', '3. Strategic Dashboard',
-    '4. Forward-Looking Risk', 'Dashboard Inputs'],
-  views: [
-    ['overview', 'Overview'], ['seasonality', 'Seasonality'],
-    ['working-capital', 'Working Capital'], ['financial-performance', 'Financial Performance'],
-    ['forward-looking', 'Forward-Looking'], ['strategic-dashboard', 'Strategic Dashboard']
-  ]
+    '4. Forward-Looking Risk', 'Dashboard Inputs', 'Report Settings'],
+  views: TPOReportSettings.sections.filter(s=>s.view).map(s=>[s.view,s.label])
 });
 
 function onOpen() {
@@ -32,6 +28,7 @@ function onOpen() {
     .addSeparator().addItem('Format & verify all sheets', 'menuFormatVerify')
     .addItem('Validate data', 'menuValidateData')
     .addItem('Repair calculated sheets', 'menuRepairCalculated')
+    .addItem('Report settings…', 'menuReportSettings')
     .addItem('Prepare Next Month Slots (Fill in the blanks)', 'menuPrepareNextMonthSlots')
     .addItem('Run diagnostics…', 'menuRunDiagnostics')
     .addItem('Show last error…', 'menuShowLastError')
@@ -336,7 +333,44 @@ function columnName_(n) {
   for (; n > 0; n = Math.floor((n - 1) / 26)) label = String.fromCharCode(65 + (n - 1) % 26) + label;
   return label;
 }
-function sourceHash_(sources) { return digest_(JSON.stringify(sources)); }
+function sourceHash_(sources) {
+  const settings=TPOReportSettings.fromSources(sources),a=TPOCore.analyze(TPOReportSettings.filterSources(sources,settings));
+  return digest_(JSON.stringify([sources.filter(s=>s.name!=='Report Settings'),settings.cutoff,TPOReportSettings.commentaryViews(settings,a)]));
+}
+function analyzeReportSources_(sources) {return TPOCore.analyze(TPOReportSettings.filterSources(sources,TPOReportSettings.fromSources(sources)));}
+
+function ensureReportSettings_() {
+  const ss=SpreadsheetApp.getActiveSpreadsheet();let sh=sheet_('Report Settings');
+  if(sh&&sh.getLastRow()) {
+    TPOReportSettings.fromSources([{name:'Report Settings',raw:sh.getDataRange().getValues()}]);return sh;
+  }
+  sh=sh||ss.insertSheet('Report Settings');ensureSize_(sh,4,2);
+  plainText_(sh.getRange(1,1,4,2),[['Setting','Value'],['Configuration',JSON.stringify(TPOReportSettings.normalize({}))],['Manage','Use TPO → Report settings. Website personal preferences do not change these shared defaults.'],['Version','1']]);
+  sh.setFrozenRows(1);sh.setColumnWidth(1,160);sh.setColumnWidth(2,760);sh.getRange(1,1,1,2).setBackground('#0B1F3A').setFontColor('#ffffff').setFontWeight('bold');sh.getRange(2,2).setWrap(true);return sh;
+}
+function menuReportSettings() {
+  uiAction_('Report settings',()=>{
+    const current=locked_(()=>{const sh=ensureReportSettings_();return TPOReportSettings.normalize(sh.getRange(2,2).getValues()[0][0]);});
+    const a=TPOCore.analyze(readSources_()),items=TPOReportSettings.sections.map(s=>({id:s.id,label:s.label,scope:'tabs'})).concat(a.customers.map(c=>({id:TPOReportSettings.slug(c.name),label:c.name,scope:'customers'})));
+    const rows=items.map((s,i)=>{const r=s.scope==='tabs'?current.tabs[s.id]:TPOReportSettings.rowSetting(current,s.id,s.label,i);return '<tr data-id="'+htmlEscape_(s.id)+'" data-scope="'+s.scope+'"><td>'+htmlEscape_(s.label)+'</td><td><select class="mode">'+['show','hide','auto'].map(v=>'<option'+(r.mode===v?' selected':'')+'>'+v+'</option>').join('')+'</select></td><td><input class="label" value="'+htmlEscape_(r.label)+'"></td><td><input class="order" type="number" value="'+r.order+'" style="width:65px"></td><td><input class="commentary" type="checkbox" '+(r.commentary?'checked':'')+'></td><td><input class="export" type="checkbox" '+(r.export?'checked':'')+'></td></tr>';}).join('');
+    const body='<h2>Shared report settings</h2><p>These defaults apply to every viewer. Personal browser preferences can override them. Financial source rows are never deleted by visibility settings.</p><label>Reporting cut-off (latest or YYYY-MM)<input id="cutoff" value="'+htmlEscape_(current.cutoff)+'"></label><div style="overflow:auto;max-height:240px"><table><tr><th>Section</th><th>Display</th><th>Label</th><th>Order</th><th>AI</th><th>Export</th></tr>'+rows+'</table></div><button id="save">Save shared controls</button><p>To apply all controls from the website, paste its shared-settings JSON below.</p><textarea id="json" aria-label="Shared settings JSON" style="height:110px">'+htmlEscape_(JSON.stringify(current,null,2))+'</textarea><button id="import">Save pasted configuration</button><button class="secondary" onclick="google.script.host.close()">Close</button><div id="status" role="status"></div>';
+    dialog_('TPO · Report settings',body,`
+      const original=${JSON.stringify(current).replace(/</g,'\\u003c')};
+      function save(value){const status=document.getElementById('status');status.textContent='Saving shared settings and refreshing derived formulas…';document.querySelectorAll('button').forEach(b=>b.disabled=true);google.script.run.withSuccessHandler(function(){status.textContent='Shared defaults saved. Reload website data to receive them. Personal browser overrides remain separate.';document.querySelectorAll('button').forEach(b=>b.disabled=false);}).withFailureHandler(function(e){status.textContent=e.message;document.querySelectorAll('button').forEach(b=>b.disabled=false);}).saveReportSettings(JSON.stringify(value));}
+      document.getElementById('save').onclick=()=>{const value=JSON.parse(JSON.stringify(original));value.cutoff=document.getElementById('cutoff').value;document.querySelectorAll('tr[data-id]').forEach(r=>{value[r.dataset.scope][r.dataset.id]={mode:r.querySelector('.mode').value,label:r.querySelector('.label').value,order:Number(r.querySelector('.order').value),commentary:r.querySelector('.commentary').checked,export:r.querySelector('.export').checked};});save(value);};
+      document.getElementById('import').onclick=()=>{try{save(JSON.parse(document.getElementById('json').value));}catch(e){document.getElementById('status').textContent=e.message;}};
+    `,700);
+  });
+}
+function saveReportSettings(text) {
+  return serverAction_('Save report settings',()=>locked_(()=>{
+    if(typeof text!=='string'||text.length>30000)throw new Error('Settings must contain at most 30,000 characters.');
+    const settings=TPOReportSettings.normalize(text),sh=ensureReportSettings_(),previous=sh.getRange(2,2).getValues()[0][0];
+    backupAndWrite_([{sheet:'Report Settings',row:2,col:2,value:JSON.stringify(settings),text:true,reason:'Shared report configuration'}],'Save shared settings');
+    try{repairAndScaffold_(false);}catch(e){plainText_(sh.getRange(2,2),[[previous]]);SpreadsheetApp.flush();throw new Error('Shared settings restored because calculation refresh failed: '+e.message);}
+    return {ok:true};
+  }));
+}
 function source_(sources, name) { return sources.find(s => s.name === name) || { name: name, raw: [], display: [], missing: true }; }
 
 // Calculation helpers never coerce blank/invalid financial values to zero.
@@ -442,6 +476,8 @@ function workingCapital_(table, latest) {
 }
 
 function buildAnalysis_(originalSources) {
+  const settings=TPOReportSettings.fromSources(originalSources);
+  originalSources=TPOReportSettings.filterSources(originalSources,settings);
   const validation = TPOCore.analyze(originalSources);
   const sources = safeSources_(originalSources, validation);
   const warnings = sources.filter(s => s.missing || !s.raw.length).map(s => s.name + ': missing or empty; do not invent data for this source.');
@@ -501,7 +537,9 @@ function buildAnalysis_(originalSources) {
     if (t.view === 'strategic-dashboard') t.summary = validation.dashboard;
   });
   customers.forEach((c, i) => tasks.push({ view: c.id, title: c.name, summary: customerSummaries[i] }));
-  return { period: latest.period.label, tasks: tasks, validation: validation, sources: sources, warnings: Array.from(new Set(warnings.concat(validation.issues.filter(i => i.level !== 'info').map(i => i.level.toUpperCase() + ' ' + i.sheet + '!' + i.cell + ': ' + i.message)))) };
+  const selected=new Set(TPOReportSettings.commentaryViews(settings,validation));
+  const selectedTasks=tasks.filter(t=>selected.has(t.view));if(!selectedTasks.length)throw new Error('No AI commentary sections selected. Update Report settings.');
+  return { period: latest.period.label, tasks: selectedTasks, validation: validation, sources: sources, settings:settings, warnings: Array.from(new Set(warnings.concat(validation.issues.filter(i => i.level !== 'info').map(i => i.level.toUpperCase() + ' ' + i.sheet + '!' + i.cell + ': ' + i.message)))) };
 }
 
 function buildPrompt_(analysis, sources, batch) {
@@ -570,7 +608,7 @@ function readCommentary_() {
 
 function prepare_() {
   const sources = readSources_();
-  const checked=TPOCore.analyze(sources), errors=checked.issues.filter(i=>i.level==='error');
+  const checked=TPOCore.analyze(TPOReportSettings.filterSources(sources,TPOReportSettings.fromSources(sources))), errors=checked.issues.filter(i=>i.level==='error');
   writeValidation_(checked);
   if(errors.length)throw new Error('Resolve '+errors.length+' data error(s) in Data Validation before preparing AI input. First: '+errors[0].sheet+'!'+errors[0].cell+' '+errors[0].message);
   const analysis = context_('Validate and calculate report', {}, () => buildAnalysis_(sources));
@@ -590,6 +628,7 @@ function prepare_() {
     outputStorage: 'grid', outputHash: '', importedHash: '' };
   saveState_(state);
   plainText_(input.getRange('B2:B5'), [[batch], [analysis.period], [state.views.length], ['Ready · ' + prompt.length.toLocaleString() + ' characters']]);
+  plainText_(input.getRange('B6'),[[state.dataFingerprint]]);
   plainText_(output.getRange('B2:B5'), [[batch], [analysis.period], [state.views.length], ['Awaiting response. Replace any older text below.']]);
   SpreadsheetApp.getActiveSpreadsheet().setActiveSheet(input);
   return { text: prompt, batch: batch, count: state.views.length, period: state.period,
