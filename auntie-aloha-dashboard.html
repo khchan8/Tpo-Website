@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+
+  <title>Auntie Aloha Business Intelligence Dashboard - TPO Wellness</title>
+  <meta content="Auntie Aloha unified operations, wholesale remittance realization, inventory depletion, and 13-week cash flow model." name="description">
+  <meta content="Auntie Aloha, Nabis, Cannabis Wholesale, Cash Flow Model, Inventory Monitor, TPO Wellness" name="keywords">
+
+  <!-- Favicons -->
+  <link href="assets/img/favicon.png" rel="icon">
+  <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Raleway:300,300i,400,400i,500,500i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="assets/vendor/aos/aos.css" rel="stylesheet">
+  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="assets/vendor/boxicons/css/boxicons.min.css" rel="stylesheet">
+  <link href="assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+  <link href="assets/vendor/remixicon/remixicon.css" rel="stylesheet">
+  <link href="assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+
+  <!-- Template Main CSS File -->
+  <link href="assets/css/style.css" rel="stylesheet">
+
+  <!-- Custom Dashboard Portal Styling -->
+  <style>
+    .dashboard-hero {
+      background: linear-gradient(135deg, #0b2518 0%, #1b4332 50%, #2d6a4f 100%);
+      color: #ffffff;
+      padding: 80px 0 60px 0;
+      position: relative;
+    }
+    .dashboard-hero h1 {
+      font-size: 2.8rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 15px;
+    }
+    .dashboard-hero p.lead {
+      color: #d8f3dc;
+      font-size: 1.15rem;
+      max-width: 650px;
+      margin-bottom: 30px;
+    }
+    .hero-logo-card {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 16px;
+      padding: 35px;
+      text-align: center;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+    }
+    .btn-launch-dashboard {
+      background: #e9c46a;
+      color: #1b4332;
+      font-weight: 700;
+      font-size: 1.1rem;
+      padding: 14px 32px;
+      border-radius: 50px;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(233, 196, 106, 0.4);
+      text-decoration: none;
+    }
+    .btn-launch-dashboard:hover {
+      background: #f4a261;
+      color: #0b2518;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(244, 162, 97, 0.5);
+    }
+    .security-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      color: #b7e4c7;
+      margin-top: 15px;
+    }
+    .feature-card {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 30px 25px;
+      height: 100%;
+      border: 1px solid #eef2f5;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.03);
+      transition: all 0.3s ease;
+    }
+    .feature-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+      border-color: #52b788;
+    }
+    .feature-icon-wrapper {
+      width: 54px;
+      height: 54px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      margin-bottom: 20px;
+    }
+    .icon-green { background: #e8f5e9; color: #2d6a4f; }
+    .icon-amber { background: #fff8e1; color: #e76f51; }
+    .icon-teal  { background: #e0f2f1; color: #00796b; }
+    .icon-blue  { background: #e3f2fd; color: #1e56a0; }
+
+    .feature-card h4 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #1b4332;
+      margin-bottom: 12px;
+    }
+    .feature-card p {
+      color: #555555;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      margin: 0;
+    }
+    .portal-preview-frame {
+      border: 1px solid #d8e2dc;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.08);
+      background: #ffffff;
+      margin-top: 40px;
+    }
+    .frame-bar {
+      background: #f8f9fa;
+      padding: 12px 20px;
+      border-bottom: 1px solid #e9ecef;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .frame-dots {
+      display: flex;
+      gap: 6px;
+    }
+    .frame-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+    .dot-red { background: #ff5f56; }
+    .dot-yellow { background: #ffbd2e; }
+    .dot-green { background: #27c93f; }
+    .frame-url {
+      background: #ffffff;
+      padding: 4px 16px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      color: #6c757d;
+      border: 1px solid #dee2e6;
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <!-- ======= Header ======= -->
+  <header id="header" class="d-flex align-items-center">
+    <div class="container d-flex align-items-center justify-content-between">
+
+      <h1 class="logo"><a href="index.html"><img src="./assets/img/TPOLogo.png" alt="TPO Wellness Logo" class="img-fluid"></a></h1>
+      <nav id="navbar" class="navbar">
+        <ul>
+          <li><a class="nav-link scrollto" href="index.html#hero">Home</a></li>
+          <li><a class="nav-link scrollto" href="about.html">About</a></li>
+          <li><a class="nav-link scrollto" href="index.html#services">Services</a></li>
+          <li><a class="nav-link scrollto" href="index.html#products">Products</a></li>
+          <li><a class="nav-link scrollto active" href="auntie-aloha-dashboard.html">Auntie Aloha BI</a></li>
+          <li><a class="nav-link scrollto" href="index.html#contact">Contact</a></li>
+        </ul>
+        <i class="bi bi-list mobile-nav-toggle"></i>
+      </nav><!-- .navbar -->
+
+    </div>
+  </header><!-- End Header -->
+
+  <main id="main">
+
+    <!-- ======= Hero Section ======= -->
+    <section class="dashboard-hero">
+      <div class="container">
+        <div class="row align-items-center">
+          <div class="col-lg-7" data-aos="fade-right">
+            <div class="d-flex align-items-center gap-2 mb-3">
+              <span class="badge bg-warning text-dark px-3 py-2 rounded-pill font-weight-bold">Internal Operations & Finance</span>
+            </div>
+            <h1>Auntie Aloha Business Dashboard</h1>
+            <p class="lead">
+              Unified cash flow forecasting, wholesale sales realization, live inventory depletion tracking, and QuickBooks Online multi-market financial accounting.
+            </p>
+            <div class="d-flex flex-wrap align-items-center gap-3">
+              <a href="https://auntie-aloha-dashboard-tpo.streamlit.app" target="_blank" rel="noopener noreferrer" class="btn-launch-dashboard">
+                <span>Launch Live Dashboard</span>
+                <i class="bi bi-box-arrow-up-right"></i>
+              </a>
+            </div>
+            <div>
+              <span class="security-badge">
+                <i class="bi bi-shield-lock-fill"></i> Passphrase Protected Portal • Authorized Team Access Only
+              </span>
+            </div>
+          </div>
+          <div class="col-lg-5 mt-4 mt-lg-0" data-aos="fade-left">
+            <div class="hero-logo-card">
+              <img src="assets/img/auntie-aloha-logo.webp" alt="Auntie Aloha" class="img-fluid mb-3" style="max-height: 90px;">
+              <p class="text-white-50 small mb-4">
+                Real-Time Operations & Financial Modeling Engine
+              </p>
+              <div class="text-start bg-dark bg-opacity-50 p-3 rounded-3 small">
+                <div class="d-flex justify-content-between py-1 border-bottom border-secondary">
+                  <span class="text-light">Current Platform:</span>
+                  <strong class="text-warning">Streamlit Cloud (Live)</strong>
+                </div>
+                <div class="d-flex justify-content-between py-1 border-bottom border-secondary">
+                  <span class="text-light">Data Sources:</span>
+                  <span class="text-light">Nabis CA + QuickBooks + TPO</span>
+                </div>
+                <div class="d-flex justify-content-between py-1">
+                  <span class="text-light">Forecasting Engine:</span>
+                  <span class="text-light">13-Week Rolling Liquidity</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======= Core Modules Section ======= -->
+    <section id="features" class="py-5 bg-light">
+      <div class="container py-4">
+
+        <div class="section-title text-center mb-5" data-aos="fade-up">
+          <span>Enterprise Modules</span>
+          <h2>Integrated Business Intelligence</h2>
+          <p>Four interconnected modules designed specifically for cannabis brand distribution, manufacturing cycles, and cross-border royalty streams.</p>
+        </div>
+
+        <div class="row g-4">
+          <!-- Card 1 -->
+          <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="100">
+            <div class="feature-card">
+              <div class="feature-icon-wrapper icon-green">
+                <i class="bi bi-cash-stack"></i>
+              </div>
+              <h4>13-Week Cash Flow</h4>
+              <p>
+                Dynamic rolling cash simulator factoring in starting bank cash, dispensary collection lag (DSO), upcoming batch manufacturing bills, and stress-test scenarios.
+              </p>
+            </div>
+          </div>
+
+          <!-- Card 2 -->
+          <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="200">
+            <div class="feature-card">
+              <div class="feature-icon-wrapper icon-amber">
+                <i class="bi bi-truck"></i>
+              </div>
+              <h4>Nabis Wholesale Realization</h4>
+              <p>
+                In-depth breakdown of 38+ historical statements. Tracks true realization rates across fulfillment fees, recurring software fees, fuel surcharges, and dispensary rankings.
+              </p>
+            </div>
+          </div>
+
+          <!-- Card 3 -->
+          <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="300">
+            <div class="feature-card">
+              <div class="feature-icon-wrapper icon-teal">
+                <i class="bi bi-box-seam"></i>
+              </div>
+              <h4>Inventory & Reorder Monitor</h4>
+              <p>
+                Depletion velocity calculations for Distillate and Rosin Gummies across Oakland and LA distribution hubs, with automated lead-time reorder warnings.
+              </p>
+            </div>
+          </div>
+
+          <!-- Card 4 -->
+          <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="400">
+            <div class="feature-card">
+              <div class="feature-icon-wrapper icon-blue">
+                <i class="bi bi-globe-americas"></i>
+              </div>
+              <h4>P&L & Royalty Streams</h4>
+              <p>
+                Reconciliation of QuickBooks GL and budget projections, tracking California retail wholesale, Thailand (TPO) royalties ($5,000/mo), and Hawaii royalties.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Embedded Portal Preview Option -->
+        <div class="portal-preview-frame mt-5" data-aos="fade-up">
+          <div class="frame-bar">
+            <div class="frame-dots">
+              <span class="frame-dot dot-red"></span>
+              <span class="frame-dot dot-yellow"></span>
+              <span class="frame-dot dot-green"></span>
+            </div>
+            <div class="frame-url">https://auntie-aloha-dashboard-tpo.streamlit.app</div>
+            <div>
+              <a href="https://auntie-aloha-dashboard-tpo.streamlit.app" target="_blank" class="btn btn-sm btn-outline-success">
+                Open Fullscreen <i class="bi bi-arrows-fullscreen ms-1"></i>
+              </a>
+            </div>
+          </div>
+          <iframe 
+            src="https://auntie-aloha-dashboard-tpo.streamlit.app/?embed=true" 
+            style="width: 100%; height: 850px; border: none;"
+            title="Auntie Aloha Business Dashboard">
+          </iframe>
+        </div>
+
+      </div>
+    </section>
+
+  </main><!-- End #main -->
+
+  <!-- ======= Footer ======= -->
+  <footer id="footer">
+    <div class="footer-top">
+      <div class="container">
+        <div class="row">
+
+          <div class="col-lg-4 col-md-6">
+            <div class="footer-info">
+              <h3>TPO Wellness</h3>
+              <p>
+                3388/77 Sirinrat Building, 21st Floor <br>Rama IV Road, Kwang Klongton<br>
+                Khet Klongtoey, Bangkok, 10110<br><br>
+                <strong>Phone:</strong> +66 87 789 4950<br>
+                <strong>Email:</strong> info@tpo-wellness.com<br>
+              </p>
+              <div class="social-links mt-3">
+                <a href="#" class="twitter"><i class="bx bxl-twitter"></i></a>
+                <a href="#" class="facebook"><i class="bx bxl-facebook"></i></a>
+                <a href="#" class="instagram"><i class="bx bxl-instagram"></i></a>
+                <a href="#" class="linkedin"><i class="bx bxl-linkedin"></i></a>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-2 col-md-6 footer-links">
+            <h4>Useful Links</h4>
+            <ul>
+              <li><i class="bx bx-chevron-right"></i> <a href="index.html">Home</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="about.html">About us</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="index.html#services">Services</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="auntie-aloha-dashboard.html">Auntie Aloha BI</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="#">Privacy policy</a></li>
+            </ul>
+          </div>
+
+          <div class="col-lg-2 col-md-6 footer-links">
+            <h4>Brand Portals</h4>
+            <ul>
+              <li><i class="bx bx-chevron-right"></i> <a href="auntie-aloha-dashboard.html">Auntie Aloha BI Portal</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="auntie-aloha-product-details.html">Auntie Aloha Products</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="AA-Sales-Tools.html">AA Sales Tools</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="oem-edibles-manufacturing.html">OEM Edibles</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="oem-preroll-production.html">OEM Pre-Rolls</a></li>
+            </ul>
+          </div>
+
+          <div class="col-lg-4 col-md-6 footer-newsletter">
+            <h4>Auntie Aloha Portal Access</h4>
+            <p>Direct encrypted portal for internal executive stakeholders, distributors, and licensed partners.</p>
+            <div class="mt-3">
+              <a href="https://auntie-aloha-dashboard-tpo.streamlit.app" target="_blank" class="btn btn-outline-warning w-100 py-2">
+                Open Auntie Aloha Streamlit Hub ↗
+              </a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="copyright">
+        © Copyright <strong><span>TPO Wellness & Auntie Aloha</span></strong>. All Rights Reserved
+      </div>
+      <div class="credits">
+        Designed by <a href="#">KH</a>
+      </div>
+    </div>
+  </footer><!-- End Footer -->
+
+  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+  <div id="preloader"></div>
+
+  <!-- Vendor JS Files -->
+  <script src="assets/vendor/aos/aos.js"></script>
+  <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/vendor/glightbox/js/glightbox.min.js"></script>
+  <script src="assets/vendor/isotope-layout/isotope.pkgd.min.js"></script>
+  <script src="assets/vendor/swiper/swiper-bundle.min.js"></script>
+
+  <!-- Template Main JS File -->
+  <script src="assets/js/main.js"></script>
+
+</body>
+
+</html>
