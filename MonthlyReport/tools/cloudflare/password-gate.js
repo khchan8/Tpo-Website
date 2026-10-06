@@ -1,16 +1,20 @@
 /**
  * Cloudflare Worker — HTTP Basic Auth gate for https://tpowellness.com/MonthlyReport/
- * The Worker sits in front of GitHub Pages (origin). Without the password the
+ * The Worker sits in front of GitHub Pages (origin). Without valid credentials the
  * browser receives 401 and never receives any page content, source, or config.js.
  *
- * Deployment (see SETUP.md "Password protection"): dashboard → Workers & Pages →
- * Create Worker → paste this file → Settings → Domains & Routes → Add Route:
- *   tpowellness.com/MonthlyReport*
+ * Deployment (see SETUP.md "Password protection"):
+ * dashboard → Workers & Pages → Create an app → Start with Hello World →
+ * name it `monthly-report-gate` → Deploy → Edit code → paste this file → Save and deploy.
+ * Settings → Domains & Routes → Add Route: `*tpowellness.com/MonthlyReport*`
  *
- * Password: the dashboard variable/secret `PASSWORD` if set, otherwise
- * DEFAULT_PASSWORD below. Any username is accepted.
+ * Credentials:
+ * - PASSWORD: the dashboard variable/secret `PASSWORD` if set, otherwise DEFAULT_PASSWORD.
+ * - USERNAME (optional): the dashboard variable/secret `USERNAME` if set, otherwise DEFAULT_USERNAME.
+ *   If left empty, any username is accepted.
  */
 const DEFAULT_PASSWORD = "Tpo888";
+const DEFAULT_USERNAME = ""; // Leave empty to accept any username, or set e.g. "admin"
 
 export default {
   async fetch(request, env) {
@@ -29,7 +33,17 @@ function authorized(request, env) {
   try { credentials = atob(match[1]); } catch { return false; }
   const separator = credentials.indexOf(":");
   if (separator < 0) return false;
-  return timingSafeEqual(credentials.slice(separator + 1), String(env.PASSWORD || DEFAULT_PASSWORD));
+
+  const username = credentials.slice(0, separator);
+  const password = credentials.slice(separator + 1);
+
+  const expectedUser = String(env.USERNAME || DEFAULT_USERNAME).trim();
+  if (expectedUser && !timingSafeEqual(username, expectedUser)) {
+    return false;
+  }
+
+  const expectedPass = String(env.PASSWORD || DEFAULT_PASSWORD);
+  return timingSafeEqual(password, expectedPass);
 }
 
 function timingSafeEqual(a, b) {
@@ -45,3 +59,4 @@ function challenge() {
     headers: { "WWW-Authenticate": 'Basic realm="TPO Monthly Report", charset="UTF-8"' },
   });
 }
+

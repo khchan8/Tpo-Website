@@ -32,13 +32,31 @@ Sheet sharing and page visibility are different controls. Show/Hide does not res
 
 ## Password protection (Cloudflare Worker)
 
-Visitors must enter a password before the browser receives anything from `/MonthlyReport/` — including the page source and **config.js**. The gate is a Cloudflare Worker running in front of GitHub Pages; no website code changes, and removing it later only removes the prompt.
+Visitors must enter credentials before the browser receives anything from `/MonthlyReport/` — including the page source and **config.js**. The gate is a Cloudflare Worker running in front of GitHub Pages; no website code changes, and removing it later only removes the prompt.
 
-1. In the Cloudflare dashboard: **Workers & Pages → Create → Worker**, name it (for example `monthly-report-gate`), paste **tools/cloudflare/password-gate.js**, and deploy.
-2. Worker **Settings → Domains & Routes → Add → Route**: zone `tpowellness.com`, pattern `tpowellness.com/MonthlyReport*`.
-3. Optional: Worker **Settings → Variables and Secrets** — set `PASSWORD` to change the password without editing the code. It overrides the value in the file.
+1. **Create the Worker**:
+   - In Cloudflare sidebar: **Compute → Workers & Pages → Create an app** (or **Create**).
+   - Under **Make something new**, click **Start with Hello World** (do *not* select "Connect GitHub", which creates a Pages project that lacks path routes).
+   - Name it (for example `monthly-report-gate`) and click **Deploy**.
+2. **Deploy the gate code**:
+   - On the Worker overview, click **Edit code** (or **Quick edit**).
+   - Replace the entire template code with **tools/cloudflare/password-gate.js** and click **Save and deploy**.
+3. **Attach the Route**:
+   - On the Worker page, open **Settings → Domains & Routes**.
+   - Under **Routes**, click **Add → Route** (or **Add Route**).
+   - Configure:
+     - **Zone**: `tpowellness.com`
+     - **Route**: `*tpowellness.com/MonthlyReport*`
+     - **Failure mode**: `Fail closed (block)` (recommended for auth gates)
+   - Click **Add Route**. *(Alternatively, configure from **Domains → tpowellness.com → Workers Routes → Add route**).*
+4. **Configure credentials (Variables and Secrets)**:
+   - Worker **Settings → Variables and Secrets → Add**:
+     - `PASSWORD`: Custom password (overrides default `Tpo888`).
+     - `USERNAME` *(optional)*: Specific username to require (e.g. `admin`). If left unset, any username is accepted.
+5. **DNS prerequisite**:
+   - In **Domains → tpowellness.com → DNS → Records**, ensure the record pointing to GitHub Pages has **Proxy status: Proxied (Orange Cloud ☁️)**. If set to DNS-only (Grey Cloud), traffic bypasses Cloudflare Workers.
 
-Any username is accepted; only the password is checked. Browsers resend the credentials automatically until closed. The gate protects the website URL, not the workbook: the Google Sheet remains readable through its public API key, as noted above. Hiding the financials themselves would additionally require restricting the sheet and changing how the site loads data.
+Browsers cache and resend the HTTP Basic credentials automatically until the browser is closed. The gate protects the website URL, not the workbook: the Google Sheet remains readable through its public API key, as noted above. Hiding the financials themselves would additionally require restricting the sheet and changing how the site loads data.
 
 ## Monthly workflow
 
