@@ -30,6 +30,16 @@ If Apps Script source modules were changed, run `node tools/build-apps-script.cj
 
 Sheet sharing and page visibility are different controls. Show/Hide does not restrict access to loaded data. A public workbook and its report URL should not be treated as confidential access controls. Changing sharing does not erase downloaded snapshots or data already loaded by a viewer.
 
+## Password protection (Cloudflare Worker)
+
+Visitors must enter a password before the browser receives anything from `/MonthlyReport/` — including the page source and **config.js**. The gate is a Cloudflare Worker running in front of GitHub Pages; no website code changes, and removing it later only removes the prompt.
+
+1. In the Cloudflare dashboard: **Workers & Pages → Create → Worker**, name it (for example `monthly-report-gate`), paste **tools/cloudflare/password-gate.js**, and deploy.
+2. Worker **Settings → Domains & Routes → Add → Route**: zone `tpowellness.com`, pattern `tpowellness.com/MonthlyReport*`.
+3. Optional: Worker **Settings → Variables and Secrets** — set `PASSWORD` to change the password without editing the code. It overrides the value in the file.
+
+Any username is accepted; only the password is checked. Browsers resend the credentials automatically until closed. The gate protects the website URL, not the workbook: the Google Sheet remains readable through its public API key, as noted above. Hiding the financials themselves would additionally require restricting the sheet and changing how the site loads data.
+
 ## Monthly workflow
 
 1. Run **Prepare Next Month Slots (Fill in the blanks)** and enter the source figures. Repeated runs preserve entered values. Future blank rows are allowed; enter zero only for an actual zero.
