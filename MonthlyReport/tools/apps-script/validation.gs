@@ -129,11 +129,24 @@ function applyFormats_(sources,a) {
   const as=sheet_('Assumptions');if(as&&as.getLastRow()>1)as.getRange(2,2,as.getLastRow()-1,1).setNumberFormat('0.0%');
   const db=sheet_('3. Strategic Dashboard');
   if(db&&db.getLastColumn()>1)(a.tables['3. Strategic Dashboard']||[]).slice(1).forEach((r,i)=>{
-    const label=String(r[0]).toLowerCase(),fmt=/retention|concentration/.test(label)?'0.0%':/turns/.test(label)?'0.0"x"':/revenue|ebit|cash/.test(label)?money:'0';
+    const label=String(r[0]).toLowerCase();
+    // Inventory numeric values use two decimals with x suffix; dated strings and
+    // period metadata are kept as readable text so they survive re-render.
+    const fmt=/retention|concentration/.test(label)?'0.0%'
+      :/^inventory turns$/i.test((r[0]||'').toString().trim())?'0.00"x"'
+      :/^(cash balance as of|inventory period)$/i.test((r[0]||'').toString().trim())?'@'
+      :/^cash balance$|ebit|revenue/.test(label)?money:'0';
     db.getRange(i+2,2,1,db.getLastColumn()-1).setNumberFormat(fmt);
   });
   const inputs=sheet_('Dashboard Inputs');
-  if(inputs&&inputs.getLastRow()>1){inputs.setColumnWidth(2,270);(a.tables['Dashboard Inputs']||[]).slice(1).forEach((r,i)=>inputs.getRange(i+2,3).setNumberFormat(/retention/i.test(r[1])?'0.0%':/turns/i.test(r[1])?'0.0"x"':'#,##0.00'));}
+  if(inputs&&inputs.getLastRow()>1){
+    inputs.setColumnWidth(2,270);
+    (a.tables['Dashboard Inputs']||[]).slice(1).forEach((r,i)=>{
+      const label=(r[1]||'').toString().trim();
+      const fmt=/retention/i.test(label)?'0.0%':'#,##0.00';
+      inputs.getRange(i+2,3).setNumberFormat(fmt);
+    });
+  }
   const risk=sheet_('4. Forward-Looking Risk');if(risk){risk.setColumnWidth(1,370);risk.getDataRange().setWrap(true);}
 }
 function menuFormatVerify() {
@@ -163,7 +176,7 @@ function TPO_REPORT_MODEL(financials, assumptions, monthlyCustomers, quarterlyCu
   return TPOCore.modelRows(TPOCore.analyze(TPOReportSettings.filterSources(sources,TPOReportSettings.normalize(reportSettings))));
 }
 function calculatedMetric_(label) {
-  return /activecustomers|revenuepercustomer|cashbalance|^ebit|concentration/.test(TPOCore.metricKey(label));
+  return /activecustomers|revenuepercustomer|cashbalance|^ebit|concentration|inventoryturns|inventoryperiod/.test(TPOCore.metricKey(label));
 }
 function modelLookup_(keyExpression) {
   // MATCH does not suppress a model error; a missing key returns blank, a real zero survives.
@@ -180,7 +193,7 @@ function repairPlan_(sources,a,next) {
   function add(sheet,row,col,value,reason,formula,text) {
     const s=byName[sheet]||(byName[sheet]={name:sheet,raw:[],formulas:[]});
     if(!s.raw[row-1])s.raw[row-1]=[];if(!s.formulas[row-1])s.formulas[row-1]=[];
-    if((formula?s.formulas[row-1][col-1]:s.raw[row-1][col-1])!==value) {
+    if((formula?s.formulas[row-1][col-1]:s.raw[row-1][col-1])!==value||(!formula&&value===''&&s.formulas[row-1][col-1])) {
       plan.push({sheet,row,col,value,reason:reason||'Dynamic keyed calculation',formula:!!formula,text:!!text});
       s.raw[row-1][col-1]=value;s.formulas[row-1][col-1]=formula?value:'';
     }
@@ -223,13 +236,20 @@ function repairPlan_(sources,a,next) {
   const legacy=table('3. Strategic Dashboard',['Strategic Metric']),hadInputs=!!byName['Dashboard Inputs']?.raw.length;
   const inputs=table('Dashboard Inputs',['Quarter','Metric','Value']);
   if(hadInputs&&inputs.raw[0].slice(0,3).join('|')!=='Quarter|Metric|Value')throw new Error('Dashboard Inputs has unrelated content. Expected Quarter | Metric | Value.');
+  // Clear obsolete inputs in place: moving surviving rows can break formula references.
+  inputs.raw.slice(1).forEach((r,i)=>{
+    const key=TPOCore.metricKey(r[1]);
+    if(key==='inventoryturns'||key==='inventoryperiod'||key==='cashbalanceasof'){
+      for(let c=1;c<=3;c++)add('Dashboard Inputs',i+2,c,'','Remove calculated metric from manual inputs');
+    }
+  });
   const di=keyedRows('Dashboard Inputs',r=>TPOCore.quarter(r[0])&&r[1]?TPOCore.quarter(r[0]).label+'|'+TPOCore.metricKey(r[1]):null);
   if(!hadInputs)legacy.raw.slice(1).forEach(r=>{
     if(!r[0]||calculatedMetric_(r[0]))return;
     legacy.raw[0].slice(1).forEach((q,j)=>{if(TPOCore.quarter(q))slot('Dashboard Inputs',di,q+'|'+TPOCore.metricKey(r[0]),[[1,q],[2,r[0]],[3,TPOCore.number(r[j+1])??'']]);});
   });
   const manualLabels=new Set(TPOCore.dashboardLabels.filter(l=>!calculatedMetric_(l)));
-  inputs.raw.slice(1).forEach(r=>{if(r[1])manualLabels.add(r[1]);});
+  inputs.raw.slice(1).forEach(r=>{if(r[1]&&!calculatedMetric_(r[1]))manualLabels.add(r[1]);});
   seedQuarters.forEach(q=>manualLabels.forEach(l=>slot('Dashboard Inputs',di,q+'|'+TPOCore.metricKey(l),[[1,q],[2,l],[3,'']])));
   // Quarter totals reference a key; new actual months enter the shared range model automatically.
   qi.forEach((row,q)=>TPOCore.metrics.forEach((k,i)=>add('Quarterly Financials',row,qf[i+1]+1,modelLookup_('"quarter|"&'+TPOCore.col(qf[0])+row+'&"|'+k+'"'),null,true)));

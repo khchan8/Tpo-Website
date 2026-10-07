@@ -361,7 +361,11 @@ test('range-fed model matches shared core and recalculates edited raw inputs',()
   data.Assumptions[1][1]=.5;data.CustomerCount[1][1]=20;
   model=get();assert.equal(model.get('customer|Q1 2027|acme corp|gp'),120);
   assert.equal(model.get('dashboard|Q1 2027|revenuepercustomer'),15);
-  assert.equal(model.get('dashboard|Q1 2027|cashbalance'),''); // no quarter-end balance
+  // Partial-quarter cash now uses the latest financial month (Feb-27) and
+  // records the explicit date; the dated metadata string lives alongside the
+  // numeric balance so consumers can render "as of Feb-27".
+  assert.equal(model.get('dashboard|Q1 2027|cashbalance'),200); // latest financial month cash
+  assert.equal(model.get('dashboard|Q1 2027|cashbalanceasof'),'Feb-27'); // explicit as-of month
   assert.ok(!model.has('quarter|Q2 2027|revenue')); // blank future ledger slot
 });
 test('monthly scaffolding reuses placeholders, leaves raw inputs blank, and uses keyed formulas',()=>{
@@ -394,6 +398,68 @@ test('repair planning is idempotent and blocks duplicate empty slots',()=>{
   assert.equal(second.filter(p=>p.sheet!=='Report Model').length,0);
   const sh=rt.sheets.get('MonthlyFinancials');sh.getRange(sh.getLastRow()+1,1).setValue('Mar-27');
   assert.throws(()=>rt.ctx.repairPlan_(rt.ctx.readSources_(),a,next),/duplicate slot/);
+});
+test('inventory input removal preserves manual formulas rather than freezing their cached values',()=>{
+  const data=fixture(),cached=data.MonthlyFinancials[1][1],formula='=MonthlyFinancials!B2';
+  data['Dashboard Inputs']=[['Quarter','Metric','Value'],['Q1 2027','Inventory Turns',4.2],['Q1 2027','Manual target',cached]];
+  const rt=runtime(data),sh=rt.sheets.get('Dashboard Inputs');
+  sh.put(3,3,{value:cached,formula,rich:null});
+  const sources=rt.ctx.readSources_(),a=rt.ctx.TPOCore.analyze(sources);
+  const plan=rt.ctx.repairPlan_(sources,a,null).filter(p=>p.sheet==='Dashboard Inputs');
+  rt.ctx.backupAndWrite_(plan,'Remove manual inventory inputs');
+  assert.equal(sh.getRange(3,3).getFormulas()[0][0],formula);
+  assert.ok(!sh.getDataRange().getValues().slice(1).some(r=>r[1]==='Inventory Turns'));
+});
+test('all obsolete inventory inputs are cleared while other manual data survives repeated repair',()=>{
+  const data=fixture();
+  data['Dashboard Inputs']=[
+    ['Quarter','Metric','Value'],
+    ['Q1 2026','Inventory Turns',4.5],
+    ['Q1 2026','Inventory Turns',2.1],
+    ['','Inventory Turns',9],
+    ['Q1 2026','Customer Retention Rate',.8],
+    ['Q1 2026','New Accounts Opened',3],
+    ['Q1 2027','Inventory Turns',''],
+    ['Q1 2027','Inventory Period','Jan-26 – Feb-26 · QTD'],
+    ['Q1 2027','Customer Retention Rate',.9],
+    ['Q1 2027','New Accounts Opened',5]
+  ];
+  const manual=data['Dashboard Inputs'].filter(r=>r[0]==='Quarter'||/Retention|Accounts/.test(r[1]));
+  const rt=runtime(data),sh=rt.sheets.get('Dashboard Inputs');
+  sh.put(7,3,{value:'',formula:'=IF(FALSE,4.2,"")',rich:null});
+  const sources=rt.ctx.readSources_(),a=rt.ctx.TPOCore.analyze(sources),next=rt.ctx.TPOCore.month('Mar-27');
+  const plan=rt.ctx.repairPlan_(sources,a,next).filter(p=>p.sheet==='Dashboard Inputs');
+  rt.ctx.backupAndWrite_(plan,'Remove manual inventory inputs');
+  assert.deepEqual(sh.getDataRange().getValues().filter(r=>r.some(v=>v!==''&&v!=null)),manual);
+  for(const row of [2,3,4,7,8]){
+    assert.deepEqual(sh.getRange(row,1,1,3).getValues(),[['','','']]);
+    assert.deepEqual(sh.getRange(row,1,1,3).getFormulas(),[['','','']]);
+  }
+  const second=rt.ctx.repairPlan_(rt.ctx.readSources_(),a,next).filter(p=>p.sheet==='Dashboard Inputs');
+  assert.equal(second.length,0);
+});
+test('Inventory Turns removal plan rolls back to original sheet state on write failure',()=>{
+  const data=fixture();
+  const before=[
+    ['Quarter','Metric','Value'],
+    ['Q1 2026','Inventory Turns',4.5],
+    ['Q1 2026','Customer Retention Rate',.8],
+    ['Q1 2026','New Accounts Opened',3],
+    ['Q1 2027','Inventory Turns',4.2],
+    ['Q1 2027','Customer Retention Rate',.9],
+    ['Q1 2027','New Accounts Opened',5]
+  ];
+  data['Dashboard Inputs']=before.map(r=>r.slice());
+  const rt=runtime(data);
+  const sources=rt.ctx.readSources_(),a=rt.ctx.TPOCore.analyze(sources),next=rt.ctx.TPOCore.month('Mar-27');
+  const plan=rt.ctx.repairPlan_(sources,a,next).filter(p=>p.sheet==='Dashboard Inputs');
+  const sh=rt.sheets.get('Dashboard Inputs');
+  const snapshot=values(sh);
+  // Fail after earlier writes, not before the first mutation.
+  sh.failOnce=(r,c)=>r===plan[3].row&&c===plan[3].col;
+  assert.throws(()=>rt.ctx.backupAndWrite_(plan,'Remove manual inventory inputs'),/simulated/);
+  assert.equal(values(sh),snapshot);
+  assert.ok(rt.sheets.has('Repair Backup'));
 });
 test('range-fed model respects Bangkok month boundary for real dates',()=>{
   const data=fixture(),rt=runtime();data.MonthlyFinancials.push([new Date('2027-03-31T18:00:00Z'),0,0,0,0,0,0,'Q2 2027']);

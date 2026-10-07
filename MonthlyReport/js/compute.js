@@ -171,14 +171,32 @@
     };
   }
 
-  /** Peak / trough customer counts (for "92 → 32" storyline). */
-  function customerCountStoryline(customerCount) {
-    if (!customerCount.length) return { peak: null, trough: null, delta: null };
-    const peak   = customerCount.reduce((a, b) => (a.count > b.count ? a : b));
-    const trough = customerCount.reduce((a, b) => (a.count < b.count ? a : b));
+  /** Exact-month MoM/YoY and 12 trailing calendar months; gaps stay null. */
+  function customerCountMomentum(customerCount, asOfMonth) {
+    const core = window.TPOCore, asOf = core.month(asOfMonth), counts = new Map();
+    if (asOf) {
+      for (const row of customerCount || []) {
+        const p = core.month(row.month);
+        if (p && p.key >= asOf.key - 12 && p.key <= asOf.key && !counts.has(p.key)) {
+          counts.set(p.key, Number.isFinite(row.count) ? row.count : null);
+        }
+      }
+    }
+    const lookup = key => ({
+      month: core.month(new Date(Date.UTC(Math.floor(key / 12), key % 12, 1))).display,
+      count: counts.get(key) ?? null,
+    });
+    const current = asOf ? lookup(asOf.key) : { month: null, count: null };
+    const previous = asOf ? lookup(asOf.key - 1) : null;
+    const priorYear = asOf ? lookup(asOf.key - 12) : null;
+    const change = baseline => {
+      const delta = current.count != null && baseline?.count != null ? current.count - baseline.count : null;
+      return { delta, pct: delta != null && baseline.count !== 0 ? delta / baseline.count : null };
+    };
     return {
-      peak, trough,
-      delta: peak.count && trough.count ? (trough.count - peak.count) / peak.count : null,
+      asOfMonth: asOf?.display || null, current, previous, priorYear,
+      mom: change(previous), yoy: change(priorYear),
+      rolling12: asOf ? Array.from({ length: 12 }, (_, i) => lookup(asOf.key - 11 + i)) : [],
     };
   }
 
@@ -200,7 +218,7 @@
     concentrationLatest, nwcSeries,
     quarterCordon, reconciliation,
     dashboardLookup, financialComparison,
-    customerCountStoryline, ebitda,
+    ebitda, customerCountMomentum,
     partialMonthIndices,
   };
 })();

@@ -374,7 +374,7 @@
     const { data } = state;
     const monthly = data.monthly;
     const last    = monthly[monthly.length - 1];
-    const storyline = K.customerCountStoryline(data.customerCount);
+    const momentum = K.customerCountMomentum(data.customerCount, last?.month);
     const concentration = K.concentrationLatest(data.customerRevenue, monthly);
     const currentQ  = last?.quarter || K.quarterOf(last?.month);
     const cordon    = K.quarterCordon(monthly, currentQ);
@@ -386,8 +386,6 @@
     const ytdGP = window.TPOCore.sum(monthly.filter(m => K.parseMonth(m.month)?.yr === yr).map(m => m.gp));
     const margin = ytd ? window.TPOCore.ratio(ytdGP, ytd) : null;
 
-    // Active customers: prefer the CustomerCount tab (reliable); fall back to mix length.
-    const lastCount = data.customerCount.length ? data.customerCount[data.customerCount.length - 1] : null;
 
     // Customer mix: prefer latest-month concentration; fall back to Customer
     // Economics (all 5 customers) when the monthly series is sparse.
@@ -404,8 +402,8 @@
       kpiTile("Latest month revenue", K.fmtMoneyFull(last?.revenue), last?.month || ""),
       kpiTile("YTD revenue", K.fmtMoney(ytd), `${yr || ""} YTD`),
       kpiTile("YTD gross margin", K.fmtPct(margin), "GP / Revenue"),
-      kpiTile("Active customers (latest)", lastCount ? `${lastCount.count}` : "—",
-              lastCount?.month || ""),
+      kpiTile("Active customers (latest)", momentum.current.count == null ? "—" : `${momentum.current.count}`,
+              momentum.current.month || ""),
     );
 
     const trendCard = chartCard({
@@ -458,6 +456,25 @@
       }),
     });
 
+    const changeNote = (change, baseline) => change.delta == null
+      ? "Exact-month comparison unavailable"
+      : `${change.delta >= 0 ? "+" : ""}${change.delta} customers · vs ${baseline.month}${baseline.count === 0 ? " (zero baseline)" : ""}`;
+    const customerTrend = chartCard({
+      title: "Customer count — rolling 12 months",
+      subtitle: `12 calendar months through ${momentum.asOfMonth || "unavailable"}; missing months remain gaps.`,
+      rangeKey: "none", height: 240,
+      data: { labels: momentum.rolling12.map(r => r.month), series: [{ name: "Active customers", values: momentum.rolling12.map(r => r.count) }] },
+      buildOption: (s) => ({
+        ...ECHART_THEME,
+        legend: { ...ECHART_THEME.legend, data: ["Active customers"] },
+        tooltip: { ...ECHART_THEME.tooltip, valueFormatter: v => v == null ? "—" : String(v) },
+        xAxis: { ...ECHART_THEME.xAxis, type: "category", data: s.labels },
+        yAxis: { ...ECHART_THEME.yAxis, type: "value", minInterval: 1, axisLabel: { ...ECHART_THEME.yAxis.axisLabel, formatter: v => v } },
+        series: [{ name: "Active customers", type: "line", smooth: false, connectNulls: false, symbolSize: 5,
+          itemStyle: { color: "#1A8A96" }, lineStyle: { color: "#1A8A96", width: 2 }, data: s.series[0].values }],
+      }),
+    });
+
     const layout = el("div", {},
       section("Strategic Dashboard", "Overview", content(data, "overview.subtitle", "Top-line performance and customer mix at a glance.")),
       recon.length ? warnBanner(`Customer-level revenue and P&L revenue disagree on ${recon.length} month(s) — e.g. ${reconLatest[0]?.month || ""}: Σ customer ${K.fmtMoneyFull(reconLatest[0]?.sumCustomer)} vs P&L ${K.fmtMoneyFull(reconLatest[0]?.pnl)}. The site continues with a note; reconcile in the sheet.`) : null,
@@ -468,14 +485,12 @@
       ),
       sawtoothDivider(),
       el("div", { class: "grid grid-cols-1 md:grid-cols-2 gap-6 mb-8" },
-        el("div", { class: "bg-white border border-rule rounded-md p-5 shadow-brief" },
-          el("h2", { class: "font-serif text-xl text-ink mb-3" }, "Customer count — historical range"),
-          el("p", { class: "text-sm text-mute mb-4" }, "Highest and lowest counts across the available history, with their dates. This range alone does not establish a seasonal trend."),
-          el("div", { class: "grid grid-cols-3 gap-3" },
-            kpiTile("Peak",   storyline.peak   ? `${storyline.peak.count}`   : "—", storyline.peak?.month   || ""),
-            kpiTile("Trough", storyline.trough ? `${storyline.trough.count}` : "—", storyline.trough?.month || ""),
-            kpiTile("Δ",      K.fmtPctDelta(storyline.delta), "trough vs peak"),
+        el("div", {},
+          el("div", { class: "grid grid-cols-2 gap-3 mb-4" },
+            kpiTile("Customer MoM", K.fmtPctDelta(momentum.mom.pct), changeNote(momentum.mom, momentum.previous)),
+            kpiTile("Customer YoY", K.fmtPctDelta(momentum.yoy.pct), changeNote(momentum.yoy, momentum.priorYear)),
           ),
+          customerTrend,
         ),
         briefingCard("overview", data,
           (cordon && cordon.isPartial) ? `${cordon.quarter} covers ${cordon.monthCount} month(s) only (through ${cordon.latestMonth}) and must not be annualized.` : undefined),
@@ -493,7 +508,7 @@
     // KPI matrix table (metrics × periods)
     const headers = ["Strategic Metric", ...periods];
     const rows = dash.metrics.map(m => ({
-      cells: [m.label, ...m.values.map(v => /retention|concentration/i.test(m.label) ? K.fmtPct(v) : /revenue|ebit|cash/i.test(m.label) ? K.fmtMoneyFull(v) : v==null ? "—" : /turns/i.test(m.label) ? v.toFixed(1)+"x" : fmtDashCell_(v))],
+      cells: [m.label, ...m.values.map(v => v==null ? "—" : typeof v==="string" ? fmtDashCell_(v) : /retention|concentration/i.test(m.label) ? K.fmtPct(v) : /revenue|ebit|cash/i.test(m.label) ? K.fmtMoneyFull(v) : /turns/i.test(m.label) ? v.toFixed(2)+"x" : fmtDashCell_(v))],
       variant: "",
     }));
 
@@ -521,7 +536,7 @@
       return "count";
     }
     function chartFor(metric) {
-      const kind = /retention|concentration/i.test(metric.label) ? "pct" : /revenue|ebit|cash/i.test(metric.label) ? "money" : "count";
+      const kind = /retention|concentration/i.test(metric.label) ? "pct" : /revenue|ebit|cash/i.test(metric.label) ? "money" : /turns/i.test(metric.label) ? "turns" : "count";
       return chartCard({
         title: metric.label + " — across periods",
         rangeKey: "none", height: 300,
@@ -529,6 +544,7 @@
         buildOption: (s) => {
           const yFmt = kind === "pct" ? (v => K.fmtPct(v))
                      : kind === "money" ? (v => K.fmtMoney(v))
+                     : kind === "turns" ? (v => v==null ? "—" : Number(v).toFixed(2)+"x")
                      : (v => v);
           return {
             ...ECHART_THEME,
@@ -573,7 +589,7 @@
 
     const layout = el("div", {},
       section("Strategic Dashboard", "Strategic Dashboard",
-        content(data, "dashboard.subtitle", "Validated metrics by their stated quarter. Active customers follow the first-month rule; cash is quarter-end. Blank means unavailable.")),
+        content(data, "dashboard.subtitle", "Active customers use the first month. Completed quarters use quarter-end cash; the current quarter uses the dated latest reporting month. Inventory turns = quarter/QTD COGS ÷ average opening/closing inventory, not annualised. Blank means unavailable.")),
       el("div", { class: "mb-8" },
         el("h2", { class: "font-serif text-xl text-ink mb-3" }, "KPI matrix"),
         matrixTable,

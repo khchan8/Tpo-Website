@@ -76,3 +76,46 @@ test('website shaper preserves unavailable NWC and ignores future rows',()=>{
   assert.equal(data.monthly.at(-1).month,'Jul-26');assert.equal(window.TPO_COMPUTE.nwcSeries(data.workingCapital)[0].nwc,null);
 });
 
+
+test('dashboard uses dated current-month cash and calculated period inventory turns, never manual ratios',()=>{
+  const wcHeader=['Reporting Month','Cash Balance','Accounts Receivable','Inventory Value','Accounts Payable','Net Working Capital'];
+  const s=source([headers,...['Apr-26','May-26','Jun-26','Jul-26','Aug-26'].map(m=>row(m))]).concat([
+    {name:'1. Working Capital',raw:[wcHeader,['Mar-26',50,0,100,0,150],['Jun-26',90,0,200,0,290],['Jul-26',100,0,210,0,310],['Aug-26',120,0,300,0,420],['Sep-26',999,0,900,0,1899]]},
+    {name:'Dashboard Inputs',raw:[['Quarter','Metric','Value'],['Q2 2026','Inventory Turns',1.8],['Q3 2026','Inventory Turns',9]]}
+  ]);
+  const model=new Map(C.modelRows(C.analyze(s)));
+  assert.equal(model.get('dashboard|Q2 2026|cashbalance'),90);
+  assert.equal(model.get('dashboard|Q2 2026|cashbalanceasof'),'Jun-26');
+  assert.equal(model.get('dashboard|Q3 2026|cashbalance'),120);
+  assert.equal(model.get('dashboard|Q3 2026|cashbalanceasof'),'Aug-26');
+  assert.equal(model.get('dashboard|Q2 2026|inventoryturns'),60/150);
+  assert.equal(model.get('dashboard|Q3 2026|inventoryturns'),40/250);
+  s[1].raw[1][3]='';
+  assert.equal(new Map(C.modelRows(C.analyze(s))).get('dashboard|Q2 2026|inventoryturns'),'');
+});
+
+test('inventory turns require contiguous COGS months and exact opening/closing stocks; cash never carries forward',()=>{
+  const wcHeader=['Reporting Month','Cash Balance','Accounts Receivable','Inventory Value','Accounts Payable','Net Working Capital'];
+  const stocks=[wcHeader,['Jun-26',100,0,100,0,200],['Jul-26',120,0,100,0,220],['Aug-26','',0,100,0,''],['Sep-26',150,0,100,0,250]];
+  const sources=source([headers,row('Jul-26'),row('Aug-26')]).concat([{name:'1. Working Capital',raw:stocks}]);
+  let model=new Map(C.modelRows(C.analyze(sources)));
+  assert.equal(model.get('dashboard|Q3 2026|cashbalance'),'');
+  assert.equal(model.get('dashboard|Q3 2026|cashbalanceasof'),'');
+  assert.equal(model.get('dashboard|Q3 2026|inventoryturns'),.4);
+  sources[0].raw=[headers,row('Jul-26'),row('Sep-26')];
+  model=new Map(C.modelRows(C.analyze(sources)));
+  assert.equal(model.get('dashboard|Q3 2026|inventoryturns'),'');
+  sources[0].raw=[headers,row('Jul-26'),row('Aug-26')];
+  stocks[1][3]='';
+  assert.equal(new Map(C.modelRows(C.analyze(sources))).get('dashboard|Q3 2026|inventoryturns'),'');
+});
+
+test('inventory turnover preserves zero COGS but rejects zero average stock and negative period costs',()=>{
+  const financial=(cost)=>['Jul-26',100,cost,100-cost,30,70-cost,40,'Q3 2026'];
+  const stocks=[['Reporting Month','Cash Balance','Accounts Receivable','Inventory Value','Accounts Payable','Net Working Capital'],['Jun-26',100,0,100,0,200],['Jul-26',100,0,100,0,200]];
+  const sources=source([headers,financial(0)]).concat([{name:'1. Working Capital',raw:stocks}]);
+  const turn=()=>new Map(C.modelRows(C.analyze(sources))).get('dashboard|Q3 2026|inventoryturns');
+  assert.equal(turn(),0);
+  stocks[1][3]=stocks[2][3]=0;assert.equal(turn(),'');
+  stocks[1][3]=stocks[2][3]=100;sources[0].raw[1]=financial(-10);assert.equal(turn(),'');
+});

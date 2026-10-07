@@ -38,7 +38,7 @@ var TPOCore = (function () {
   const sum = a => a.length && a.every(Number.isFinite) ? a.reduce((x,y)=>x+y,0) : null;
   const ratio = (a,b) => Number.isFinite(a) && Number.isFinite(b) && b !== 0 ? a/b : null;
   const col = n => { let s=''; for(n++;n;n=Math.floor((n-1)/26)) s=String.fromCharCode(65+(n-1)%26)+s; return s; };
-  const dashboardLabels=['Active Customers','New Accounts Opened','Customer Retention Rate','Revenue per Customer','Top 5 Revenue Concentration','EBIT (EBITDA proxy; D&A unavailable)','Cash Balance','Inventory Turns'];
+  const dashboardLabels=['Active Customers','New Accounts Opened','Customer Retention Rate','Revenue per Customer','Top 5 Revenue Concentration','EBIT (EBITDA proxy; D&A unavailable)','Cash Balance','Cash Balance As Of','Inventory Turns','Inventory Period'];
   function metricKey(label) { const key=norm(label); return key.startsWith('ebit')?'ebit':key; }
   function riskStatus(current, prior) {
     if(!Number.isFinite(current))return {status:'Unavailable / Missing EBIT',level:'unknown'};
@@ -180,8 +180,9 @@ var TPOCore = (function () {
     if(inputRows) {
       if(norm((inputRows[0]||[])[0])!=='quarter'||norm((inputRows[0]||[])[1])!=='metric'||norm((inputRows[0]||[])[2])!=='value')issue('error','Dashboard Inputs','A1:C1','Expected Quarter | Metric | Value.');
       inputRows.slice(1).forEach((r,i)=>{
-        if(r.every(blank))return;const q=quarter(r[0]),key=metricKey(r[1]);
-        if(!q||!key){issue('error','Dashboard Inputs','A'+(i+2),'Invalid quarter or metric.');return;}
+        if(r.every(blank))return;const key=metricKey(r[1]);
+        if(key==='inventoryturns'||key==='inventoryperiod'||key==='cashbalanceasof')return;
+        const q=quarter(r[0]);if(!q||!key){issue('error','Dashboard Inputs','A'+(i+2),'Invalid quarter or metric.');return;}
         const id=q.label+'|'+key;
         if(manual.has(id)){issue('error','Dashboard Inputs','A'+(i+2),'Duplicate quarter/metric. Values excluded.');manual.set(id,null);return;}
         const kind=/retention/.test(key)?'percent':/accounts|customers/.test(key)?'count':'number';
@@ -191,15 +192,29 @@ var TPOCore = (function () {
     } else dashboardRaw.slice(1).forEach(r=>(dashboardRaw[0]||[]).slice(1).forEach((q,j)=>{if(quarter(q))manual.set(trim(q)+'|'+metricKey(r[0]),number(r[j+1]));}));
     const dashboard={periods:Array.from(new Set(quarterly.map(q=>q.quarter).concat((dashboardRaw[0]||[]).slice(1).filter(v=>quarter(v)).map(trim))))
       .filter(q=>latest&&quarter(q).key<=quarter(latest.quarter).key).sort((a,b)=>quarter(a).key-quarter(b).key),metrics:[]};
+    const quarterDetails=new Map(dashboard.periods.map(q=>{
+      const qp=quarter(q),start=qp.year*12+(qp.q-1)*3,end=Math.min(start+2,latest.period.key);
+      const fin=quarterly.find(r=>r.quarter===q),balance=wc.find(r=>r.period.key===end),opening=wc.find(r=>r.period.key===start-1);
+      const covered=!!fin&&fin.months.length===end-start+1&&fin.months.every(m=>{const p=month(m);return p.key>=start&&p.key<=end;});
+      const average=opening&&balance&&Number.isFinite(opening.inventory)&&opening.inventory>=0&&Number.isFinite(balance.inventory)&&balance.inventory>=0
+        ?(opening.inventory+balance.inventory)/2:null;
+      const turns=covered&&Number.isFinite(fin.cogs)&&fin.cogs>=0&&average>0?fin.cogs/average:null;
+      const first=months[(qp.q-1)*3]+'-'+String(qp.year).slice(-2),last=months[end%12]+'-'+String(qp.year).slice(-2);
+      const period=covered?first+' – '+last+' · '+(end<start+2?'QTD':'full quarter')+'; not annualised':null;
+      return [q,{fin,balance,turns,period,count:counts.find(r=>r.period.key===start)}];
+    }));
     labels.forEach((label,key)=>{
       const legacyRow=dashboardRaw.findIndex(r=>metricKey(r[0])===key),values=dashboard.periods.map(q=>{
-        const legacyCol=(dashboardRaw[0]||[]).findIndex(v=>trim(v)===q),legacy=legacyRow>0&&legacyCol>0?number(dashboardRaw[legacyRow][legacyCol]):null;
-        const qp=quarter(q), fin=quarterly.find(x=>x.quarter===q), start=qp.year*12+(qp.q-1)*3, count=counts.find(x=>x.period.key===start), balance=wc.find(x=>x.period.key===start+2);
+        const legacyCol=(dashboardRaw[0]||[]).findIndex(v=>trim(v)===q),rawLegacy=legacyRow>0&&legacyCol>0?dashboardRaw[legacyRow][legacyCol]:null;
+        const legacy=key==='cashbalanceasof'||key==='inventoryperiod'?trim(rawLegacy)||null:number(rawLegacy);
+        const {fin,count,balance,turns,period}=quarterDetails.get(q);
         let value=manual.get(q+'|'+key)??null, calculated=false;
         if(key.includes('activecustomers')){value=count?count.values[0]:null;calculated=true;}
         if(key.includes('revenuepercustomer')){value=ratio(fin&&fin.revenue,count&&count.values[0]);calculated=true;}
         if(key.startsWith('ebit')){value=fin?fin.ebit:null;calculated=true;}
-        if(key.includes('cashbalance')){value=balance?balance.cash:null;calculated=true;}
+        if(key.includes('cashbalance')){value=balance&&Number.isFinite(balance.cash)?(key==='cashbalanceasof'?balance.month:balance.cash):null;calculated=true;}
+        if(key==='inventoryturns'){value=turns;calculated=true;}
+        if(key==='inventoryperiod'){value=period;calculated=true;}
         if(key.includes('concentration')) {
           const rows=cq.filter(r=>r.period.label===q), total=sum(rows.map(r=>r.values[0]));
           const covered=customers.length>0&&customers.every(c=>rows.some(r=>r.customer.toLowerCase()===c.name.toLowerCase()));
@@ -303,7 +318,7 @@ const TPO = Object.freeze({
   input: 'LLM-Input', output: 'LLM Output', commentary: 'Commentary',
   startRow: 8, chunkSize: 30000, maxPrompt: 1500000, maxSourceCells: 200000,
   stateKey: 'TPO_MANUAL_V1_', version: 'tpo-commentary-v1',
-  build: '2026-09-07-v5', timezone: 'Asia/Bangkok',
+  build: '2026-10-07-v6', timezone: 'Asia/Bangkok',
   sources: ['Assumptions', 'MonthlyFinancials', 'CustomerRevenueMonthly',
     'CustomerRevenueQuarterly', 'CustomerCount', 'Quarterly Financials',
     '1. Working Capital', '2. Customer Economics', '3. Strategic Dashboard',
@@ -1325,11 +1340,24 @@ function applyFormats_(sources,a) {
   const as=sheet_('Assumptions');if(as&&as.getLastRow()>1)as.getRange(2,2,as.getLastRow()-1,1).setNumberFormat('0.0%');
   const db=sheet_('3. Strategic Dashboard');
   if(db&&db.getLastColumn()>1)(a.tables['3. Strategic Dashboard']||[]).slice(1).forEach((r,i)=>{
-    const label=String(r[0]).toLowerCase(),fmt=/retention|concentration/.test(label)?'0.0%':/turns/.test(label)?'0.0"x"':/revenue|ebit|cash/.test(label)?money:'0';
+    const label=String(r[0]).toLowerCase();
+    // Inventory numeric values use two decimals with x suffix; dated strings and
+    // period metadata are kept as readable text so they survive re-render.
+    const fmt=/retention|concentration/.test(label)?'0.0%'
+      :/^inventory turns$/i.test((r[0]||'').toString().trim())?'0.00"x"'
+      :/^(cash balance as of|inventory period)$/i.test((r[0]||'').toString().trim())?'@'
+      :/^cash balance$|ebit|revenue/.test(label)?money:'0';
     db.getRange(i+2,2,1,db.getLastColumn()-1).setNumberFormat(fmt);
   });
   const inputs=sheet_('Dashboard Inputs');
-  if(inputs&&inputs.getLastRow()>1){inputs.setColumnWidth(2,270);(a.tables['Dashboard Inputs']||[]).slice(1).forEach((r,i)=>inputs.getRange(i+2,3).setNumberFormat(/retention/i.test(r[1])?'0.0%':/turns/i.test(r[1])?'0.0"x"':'#,##0.00'));}
+  if(inputs&&inputs.getLastRow()>1){
+    inputs.setColumnWidth(2,270);
+    (a.tables['Dashboard Inputs']||[]).slice(1).forEach((r,i)=>{
+      const label=(r[1]||'').toString().trim();
+      const fmt=/retention/i.test(label)?'0.0%':'#,##0.00';
+      inputs.getRange(i+2,3).setNumberFormat(fmt);
+    });
+  }
   const risk=sheet_('4. Forward-Looking Risk');if(risk){risk.setColumnWidth(1,370);risk.getDataRange().setWrap(true);}
 }
 function menuFormatVerify() {
@@ -1359,7 +1387,7 @@ function TPO_REPORT_MODEL(financials, assumptions, monthlyCustomers, quarterlyCu
   return TPOCore.modelRows(TPOCore.analyze(TPOReportSettings.filterSources(sources,TPOReportSettings.normalize(reportSettings))));
 }
 function calculatedMetric_(label) {
-  return /activecustomers|revenuepercustomer|cashbalance|^ebit|concentration/.test(TPOCore.metricKey(label));
+  return /activecustomers|revenuepercustomer|cashbalance|^ebit|concentration|inventoryturns|inventoryperiod/.test(TPOCore.metricKey(label));
 }
 function modelLookup_(keyExpression) {
   // MATCH does not suppress a model error; a missing key returns blank, a real zero survives.
@@ -1376,7 +1404,7 @@ function repairPlan_(sources,a,next) {
   function add(sheet,row,col,value,reason,formula,text) {
     const s=byName[sheet]||(byName[sheet]={name:sheet,raw:[],formulas:[]});
     if(!s.raw[row-1])s.raw[row-1]=[];if(!s.formulas[row-1])s.formulas[row-1]=[];
-    if((formula?s.formulas[row-1][col-1]:s.raw[row-1][col-1])!==value) {
+    if((formula?s.formulas[row-1][col-1]:s.raw[row-1][col-1])!==value||(!formula&&value===''&&s.formulas[row-1][col-1])) {
       plan.push({sheet,row,col,value,reason:reason||'Dynamic keyed calculation',formula:!!formula,text:!!text});
       s.raw[row-1][col-1]=value;s.formulas[row-1][col-1]=formula?value:'';
     }
@@ -1419,13 +1447,20 @@ function repairPlan_(sources,a,next) {
   const legacy=table('3. Strategic Dashboard',['Strategic Metric']),hadInputs=!!byName['Dashboard Inputs']?.raw.length;
   const inputs=table('Dashboard Inputs',['Quarter','Metric','Value']);
   if(hadInputs&&inputs.raw[0].slice(0,3).join('|')!=='Quarter|Metric|Value')throw new Error('Dashboard Inputs has unrelated content. Expected Quarter | Metric | Value.');
+  // Clear obsolete inputs in place: moving surviving rows can break formula references.
+  inputs.raw.slice(1).forEach((r,i)=>{
+    const key=TPOCore.metricKey(r[1]);
+    if(key==='inventoryturns'||key==='inventoryperiod'||key==='cashbalanceasof'){
+      for(let c=1;c<=3;c++)add('Dashboard Inputs',i+2,c,'','Remove calculated metric from manual inputs');
+    }
+  });
   const di=keyedRows('Dashboard Inputs',r=>TPOCore.quarter(r[0])&&r[1]?TPOCore.quarter(r[0]).label+'|'+TPOCore.metricKey(r[1]):null);
   if(!hadInputs)legacy.raw.slice(1).forEach(r=>{
     if(!r[0]||calculatedMetric_(r[0]))return;
     legacy.raw[0].slice(1).forEach((q,j)=>{if(TPOCore.quarter(q))slot('Dashboard Inputs',di,q+'|'+TPOCore.metricKey(r[0]),[[1,q],[2,r[0]],[3,TPOCore.number(r[j+1])??'']]);});
   });
   const manualLabels=new Set(TPOCore.dashboardLabels.filter(l=>!calculatedMetric_(l)));
-  inputs.raw.slice(1).forEach(r=>{if(r[1])manualLabels.add(r[1]);});
+  inputs.raw.slice(1).forEach(r=>{if(r[1]&&!calculatedMetric_(r[1]))manualLabels.add(r[1]);});
   seedQuarters.forEach(q=>manualLabels.forEach(l=>slot('Dashboard Inputs',di,q+'|'+TPOCore.metricKey(l),[[1,q],[2,l],[3,'']])));
   // Quarter totals reference a key; new actual months enter the shared range model automatically.
   qi.forEach((row,q)=>TPOCore.metrics.forEach((k,i)=>add('Quarterly Financials',row,qf[i+1]+1,modelLookup_('"quarter|"&'+TPOCore.col(qf[0])+row+'&"|'+k+'"'),null,true)));

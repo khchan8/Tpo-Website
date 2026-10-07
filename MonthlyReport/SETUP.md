@@ -16,6 +16,15 @@ The script maintains **LLM-Input**, **LLM Output**, and **Commentary**. Commenta
 
 Copying Code.gs into GitHub does not install it in Google Sheets. The website and the bound Apps Script are updated separately.
 
+### v6 cash and inventory-turn migration
+
+Use the current `apps-script/Code.gs` build (`2026-10-07-v6`) in the existing bound project, then run **📊 TPO → Repair calculated sheets**. The repair backs up and clears every old Inventory Turns input, including historical numeric values, without moving other manual inputs or formulas. It adds **Cash Balance As Of** and **Inventory Period** and binds inventory turns to the shared calculation engine. Run **Format & verify all sheets** afterward; allow custom-function recalculation to finish before reviewing Data Validation or preparing AI input.
+
+Expected from the current August inputs: Q3 cash **฿3,340,966 as of Aug-26**, Q1 inventory turns **0.92x**, Q2 **0.71x**, and Q3 **0.13x for Jul–Aug QTD**, not annualised. Earlier turns stay blank where opening/closing inventory is unavailable; do not restore the old manual ratios.
+
+The updated `TPO_Monthly_Input.xlsx` is an export/snapshot, not an Apps Script project. Prefer the bound-script update above over replacing the live spreadsheet. If importing the XLSX into a separate copy, install `Code.gs` in that copy, **clear the contents of Report Model** to remove exported spill caches, then run **Set up / repair workflow sheets**, **Repair calculated sheets**, and **Format & verify all sheets**. This leaves primary inputs intact and lets the custom function rebuild its spill. Replacing or importing a workbook does not install the updated script or repoint the website's `SHEET_ID`.
+
+
 ## Website configuration and publication
 
 Keep the existing **config.js** with its **SHEET_ID** and Sheets **API_KEY**. The static website requires a Sheets API key and a workbook readable through that API. The API key is for loading spreadsheet data, not generating AI commentary. Keep its API and website referrer restrictions configured in Google Cloud.

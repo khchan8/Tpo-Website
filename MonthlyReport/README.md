@@ -1,4 +1,4 @@
-# TPO monthly report — manual AI workflow, v5
+# TPO monthly report — manual AI workflow, v6
 
 The Apps Script, calculated Google Sheets cells, and website use the same calculation engine. By default, the reporting period follows the latest month with valid actual revenue in MonthlyFinancials; Report settings can apply a historical cut-off. Blank future rows such as Aug-27 and Sep-27 are allowed and ignored; an explicit zero is actual data. An expense-only future row remains pending until revenue is entered.
 
@@ -32,7 +32,7 @@ Commentary uses **View | Commentary | Status** in A:C. It does not recreate the 
 | 2. Customer Economics | Customer Brand, Quarter, Gross Revenue, Revenue Concentration, Estimated Contribution (legacy Gross Profit accepted), Contribution Margin |
 | 3. Strategic Dashboard | Strategic Metric, then quarter columns |
 | 4. Forward-Looking Risk | Reporting Period, Revenue, COGS, Gross Profit, SG&A, EBIT, Net Income, Risk Status |
-| Dashboard Inputs | Quarter, Metric, Value — manual new-account counts, retention, inventory turns, and custom metrics |
+| Dashboard Inputs | Quarter, Metric, Value — manual new-account counts, retention, and custom metrics; never inventory turns |
 | Report Model | Generated key/value spill; do not type into this sheet |
 | Assumptions | Customer and contribution margin in A:B; parameters in D:E |
 
@@ -43,12 +43,17 @@ Duplicate populated period/customer keys are excluded rather than summed. Scaffo
 - Quarter totals derive from unique monthly rows. Partial quarters compare only with the same available months one year earlier. Three rows indicate coverage, not proof that individual months are finalized.
 - Working capital requires all four components: cash + AR + inventory − AP. Enter zero when a component is actually zero. An existing formula that treats blanks as zero is not accepted as a validated NWC result.
 - Customer mix shares refer to the listed customer total. Company-wide concentration requires reconciliation with the P&L; otherwise it is unavailable. Customer contribution is revenue × assumed margin, not audited gross profit.
-- Active customers follow the first month of a quarter. Cash uses quarter-end working-capital data. EBITDA is explicitly labelled an EBIT proxy because D&A is unavailable.
+- Dashboard active customers follow the first month of a quarter. Overview uses the exact latest financial reporting month, exact previous-month and prior-year comparisons, and a rolling 12-calendar-month customer trend. Missing observations stay unavailable; zero counts are real, but percentage changes from zero baselines are unavailable.
+- Completed quarters use exact quarter-end cash. The ongoing quarter uses the exact latest financial month, named in **Cash Balance As Of**; a missing balance never carries forward from an earlier month.
+- **Inventory Turns** = quarter/QTD COGS ÷ ((prior-quarter-end inventory + closing inventory) / 2). Require contiguous COGS months, nonnegative period COGS and endpoint inventories, and positive average inventory. **Inventory Period** names the covered months and full-quarter/QTD basis. Turns are not annualised; missing inputs remain unavailable, with no historical/manual fallback.
+- EBITDA is explicitly labelled an EBIT proxy because D&A is unavailable.
 - Low season follows Assumptions. The current workbook specifies May–October.
 
 **Report Model** contains one range-fed `TPO_REPORT_MODEL` custom function using the same `TPOCore` as the website. Derived sheet cells use keyed `INDEX/MATCH` lookups into that model, preserving real zeros and missing values. The function receives only primary inputs; derived outputs never feed back into it. Google recalculates when the referenced input ranges change. Month setup expands capacity as needed. If you manually add rows outside the generated range, rerun Repair calculated sheets. Allow Sheets to finish calculating before validation or AI export; a model error stays visible rather than displaying old totals.
 
-Existing manually maintained dashboard values migrate once into **Dashboard Inputs**. Edit them there afterward. Customer Economics revenue comes from **CustomerRevenueQuarterly**, with each portfolio total scoped to an explicit quarter. Source numbers and replaced formulas are recorded in **Repair Backup** before changes. Formula errors identify the source sheet/cell; failed writes attempt rollback.
+Only noncalculated dashboard values migrate into **Dashboard Inputs**. Repair clears obsolete Inventory Turns / Inventory Period / Cash Balance As Of entries in place, including old numeric ratios, and never reseeds them. Other manual rows and formulas retain their original coordinates to protect cross-cell references.
+
+Customer Economics revenue comes from **CustomerRevenueQuarterly**, with each portfolio total scoped to an explicit quarter. Source numbers and replaced formulas are recorded in **Repair Backup** before changes. Formula errors identify the source sheet/cell; failed writes attempt rollback.
 
 Forward risk is deterministic: negative current matched EBIT is **Operating Loss / High Risk**; positive improvement is **Improving / On Track**; a decline is **Contracting / Moderate Risk**; equal EBIT is **Stable / Monitor**. Missing EBIT or baseline is explicitly unavailable. Coverage is a separate column; missing prior-year months never become zero. This is historical comparison, not a forecast or AI classification.
 
@@ -128,3 +133,11 @@ npx --yes --package=tailwindcss@3.4.17 tailwindcss --config tools/tailwind.confi
 Google references: [date formatting](https://developers.google.com/apps-script/reference/utilities/utilities#formatdatedate,-timezone,-format), [spreadsheet timezone](https://developers.google.com/apps-script/reference/spreadsheet/spreadsheet#setSpreadsheetTimeZone(String)), [unformatted Sheets values](https://developers.google.com/workspace/sheets/api/reference/rest/v4/spreadsheets.values/get).
 
 Reporting-month safety: Sheets can interpret a label such as Jan-25 as January 25 of the current year when changing date formats. Version 3.2 writes the verified month-year label with plain-text format before other formatting or timezone repair. Conflicting month/quarter pairs are excluded and block AI export.
+
+## 2026-10-07 — v6 calculation cutover
+
+- Overview replaces all-history customer extremes with exact-month MoM/YoY and a fixed trailing 12-month trend.
+- Current-quarter cash is explicitly dated; inventory turns are calculated quarter/QTD values rather than manually supplied history.
+- The updated `TPO_Monthly_Input.xlsx` uses a fresh live-sheet export. `TPO_Monthly_Input-old.xlsx` preserves the previous local copy. Raw financial and customer input values are unchanged.
+- Snapshot engine `tpo-v6` rejects pre-cutover calculation versions rather than reinterpreting archived figures. Regenerate commentary after installing the script and repairing the live sheet.
+

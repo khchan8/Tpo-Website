@@ -38,7 +38,7 @@ var TPOCore = (function () {
   const sum = a => a.length && a.every(Number.isFinite) ? a.reduce((x,y)=>x+y,0) : null;
   const ratio = (a,b) => Number.isFinite(a) && Number.isFinite(b) && b !== 0 ? a/b : null;
   const col = n => { let s=''; for(n++;n;n=Math.floor((n-1)/26)) s=String.fromCharCode(65+(n-1)%26)+s; return s; };
-  const dashboardLabels=['Active Customers','New Accounts Opened','Customer Retention Rate','Revenue per Customer','Top 5 Revenue Concentration','EBIT (EBITDA proxy; D&A unavailable)','Cash Balance','Inventory Turns'];
+  const dashboardLabels=['Active Customers','New Accounts Opened','Customer Retention Rate','Revenue per Customer','Top 5 Revenue Concentration','EBIT (EBITDA proxy; D&A unavailable)','Cash Balance','Cash Balance As Of','Inventory Turns','Inventory Period'];
   function metricKey(label) { const key=norm(label); return key.startsWith('ebit')?'ebit':key; }
   function riskStatus(current, prior) {
     if(!Number.isFinite(current))return {status:'Unavailable / Missing EBIT',level:'unknown'};
@@ -180,8 +180,9 @@ var TPOCore = (function () {
     if(inputRows) {
       if(norm((inputRows[0]||[])[0])!=='quarter'||norm((inputRows[0]||[])[1])!=='metric'||norm((inputRows[0]||[])[2])!=='value')issue('error','Dashboard Inputs','A1:C1','Expected Quarter | Metric | Value.');
       inputRows.slice(1).forEach((r,i)=>{
-        if(r.every(blank))return;const q=quarter(r[0]),key=metricKey(r[1]);
-        if(!q||!key){issue('error','Dashboard Inputs','A'+(i+2),'Invalid quarter or metric.');return;}
+        if(r.every(blank))return;const key=metricKey(r[1]);
+        if(key==='inventoryturns'||key==='inventoryperiod'||key==='cashbalanceasof')return;
+        const q=quarter(r[0]);if(!q||!key){issue('error','Dashboard Inputs','A'+(i+2),'Invalid quarter or metric.');return;}
         const id=q.label+'|'+key;
         if(manual.has(id)){issue('error','Dashboard Inputs','A'+(i+2),'Duplicate quarter/metric. Values excluded.');manual.set(id,null);return;}
         const kind=/retention/.test(key)?'percent':/accounts|customers/.test(key)?'count':'number';
@@ -191,15 +192,29 @@ var TPOCore = (function () {
     } else dashboardRaw.slice(1).forEach(r=>(dashboardRaw[0]||[]).slice(1).forEach((q,j)=>{if(quarter(q))manual.set(trim(q)+'|'+metricKey(r[0]),number(r[j+1]));}));
     const dashboard={periods:Array.from(new Set(quarterly.map(q=>q.quarter).concat((dashboardRaw[0]||[]).slice(1).filter(v=>quarter(v)).map(trim))))
       .filter(q=>latest&&quarter(q).key<=quarter(latest.quarter).key).sort((a,b)=>quarter(a).key-quarter(b).key),metrics:[]};
+    const quarterDetails=new Map(dashboard.periods.map(q=>{
+      const qp=quarter(q),start=qp.year*12+(qp.q-1)*3,end=Math.min(start+2,latest.period.key);
+      const fin=quarterly.find(r=>r.quarter===q),balance=wc.find(r=>r.period.key===end),opening=wc.find(r=>r.period.key===start-1);
+      const covered=!!fin&&fin.months.length===end-start+1&&fin.months.every(m=>{const p=month(m);return p.key>=start&&p.key<=end;});
+      const average=opening&&balance&&Number.isFinite(opening.inventory)&&opening.inventory>=0&&Number.isFinite(balance.inventory)&&balance.inventory>=0
+        ?(opening.inventory+balance.inventory)/2:null;
+      const turns=covered&&Number.isFinite(fin.cogs)&&fin.cogs>=0&&average>0?fin.cogs/average:null;
+      const first=months[(qp.q-1)*3]+'-'+String(qp.year).slice(-2),last=months[end%12]+'-'+String(qp.year).slice(-2);
+      const period=covered?first+' – '+last+' · '+(end<start+2?'QTD':'full quarter')+'; not annualised':null;
+      return [q,{fin,balance,turns,period,count:counts.find(r=>r.period.key===start)}];
+    }));
     labels.forEach((label,key)=>{
       const legacyRow=dashboardRaw.findIndex(r=>metricKey(r[0])===key),values=dashboard.periods.map(q=>{
-        const legacyCol=(dashboardRaw[0]||[]).findIndex(v=>trim(v)===q),legacy=legacyRow>0&&legacyCol>0?number(dashboardRaw[legacyRow][legacyCol]):null;
-        const qp=quarter(q), fin=quarterly.find(x=>x.quarter===q), start=qp.year*12+(qp.q-1)*3, count=counts.find(x=>x.period.key===start), balance=wc.find(x=>x.period.key===start+2);
+        const legacyCol=(dashboardRaw[0]||[]).findIndex(v=>trim(v)===q),rawLegacy=legacyRow>0&&legacyCol>0?dashboardRaw[legacyRow][legacyCol]:null;
+        const legacy=key==='cashbalanceasof'||key==='inventoryperiod'?trim(rawLegacy)||null:number(rawLegacy);
+        const {fin,count,balance,turns,period}=quarterDetails.get(q);
         let value=manual.get(q+'|'+key)??null, calculated=false;
         if(key.includes('activecustomers')){value=count?count.values[0]:null;calculated=true;}
         if(key.includes('revenuepercustomer')){value=ratio(fin&&fin.revenue,count&&count.values[0]);calculated=true;}
         if(key.startsWith('ebit')){value=fin?fin.ebit:null;calculated=true;}
-        if(key.includes('cashbalance')){value=balance?balance.cash:null;calculated=true;}
+        if(key.includes('cashbalance')){value=balance&&Number.isFinite(balance.cash)?(key==='cashbalanceasof'?balance.month:balance.cash):null;calculated=true;}
+        if(key==='inventoryturns'){value=turns;calculated=true;}
+        if(key==='inventoryperiod'){value=period;calculated=true;}
         if(key.includes('concentration')) {
           const rows=cq.filter(r=>r.period.label===q), total=sum(rows.map(r=>r.values[0]));
           const covered=customers.length>0&&customers.every(c=>rows.some(r=>r.customer.toLowerCase()===c.name.toLowerCase()));

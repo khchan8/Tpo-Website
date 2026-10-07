@@ -8,7 +8,7 @@ const TPO = Object.freeze({
   input: 'LLM-Input', output: 'LLM Output', commentary: 'Commentary',
   startRow: 8, chunkSize: 30000, maxPrompt: 1500000, maxSourceCells: 200000,
   stateKey: 'TPO_MANUAL_V1_', version: 'tpo-commentary-v1',
-  build: '2026-09-07-v5', timezone: 'Asia/Bangkok',
+  build: '2026-10-07-v6', timezone: 'Asia/Bangkok',
   sources: ['Assumptions', 'MonthlyFinancials', 'CustomerRevenueMonthly',
     'CustomerRevenueQuarterly', 'CustomerCount', 'Quarterly Financials',
     '1. Working Capital', '2. Customer Economics', '3. Strategic Dashboard',

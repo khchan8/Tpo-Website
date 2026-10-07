@@ -15,5 +15,17 @@ async function runtime(settings={},hash='#/setup'){
 }
 test('controller redirects hidden direct links and always exposes Setup',async()=>{const rt=await runtime({tabs:{financials:{mode:'hide'}}},'#/financials');assert.equal(rt.location.hash,'#/overview');assert.ok(rt.nodes.get('primary-nav').children.some(a=>a.href==='#/setup'));assert.ok(!rt.nodes.get('primary-nav').children.some(a=>a.href==='#/financials'));});
 test('controller handles all hidden pages without redirect loops',async()=>{const rt=await runtime({tabs:Object.fromEntries(C.settings.sections.map(s=>[s.id,{mode:'hide'}]))},'#/financials');assert.equal(rt.location.hash,'#/setup');assert.equal(rt.nodes.get('primary-nav').children.length,1);});
-test('snapshot round trip validates captured data and rejects altered values',async()=>{const rt=await runtime();rt.app.saveSnapshot();const snapshot=JSON.parse(rt.downloads[0].text);assert.equal(snapshot.engine,'tpo-v5');assert.ok(!JSON.stringify(snapshot).includes('API_KEY'));assert.doesNotThrow(()=>rt.app.openSnapshot(snapshot));snapshot.sources.MonthlyFinancials[1][1]=101;assert.throws(()=>rt.app.openSnapshot(snapshot),/validation failed/);assert.doesNotThrow(()=>rt.app.returnLive());});
+test('snapshot round trip preserves report output and rejects obsolete calculation versions or altered data',async()=>{
+  const rt=await runtime();
+  rt.app.exportCSV();const original=rt.downloads.at(-1).text;
+  rt.app.saveSnapshot();const snapshot=JSON.parse(rt.downloads.at(-1).text);
+  assert.ok(!JSON.stringify(snapshot).includes('API_KEY'));
+  rt.app.openSnapshot(snapshot);rt.app.exportCSV();
+  assert.equal(rt.downloads.at(-1).text,original);
+  assert.throws(()=>rt.app.openSnapshot({...snapshot,engine:'tpo-v5'}));
+  const changed=JSON.parse(JSON.stringify(snapshot));changed.sources.MonthlyFinancials[1][1]=101;
+  assert.throws(()=>rt.app.openSnapshot(changed));
+  rt.app.exportCSV();assert.equal(rt.downloads.at(-1).text,original);
+  rt.app.returnLive();rt.app.exportCSV();assert.equal(rt.downloads.at(-1).text,original);
+});
 test('CSV respects customer visibility and explicit export selection',async()=>{const tabs=Object.fromEntries(C.settings.sections.map(s=>[s.id,{export:s.id==='customers'}]));const rt=await runtime({tabs,customers:{mana:{mode:'hide'}}});rt.app.exportCSV();assert.ok(!rt.downloads[0].text.includes('Mana'));});
