@@ -16,15 +16,6 @@ The script maintains **LLM-Input**, **LLM Output**, and **Commentary**. Commenta
 
 Copying Code.gs into GitHub does not install it in Google Sheets. The website and the bound Apps Script are updated separately.
 
-### v6 cash and inventory-turn migration
-
-Use the current `apps-script/Code.gs` build (`2026-10-07-v6`) in the existing bound project, then run **📊 TPO → Repair calculated sheets**. The repair backs up and clears every old Inventory Turns input, including historical numeric values, without moving other manual inputs or formulas. It adds **Cash Balance As Of** and **Inventory Period** and binds inventory turns to the shared calculation engine. Run **Format & verify all sheets** afterward; allow custom-function recalculation to finish before reviewing Data Validation or preparing AI input.
-
-Expected from the current August inputs: Q3 cash **฿3,340,966 as of Aug-26**, Q1 inventory turns **0.92x**, Q2 **0.71x**, and Q3 **0.13x for Jul–Aug QTD**, not annualised. Earlier turns stay blank where opening/closing inventory is unavailable; do not restore the old manual ratios.
-
-The updated `TPO_Monthly_Input.xlsx` is an export/snapshot, not an Apps Script project. Prefer the bound-script update above over replacing the live spreadsheet. If importing the XLSX into a separate copy, install `Code.gs` in that copy, **clear the contents of Report Model** to remove exported spill caches, then run **Set up / repair workflow sheets**, **Repair calculated sheets**, and **Format & verify all sheets**. This leaves primary inputs intact and lets the custom function rebuild its spill. Replacing or importing a workbook does not install the updated script or repoint the website's `SHEET_ID`.
-
-
 ## Website configuration and publication
 
 Keep the existing **config.js** with its **SHEET_ID** and Sheets **API_KEY**. The static website requires a Sheets API key and a workbook readable through that API. The API key is for loading spreadsheet data, not generating AI commentary. Keep its API and website referrer restrictions configured in Google Cloud.
@@ -69,12 +60,23 @@ Browsers cache and resend the HTTP Basic credentials automatically until the bro
 
 ## Monthly workflow
 
-1. Run **Prepare Next Month Slots (Fill in the blanks)** and enter the source figures. Repeated runs preserve entered values. Future blank rows are allowed; enter zero only for an actual zero.
-2. Run **Format & verify all sheets**, review **Data Validation**, and resolve errors. Use **Repair calculated sheets** if derived formulas need restoration. Enter manually maintained dashboard metrics in **Dashboard Inputs**.
-3. Run **1. Prepare LLM Input + Copy… → Copy all**. Paste the complete prompt into Gemini, ChatGPT, DeepSeek, or another AI chat.
-4. Copy the AI's JSON response. Use **Paste AI response…**, or paste into **LLM Output** starting at A8.
-5. Run **3. Import LLM Output**. The importer validates the batch and writes each response to its matching Commentary row. Review the prose for factual accuracy.
-6. Use **Reload data** on the website's **Setup & data health** page.
+1. Run **Prepare Next Month Slots (Fill in the blanks)**. This creates empty row slots for the new period across all input sheets.
+2. Enter raw figures into the **manual input sheets** (leave unknown future slots blank; enter `0` only for a genuine zero):
+   - **`MonthlyFinancials`**: Enter `Total Revenue`, `COGS`, `SG&A`, and `Net Income`. (`Gross Profit`, `EBIT`, and `Quarter` are calculated automatically).
+   - **`CustomerRevenueMonthly`**: Enter monthly `Revenue` for each customer.
+   - **`CustomerRevenueQuarterly`**: Enter quarter-to-date (QTD) `Revenue` for each customer under the quarter row (e.g. enter `Jul + Aug` for `Q3 2026`; update with full quarter when September closes).
+   - **`CustomerCount`**: Enter `Customer Count` for the month.
+   - **`1. Working Capital`**: Enter `Cash Balance`, `Accounts Receivable`, `Inventory Value`, and `Accounts Payable`. (`Net Working Capital` calculates automatically).
+   - **`Dashboard Inputs`** *(optional)*: Enter any manual operational metrics (such as retention, new accounts, or inventory turns) as `Quarter | Metric | Value`.
+
+   > [!IMPORTANT]
+   > **Do not type into derived sheets:** **`Quarterly Financials`**, **`2. Customer Economics`**, **`3. Strategic Dashboard`**, and **`4. Forward-Looking Risk`** are calculated automatically from the input sheets via `Report Model`. Manual edits to these sheets overwrite their formulas.
+
+3. Run **Format & verify all sheets**, review the **Data Validation** sheet, and resolve any reported errors. Use **Repair calculated sheets** if derived formulas ever need restoration.
+4. Run **1. Prepare LLM Input + Copy… → Copy all**. Paste the complete prompt into Gemini, ChatGPT, DeepSeek, or another AI chat.
+5. Copy the AI's JSON response. Use **Paste AI response…**, or paste into **LLM Output** starting at A8.
+6. Run **3. Import LLM Output**. The importer validates the batch and writes each response to its matching Commentary row. Review the prose for factual accuracy.
+7. Use **Reload data** on the website's **Setup & data health** page.
 
 Prepare a new prompt if source data, the shared reporting cut-off, or selected AI sections change. **Run diagnostics…** and **Show last error…** provide action, stack, timezone, and available source-cell context when troubleshooting.
 
