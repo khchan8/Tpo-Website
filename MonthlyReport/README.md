@@ -1,21 +1,21 @@
-# TPO monthly report — manual AI workflow, v7
+# TPO monthly report — manual AI workflow, v8
 
 The Apps Script, calculated Google Sheets cells, and website use the same calculation engine. By default, the reporting period follows the latest month with valid actual revenue in MonthlyFinancials; Report settings can apply a historical cut-off. Blank future rows such as Aug-27 and Sep-27 are allowed and ignored; an explicit zero is actual data. An expense-only future row remains pending until revenue is entered.
 
 ## Monthly workflow
 
-1. Run **Prepare Next Month Slots (Fill in the blanks)**. It reuses or creates the next calendar month's rows, supplies blank-safe GP/EBIT/NWC formulas, and adds missing quarter sections. Fill the raw source figures. Repeated runs preserve entered values and reuse existing slots.
-2. **📊 TPO → Format & verify all sheets**. This protects reporting month labels as explicit text, normalizes unambiguous numeric text, and applies amount/percentage formats, and writes **Data Validation**. It preserves blank inputs and formulas. Previous converted values are recorded in **Repair Backup**.
-3. Resolve errors. **Repair calculated sheets** installs or restores dynamic quarter totals, customer contribution/concentration, working capital, dashboard, matching-period comparisons, and as-of formulas. Month setup also performs this repair. Once installed, changing source figures recalculates these cells automatically. Run month setup to create new sections; no formula dragging is needed.
-4. **1. Prepare LLM Input + Copy… → Copy all**. Paste into Gemini, ChatGPT, DeepSeek, or another AI chat. The prompt requests the report sections and customers selected in shared Report settings, with calculated summaries, normalized supporting tables, quality notes, and a JSON response template.
-5. Copy the AI response. Use **Paste AI response…** to save it to **LLM Output**, or paste into that sheet starting at **A8**.
-6. **3. Import LLM Output** writes matching entries into **Commentary A:C**. Reload the website.
+1. Run **📊 TPO → 1. Enter monthly data → Prepare next month slots**. It reuses or creates the next calendar month's rows, supplies blank-safe GP/EBIT/NWC formulas, and adds missing quarter sections. Fill the raw source figures. Repeated runs preserve entered values and reuse existing slots. **Input checklist…** in the same submenu shows what to type and links to the input tabs.
+2. **📊 TPO → 2. Check & calculate**. This protects reporting month labels as explicit text, normalizes unambiguous numeric text, sets up the workflow sheets, repairs calculated sheets, applies amount/percentage formats, cleans up obsolete guide content, and writes **Data Validation**. It preserves blank inputs and formulas; previous values are recorded in **Repair Backup**. Review Data Validation and wait for recalculation.
+3. Resolve errors. Repair installs or restores dynamic quarter totals, customer contribution/concentration, working capital, dashboard, matching-period comparisons, and as-of formulas. Once installed, changing source figures recalculates these cells automatically. Run month setup to create new sections; no formula dragging is needed.
+4. **📊 TPO → 3. Prepare AI prompt + copy… → Copy all**. Paste into Gemini, ChatGPT, DeepSeek, or another AI chat. The prompt requests the report sections and customers selected in shared Report settings, with calculated summaries, normalized supporting tables, quality notes, and a JSON response template.
+5. Copy the AI's JSON response and run **📊 TPO → 4. Paste AI response & update Commentary…**. This validates the batch, saves the literal response in **LLM Output**, and writes matching entries into **Commentary A:C** in one action; unmatched rows keep their positions.
+6. Run **📊 TPO → 5. Review Commentary**, then reload the website.
 
 The prose style remains 2–4 English sentences, 50–90 words per section. No LLM API key is needed. The script does not send data to an AI provider; you choose where to paste it.
 
 ## Installation
 
-Replace the complete bound Apps Script with **Code.gs** (project delivery: **apps-script/Code.gs**). Do not append it or install multiple versions together. Save and reload Google Sheets, then run **Repair calculated sheets** once. Google may require authorization or identity verification on the first run. All dialogs are embedded in the file. Copying this file into GitHub does not update the bound Google script; installation in Sheets is separate. See **SETUP.md** for the complete setup workflow.
+Replace the complete bound Apps Script with **Code.gs** (project delivery: **apps-script/Code.gs**). Do not append it or install multiple versions together. Save and reload Google Sheets, then run **2. Check & calculate** once. Google may require authorization or identity verification on the first run. All dialogs are embedded in the file. Copying this file into GitHub does not update the bound Google script; installation in Sheets is separate. See **SETUP.md** for the complete setup workflow.
 
 Commentary uses **View | Commentary | Status** in A:C. It does not recreate the deleted D:G columns. The generated **LLM-Input** and **LLM Output** sheets use rows 1–7 for metadata and A8 onward for text. Use the copy dialog to concatenate prompt chunks; copying a spreadsheet range can introduce tabs/newlines.
 

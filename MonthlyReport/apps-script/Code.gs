@@ -342,7 +342,7 @@ const TPO = Object.freeze({
   input: 'LLM-Input', output: 'LLM Output', commentary: 'Commentary',
   startRow: 8, chunkSize: 30000, maxPrompt: 1500000, maxSourceCells: 200000,
   stateKey: 'TPO_MANUAL_V1_', version: 'tpo-commentary-v1',
-  build: '2026-10-07-v7', timezone: 'Asia/Bangkok',
+  build: '2026-10-07-v8', timezone: 'Asia/Bangkok',
   sources: ['Assumptions', 'MonthlyFinancials', 'CustomerRevenueMonthly',
     'CustomerRevenueQuarterly', 'CustomerCount', 'Quarterly Financials',
     '1. Working Capital', '2. Customer Economics', '3. Strategic Dashboard',
@@ -351,22 +351,62 @@ const TPO = Object.freeze({
 });
 
 function onOpen() {
-  SpreadsheetApp.getUi().createMenu('📊 TPO')
-    .addItem('1. Prepare LLM Input + Copy…', 'menuPrepareLLMInput')
-    .addItem('Copy prepared input…', 'menuCopyLLMInput')
-    .addItem('2. Open LLM Output sheet', 'menuOpenLLMOutput')
-    .addItem('Paste AI response…', 'menuPasteLLMOutput')
-    .addItem('3. Import LLM Output', 'menuImportLLMOutput')
-    .addSeparator().addItem('Add Customer…', 'menuAddCustomer')
-    .addItem('Set up / repair workflow sheets', 'menuSetupManualWorkflow')
-    .addSeparator().addItem('Format & verify all sheets', 'menuFormatVerify')
-    .addItem('Validate data', 'menuValidateData')
-    .addItem('Repair calculated sheets', 'menuRepairCalculated')
+  const ui = SpreadsheetApp.getUi();
+  const input = ui.createMenu('1. Enter monthly data')
+    .addItem('Input checklist…', 'menuMonthlyInput')
+    .addItem('Prepare next month slots', 'menuPrepareNextMonthSlots')
+    .addItem('Add customer…', 'menuAddCustomer');
+  const tools = ui.createMenu('Tools & settings')
     .addItem('Report settings…', 'menuReportSettings')
-    .addItem('Prepare Next Month Slots (Fill in the blanks)', 'menuPrepareNextMonthSlots')
+    .addItem('Copy prepared AI prompt…', 'menuCopyLLMInput')
+    .addItem('Clean up obsolete information', 'menuCleanupWorkbook')
+    .addItem('Repair calculated sheets', 'menuRepairCalculated')
+    .addItem('Format & verify all sheets', 'menuFormatVerify')
     .addItem('Run diagnostics…', 'menuRunDiagnostics')
-    .addItem('Show last error…', 'menuShowLastError')
+    .addItem('Show last error…', 'menuShowLastError');
+  ui.createMenu('📊 TPO')
+    .addSubMenu(input)
+    .addItem('2. Check & calculate', 'menuCheckAndCalculate')
+    .addItem('3. Prepare AI prompt + copy…', 'menuPrepareLLMInput')
+    .addItem('4. Paste AI response & update Commentary…', 'menuPasteAndImportLLMOutput')
+    .addItem('5. Review Commentary', 'menuReviewCommentary')
+    .addSeparator()
+    .addSubMenu(tools)
     .addToUi();
+}
+
+function menuMonthlyInput() {
+  uiAction_('Input checklist', () => {
+    const ss = SpreadsheetApp.getActiveSpreadsheet(), base = ss.getUrl().split('#')[0];
+    const link = (name, label) => {
+      const sh = ss.getSheetByName(name);
+      return '<li>' + htmlEscape_(label) + ': ' + (sh
+        ? '<a href="' + htmlEscape_(base + '#gid=' + sh.getSheetId()) + '" target="_top">' + htmlEscape_(name) + '</a>'
+        : '<b>' + htmlEscape_(name) + ' is missing</b>') + '</li>';
+    };
+    const body = '<h2>Monthly input checklist</h2>' +
+      '<p>Enter data only in the input tabs below. Derived sheets (Quarterly Financials, Customer Economics, Strategic Dashboard, Forward-Looking Risk, CustomerRevenueQuarterly) are calculated, not inputs.</p><ul>' +
+      link('Assumptions', 'Customer margins and configuration (occasional)') +
+      link('MonthlyFinancials', 'Monthly amounts — do not overwrite calculation formulas') +
+      link('CustomerRevenueMonthly', 'Customer revenue per month') +
+      link('CustomerCount', 'Customer count per month') +
+      link('1. Working Capital', 'Cash, accounts receivable, inventory, accounts payable') +
+      link('Dashboard Inputs', 'Column C actual values; column D examples are ignored') +
+      '</ul>' +
+      '<p>Leave unknown cells blank; enter 0 only for a genuine zero. To start a new month, use TPO → 1. Enter monthly data → Prepare next month slots. Corrections to an existing month do not roll forward automatically.</p>' +
+      '<p>Next steps: TPO → 2. Check &amp; calculate, then 3. Prepare AI prompt + copy…, 4. Paste AI response &amp; update Commentary…, and 5. Review Commentary.</p>';
+    dialog_('TPO · Monthly input checklist', body, '', 520);
+  });
+}
+
+function menuReviewCommentary() {
+  uiAction_('Review Commentary', () => {
+    const sh = sheet_(TPO.commentary);
+    if (!sh) { SpreadsheetApp.getUi().alert('Commentary is missing. Run Check & calculate first.'); return; }
+    SpreadsheetApp.getActiveSpreadsheet().setActiveSheet(sh);
+    sh.getRange('A1').activate();
+    SpreadsheetApp.getUi().alert('Review the Commentary text for factual accuracy. Reload website data after your review; commentary positions and statuses are unchanged.');
+  });
 }
 
 function uiAction_(name, action) {
@@ -610,10 +650,10 @@ function ensureExchange_(name, type) {
   plainText_(sh.getRange('A1'), [[title]]);
   plainText_(sh.getRange('A2:A7'), [
     ['Batch'], ['Latest financial month'], ['Sections'], ['Status'],
-    [type === 'input' ? 'Use TPO → Copy prepared input to copy the complete prompt.' :
-      'Paste the complete JSON at A8, or use TPO → Paste AI response.'],
+    [type === 'input' ? 'Use TPO → 3. Prepare AI prompt + copy… to create and copy the complete prompt.' :
+      'Use TPO → 4. Paste AI response & update Commentary… to save the response and update Commentary in one action; or paste the complete JSON at A8.'],
     [type === 'input' ? 'Prompt chunks below — copied together with no extra separators.' :
-      'Then use TPO → Import LLM Output. Clear the old response before pasting a replacement.']
+      'After importing, use TPO → 5. Review Commentary. Clear the old response before pasting a replacement at A8.']
   ]);
   sh.getRange('A1:B1').setBackground('#115E67').setFontColor('#ffffff').setFontWeight('bold');
   sh.getRange('A2:A5').setFontWeight('bold');
@@ -636,12 +676,6 @@ function setup_() {
   ensureCommentary_();
   ensureExchange_(TPO.input, 'input'); ensureExchange_(TPO.output, 'output');
   disableLegacyTrigger_();
-}
-function menuSetupManualWorkflow() {
-  uiAction_('Set up workflow sheets', () => {
-    locked_(setup_);
-    SpreadsheetApp.getUi().alert('Ready. Use TPO → 1. Prepare LLM Input + Copy.');
-  });
 }
 
 function readSources_() {
@@ -679,7 +713,7 @@ function ensureReportSettings_() {
     TPOReportSettings.fromSources([{name:'Report Settings',raw:sh.getDataRange().getValues()}]);return sh;
   }
   sh=sh||ss.insertSheet('Report Settings');ensureSize_(sh,4,2);
-  plainText_(sh.getRange(1,1,4,2),[['Setting','Value'],['Configuration',JSON.stringify(TPOReportSettings.normalize({}))],['Manage','Use TPO → Report settings. Website personal preferences do not change these shared defaults.'],['Version','1']]);
+  plainText_(sh.getRange(1,1,4,2),[['Setting','Value'],['Configuration',JSON.stringify(TPOReportSettings.normalize({}))],['Manage','Use TPO → Tools & settings → Report settings. Website personal preferences do not change these shared defaults.'],['Version','1']]);
   sh.setFrozenRows(1);sh.setColumnWidth(1,160);sh.setColumnWidth(2,760);sh.getRange(1,1,1,2).setBackground('#0B1F3A').setFontColor('#ffffff').setFontWeight('bold');sh.getRange(2,2).setWrap(true);return sh;
 }
 function menuReportSettings() {
@@ -941,6 +975,8 @@ function readCommentary_() {
 }
 
 function prepare_() {
+  // Cleanup precedes every read so the batch and hashes reflect cleared labels.
+  const cleanup = cleanupWorkbook_();
   const sources = readSources_();
   const checked=TPOCore.analyze(TPOReportSettings.filterSources(sources,TPOReportSettings.fromSources(sources))), errors=checked.issues.filter(i=>i.level==='error');
   writeValidation_(checked);
@@ -966,7 +1002,7 @@ function prepare_() {
   plainText_(output.getRange('B2:B5'), [[batch], [analysis.period], [state.views.length], ['Awaiting response. Replace any older text below.']]);
   SpreadsheetApp.getActiveSpreadsheet().setActiveSheet(input);
   return { text: prompt, batch: batch, count: state.views.length, period: state.period,
-    warnings: analysis.warnings, characters: prompt.length };
+    warnings: analysis.warnings, characters: prompt.length, cleanupNotices: cleanup.notices };
 }
 function menuPrepareLLMInput() {
   uiAction_('menuPrepareLLMInput', () => { const data = locked_(prepare_); showCopy_(data); });
@@ -981,13 +1017,6 @@ function preparedInput_() {
   return { text: text, batch: state.batch, count: state.views.length, period: state.period, characters: text.length };
 }
 function menuCopyLLMInput() { uiAction_('menuCopyLLMInput', () => showCopy_(locked_(preparedInput_))); }
-function menuOpenLLMOutput() {
-  uiAction_('menuOpenLLMOutput', () => {
-    const sh = locked_(() => ensureExchange_(TPO.output, 'output'));
-    SpreadsheetApp.getActiveSpreadsheet().setActiveSheet(sh); sh.getRange('A8').activate();
-  });
-}
-
 function parseOutput_(text, state) {
   let clean = String(text || '').replace(/^\uFEFF/, '').trim();
   const fence = /^```(?:json)?\s*\n?([\s\S]*?)\n?```$/i.exec(clean);
@@ -1040,6 +1069,7 @@ function readOutput_(state) {
 
 function import_() {
   const state = readState_();
+  const incoming = JSON.parse(JSON.stringify(state));
   const parsed = parseOutput_(readOutput_(state), state);
   const outputHash = digest_(JSON.stringify(parsed.items.slice().sort((a, b) => a.view.localeCompare(b.view))));
   const current = readCommentary_();
@@ -1078,11 +1108,16 @@ function import_() {
     if (last && last[last.length - 1].row + 1 === change.row) last.push(change);
     else runs.push([change]);
   });
+  const statusCell = sheet_(TPO.output).getRange('B5');
+  const statusBefore = { value: statusCell.getValues()[0][0], formula: String(statusCell.getFormulas()[0][0] || ''), rich: statusCell.getRichTextValues()[0][0] };
   try {
     if (append.length) plainText_(sh.getRange(appendStart, 1, append.length, 1), append.map(i => [i.view]));
     runs.forEach(run => {
       sh.getRange(run[0].row, 2, run.length, 2).setRichTextValues(run.map(c => after[c.row - 2]));
     });
+    state.importedHash = outputHash; state.importedAt = stamp_();
+    saveState_(state);
+    plainText_(statusCell, [['Imported ' + parsed.items.length + ' sections · ' + state.importedAt + (parsed.warnings.length ? ' · word-count notes: ' + parsed.warnings.length : '')]]);
     SpreadsheetApp.flush();
   } catch (e) {
     // Best-effort recovery for a Sheets service failure; invalid JSON never reaches this block.
@@ -1098,21 +1133,15 @@ function import_() {
         }
       }));
       if (append.length) sh.getRange(appendStart, 1, append.length, 3).clearContent();
+      saveState_(incoming);
+      if (statusBefore.formula) statusCell.setFormula(statusBefore.formula);
+      else if (statusBefore.rich) statusCell.setRichTextValue(statusBefore.rich);
+      else statusCell.setValue(statusBefore.value);
       SpreadsheetApp.flush();
     } catch (restoreError) { recovery = 'Recovery also failed. Some rows may have changed; use Sheets version history to review.'; }
     throw new Error('Import failed: ' + e.message + '. ' + recovery);
   }
-  state.importedHash = outputHash; state.importedAt = stamp_();
-  saveState_(state);
-  plainText_(sheet_(TPO.output).getRange('B5'), [['Imported ' + parsed.items.length + ' sections · ' + state.importedAt + (parsed.warnings.length ? ' · word-count notes: ' + parsed.warnings.length : '')]]);
   return { count: parsed.items.length, already: false, warnings: parsed.warnings };
-}
-function menuImportLLMOutput() {
-  uiAction_('menuImportLLMOutput', () => {
-    const result = locked_(import_);
-    SpreadsheetApp.getUi().alert((result.already ? 'Already imported: ' : 'Imported: ') + result.count + ' sections.' +
-      (result.warnings.length ? '\n\nWord-count notes (text was kept as supplied):\n' + result.warnings.join('\n') : ''));
-  });
 }
 
 // HTML is inline so installation requires only one Code.gs file.
@@ -1130,8 +1159,11 @@ function dialog_(title, body, script, height) {
   SpreadsheetApp.getUi().showModalDialog(HtmlService.createHtmlOutput(html).setWidth(720).setHeight(height || 570), title);
 }
 function showCopy_(data) {
-  const body = '<h2>Copy your AI briefing input</h2><p>Copy everything below, then paste it into your preferred AI chat. Paste the JSON response into <b>LLM Output</b>.</p>' +
+  const maintenance = data.cleanupNotices && data.cleanupNotices.length;
+  const body = '<h2>Copy your AI briefing input</h2>' +
+    '<p>Copy everything below, then paste it into your preferred AI chat — that exchange stays a manual copy/paste step. When the AI answers, use <b>TPO → 4. Paste AI response &amp; update Commentary…</b> to save the response and update Commentary together.</p>' +
     '<p class="meta">Financial month: ' + htmlEscape_(data.period) + ' · ' + data.count + ' sections · ' + data.characters.toLocaleString() + ' characters</p>' +
+    (maintenance ? '<p class="meta">Workbook maintenance notes (not part of the AI data): ' + htmlEscape_(data.cleanupNotices.join(' ')) + '</p>' : '') +
     '<textarea id="payload" readonly aria-label="Complete AI prompt">' + htmlEscape_(data.text) + '</textarea>' +
     '<button id="copy">Copy all</button><button class="secondary" onclick="google.script.host.close()">Close</button><div id="status" role="status"></div>';
   dialog_('TPO · Copy LLM Input', body, `
@@ -1148,36 +1180,80 @@ function showCopy_(data) {
     };
   `);
 }
-function menuPasteLLMOutput() {
-  uiAction_('menuPasteLLMOutput', () => {
+/** Snapshot the pre-action LLM Output payload and status; returns a restore function. */
+function snapshotOutputPayload_(sh) {
+  const rows = Math.max(0, sh.getLastRow() - TPO.startRow + 1);
+  const cols = Math.max(1, sh.getMaxColumns());
+  let values = [], formulas = [], rich = [];
+  if (rows) {
+    const range = sh.getRange(TPO.startRow, 1, rows, cols);
+    values = range.getValues(); formulas = range.getFormulas(); rich = range.getRichTextValues();
+  }
+  const status = sh.getRange('B5');
+  const statusBefore = { value: status.getValues()[0][0], formula: String(status.getFormulas()[0][0] || ''), rich: status.getRichTextValues()[0][0] };
+  return function restore() {
+    // Clear only newly written payload cells beyond the previous area first.
+    const previousLast = TPO.startRow - 1 + rows;
+    if (sh.getLastRow() > previousLast)
+      sh.getRange(previousLast + 1, 1, sh.getLastRow() - previousLast, Math.max(1, sh.getMaxColumns())).clearContent();
+    for (let i = 0; i < rows; i++) for (let j = 0; j < cols; j++) {
+      const cell = sh.getRange(TPO.startRow + i, j + 1);
+      if (formulas[i][j]) cell.setFormula(formulas[i][j]);
+      else if (rich[i][j]) cell.setRichTextValue(rich[i][j]);
+      else cell.setValue(values[i][j]);
+    }
+    if (statusBefore.formula) status.setFormula(statusBefore.formula);
+    else if (statusBefore.rich) status.setRichTextValue(statusBefore.rich);
+    else status.setValue(statusBefore.value);
+  };
+}
+function menuPasteAndImportLLMOutput() {
+  uiAction_('menuPasteAndImportLLMOutput', () => {
     const state = locked_(readState_);
-    const body = '<h2>Paste the AI response</h2><p>Paste the complete JSON response. Saving replaces the previous response in LLM Output. Then run <b>Import LLM Output</b>.</p>' +
+    const body = '<h2>Paste the AI response</h2>' +
+      '<p>Paste the complete JSON response for batch ' + htmlEscape_(state.batch) + '. A successful import saves it in <b>LLM Output</b> and updates the selected <b>Commentary</b> views in one action; unmatched rows keep their positions.</p>' +
       '<textarea id="response" aria-label="AI JSON response" placeholder="Paste JSON here"></textarea>' +
-      '<button id="save">Save to LLM Output</button><button class="secondary" onclick="google.script.host.close()">Close</button><div id="status" role="status"></div>';
+      '<button id="save">Import to Commentary</button><button class="secondary" onclick="google.script.host.close()">Close</button><div id="status" role="status"></div>';
     dialog_('TPO · Paste AI response', body, `
       document.getElementById('save').onclick = function () {
         const button = this, status = document.getElementById('status'); button.disabled = true;
-        status.className = ''; status.textContent = 'Validating and saving…';
+        status.className = ''; status.textContent = 'Validating, saving and importing…';
         google.script.run.withSuccessHandler(function (result) {
-          button.disabled = false; status.textContent = 'Saved ' + result.count + ' sections. Use TPO → Import LLM Output.';
+          button.disabled = false;
+          status.textContent = (result.already ? 'Already imported: ' : 'Imported: ') + result.count + ' sections.' +
+            (result.warnings.length ? '\\n\\nWord-count notes (text was kept as supplied):\\n' + result.warnings.join('\\n') : '');
         }).withFailureHandler(function (error) {
           button.disabled = false; status.className = 'error'; status.textContent = error.message || String(error);
-        }).savePastedLLMOutput(document.getElementById('response').value, ${JSON.stringify(state.batch)});
+        }).importPastedLLMOutput(document.getElementById('response').value, ${JSON.stringify(state.batch)});
       };
     `);
   });
 }
-function savePastedLLMOutput(text, batch) {
-  return serverAction_('savePastedLLMOutput', () => locked_(() => {
+function importPastedLLMOutput(text, batch) {
+  return serverAction_('importPastedLLMOutput', () => locked_(() => {
     const state = readState_();
     if (batch !== state.batch) throw new Error('A newer input was prepared. Reopen this dialog for the current batch.');
-    if (typeof text !== 'string' || text.length > TPO.maxPrompt) throw new Error('Response is empty or too large.');
-    const parsed = parseOutput_(text, state);
+    if (typeof text !== 'string' || !text.length || text.length > TPO.maxPrompt) throw new Error('Response is empty or too large.');
+    // Validate everything before mutating output, Commentary, or the batch manifest.
+    parseOutput_(text, state);
+    readCommentary_();
+    if (sourceHash_(readSources_()) !== state.sourceHash) throw new Error('Source data changed after this batch was prepared. Prepare LLM Input again and request a fresh response. Nothing was imported.');
     const output = ensureExchange_(TPO.output, 'output');
-    writePayload_(output, text);
-    state.outputStorage = 'chunks'; state.outputHash = digest_(text); saveState_(state);
-    plainText_(output.getRange('B5'), [['Response saved; ready to import']]);
-    return { count: parsed.items.length };
+    const restoreOutput_ = snapshotOutputPayload_(output);
+    const stateBefore = JSON.stringify(state);
+    const restoreState_ = () => saveState_(JSON.parse(stateBefore));
+    try {
+      writePayload_(output, text);
+      state.outputStorage = 'chunks'; state.outputHash = digest_(text); saveState_(state);
+      var result = import_();
+    } catch (e) {
+      let restored = ' LLM Output and the batch manifest were restored to their pre-action state.';
+      try { restoreOutput_(); restoreState_(); }
+      catch (restoreError) { restored = ' Restoration failed (' + restoreError.message + '); use Sheets version history and Prepare LLM Input again.'; }
+      throw new Error(e.message + restored);
+    }
+    SpreadsheetApp.getActiveSpreadsheet().setActiveSheet(sheet_(TPO.commentary));
+    return result;
   }));
 }
 
@@ -1286,10 +1362,136 @@ function writeValidation_(a) {
   sh.getRange(2,1,rows.length-1,4).setWrap(true).setVerticalAlignment('top');
   return sh;
 }
-function menuValidateData() {
-  uiAction_('Validate data',()=>locked_(()=>{
-    const sh=writeValidation_(analyzeReportSources_(readSources_()));SpreadsheetApp.getActiveSpreadsheet().setActiveSheet(sh);
-  }));
+
+/** Recognized obsolete guide content, cleared one cell at a time with backup. */
+function managedReadmeRows_() {
+  return [
+    ['TPO — Monthly workflow', ''],
+    ['Build', TPO.build],
+    ['', ''],
+    ['MONTHLY STAGES', ''],
+    ['1. Enter monthly data', 'TPO → 1. Enter monthly data → Input checklist… shows what to type. Use Prepare next month slots before filling a new month.'],
+    ['2. Check & calculate', 'TPO → 2. Check & calculate. Review Data Validation and wait for recalculation before preparing the prompt.'],
+    ['3. Prepare AI prompt + copy…', 'Builds the prompt from validated data; copy it into your preferred AI chat (manual copy/paste step).'],
+    ['4. Paste AI response & update Commentary…', 'Saves the JSON response in LLM Output and updates the selected Commentary views in one action.'],
+    ['5. Review Commentary', 'TPO → 5. Review Commentary. Reload website data after factual review.'],
+    ['', ''],
+    ['INPUT TABS', ''],
+    ['Assumptions', 'Customer names and contribution margins; occasional parameters (Currency, Active Customers rule, Low season).'],
+    ['MonthlyFinancials', 'Monthly amounts by row; do not overwrite calculation formulas.'],
+    ['CustomerRevenueMonthly', 'Monthly revenue per customer.'],
+    ['CustomerCount', 'Customer count per month.'],
+    ['1. Working Capital', 'Cash, accounts receivable, inventory, accounts payable; net working capital is calculated.'],
+    ['Dashboard Inputs', 'Column C holds actual values; column D examples are ignored.'],
+    ['', ''],
+    ['DATA RULES', ''],
+    ['Unknown vs zero', 'Leave unknown cells blank; enter 0 only for a genuine zero.'],
+    ['Derived tabs', 'Quarterly Financials, CustomerRevenueQuarterly, 2. Customer Economics, 3. Strategic Dashboard and 4. Forward-Looking Risk are calculated, not manual inputs.'],
+    ['Customer quarters', 'Customer quarterly revenue comes from monthly data; a quarter covers quarter-start through the reporting month (QTD cutoff) and complete calendar months.'],
+    ['As-of & quarter coverage', 'Reporting period (as-of) and Quarter coverage derive from the latest financial data.'],
+    ['Errors vs warnings', 'Errors block AI preparation; reconciliation warnings require review, not balancing entries.'],
+    ['', ''],
+    ['MAINTENANCE', ''],
+    ['Backups', 'Cleanup and repair record every previous cell value and formula in Repair Backup before changing it.'],
+    ['Cleanup', 'TPO → Tools & settings → Clean up obsolete information removes only recognized obsolete content and reports skipped custom content.'],
+    ['Apps Script', 'Installing apps-script/Code.gs in this workbook’s bound script is separate from GitHub deployment or website publishing.']
+  ];
+}
+function workbookCleanupPlan_() {
+  const plan=[],notices=[],planned=new Set();
+  function snapshot(sh,cols) {
+    const rows=sh.getLastRow();
+    if(!rows)return {values:[],formulas:[]};
+    const width=Math.max(1,Math.min(cols,sh.getLastColumn()||cols));
+    const range=sh.getRange(1,1,rows,width);
+    return {values:range.getValues(),formulas:range.getFormulas()};
+  }
+  function planWrite(sh,snap,row,col,value,reason) {
+    if(row<1||col<1)return;
+    const key=sh.name+'|'+row+'|'+col;if(planned.has(key))return;
+    const v=snap.values[row-1]?snap.values[row-1][col-1]:undefined;
+    const f=snap.formulas[row-1]?String(snap.formulas[row-1][col-1]||''):'';
+    if(!f&&String(v==null?'':v)===String(value))return; // include only value/formula differences
+    planned.add(key);plan.push({sheet:sh.name,row,col,value,reason,text:true});
+  }
+  const assumptions=sheet_('Assumptions');
+  if(assumptions) {
+    const snap=snapshot(assumptions,5),rows=snap.values.length;
+    for(let i=0;i<rows;i++) {
+      if(normalize_(snap.values[i][3])!=='reconciliationcheck')continue;
+      const labels=[0,1,2,3].map(k=>snap.values[i+k]?String(snap.values[i+k][3]||'').trim():'');
+      const headingBlank=!hasValue_(snap.values[i][4])&&!String(snap.formulas[i]&&snap.formulas[i][4]||'');
+      const customer=/^customer revenue total\s*\(?\s*q([1-4])\s+(\d{4})\s*\)?$/i.exec(labels[1]);
+      const pnl=/^p&l total revenue\s*\(?\s*q([1-4])\s+(\d{4})\s*\)?$/i.exec(labels[2]);
+      const gap=normalize_(labels[3])==='gapresolvebeforeingest';
+      if(headingBlank&&customer&&pnl&&customer[1]===pnl[1]&&customer[2]===pnl[2]&&gap) {
+        [0,1,2,3].forEach(k=>[0,1].forEach(c=>
+          planWrite(assumptions,snap,i+k+1,4+c,'','Retire legacy reconciliation block; Data Validation reports the same gaps')));
+      } else {
+        notices.push('Assumptions reconciliation block at D'+(i+1)+':E'+(i+4)+' does not match the legacy template; left unchanged.');
+      }
+    }
+  }
+  const readme=sheet_('README');
+  if(readme) {
+    const snap=snapshot(readme,2),used=snap.values.length;
+    const title=String(snap.values[0]&&snap.values[0][0]||'').trim();
+    const beyondB=snap.values.some((r,i)=>r.slice(2).some(v=>hasValue_(v))||(snap.formulas[i]||[]).slice(2).some(f=>String(f||'')));
+    let refresh=false;
+    if(title==='TPO Wellness — Monthly Input Template') {
+      const a2=String(snap.values[1]&&snap.values[1][0]||'');
+      if(beyondB||!/pipeline\/inputs\/|validate_input\.py|build_sources\.py/.test(a2))notices.push('README contains custom content; left unchanged.');
+      else refresh=true;
+    } else if(title==='TPO — Monthly workflow') {
+      if(beyondB)notices.push('README contains custom content; left unchanged.');else refresh=true;
+    } else if(!used)refresh=true;
+    else notices.push('README contains custom content; left unchanged.');
+    if(refresh) {
+      const guide=managedReadmeRows_();
+      for(let row=1;row<=Math.max(used,guide.length);row++)for(let col=1;col<=2;col++)
+        planWrite(readme,snap,row,col,guide[row-1]?guide[row-1][col-1]:'','Refresh managed monthly-workflow guide');
+    }
+  }
+  const glossary=sheet_('Glossary');
+  if(glossary) {
+    const snap=snapshot(glossary,2);
+    if(String(snap.values[0]&&snap.values[0][0]||'').trim()!=='Term'||String(snap.values[0]&&snap.values[0][1]||'').trim()!=='Definition')
+      notices.push('Glossary headers are not Term | Definition; left unchanged.');
+    else snap.values.slice(1).forEach((r,i)=>{
+      const row=i+2,term=String(r[0]||'').trim();
+      if(/^low season\s*(\([^)]*\))?$/i.test(term)) {
+        planWrite(glossary,snap,row,1,'Low season','Rename recognized glossary term');
+        planWrite(glossary,snap,row,2,'The month range is configured in Assumptions → Low season; reporting uses that setting rather than a fixed seasonal window.','Refresh recognized glossary definition');
+      } else if(/^Q[1-4]\s+\d{4}\s+cordon$/i.test(term)) {
+        planWrite(glossary,snap,row,1,'Quarter coverage','Rename recognized glossary term');
+        planWrite(glossary,snap,row,2,'A partial quarter covers quarter-start through the reporting month. Compare matching months only; do not annualize or extrapolate.','Refresh recognized glossary definition');
+      } else if(/^contribution margin$/i.test(term)) {
+        planWrite(glossary,snap,row,2,'Customer-specific assumed margin used to estimate contribution from revenue; not audited gross profit.','Refresh recognized glossary definition');
+      } else if(/^data note \(warn\)$/i.test(term)) {
+        planWrite(glossary,snap,row,1,'Data quality notes','Rename recognized glossary term');
+        planWrite(glossary,snap,row,2,'Data Validation reports missing or conflicting inputs and customer/P&L reconciliation gaps. Review warnings; do not fill unknowns or add balancing amounts to remove them.','Refresh recognized glossary definition');
+      } else if(/^turnaround storyline$/i.test(term)) {
+        planWrite(glossary,snap,row,1,'','Remove obsolete storyline term');
+        planWrite(glossary,snap,row,2,'','Remove obsolete storyline term');
+      }
+    });
+  }
+  const commentary=sheet_(TPO.commentary);
+  if(commentary&&commentary.getMaxColumns()>=4&&normalize_(String(commentary.getRange('D1').getDisplayValue()||'').trim())==='oldcommentary') {
+    const last=commentary.getLastRow(),rows=Math.max(0,last-1);
+    const values=rows?commentary.getRange(2,4,rows,1).getDisplayValues():[];
+    const formulas=rows?commentary.getRange(2,4,rows,1).getFormulas():[];
+    if(values.some(r=>hasValue_(r[0]))||formulas.some(r=>String(r[0]||'')))
+      notices.push('Commentary column D contains archived content; left unchanged.');
+    else planWrite(commentary,{values:[['','','','Old Commentary']],formulas:[['','','','']]},1,4,'','Remove empty Old Commentary archive header');
+  }
+  return {plan:plan,notices:notices};
+}
+function cleanupWorkbook_() {
+  const planned=workbookCleanupPlan_();
+  backupAndWrite_(planned.plan,'Clean up obsolete workbook information');
+  return {changes:planned.plan.length,notices:planned.notices,
+    sourcesCleared:planned.plan.some(p=>TPO.sources.includes(p.sheet))};
 }
 
 function formatPlan_(sources,a) {
@@ -1548,11 +1750,6 @@ function repairPlan_(sources,a,next) {
     const row=i+2,label=String(r[3]||'');
     if(/reporting period/i.test(label))add('Assumptions',row,5,modelLookup_('"meta|latest-month"'),null,true);
     if(/cordon|quarter coverage/i.test(label)){add('Assumptions',row,4,'Quarter coverage');add('Assumptions',row,5,modelLookup_('"meta|coverage"'),null,true);}
-    if(/Q[1-4]\s+\d{4}/i.test(label)&&/customer revenue total|P&L Total Revenue/i.test(label)) {
-      const prefix=/P&L/i.test(label)?'quarter':'portfolio';
-      add('Assumptions',row,5,modelLookup_('"'+prefix+'|"&UPPER(REGEXEXTRACT(D'+row+',"(?i)Q[1-4]\\s+[0-9]{4}"))&"|revenue"'),null,true);
-    }
-    if(/gap/i.test(label)&&row>=4)add('Assumptions',row,5,'=IF(COUNT(E'+(row-2)+':E'+(row-1)+')=2,E'+(row-2)+'-E'+(row-1)+',"")','Blank-safe reconciliation gap',true);
   });
   // Preserve existing row positions while replacing manual quarterly totals.
   cqi.forEach(row=>{
@@ -1571,6 +1768,8 @@ function repairPlan_(sources,a,next) {
   return Array.from(new Map(plan.map(p=>[p.sheet+'|'+p.row+'|'+p.col,p])).values());
 }
 function repairAndScaffold_(nextMonth) {
+  // Cleanup runs first so repairs and fresh source arrays see cleared labels.
+  cleanupWorkbook_();
   const sources=readSources_(),a=TPOCore.analyze(sources),derived=['CustomerRevenueQuarterly','Quarterly Financials','2. Customer Economics','3. Strategic Dashboard','4. Forward-Looking Risk'];
   // Derived formula failures are repairable; primary-input errors must be resolved first.
   const blocking=a.issues.filter(i=>i.level==='error'&&!derived.includes(i.sheet)&&!(i.sheet==='Assumptions'&&/^E\d+$/.test(i.cell)));
@@ -1592,10 +1791,32 @@ function repairAndScaffold_(nextMonth) {
   ss.setActiveSheet(writeValidation_(checked));
   return next?next.display:null;
 }
+/** One locked action: normalize numeric text, ensure sheets, then repair and validate. */
+function checkAndCalculate_() {
+  const sources=readSources_(),a=TPOCore.analyze(sources);
+  backupAndWrite_(formatPlan_(sources,a),'Normalize numeric text');
+  setup_();
+  return repairAndScaffold_(false);
+}
+function menuCheckAndCalculate() {
+  uiAction_('Check & calculate',()=>{
+    locked_(checkAndCalculate_);
+    SpreadsheetApp.getUi().alert('Checked and calculated. Review Data Validation, then wait for recalculation to finish before preparing the AI prompt (TPO → 3. Prepare AI prompt + copy…). Errors block AI preparation; reconciliation warnings require review, not balancing entries.');
+  });
+}
+function menuCleanupWorkbook() {
+  uiAction_('Clean up obsolete information',()=>{
+    const result=locked_(cleanupWorkbook_);
+    const lines=['Cleaned up '+result.changes+' obsolete cell(s); original values and formulas are recorded in Repair Backup.'];
+    if(result.notices.length)lines.push('','Skipped content:',...result.notices);
+    if(result.sourcesCleared)lines.push('','Source helper cells were cleared. Prepare a fresh AI prompt (TPO → 3. Prepare AI prompt + copy…) before importing any pending response.');
+    SpreadsheetApp.getUi().alert(lines.join('\n'));
+  });
+}
 function menuRepairCalculated() {uiAction_('Repair calculated sheets',()=>locked_(()=>repairAndScaffold_(false)));}
 function menuPrepareNextMonthSlots() {
   uiAction_('Prepare Next Month Slots',()=>locked_(()=>{
-    const next=repairAndScaffold_(true),message='Prepared '+next+' input slots. Fill raw amounts; leave unknown values blank. Repeating this action preserves existing inputs.';
+    const next=repairAndScaffold_(true),message='Prepared '+next+' input slots. Fill raw amounts; leave unknown values blank. Repeating this action preserves existing inputs. When done, use TPO → 2. Check & calculate.';
     // Editor runs may lack a bound UI even though spreadsheet writes succeed.
     console.info(message);try{SpreadsheetApp.getActiveSpreadsheet().toast(message,'TPO',10);}catch(notificationError){console.info('Setup completed; notification unavailable: '+notificationError.message);}
   }));

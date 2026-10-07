@@ -38,10 +38,136 @@ function writeValidation_(a) {
   sh.getRange(2,1,rows.length-1,4).setWrap(true).setVerticalAlignment('top');
   return sh;
 }
-function menuValidateData() {
-  uiAction_('Validate data',()=>locked_(()=>{
-    const sh=writeValidation_(analyzeReportSources_(readSources_()));SpreadsheetApp.getActiveSpreadsheet().setActiveSheet(sh);
-  }));
+
+/** Recognized obsolete guide content, cleared one cell at a time with backup. */
+function managedReadmeRows_() {
+  return [
+    ['TPO — Monthly workflow', ''],
+    ['Build', TPO.build],
+    ['', ''],
+    ['MONTHLY STAGES', ''],
+    ['1. Enter monthly data', 'TPO → 1. Enter monthly data → Input checklist… shows what to type. Use Prepare next month slots before filling a new month.'],
+    ['2. Check & calculate', 'TPO → 2. Check & calculate. Review Data Validation and wait for recalculation before preparing the prompt.'],
+    ['3. Prepare AI prompt + copy…', 'Builds the prompt from validated data; copy it into your preferred AI chat (manual copy/paste step).'],
+    ['4. Paste AI response & update Commentary…', 'Saves the JSON response in LLM Output and updates the selected Commentary views in one action.'],
+    ['5. Review Commentary', 'TPO → 5. Review Commentary. Reload website data after factual review.'],
+    ['', ''],
+    ['INPUT TABS', ''],
+    ['Assumptions', 'Customer names and contribution margins; occasional parameters (Currency, Active Customers rule, Low season).'],
+    ['MonthlyFinancials', 'Monthly amounts by row; do not overwrite calculation formulas.'],
+    ['CustomerRevenueMonthly', 'Monthly revenue per customer.'],
+    ['CustomerCount', 'Customer count per month.'],
+    ['1. Working Capital', 'Cash, accounts receivable, inventory, accounts payable; net working capital is calculated.'],
+    ['Dashboard Inputs', 'Column C holds actual values; column D examples are ignored.'],
+    ['', ''],
+    ['DATA RULES', ''],
+    ['Unknown vs zero', 'Leave unknown cells blank; enter 0 only for a genuine zero.'],
+    ['Derived tabs', 'Quarterly Financials, CustomerRevenueQuarterly, 2. Customer Economics, 3. Strategic Dashboard and 4. Forward-Looking Risk are calculated, not manual inputs.'],
+    ['Customer quarters', 'Customer quarterly revenue comes from monthly data; a quarter covers quarter-start through the reporting month (QTD cutoff) and complete calendar months.'],
+    ['As-of & quarter coverage', 'Reporting period (as-of) and Quarter coverage derive from the latest financial data.'],
+    ['Errors vs warnings', 'Errors block AI preparation; reconciliation warnings require review, not balancing entries.'],
+    ['', ''],
+    ['MAINTENANCE', ''],
+    ['Backups', 'Cleanup and repair record every previous cell value and formula in Repair Backup before changing it.'],
+    ['Cleanup', 'TPO → Tools & settings → Clean up obsolete information removes only recognized obsolete content and reports skipped custom content.'],
+    ['Apps Script', 'Installing apps-script/Code.gs in this workbook’s bound script is separate from GitHub deployment or website publishing.']
+  ];
+}
+function workbookCleanupPlan_() {
+  const plan=[],notices=[],planned=new Set();
+  function snapshot(sh,cols) {
+    const rows=sh.getLastRow();
+    if(!rows)return {values:[],formulas:[]};
+    const width=Math.max(1,Math.min(cols,sh.getLastColumn()||cols));
+    const range=sh.getRange(1,1,rows,width);
+    return {values:range.getValues(),formulas:range.getFormulas()};
+  }
+  function planWrite(sh,snap,row,col,value,reason) {
+    if(row<1||col<1)return;
+    const key=sh.name+'|'+row+'|'+col;if(planned.has(key))return;
+    const v=snap.values[row-1]?snap.values[row-1][col-1]:undefined;
+    const f=snap.formulas[row-1]?String(snap.formulas[row-1][col-1]||''):'';
+    if(!f&&String(v==null?'':v)===String(value))return; // include only value/formula differences
+    planned.add(key);plan.push({sheet:sh.name,row,col,value,reason,text:true});
+  }
+  const assumptions=sheet_('Assumptions');
+  if(assumptions) {
+    const snap=snapshot(assumptions,5),rows=snap.values.length;
+    for(let i=0;i<rows;i++) {
+      if(normalize_(snap.values[i][3])!=='reconciliationcheck')continue;
+      const labels=[0,1,2,3].map(k=>snap.values[i+k]?String(snap.values[i+k][3]||'').trim():'');
+      const headingBlank=!hasValue_(snap.values[i][4])&&!String(snap.formulas[i]&&snap.formulas[i][4]||'');
+      const customer=/^customer revenue total\s*\(?\s*q([1-4])\s+(\d{4})\s*\)?$/i.exec(labels[1]);
+      const pnl=/^p&l total revenue\s*\(?\s*q([1-4])\s+(\d{4})\s*\)?$/i.exec(labels[2]);
+      const gap=normalize_(labels[3])==='gapresolvebeforeingest';
+      if(headingBlank&&customer&&pnl&&customer[1]===pnl[1]&&customer[2]===pnl[2]&&gap) {
+        [0,1,2,3].forEach(k=>[0,1].forEach(c=>
+          planWrite(assumptions,snap,i+k+1,4+c,'','Retire legacy reconciliation block; Data Validation reports the same gaps')));
+      } else {
+        notices.push('Assumptions reconciliation block at D'+(i+1)+':E'+(i+4)+' does not match the legacy template; left unchanged.');
+      }
+    }
+  }
+  const readme=sheet_('README');
+  if(readme) {
+    const snap=snapshot(readme,2),used=snap.values.length;
+    const title=String(snap.values[0]&&snap.values[0][0]||'').trim();
+    const beyondB=snap.values.some((r,i)=>r.slice(2).some(v=>hasValue_(v))||(snap.formulas[i]||[]).slice(2).some(f=>String(f||'')));
+    let refresh=false;
+    if(title==='TPO Wellness — Monthly Input Template') {
+      const a2=String(snap.values[1]&&snap.values[1][0]||'');
+      if(beyondB||!/pipeline\/inputs\/|validate_input\.py|build_sources\.py/.test(a2))notices.push('README contains custom content; left unchanged.');
+      else refresh=true;
+    } else if(title==='TPO — Monthly workflow') {
+      if(beyondB)notices.push('README contains custom content; left unchanged.');else refresh=true;
+    } else if(!used)refresh=true;
+    else notices.push('README contains custom content; left unchanged.');
+    if(refresh) {
+      const guide=managedReadmeRows_();
+      for(let row=1;row<=Math.max(used,guide.length);row++)for(let col=1;col<=2;col++)
+        planWrite(readme,snap,row,col,guide[row-1]?guide[row-1][col-1]:'','Refresh managed monthly-workflow guide');
+    }
+  }
+  const glossary=sheet_('Glossary');
+  if(glossary) {
+    const snap=snapshot(glossary,2);
+    if(String(snap.values[0]&&snap.values[0][0]||'').trim()!=='Term'||String(snap.values[0]&&snap.values[0][1]||'').trim()!=='Definition')
+      notices.push('Glossary headers are not Term | Definition; left unchanged.');
+    else snap.values.slice(1).forEach((r,i)=>{
+      const row=i+2,term=String(r[0]||'').trim();
+      if(/^low season\s*(\([^)]*\))?$/i.test(term)) {
+        planWrite(glossary,snap,row,1,'Low season','Rename recognized glossary term');
+        planWrite(glossary,snap,row,2,'The month range is configured in Assumptions → Low season; reporting uses that setting rather than a fixed seasonal window.','Refresh recognized glossary definition');
+      } else if(/^Q[1-4]\s+\d{4}\s+cordon$/i.test(term)) {
+        planWrite(glossary,snap,row,1,'Quarter coverage','Rename recognized glossary term');
+        planWrite(glossary,snap,row,2,'A partial quarter covers quarter-start through the reporting month. Compare matching months only; do not annualize or extrapolate.','Refresh recognized glossary definition');
+      } else if(/^contribution margin$/i.test(term)) {
+        planWrite(glossary,snap,row,2,'Customer-specific assumed margin used to estimate contribution from revenue; not audited gross profit.','Refresh recognized glossary definition');
+      } else if(/^data note \(warn\)$/i.test(term)) {
+        planWrite(glossary,snap,row,1,'Data quality notes','Rename recognized glossary term');
+        planWrite(glossary,snap,row,2,'Data Validation reports missing or conflicting inputs and customer/P&L reconciliation gaps. Review warnings; do not fill unknowns or add balancing amounts to remove them.','Refresh recognized glossary definition');
+      } else if(/^turnaround storyline$/i.test(term)) {
+        planWrite(glossary,snap,row,1,'','Remove obsolete storyline term');
+        planWrite(glossary,snap,row,2,'','Remove obsolete storyline term');
+      }
+    });
+  }
+  const commentary=sheet_(TPO.commentary);
+  if(commentary&&commentary.getMaxColumns()>=4&&normalize_(String(commentary.getRange('D1').getDisplayValue()||'').trim())==='oldcommentary') {
+    const last=commentary.getLastRow(),rows=Math.max(0,last-1);
+    const values=rows?commentary.getRange(2,4,rows,1).getDisplayValues():[];
+    const formulas=rows?commentary.getRange(2,4,rows,1).getFormulas():[];
+    if(values.some(r=>hasValue_(r[0]))||formulas.some(r=>String(r[0]||'')))
+      notices.push('Commentary column D contains archived content; left unchanged.');
+    else planWrite(commentary,{values:[['','','','Old Commentary']],formulas:[['','','','']]},1,4,'','Remove empty Old Commentary archive header');
+  }
+  return {plan:plan,notices:notices};
+}
+function cleanupWorkbook_() {
+  const planned=workbookCleanupPlan_();
+  backupAndWrite_(planned.plan,'Clean up obsolete workbook information');
+  return {changes:planned.plan.length,notices:planned.notices,
+    sourcesCleared:planned.plan.some(p=>TPO.sources.includes(p.sheet))};
 }
 
 function formatPlan_(sources,a) {
@@ -300,11 +426,6 @@ function repairPlan_(sources,a,next) {
     const row=i+2,label=String(r[3]||'');
     if(/reporting period/i.test(label))add('Assumptions',row,5,modelLookup_('"meta|latest-month"'),null,true);
     if(/cordon|quarter coverage/i.test(label)){add('Assumptions',row,4,'Quarter coverage');add('Assumptions',row,5,modelLookup_('"meta|coverage"'),null,true);}
-    if(/Q[1-4]\s+\d{4}/i.test(label)&&/customer revenue total|P&L Total Revenue/i.test(label)) {
-      const prefix=/P&L/i.test(label)?'quarter':'portfolio';
-      add('Assumptions',row,5,modelLookup_('"'+prefix+'|"&UPPER(REGEXEXTRACT(D'+row+',"(?i)Q[1-4]\\s+[0-9]{4}"))&"|revenue"'),null,true);
-    }
-    if(/gap/i.test(label)&&row>=4)add('Assumptions',row,5,'=IF(COUNT(E'+(row-2)+':E'+(row-1)+')=2,E'+(row-2)+'-E'+(row-1)+',"")','Blank-safe reconciliation gap',true);
   });
   // Preserve existing row positions while replacing manual quarterly totals.
   cqi.forEach(row=>{
@@ -323,6 +444,8 @@ function repairPlan_(sources,a,next) {
   return Array.from(new Map(plan.map(p=>[p.sheet+'|'+p.row+'|'+p.col,p])).values());
 }
 function repairAndScaffold_(nextMonth) {
+  // Cleanup runs first so repairs and fresh source arrays see cleared labels.
+  cleanupWorkbook_();
   const sources=readSources_(),a=TPOCore.analyze(sources),derived=['CustomerRevenueQuarterly','Quarterly Financials','2. Customer Economics','3. Strategic Dashboard','4. Forward-Looking Risk'];
   // Derived formula failures are repairable; primary-input errors must be resolved first.
   const blocking=a.issues.filter(i=>i.level==='error'&&!derived.includes(i.sheet)&&!(i.sheet==='Assumptions'&&/^E\d+$/.test(i.cell)));
@@ -344,10 +467,32 @@ function repairAndScaffold_(nextMonth) {
   ss.setActiveSheet(writeValidation_(checked));
   return next?next.display:null;
 }
+/** One locked action: normalize numeric text, ensure sheets, then repair and validate. */
+function checkAndCalculate_() {
+  const sources=readSources_(),a=TPOCore.analyze(sources);
+  backupAndWrite_(formatPlan_(sources,a),'Normalize numeric text');
+  setup_();
+  return repairAndScaffold_(false);
+}
+function menuCheckAndCalculate() {
+  uiAction_('Check & calculate',()=>{
+    locked_(checkAndCalculate_);
+    SpreadsheetApp.getUi().alert('Checked and calculated. Review Data Validation, then wait for recalculation to finish before preparing the AI prompt (TPO → 3. Prepare AI prompt + copy…). Errors block AI preparation; reconciliation warnings require review, not balancing entries.');
+  });
+}
+function menuCleanupWorkbook() {
+  uiAction_('Clean up obsolete information',()=>{
+    const result=locked_(cleanupWorkbook_);
+    const lines=['Cleaned up '+result.changes+' obsolete cell(s); original values and formulas are recorded in Repair Backup.'];
+    if(result.notices.length)lines.push('','Skipped content:',...result.notices);
+    if(result.sourcesCleared)lines.push('','Source helper cells were cleared. Prepare a fresh AI prompt (TPO → 3. Prepare AI prompt + copy…) before importing any pending response.');
+    SpreadsheetApp.getUi().alert(lines.join('\n'));
+  });
+}
 function menuRepairCalculated() {uiAction_('Repair calculated sheets',()=>locked_(()=>repairAndScaffold_(false)));}
 function menuPrepareNextMonthSlots() {
   uiAction_('Prepare Next Month Slots',()=>locked_(()=>{
-    const next=repairAndScaffold_(true),message='Prepared '+next+' input slots. Fill raw amounts; leave unknown values blank. Repeating this action preserves existing inputs.';
+    const next=repairAndScaffold_(true),message='Prepared '+next+' input slots. Fill raw amounts; leave unknown values blank. Repeating this action preserves existing inputs. When done, use TPO → 2. Check & calculate.';
     // Editor runs may lack a bound UI even though spreadsheet writes succeed.
     console.info(message);try{SpreadsheetApp.getActiveSpreadsheet().toast(message,'TPO',10);}catch(notificationError){console.info('Setup completed; notification unavailable: '+notificationError.message);}
   }));

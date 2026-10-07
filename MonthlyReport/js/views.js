@@ -1046,19 +1046,27 @@
     const dataNoteDef = findings.length ? 'Review Setup & data health for missing values, reconciliation gaps and source-cell locations.' : 'No validation issues detected in the loaded data. This does not verify that every reporting month is finalized.';
 
     let items = (data.glossary && data.glossary.length) ? data.glossary.map(g => [g.term, g.definition]) : [
-      ["Low season (Jun – Oct)", "The seasonal trough — outside this window, revenue and active customers step up materially."],
-      ["Quarter coverage", "Unique populated monthly rows; missing months remain partial. Never annualize."],
       ["Active customers",       "Count at the first month of the quarter (documented in the Assumptions tab)."],
       ["Net Working Capital",    "Cash + Accounts Receivable + Inventory − Accounts Payable."],
       ["Contribution margin",    "Assumed margin used to estimate contribution; not audited gross profit."],
-      ["Turnaround storyline",   "Q1 2025 trough → Q1 2026 recovery, framed by the swing in active customers."],
     ];
 
-    items=items.filter(([term])=>!/low season|cordon|turnaround storyline/i.test(term));
+    // Sheet rows for low season, cordon/storyline and the generic "Quarter coverage"
+    // term are replaced by the authoritative rows prepended below; custom variants
+    // such as "Quarter coverage notes" are preserved.
+    items = items.filter(([term]) => {
+      const t = (term || "").trim();
+      return !/low season|cordon|turnaround storyline/i.test(t) && !/^quarter coverage$/i.test(t);
+    });
     items.unshift(['Low season',data.assumptions.params['Low season']||'Not configured'],['Quarter coverage','Unique populated months; partial quarters compare with matching months only. No annualization.']);
 
-    // Replace the existing Data note if present from the sheet, otherwise insert at a similar position
-    const noteIndex = items.findIndex(i => i[0].toLowerCase().includes("data note") || i[0].toLowerCase().includes("data healthy"));
+    // Replace the sheet's generic validation-note row (including the managed
+    // "Data quality notes" term) with the live finding count; keep one definition.
+    const noteIndex = items.findIndex(i => {
+      const t = (i[0] || "").trim().toLowerCase();
+      return t === "data quality notes" || t.includes("data note") || t.includes("data healthy");
+    });
+
     if (noteIndex >= 0) {
       items[noteIndex] = [dataNoteTerm, dataNoteDef];
     } else {

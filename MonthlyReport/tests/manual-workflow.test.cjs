@@ -10,11 +10,13 @@ class RichText {
   getText() { return this.text; }
 }
 class Sheet {
-  constructor(name, values = [], cols = 26) {
-    this.name = name; this.maxRows = Math.max(100, values.length); this.maxCols = Math.max(cols, ...values.map(r => r.length));
+  constructor(name, values = [], cols = 26, sheetId = 0) {
+    this.name = name; this.sheetId = sheetId;
+    this.maxRows = Math.max(100, values.length); this.maxCols = Math.max(cols, ...values.map(r => r.length));
     this.cells = new Map(); this.writes = []; this.failOnce = null;
     values.forEach((row, r) => row.forEach((v, c) => this.cells.set(`${r + 1},${c + 1}`, { value: v, formula: '', rich: null })));
   }
+  getSheetId() { return this.sheetId; }
   cell(r, c) { return this.cells.get(`${r},${c}`) || { value: '', formula: '', rich: null }; }
   put(r, c, data) {
     if (this.failOnce && this.failOnce(r, c)) { this.failOnce = null; throw new Error('simulated Sheets write failure'); }
@@ -103,12 +105,15 @@ function fixture() {
   };
 }
 function runtime(data = fixture()) {
-  const sheets = new Map(Object.entries(data).map(([name, rows]) => [name, new Sheet(name, rows, name === 'Commentary' ? 3 : 26)]));
-  const properties = new Map(); let html = ''; let locked = false; let flushFail = false;
+  let nextId = 2102000;
+  const sheets = new Map(Object.entries(data).map(([name, rows]) => [name, new Sheet(name, rows, name === 'Commentary' ? 3 : 26, nextId++)]));
+  const properties = new Map(); let html = ''; let locked = false; let flushFail = false; let propsRemaining = -1; let selected = null;
   const ss = {
     getSheetByName: n => sheets.get(n) || null,
-    insertSheet: n => { const sh = new Sheet(n); sheets.set(n, sh); return sh; },
-    getSpreadsheetTimeZone: () => 'Asia/Bangkok', setActiveSheet: sh => sh
+    insertSheet: n => { const sh = new Sheet(n, [], 26, nextId++); sheets.set(n, sh); return sh; },
+    getSpreadsheetTimeZone: () => 'Asia/Bangkok',
+    getUrl: () => 'https://docs.google.com/spreadsheets/d/fixture/edit',
+    setActiveSheet: sh => { selected = sh; return sh; }
   };
   const ctx = vm.createContext({ console, Date, Map, Set,
     SpreadsheetApp: {
@@ -119,7 +124,11 @@ function runtime(data = fixture()) {
     },
     PropertiesService: { getDocumentProperties: () => ({
       getProperty: k => properties.has(k) ? properties.get(k) : null,
-      setProperties: values => Object.entries(values).forEach(([k, v]) => { assert.ok(Buffer.byteLength(v) < 9000); properties.set(k, v); }),
+      setProperties: values => {
+        if (propsRemaining > 0) propsRemaining--;
+        else if (propsRemaining === 0) { propsRemaining = -1; throw new Error('simulated property store failure'); }
+        Object.entries(values).forEach(([k, v]) => { assert.ok(Buffer.byteLength(v) < 9000); properties.set(k, v); });
+      },
       deleteProperty: k => properties.delete(k)
     }) },
     Utilities: {
@@ -134,7 +143,8 @@ function runtime(data = fixture()) {
   });
   vm.runInContext(sourceCode, ctx);
   ctx.PropertiesService.getUserProperties = ctx.PropertiesService.getDocumentProperties;
-  return { ctx, sheets, ss, properties, getHtml: () => html, flushFail: () => { flushFail = true; } };
+  return { ctx, sheets, ss, properties, getHtml: () => html, flushFail: () => { flushFail = true; },
+    failProps: (succeedFirst = 0) => { propsRemaining = succeedFirst; }, getSelected: () => selected };
 }
 function sampleResponse(rt) {
   const state = rt.ctx.readState_();
@@ -215,9 +225,8 @@ test('fenced JSON and dialog-saved split responses import successfully as litera
   response.commentaries[2].commentary += ' extra '.repeat(1800);
   const text = '```json\n' + JSON.stringify(response, null, 2) + '\n```';
   assert.ok(text.length > 30000);
-  rt.ctx.savePastedLLMOutput(text, response.batch_id);
+  rt.ctx.importPastedLLMOutput(text, response.batch_id);
   assert.equal(rt.ctx.readOutput_(rt.ctx.readState_()), text);
-  rt.ctx.import_();
   const row = rt.ctx.readCommentary_().find(r => r.view === response.commentaries[0].view).row;
   assert.equal(rt.sheets.get('Commentary').getRange(row, 2).getFormulas()[0][0], '');
   assert.equal(rt.sheets.get('Commentary').getRange(row, 2).getDisplayValue(), response.commentaries[0].commentary.trim());
@@ -302,7 +311,7 @@ test('dialog HTML escapes source text and all inline scripts compile', async () 
   vm.runInContext(script, browser); await elements.copy.onclick(); assert.match(elements.status.textContent, /Ctrl\+C/);
   browser.navigator.clipboard = { writeText: async text => assert.equal(text, prepared.text) };
   await elements.copy.onclick(); assert.match(elements.status.textContent, /^Copied/);
-  rt.ctx.menuPasteLLMOutput(); new vm.Script(rt.getHtml().match(/<script>([\s\S]*)<\/script>/)[1]);
+  rt.ctx.menuPasteAndImportLLMOutput(); new vm.Script(rt.getHtml().match(/<script>([\s\S]*)<\/script>/)[1]);
   rt.ctx.menuAddCustomer(); new vm.Script(rt.getHtml().match(/<script>([\s\S]*)<\/script>/)[1]);
 });
 
@@ -514,3 +523,222 @@ test('shared settings dialog scripts compile and unrelated sheet contents are pr
   rt.sheets.get('Report Settings').getRange(1,1).setValue('Other content');assert.throws(()=>rt.ctx.ensureReportSettings_(),/expected/);
 });
 module.exports = { runtime, fixture, sampleResponse };
+function legacyAssumptionsFixture(extra) {
+  const data = fixture();
+  data.Assumptions = [
+    ['Customer', 'Contribution Margin', '', 'Parameter', 'Value'],
+    ['Acme Corp', .45, '', 'Currency', 'THB'],
+    ['Beta', '30%', '', 'Reporting period (as-of)', 'Feb-27'],
+    ['', '', '', 'RECONCILIATION CHECK', ''],
+    ['', '', '', 'Customer revenue total (Q1 2027)', '=IF(COUNT(E6:E7)=2,1,"")'],
+    ['', '', '', extra && extra.mismatch ? 'P&L Total Revenue (Q2 2027)' : 'P&L Total Revenue (Q1 2027)', '=2'],
+    ['', '', '', 'Gap (resolve before ingest)', '=IF(COUNT(E6:E7)=2,E6-E7,"")'],
+    ['', '', '', 'Custom param', 'keep me']];
+  return data;
+}
+test('cleanup clears only the recognized legacy Assumptions block and never regenerates it', () => {
+  const rt = runtime(legacyAssumptionsFixture());
+  const before = rt.ctx.TPOCore.analyze(rt.ctx.readSources_());
+  const result = rt.ctx.cleanupWorkbook_();
+  assert.equal(result.changes, 7); // E of the heading row is already blank and stays untouched
+  assert.equal(result.sourcesCleared, true);
+  assert.equal(JSON.stringify(result.notices), JSON.stringify([]));
+  const sh = rt.sheets.get('Assumptions');
+  for (let row = 4; row <= 7; row++) for (let col = 4; col <= 5; col++) {
+    assert.equal(sh.getRange(row, col).getValues()[0][0], '');
+    assert.equal(sh.getRange(row, col).getFormulas()[0][0], '');
+  }
+  assert.equal(sh.getRange(2, 1).getValues()[0][0], 'Acme Corp');
+  assert.equal(sh.getRange(2, 5).getValues()[0][0], 'THB');
+  assert.equal(sh.getRange(3, 5).getValues()[0][0], 'Feb-27');
+  assert.equal(sh.getRange(8, 4).getValues()[0][0], 'Custom param');
+  assert.equal(sh.getRange(8, 5).getValues()[0][0], 'keep me');
+  const backup = rt.sheets.get('Repair Backup').getDataRange().getValues();
+  assert.equal(backup.find(r => r[2] === 'Assumptions' && r[3] === 'D4')[4], 'RECONCILIATION CHECK');
+  assert.ok(/COUNT\(E6:E7\)/.test(backup.find(r => r[2] === 'Assumptions' && r[3] === 'E5')[4]));
+  assert.ok(/E6-E7/.test(backup.find(r => r[2] === 'Assumptions' && r[3] === 'E7')[4]));
+  const after = rt.ctx.TPOCore.analyze(rt.ctx.readSources_());
+  assert.equal(JSON.stringify(after.issues), JSON.stringify(before.issues));
+  assert.equal(rt.ctx.TPOCore.fingerprint(after), rt.ctx.TPOCore.fingerprint(before));
+  assert.equal(JSON.stringify(rt.ctx.TPOCore.modelRows(after)), JSON.stringify(rt.ctx.TPOCore.modelRows(before)));
+  rt.ctx.repairAndScaffold_(false);
+  for (let row = 4; row <= 7; row++) for (let col = 4; col <= 5; col++) {
+    assert.equal(sh.getRange(row, col).getValues()[0][0], '', 'regenerated at row ' + row);
+    assert.equal(sh.getRange(row, col).getFormulas()[0][0], '', 'formula regenerated at row ' + row);
+  }
+  assert.equal(sh.getRange(8, 4).getValues()[0][0], 'Custom param');
+});
+test('mismatched or partial reconciliation blocks stay intact with a notice', () => {
+  const rt = runtime(legacyAssumptionsFixture({ mismatch: true }));
+  const before = values(rt.sheets.get('Assumptions'));
+  const result = rt.ctx.cleanupWorkbook_();
+  assert.equal(result.changes, 0);
+  assert.equal(JSON.stringify(result.notices), JSON.stringify(['Assumptions reconciliation block at D4:E7 does not match the legacy template; left unchanged.']));
+  assert.equal(values(rt.sheets.get('Assumptions')), before);
+  assert.ok(!rt.sheets.has('Repair Backup'));
+  const partial = legacyAssumptionsFixture();
+  partial.Assumptions[6][3] = 'Something else';
+  const rt2 = runtime(partial);
+  const result2 = rt2.ctx.cleanupWorkbook_();
+  assert.equal(result2.changes, 0);
+  assert.equal(JSON.stringify(result2.notices), JSON.stringify(['Assumptions reconciliation block at D4:E7 does not match the legacy template; left unchanged.']));
+});
+function capturedGuideFixture() {
+  const data = legacyAssumptionsFixture();
+  data.README = [
+    ['TPO Wellness — Monthly Input Template'],
+    ['Single source of truth. Collect in Google Sheets (Apps Script), download .xlsx into pipeline/inputs/, run validate_input.py, then build_sources.py.'],
+    ['LEGEND'],
+    ['Yellow cells', 'INPUT — you type this (raw data, balance sheet, dashboard inputs).'],
+    ['White cells', 'FORMULA/DERIVED — auto-computed.'],
+    ['Blank', 'no data yet.'],
+    [], ['HOW TO USE'],
+    ['1.', 'Fill raw-data tabs.'],
+    ['2.', 'Board tables auto-compute.'],
+    ['3.', 'Check Assumptions reconciliation cell.'],
+    ['4.', 'Import to Google Sheets.'],
+    ['5.', 'python pipeline/validate_input.py -> build_sources.py'],
+    [], ['DATA SOURCES (seeded)'],
+    ['MonthlyFinancials', 'from xlsx Jan-25..May-26.'],
+    ['CustomerRevenueMonthly', 'from xlsx May-24..May-26.'],
+    [], ['NotebookLM reads final integers.']];
+  data.Glossary = [
+    ['Term', 'Definition'],
+    ['Low season (Jun – Oct)', 'The seasonal trough.'],
+    ['Q2 2026 cordon', 'Through May only.'],
+    ['Active customers', 'Count at the first month of the quarter.'],
+    ['Net Working Capital', 'Cash + AR + inventory − AP.'],
+    ['Contribution margin', 'Per-customer gross margin assumption.'],
+    ['Data note (WARN)', 'Divergence > 0.5% note.'],
+    ['Turnaround storyline', 'Q1 2025 trough → Q1 2026 recovery.'],
+    ['Company Name', 'TPO Wellness']];
+  data.Commentary = [['View', 'Commentary', 'Status', 'Old Commentary'],
+    ['beta', 'Old beta', 'Old status', ''], ['overview', 'Old overview', 'Old status', ''],
+    ['custom-note', 'Unrelated text', 'Keep', ''], ['acme-corp', 'Old acme', 'Old status', '']];
+  return data;
+}
+test('cleanup refreshes captured README/Glossary and clears the empty archive header, then stays idempotent', () => {
+  const rt = runtime(capturedGuideFixture());
+  const commentaryBefore = JSON.stringify(rt.sheets.get('Commentary').getDataRange().getValues().map(r => r.slice(0, 3)));
+  const result = rt.ctx.cleanupWorkbook_();
+  assert.ok(result.changes > 20);
+  const readme = rt.sheets.get('README');
+  assert.equal(readme.getRange('A1').getDisplayValue(), 'TPO — Monthly workflow');
+  assert.equal(readme.getRange('B2').getDisplayValue(), '2026-10-07-v8');
+  const readmeText = JSON.stringify(readme.getDataRange().getValues());
+  for (const stale of ['validate_input.py', 'pipeline/inputs/', 'NotebookLM', 'Q1 2026', 'reconciliation cell'])
+    assert.ok(!readmeText.includes(stale), stale + ' still present');
+  assert.ok(readmeText.includes('TPO → 2. Check & calculate'));
+  const glossary = rt.sheets.get('Glossary');
+  assert.equal(glossary.getRange('A2').getDisplayValue(), 'Low season');
+  assert.ok(glossary.getRange('B2').getDisplayValue().includes('configured in Assumptions'));
+  assert.equal(glossary.getRange('A3').getDisplayValue(), 'Quarter coverage');
+  assert.ok(glossary.getRange('B3').getDisplayValue().includes('do not annualize'));
+  assert.ok(glossary.getRange('B6').getDisplayValue().includes('not audited gross profit'));
+  assert.equal(glossary.getRange('A7').getDisplayValue(), 'Data quality notes');
+  assert.ok(glossary.getRange('B7').getDisplayValue().includes('do not fill unknowns'));
+  const glossaryText = JSON.stringify(glossary.getDataRange().getValues());
+  assert.ok(!glossaryText.includes('Turnaround storyline'));
+  assert.ok(!glossaryText.includes('0.5%'));
+  assert.equal(glossary.getRange('A4').getDisplayValue(), 'Active customers');
+  assert.equal(glossary.getRange('A9').getDisplayValue(), 'Company Name');
+  assert.equal(glossary.getRange('B9').getDisplayValue(), 'TPO Wellness');
+  assert.equal(rt.sheets.get('Commentary').getRange('D1').getDisplayValue(), '');
+  assert.equal(JSON.stringify(rt.sheets.get('Commentary').getDataRange().getValues().map(r => r.slice(0, 3))), commentaryBefore);
+  const backupRows = rt.sheets.get('Repair Backup').getLastRow();
+  const second = rt.ctx.cleanupWorkbook_();
+  assert.equal(second.changes, 0);
+  assert.equal(JSON.stringify(second.notices), JSON.stringify([]));
+  assert.equal(rt.sheets.get('Repair Backup').getLastRow(), backupRows);
+});
+test('custom README, foreign glossary headers and populated archives are preserved with notices', () => {
+  const custom = capturedGuideFixture();
+  custom.README[0][0] = 'My own notes';
+  custom.Glossary[0] = ['Glossar', 'Bedeutung'];
+  custom.Commentary[1][3] = 'kept archive text';
+  const rt = runtime(custom);
+  const before = [values(rt.sheets.get('README')), values(rt.sheets.get('Glossary')), values(rt.sheets.get('Commentary'))];
+  const result = rt.ctx.cleanupWorkbook_();
+  assert.equal(result.changes, 7); // only the Assumptions block
+  assert.equal(JSON.stringify(result.notices), JSON.stringify(['README contains custom content; left unchanged.',
+    'Glossary headers are not Term | Definition; left unchanged.',
+    'Commentary column D contains archived content; left unchanged.']));
+  assert.equal(values(rt.sheets.get('README')), before[0]);
+  assert.equal(values(rt.sheets.get('Glossary')), before[1]);
+  assert.equal(values(rt.sheets.get('Commentary')), before[2]);
+});
+test('cleanup failure rolls every earlier changed cell back and keeps backup evidence', () => {
+  const rt = runtime(capturedGuideFixture());
+  const names = ['Assumptions', 'README', 'Glossary', 'Commentary'];
+  const before = Object.fromEntries(names.map(n => [n, JSON.stringify({
+    values: rt.sheets.get(n).getDataRange().getValues(), formulas: rt.sheets.get(n).getDataRange().getFormulas() })]));
+  rt.sheets.get('README').failOnce = (r, c) => r === 9 && c === 1; // after Assumptions + early README writes
+  assert.throws(() => rt.ctx.cleanupWorkbook_(), /simulated/);
+  names.forEach(n => {
+    const sh = rt.sheets.get(n);
+    assert.equal(JSON.stringify({ values: sh.getDataRange().getValues(), formulas: sh.getDataRange().getFormulas() }), before[n], n + ' not restored');
+  });
+  const backup = rt.sheets.get('Repair Backup').getDataRange().getValues();
+  assert.ok(backup.some(r => r[2] === 'Assumptions' && r[3] === 'E7' && /E6-E7/.test(r[4])));
+});
+test('combined response import updates Commentary, stores literal JSON, selects Commentary, and repeats without rewriting', () => {
+  const rt = runtime(); rt.ctx.prepare_();
+  const sh = rt.sheets.get('Commentary');
+  sh.getRange(4, 2).setFormula('="Unrelated formula"'); sh.writes = [];
+  const response = sampleResponse(rt);
+  const text = JSON.stringify(response, null, 2);
+  const result = rt.ctx.importPastedLLMOutput(text, response.batch_id);
+  assert.equal(result.count, 8); assert.equal(result.already, false);
+  assert.equal(rt.getSelected().name, 'Commentary');
+  assert.equal(rt.ctx.readOutput_(rt.ctx.readState_()), text);
+  assert.equal(sh.getRange(2, 2).getDisplayValue(), response.commentaries.find(r => r.view === 'beta').commentary);
+  assert.equal(sh.getRange(4, 2).getFormulas()[0][0], '="Unrelated formula"');
+  assert.ok(sh.writes.every(([r, c]) => c <= 3 && r !== 4));
+  const state = rt.ctx.readState_();
+  assert.ok(state.importedHash); assert.ok(state.importedAt);
+  assert.match(rt.sheets.get('LLM Output').getRange('B5').getDisplayValue(), /^Imported 8 sections/);
+  sh.writes = [];
+  const again = rt.ctx.importPastedLLMOutput(text, response.batch_id);
+  assert.equal(again.already, true);
+  assert.equal(sh.writes.length, 0);
+});
+test('invalid, wrong-batch and stale responses leave output, Commentary and manifest unchanged', () => {
+  const rt = runtime(); rt.ctx.prepare_();
+  const valid = sampleResponse(rt);
+  const outputBefore = values(rt.sheets.get('LLM Output'));
+  const commentaryBefore = values(rt.sheets.get('Commentary'));
+  const manifestBefore = rt.properties.get('TPO_MANUAL_V1_0');
+  const cases = [
+    ['{broken', valid.batch_id, /valid JSON/],
+    [JSON.stringify({ ...valid, batch_id: 'old' }), valid.batch_id, /another batch/],
+    [JSON.stringify(valid), 'other-batch', /newer input was prepared/],
+    [JSON.stringify({ ...valid, commentaries: valid.commentaries.slice(1) }), valid.batch_id, /incomplete/]];
+  cases.forEach(([text, batch, error]) => {
+    assert.throws(() => rt.ctx.importPastedLLMOutput(text, batch), error);
+    assert.equal(values(rt.sheets.get('LLM Output')), outputBefore);
+    assert.equal(values(rt.sheets.get('Commentary')), commentaryBefore);
+    assert.equal(rt.properties.get('TPO_MANUAL_V1_0'), manifestBefore);
+  });
+  rt.sheets.get('MonthlyFinancials').getRange(2, 3).setValue(999);
+  assert.throws(() => rt.ctx.importPastedLLMOutput(JSON.stringify(valid), valid.batch_id), /Source data changed/);
+  assert.equal(values(rt.sheets.get('Commentary')), commentaryBefore);
+  assert.equal(rt.properties.get('TPO_MANUAL_V1_0'), manifestBefore);
+});
+test('combined action restores output, manifest and Commentary after late failures', () => {
+  const scenarios = [
+    rt => { rt.sheets.get('LLM Output').failOnce = (r, c) => r >= 8 && c === 1; return /simulated/; },
+    rt => { rt.sheets.get('Commentary').failOnce = (r, c) => r === 5 && c === 2; return /Original commentary was restored/; },
+    rt => { rt.failProps(1); return /Import failed/; },
+    rt => { rt.sheets.get('LLM Output').failOnce = (r, c) => r === 5 && c === 2; return /Import failed/; }];
+  scenarios.forEach(setup => {
+    const rt = runtime(); rt.ctx.prepare_();
+    const response = sampleResponse(rt);
+    const before = [values(rt.sheets.get('LLM Output')), values(rt.sheets.get('Commentary')), JSON.stringify(rt.ctx.readState_())];
+    const pattern = setup(rt);
+    assert.throws(() => rt.ctx.importPastedLLMOutput(JSON.stringify(response, null, 2), response.batch_id), pattern);
+    assert.equal(values(rt.sheets.get('LLM Output')), before[0]);
+    assert.equal(values(rt.sheets.get('Commentary')), before[1]);
+    assert.equal(JSON.stringify(rt.ctx.readState_()), before[2]);
+  });
+});
+

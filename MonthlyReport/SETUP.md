@@ -9,12 +9,16 @@ Use the existing reporting workbook; updating the script does not require import
 1. In Google Sheets, open **Extensions → Apps Script**.
 2. Replace the complete contents of the existing report script with the repository's **apps-script/Code.gs**. Do not append another copy or keep duplicate report functions in other script files.
 3. Save and reload Google Sheets. Authorize the script when Google requests it.
-4. Run **📊 TPO → Set up / repair workflow sheets**, then **Repair calculated sheets** and **Format & verify all sheets**. Review **Data Validation** and resolve reported errors.
-5. Open **📊 TPO → Report settings…** to create or edit the shared **Report Settings** configuration. Saving settings also refreshes derived formulas.
+4. Run **📊 TPO → 2. Check & calculate**. This sets up the workflow sheets, normalizes numeric text, repairs calculated sheets, performs obsolete-content cleanup, and writes **Data Validation**. Resolve reported errors.
+5. Open **📊 TPO → Tools & settings → Report settings…** to create or edit the shared **Report Settings** configuration. Saving settings also refreshes derived formulas.
 
 The script maintains **LLM-Input**, **LLM Output**, and **Commentary**. Commentary uses **View | Commentary | Status** in A:C; the removed D:G columns are not needed. Input/output rows 1–7 contain metadata; prompt and response text start at A8.
 
 Copying Code.gs into GitHub does not install it in Google Sheets. The website and the bound Apps Script are updated separately.
+
+### v8: guided monthly workflow and one-step response import
+
+Install build **`2026-10-07-v8`** (replace the whole bound script, save, reload). Then run **TPO → 2. Check & calculate**, or **TPO → Tools & settings → Clean up obsolete information**. Cleanup clears the retired Assumptions D10:E13 reconciliation block (original formulas are recorded in **Repair Backup**), refreshes the README/Glossary guides, and removes the empty **Old Commentary** header in D1; custom content is preserved and reported. Prepare a **new** AI prompt afterwards if source helper cells were cleared. The menu is now ordered around the monthly flow: **1. Enter monthly data → 2. Check & calculate → 3. Prepare AI prompt + copy → 4. Paste AI response & update Commentary → 5. Review Commentary**, with the remaining tools under **Tools & settings**. Step 4 saves the JSON response in **LLM Output** and updates Commentary in one action.
 
 ### v7: calculate customer quarters from monthly revenue
 
@@ -73,7 +77,7 @@ Browsers cache and resend the HTTP Basic credentials automatically until the bro
 
 ## Monthly workflow
 
-1. Run **Prepare Next Month Slots (Fill in the blanks)**. This creates empty row slots for the new period across all input sheets.
+1. Run **📊 TPO → 1. Enter monthly data → Prepare next month slots**. This creates empty row slots for the new period across all input sheets. **Input checklist…** in the same submenu shows what to type and links to the input tabs.
 2. Enter raw figures into the **manual input sheets** (leave unknown future slots blank; enter `0` only for a genuine zero):
    - **`MonthlyFinancials`**: Enter `Total Revenue`, `COGS`, `SG&A`, and `Net Income`. (`Gross Profit`, `EBIT`, and `Quarter` are calculated automatically).
    - **`CustomerRevenueMonthly`**: Enter monthly `Revenue` for each customer.
@@ -84,10 +88,10 @@ Browsers cache and resend the HTTP Basic credentials automatically until the bro
    > [!IMPORTANT]
    > **Do not type into derived sheets:** **`CustomerRevenueQuarterly`**, **`Quarterly Financials`**, **`2. Customer Economics`**, **`3. Strategic Dashboard`**, and **`4. Forward-Looking Risk`** are calculated automatically from the input sheets via `Report Model`. Manual edits to these sheets overwrite their formulas.
 
-3. Run **Format & verify all sheets**, review the **Data Validation** sheet, and resolve any reported errors. Use **Repair calculated sheets** if derived formulas ever need restoration.
-4. Run **1. Prepare LLM Input + Copy… → Copy all**. Paste the complete prompt into Gemini, ChatGPT, DeepSeek, or another AI chat.
-5. Copy the AI's JSON response. Use **Paste AI response…**, or paste into **LLM Output** starting at A8.
-6. Run **3. Import LLM Output**. The importer validates the batch and writes each response to its matching Commentary row. Review the prose for factual accuracy.
+3. Run **📊 TPO → 2. Check & calculate**, review the **Data Validation** sheet, and resolve any reported errors; wait for recalculation to finish. Use **Tools & settings → Repair calculated sheets** if derived formulas ever need restoration.
+4. Run **📊 TPO → 3. Prepare AI prompt + copy… → Copy all**. Paste the complete prompt into Gemini, ChatGPT, DeepSeek, or another AI chat.
+5. Copy the AI's JSON response and run **📊 TPO → 4. Paste AI response & update Commentary…**. This validates the response against the prepared batch, saves it in **LLM Output**, and writes each entry to its matching Commentary row in one action (or paste the JSON into **LLM Output** at A8 and re-run step 4).
+6. Run **📊 TPO → 5. Review Commentary** and check the prose for factual accuracy.
 7. Use **Reload data** on the website's **Setup & data health** page.
 
 Prepare a new prompt if source data, the shared reporting cut-off, or selected AI sections change. **Run diagnostics…** and **Show last error…** provide action, stack, timezone, and available source-cell context when troubleshooting.
