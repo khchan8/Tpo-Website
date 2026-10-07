@@ -16,6 +16,19 @@ The script maintains **LLM-Input**, **LLM Output**, and **Commentary**. Commenta
 
 Copying Code.gs into GitHub does not install it in Google Sheets. The website and the bound Apps Script are updated separately.
 
+### v7: calculate customer quarters from monthly revenue
+
+Install build **`2026-10-07-v7`**, then run **TPO → Repair calculated sheets** even if you previously repaired v6. This backs up old quarterly totals, replaces `CustomerRevenueQuarterly` revenue cells with formulas, and rewrites the `Report Model` arguments so the quarterly output cannot feed back into itself. Wait for custom-function recalculation, then run **Format & verify all sheets** and regenerate commentary.
+
+Enter customer revenue only in **CustomerRevenueMonthly**. Historical quarters require one valid amount for every calendar month; the current quarter sums quarter-start through the latest financial reporting month. A missing month leaves the quarter blank, not zero. Current August Q3 totals should be Mana **774,820**, Auntie Aloha **1,145,367**, Fuzzies **857,842**, Tyson **904,933**, and Private Label **546,010**.
+
+Four historical totals need missing monthly figures before they can be calculated: Auntie Aloha **Apr-24**, Fuzzies **Jul-24**, Tyson **Jan/Feb-25**, and Private Label **Jan-25**. Confirm whether each amount was genuinely zero or enter the actual revenue; do not infer it from the old quarter totals.
+
+Keep the red tabs for **Assumptions**, **Dashboard Inputs**, **MonthlyFinancials**, **CustomerRevenueMonthly**, **CustomerCount**, and **1. Working Capital**. Do not mark `CustomerRevenueQuarterly` as a routine manual-input tab. Dashboard Inputs column C is the actual `Value`; column D examples are ignored by the calculation. Repair restores **Cash Balance As Of** and **Inventory Period** on the Strategic Dashboard, not in Dashboard Inputs.
+
+No XLSX import is needed. Keep the downloaded workbook as the pre-migration snapshot, update the existing bound script, and download a fresh copy after repairing the live sheet. Importing XLSX does not install Apps Script and exported spill caches may block recalculation.
+
+
 ## Website configuration and publication
 
 Keep the existing **config.js** with its **SHEET_ID** and Sheets **API_KEY**. The static website requires a Sheets API key and a workbook readable through that API. The API key is for loading spreadsheet data, not generating AI commentary. Keep its API and website referrer restrictions configured in Google Cloud.
@@ -64,13 +77,12 @@ Browsers cache and resend the HTTP Basic credentials automatically until the bro
 2. Enter raw figures into the **manual input sheets** (leave unknown future slots blank; enter `0` only for a genuine zero):
    - **`MonthlyFinancials`**: Enter `Total Revenue`, `COGS`, `SG&A`, and `Net Income`. (`Gross Profit`, `EBIT`, and `Quarter` are calculated automatically).
    - **`CustomerRevenueMonthly`**: Enter monthly `Revenue` for each customer.
-   - **`CustomerRevenueQuarterly`**: Enter quarter-to-date (QTD) `Revenue` for each customer under the quarter row (e.g. enter `Jul + Aug` for `Q3 2026`; update with full quarter when September closes).
    - **`CustomerCount`**: Enter `Customer Count` for the month.
    - **`1. Working Capital`**: Enter `Cash Balance`, `Accounts Receivable`, `Inventory Value`, and `Accounts Payable`. (`Net Working Capital` calculates automatically).
    - **`Dashboard Inputs`** *(optional)*: Enter `New Accounts Opened`, `Customer Retention Rate`, and other non-calculated operational metrics as `Quarter | Metric | Value`. Enter retention as a percentage (e.g. `94%`) or fraction (`0.94`); leave unknown values blank. **Do not enter Inventory Turns**—it calculates automatically from COGS and inventory balances.
 
    > [!IMPORTANT]
-   > **Do not type into derived sheets:** **`Quarterly Financials`**, **`2. Customer Economics`**, **`3. Strategic Dashboard`**, and **`4. Forward-Looking Risk`** are calculated automatically from the input sheets via `Report Model`. Manual edits to these sheets overwrite their formulas.
+   > **Do not type into derived sheets:** **`CustomerRevenueQuarterly`**, **`Quarterly Financials`**, **`2. Customer Economics`**, **`3. Strategic Dashboard`**, and **`4. Forward-Looking Risk`** are calculated automatically from the input sheets via `Report Model`. Manual edits to these sheets overwrite their formulas.
 
 3. Run **Format & verify all sheets**, review the **Data Validation** sheet, and resolve any reported errors. Use **Repair calculated sheets** if derived formulas ever need restoration.
 4. Run **1. Prepare LLM Input + Copy… → Copy all**. Paste the complete prompt into Gemini, ChatGPT, DeepSeek, or another AI chat.

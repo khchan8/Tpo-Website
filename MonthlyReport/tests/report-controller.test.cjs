@@ -22,7 +22,7 @@ test('snapshot round trip preserves report output and rejects obsolete calculati
   assert.ok(!JSON.stringify(snapshot).includes('API_KEY'));
   rt.app.openSnapshot(snapshot);rt.app.exportCSV();
   assert.equal(rt.downloads.at(-1).text,original);
-  assert.throws(()=>rt.app.openSnapshot({...snapshot,engine:'tpo-v5'}));
+  assert.throws(()=>rt.app.openSnapshot({...snapshot,engine:'tpo-v6'}));
   const changed=JSON.parse(JSON.stringify(snapshot));changed.sources.MonthlyFinancials[1][1]=101;
   assert.throws(()=>rt.app.openSnapshot(changed));
   rt.app.exportCSV();assert.equal(rt.downloads.at(-1).text,original);

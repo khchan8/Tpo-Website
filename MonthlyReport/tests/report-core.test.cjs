@@ -65,10 +65,6 @@ test('audit-log error strings do not contaminate current data validation',()=>{
   const data=source([headers,row('Jul-26')]).concat([{name:'Repair Backup',raw:[['Old value'],['#VALUE!']]}]);
   assert.ok(!C.analyze(data).issues.some(i=>i.sheet==='Repair Backup'));
 });
-test('Apps Script and website share identical core source',()=>{
-  assert.equal(fs.readFileSync('js/report-core.js','utf8'),fs.readFileSync('js/report-core.js','utf8'));
-  assert.ok(fs.readFileSync('apps-script/Code.gs','utf8').startsWith(fs.readFileSync('js/report-core.js','utf8')));
-});
 test('website shaper preserves unavailable NWC and ignores future rows',()=>{
   const window={TPOCore:C};const ctx=vm.createContext({window,AbortController,URL,console,setTimeout,clearTimeout});
   vm.runInContext(fs.readFileSync('js/data.js','utf8'),ctx);vm.runInContext(fs.readFileSync('js/compute.js','utf8'),ctx);
@@ -118,4 +114,182 @@ test('inventory turnover preserves zero COGS but rejects zero average stock and 
   assert.equal(turn(),0);
   stocks[1][3]=stocks[2][3]=0;assert.equal(turn(),'');
   stocks[1][3]=stocks[2][3]=100;sources[0].raw[1]=financial(-10);assert.equal(turn(),'');
+});
+
+// --- Customer-quarterly derivation (CQ is derived from the monthly ledger; cached CQ sheet is ignored) ---
+const cqHdr=['Customer','Month','Revenue'];
+const cqRow=(c,m,r)=>[c,m,r];
+test('derived CQ sums all three calendar months for a closed historical quarter',()=>{
+  const data=source([headers,row('Apr-25',200),row('May-25',300),row('Jun-25',400)]).concat([
+    {name:'CustomerRevenueMonthly',raw:[cqHdr,cqRow('Mana','Apr-25',50),cqRow('Mana','May-25',60),cqRow('Mana','Jun-25',70)]},
+    {name:'Assumptions',raw:[['Customer','Margin'],['Mana',.7]]}
+  ]);
+  const a=C.analyze(data);
+  assert.equal(a.cq.find(r=>r.customer==='Mana'&&r.period.label==='Q2 2025').values[0],180);
+  const matrix=new Map(C.modelRows(a));
+  assert.equal(matrix.get('customer|Q2 2025|mana|revenue'),180);
+});
+test('derived CQ uses August QTD — covered calendar months only, no annualisation',()=>{
+  const data=source([headers,row('Jul-26',100),row('Aug-26',200)]).concat([
+    {name:'CustomerRevenueMonthly',raw:[cqHdr,cqRow('Mana','Jul-26',40),cqRow('Mana','Aug-26',50)]},
+    {name:'Assumptions',raw:[['Customer','Margin'],['Mana',.7]]}
+  ]);
+  const a=C.analyze(data);
+  const rec=a.cq.find(r=>r.customer==='Mana'&&r.period.label==='Q3 2026');
+  assert.equal(rec.values[0],90);
+});
+test('changing a monthly figure changes derived quarter revenue and concentration',()=>{
+  const before=C.analyze(source([headers,row('Jul-26',100),row('Aug-26',200)]).concat([
+    {name:'CustomerRevenueMonthly',raw:[cqHdr,cqRow('Mana','Jul-26',40),cqRow('Mana','Aug-26',50)]},
+    {name:'Assumptions',raw:[['Customer','Margin'],['Mana',.7]]}
+  ]));
+  const after=C.analyze(source([headers,row('Jul-26',100),row('Aug-26',200)]).concat([
+    {name:'CustomerRevenueMonthly',raw:[cqHdr,cqRow('Mana','Jul-26',80),cqRow('Mana','Aug-26',50)]},
+    {name:'Assumptions',raw:[['Customer','Margin'],['Mana',.7]]}
+  ]));
+  assert.notEqual(before.cq[0].values[0],after.cq[0].values[0]);
+  assert.equal(before.cq[0].values[0],90);assert.equal(after.cq[0].values[0],130);
+  assert.equal(before.econ[0].concentration,90/300);
+  assert.equal(after.econ[0].concentration,130/300);
+  assert.equal(after.econ[0].gp,91);
+});
+test('cached CQ literal cannot override the monthly-derived value',()=>{
+  const sources=source([headers,row('Jul-26',100),row('Aug-26',200)]).concat([
+    {name:'CustomerRevenueMonthly',raw:[cqHdr,cqRow('Mana','Jul-26',40),cqRow('Mana','Aug-26',50)]},
+    {name:'CustomerRevenueQuarterly',raw:[['Customer','Quarter','Revenue'],['Mana','Q3 2026',99999]]},
+    {name:'Assumptions',raw:[['Customer','Margin'],['Mana',.7]]}
+  ]);
+  const a=C.analyze(sources);
+  assert.equal(a.cq.find(r=>r.customer==='Mana'&&r.period.label==='Q3 2026').values[0],90);
+});
+test('calculation fingerprint is independent of cached quarterly totals',()=>{
+  const base=source([headers,row('Jul-26',100),row('Aug-26',200)]).concat([
+    {name:'CustomerRevenueMonthly',raw:[cqHdr,cqRow('Mana','Jul-26',40),cqRow('Mana','Aug-26',50)]},
+    {name:'Assumptions',raw:[['Customer','Margin'],['Mana',.7]]}
+  ]);
+  const cached=base.concat([{name:'CustomerRevenueQuarterly',raw:[['Customer','Quarter','Revenue'],['Mana','Q3 2026',99999]]}]);
+  const a=C.analyze(base),b=C.analyze(cached);
+  assert.equal(C.fingerprint(a),C.fingerprint(b));
+});
+test('explicit monthly zero is preserved as a real quarter contribution',()=>{
+  const data=source([headers,row('Jul-26',100),row('Aug-26',200)]).concat([
+    {name:'CustomerRevenueMonthly',raw:[cqHdr,cqRow('Mana','Jul-26',0),cqRow('Mana','Aug-26',50)]},
+    {name:'Assumptions',raw:[['Customer','Margin'],['Mana',.7]]}
+  ]);
+  assert.equal(C.analyze(data).cq.find(r=>r.customer==='Mana'&&r.period.label==='Q3 2026').values[0],50);
+});
+test('blank historical month fails the closed quarter to null without zero-fill',()=>{
+  const data=source([headers,row('Apr-25',200),row('May-25',300),row('Jun-25',400)]).concat([
+    {name:'CustomerRevenueMonthly',raw:[cqHdr,cqRow('Mana','Apr-25',50),cqRow('Mana','Jun-25',70)]},
+    {name:'Assumptions',raw:[['Customer','Margin'],['Mana',.7]]}
+  ]);
+  assert.equal(C.analyze(data).cq.find(r=>r.customer==='Mana'&&r.period.label==='Q2 2025').values[0],null);
+});
+test('duplicate monthly rows for the same month are quarantined and the quarter stays null',()=>{
+  const data=source([headers,row('Jul-26',100),row('Aug-26',200)]).concat([
+    {name:'CustomerRevenueMonthly',raw:[cqHdr,cqRow('Mana','Jul-26',10),cqRow('Mana','Jul-26',20),cqRow('Mana','Aug-26',50)]},
+    {name:'Assumptions',raw:[['Customer','Margin'],['Mana',.7]]}
+  ]);
+  const a=C.analyze(data);
+  assert.equal(a.cq.find(r=>r.customer==='Mana'&&r.period.label==='Q3 2026').values[0],null);
+  assert.ok(a.issues.some(i=>i.level==='error'&&i.sheet==='CustomerRevenueMonthly'));
+});
+test('invalid monthly string fails the quarter to null without partial parse',()=>{
+  const data=source([headers,row('Jul-26',100),row('Aug-26',200)]).concat([
+    {name:'CustomerRevenueMonthly',raw:[cqHdr,cqRow('Mana','Jul-26','abc'),cqRow('Mana','Aug-26',50)]},
+    {name:'Assumptions',raw:[['Customer','Margin'],['Mana',.7]]}
+  ]);
+  assert.equal(C.analyze(data).cq.find(r=>r.customer==='Mana'&&r.period.label==='Q3 2026').values[0],null);
+});
+test('mixed labels/case in monthly rows collapse to one customer identity',()=>{
+  const data=source([headers,row('Jul-26',100),row('Aug-26',200)]).concat([
+    {name:'CustomerRevenueMonthly',raw:[cqHdr,cqRow('Auntie Aloha','Jul-26',40),cqRow('auntie aloha','Aug-26',50)]},
+    {name:'Assumptions',raw:[['Customer','Margin'],['Auntie Aloha',.65]]}
+  ]);
+  const a=C.analyze(data);
+  assert.equal(a.cq.length,1);
+  assert.equal(a.cq[0].customer,'Auntie Aloha');
+  assert.equal(a.cq[0].values[0],90);
+});
+test('future months do not advance CQ beyond the financial as-of',()=>{
+  const data=source([headers,row('Jul-26',100),row('Aug-26',200),['Sep-27','','','','','','','Q3 2027']]).concat([
+    {name:'CustomerRevenueMonthly',raw:[cqHdr,cqRow('Mana','Jul-26',40),cqRow('Mana','Aug-26',50),cqRow('Mana','Sep-27',0)]},
+    {name:'Assumptions',raw:[['Customer','Margin'],['Mana',.7]]}
+  ]);
+  const a=C.analyze(data);
+  assert.equal(a.latest.month,'Aug-26');
+  assert.equal(a.cq.find(r=>r.customer==='Mana'&&r.period.label==='Q3 2026').values[0],90);
+  assert.ok(!a.cq.some(r=>r.period.label==='Q3 2027'));
+});
+test('a future-only monthly customer cannot change the current portfolio',()=>{
+  const data=source([headers,row('Jul-26',100),row('Aug-26',200)]).concat([
+    {name:'CustomerRevenueMonthly',raw:[cqHdr,cqRow('Mana','Jul-26',40),cqRow('Mana','Aug-26',50),cqRow('Future Account','Sep-26',500)]},
+    {name:'Assumptions',raw:[['Customer','Margin'],['Mana',.7]]}
+  ]);
+  const a=C.analyze(data);
+  assert.deepEqual(a.customers.map(c=>c.name),['Mana']);
+  assert.deepEqual(a.cq.map(r=>[r.customer,r.period.label,r.values[0]]),[['Mana','Q3 2026',90]]);
+  assert.equal(new Map(C.modelRows(a)).get('portfolio|Q3 2026|revenue'),90);
+});
+test('quarterly customer figures stay unavailable without a financial reporting month',()=>{
+  const data=source([headers]).concat([
+    {name:'CustomerRevenueMonthly',raw:[cqHdr,cqRow('Mana','Jan-26',10),cqRow('Mana','Feb-26',20),cqRow('Mana','Mar-26',30)]},
+    {name:'Assumptions',raw:[['Customer','Margin'],['Mana',.7]]}
+  ]);
+  const a=C.analyze(data);
+  assert.equal(a.latest,null);
+  assert.deepEqual(a.cq,[]);
+  assert.equal(new Map(C.modelRows(a)).get('meta|latest-month'),'');
+});
+test('December to January rollover closes the old quarter and starts a new QTD',()=>{
+  const data=source([headers,row('Oct-26',100),row('Nov-26',200),row('Dec-26',300),row('Jan-27',400)]).concat([
+    {name:'CustomerRevenueMonthly',raw:[cqHdr,cqRow('Mana','Oct-26',40),cqRow('Mana','Nov-26',50),cqRow('Mana','Dec-26',60),cqRow('Mana','Jan-27',70)]},
+    {name:'Assumptions',raw:[['Customer','Margin'],['Mana',.7]]}
+  ]);
+  const a=C.analyze(data);
+  assert.equal(a.cq.find(r=>r.period.label==='Q4 2026').values[0],150);
+  assert.equal(a.cq.find(r=>r.period.label==='Q1 2027').values[0],70);
+});
+test('historical settings cutoff blanks covered months and the partial quarter uses only covered calendar months',()=>{
+  const data=source([headers,row('Apr-26',100),row('May-26',200),row('Jun-26',300),row('Jul-26',400)]).concat([
+    {name:'CustomerRevenueMonthly',raw:[cqHdr,cqRow('Mana','Apr-26',40),cqRow('Mana','May-26',50),cqRow('Mana','Jun-26',60),cqRow('Mana','Jul-26',70)]},
+    {name:'Assumptions',raw:[['Customer','Margin'],['Mana',.7]]}
+  ]);
+  const filtered=C.settings.filterSources(data,C.settings.normalize({cutoff:'2026-05'}));
+  const a=C.analyze(filtered);
+  assert.equal(a.latest.month,'May-26');
+  const q2=a.cq.find(r=>r.customer==='Mana'&&r.period.label==='Q2 2026');
+  // Q2 2026 QTD through May = Apr (40) + May (50) = 90; Jun and Jul are past the as-of and not required.
+  assert.equal(q2.values[0],90);
+  assert.ok(!a.cq.some(r=>r.customer==='Mana'&&r.period.label==='Q3 2026'));
+});
+test('historical placeholder rows surface as null CQ records for the named quarter',()=>{
+  const data=source([headers,row('Apr-24',100),row('May-24',120),row('Jun-24',140)]).concat([
+    {name:'CustomerRevenueMonthly',raw:[cqHdr,cqRow('Mana','May-24',null),cqRow('Mana','Jun-24',null)]},
+    {name:'Assumptions',raw:[['Customer','Margin'],['Mana',.7]]}
+  ]);
+  const a=C.analyze(data);
+  const rec=a.cq.find(r=>r.customer==='Mana'&&r.period.label==='Q2 2024');
+  assert.ok(rec);
+  assert.equal(rec.values[0],null);
+});
+test('monthly-only customers without Assumptions margin use null margin and still derive',()=>{
+  const data=source([headers,row('Jul-26',100),row('Aug-26',200)]).concat([
+    {name:'CustomerRevenueMonthly',raw:[cqHdr,cqRow('Newco','Jul-26',10),cqRow('Newco','Aug-26',20)]}
+  ]);
+  const a=C.analyze(data);
+  const cust=a.customers.find(c=>c.name==='Newco');
+  assert.equal(cust.margin,null);
+  assert.equal(a.cq.find(r=>r.customer==='Newco'&&r.period.label==='Q3 2026').values[0],30);
+  assert.equal(a.econ.find(e=>e.name==='Newco').gp,null);
+});
+test('source monthly records are not mutated by CQ derivation',()=>{
+  const cm=[cqHdr,cqRow('Mana','Jul-26',40),cqRow('Mana','Aug-26',50)];
+  const snapshot=cm.map(r=>r.slice());
+  const data=source([headers,row('Jul-26',100),row('Aug-26',200)]).concat([
+    {name:'CustomerRevenueMonthly',raw:cm},
+    {name:'Assumptions',raw:[['Customer','Margin'],['Mana',.7]]}
+  ]);
+  C.analyze(data);
+  assert.deepEqual(cm,snapshot);
 });

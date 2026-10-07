@@ -925,20 +925,17 @@
       );
     }
 
-    // Quarterly revenue trend from CustomerRevenueQuarterly (all quarters, all customers).
+    // Quarterly revenue is calculated from the monthly customer ledger.
     const crq = data.customerRevenueQuarterly || {};
     const myQ = (crq[c.slug] && crq[c.slug].quarterly) || [];      // [{quarter, revenue}]
     const myQValued = myQ.filter(p => p.revenue !== null && p.revenue !== undefined);
     const latestPt = myQValued.length ? myQValued[myQValued.length - 1] : null;
 
-    // Mix share in the latest quarter (across all customers with a value that quarter).
+    // A share requires the same quarter's revenue for every listed customer.
     let mixShare = null;
     if (latestPt) {
-      let total = 0;
-      for (const sl in crq) {
-        const pt = (crq[sl].quarterly || []).find(p => p.quarter === latestPt.quarter);
-        if (pt && pt.revenue !== null && pt.revenue !== undefined) total += pt.revenue;
-      }
+      const total = window.TPOCore.sum(Object.values(crq).map(customer =>
+        customer.quarterly.find(p => p.quarter === latestPt.quarter)?.revenue ?? null));
       mixShare = total ? latestPt.revenue / total : null;
     }
     const latestGpEst = (latestPt && latestPt.revenue != null && c.margin != null) ? latestPt.revenue * c.margin : null;
@@ -953,7 +950,7 @@
       kpiTile("Share of listed customers",  K.fmtPct(mixShare), latestPt?.quarter || ""),
     );
 
-    // Q-to-Q chart — full multi-quarter trend from CustomerRevenueQuarterly.
+    // Q-to-Q chart — monthly-derived quarter/QTD revenue.
     // A quarter is "partial" ONLY while the current quarter is incomplete
     // (< 3 months present in MonthlyFinancials). This is data-driven, so the
     // moment June is added the latest month becomes Jun (= end of Q2) and the
@@ -965,7 +962,7 @@
     const isPartialQ = (q) => !!q && data.quarterly.quarters.some(x => x.quarter === q && !x.complete);
     const qqCard = chartCard({
       title: "Quarter-to-quarter",
-      subtitle: "Source: CustomerRevenueQuarterly" +
+      subtitle: "Calculated from CustomerRevenueMonthly" +
         (isPartialQ(latestPt?.quarter) ? ` · ${latestPt.quarter} partial (${partialMonthCount} of 3 months)` : ""),
       rangeKey: "quarterly", height: 300,
       data: { labels: myQ.map(p => p.quarter),
@@ -1009,7 +1006,7 @@
     } else {
       monthBlock = el("div", { class: "bg-white border border-dashed border-rule rounded-md p-5" },
         el("h2", { class: "font-serif text-xl text-ink mb-2" }, "Month-to-month"),
-        el("p", { class: "text-sm text-mute" }, "Monthly detail is not entered for this customer in the CustomerRevenueMonthly tab. Quarterly figures above come from CustomerRevenueQuarterly."),
+        el("p", { class: "text-sm text-mute" }, "Monthly revenue has not been entered for this customer. Quarterly figures remain unavailable until the required monthly amounts are supplied."),
       );
     }
 

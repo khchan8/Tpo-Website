@@ -1,4 +1,4 @@
-# TPO monthly report — manual AI workflow, v6
+# TPO monthly report — manual AI workflow, v7
 
 The Apps Script, calculated Google Sheets cells, and website use the same calculation engine. By default, the reporting period follows the latest month with valid actual revenue in MonthlyFinancials; Report settings can apply a historical cut-off. Blank future rows such as Aug-27 and Sep-27 are allowed and ignored; an explicit zero is actual data. An expense-only future row remains pending until revenue is entered.
 
@@ -26,7 +26,7 @@ Commentary uses **View | Commentary | Status** in A:C. It does not recreate the 
 | MonthlyFinancials | Month, Total Revenue, COGS, Gross Profit, SG&A, EBIT, Net Income, Quarter |
 | Quarterly Financials | Quarter, Total Revenue, COGS, Gross Profit, SG&A, EBIT, Net Income |
 | CustomerRevenueMonthly | Customer, Month, Revenue |
-| CustomerRevenueQuarterly | Customer, Quarter, Revenue |
+| CustomerRevenueQuarterly | Customer, Quarter, Revenue — derived from CustomerRevenueMonthly; never enter quarterly totals |
 | CustomerCount | Month, Customer Count |
 | 1. Working Capital | Reporting Month, Cash Balance, Accounts Receivable, Inventory Value, Accounts Payable, Net Working Capital |
 | 2. Customer Economics | Customer Brand, Quarter, Gross Revenue, Revenue Concentration, Estimated Contribution (legacy Gross Profit accepted), Contribution Margin |
@@ -41,6 +41,7 @@ The tabular readers find columns by header. Missing required headers exclude tha
 Duplicate populated period/customer keys are excluded rather than summed. Scaffolding also rejects duplicate empty slots. Error-level findings block AI input preparation; repairs can replace broken derived formulas but stop on invalid primary inputs. Missing or malformed numbers remain unavailable. Monetary checks allow small whole-baht rounding differences. Blank or invalid GP/EBIT values do not silently become zero in quarterly or YTD totals.
 
 - Quarter totals derive from unique monthly rows. Partial quarters compare only with the same available months one year earlier. Three rows indicate coverage, not proof that individual months are finalized.
+- Customer quarterly revenue sums the unique monthly amounts for each customer. Completed quarters require all three calendar months; the reporting quarter uses quarter-start through the latest financial month or historical cut-off. Missing, blank, invalid, or conflicting monthly amounts leave the quarter unavailable. Genuine zero is valid; no manual quarterly fallback or annualisation.
 - Working capital requires all four components: cash + AR + inventory − AP. Enter zero when a component is actually zero. An existing formula that treats blanks as zero is not accepted as a validated NWC result.
 - Customer mix shares refer to the listed customer total. Company-wide concentration requires reconciliation with the P&L; otherwise it is unavailable. Customer contribution is revenue × assumed margin, not audited gross profit.
 - Dashboard active customers follow the first month of a quarter. Overview uses the exact latest financial reporting month, exact previous-month and prior-year comparisons, and a rolling 12-calendar-month customer trend. Missing observations stay unavailable; zero counts are real, but percentage changes from zero baselines are unavailable.
@@ -53,11 +54,11 @@ Duplicate populated period/customer keys are excluded rather than summed. Scaffo
 
 Only noncalculated dashboard values migrate into **Dashboard Inputs**. Repair clears obsolete Inventory Turns / Inventory Period / Cash Balance As Of entries in place, including old numeric ratios, and never reseeds them. Other manual rows and formulas retain their original coordinates to protect cross-cell references.
 
-Customer Economics revenue comes from **CustomerRevenueQuarterly**, with each portfolio total scoped to an explicit quarter. Source numbers and replaced formulas are recorded in **Repair Backup** before changes. Formula errors identify the source sheet/cell; failed writes attempt rollback.
+Customer Economics revenue comes from the monthly-derived **CustomerRevenueQuarterly** model, with each portfolio total scoped to an explicit quarter. Repair replaces existing quarterly literals with model lookups without moving rows and records previous values/formulas in **Repair Backup**. The quarterly output range is not an argument to `TPO_REPORT_MODEL`, preventing a circular dependency. Customer-page portfolio shares remain unavailable when any required customer-quarter total is unknown.
 
 Forward risk is deterministic: negative current matched EBIT is **Operating Loss / High Risk**; positive improvement is **Improving / On Track**; a decline is **Contracting / Moderate Risk**; equal EBIT is **Stable / Monitor**. Missing EBIT or baseline is explicitly unavailable. Coverage is a separate column; missing prior-year months never become zero. This is historical comparison, not a forecast or AI classification.
 
-The supplied workbook's Q1 2026 customer revenue exceeds P&L revenue by **฿153,034** (฿11,355,290 − ฿11,202,256). It remains a reconciliation warning; timing differences are a possible explanation, not established by the data.
+The current workbook's monthly-derived Q1 2026 customer revenue exceeds P&L revenue by **฿153,033** (฿11,355,289 − ฿11,202,256). It remains a reconciliation warning; timing differences are a possible explanation, not established by the data.
 
 Supporting tables in the AI prompt are normalized and filtered; they are not a raw cell dump. Rows are labelled `normalized_row`. Error/warning notes identify original sheet cells. Unsafe derived figures and ambiguous duplicate rows are not supplied as authoritative inputs. Validate facts in the resulting prose before using them; the importer validates structure and routing, not the AI's reasoning.
 
@@ -138,6 +139,15 @@ Reporting-month safety: Sheets can interpret a label such as Jan-25 as January 2
 
 - Overview replaces all-history customer extremes with exact-month MoM/YoY and a fixed trailing 12-month trend.
 - Current-quarter cash is explicitly dated; inventory turns are calculated quarter/QTD values rather than manually supplied history.
-- The updated `TPO_Monthly_Input.xlsx` uses a fresh live-sheet export. `TPO_Monthly_Input-old.xlsx` preserves the previous local copy. Raw financial and customer input values are unchanged.
+- Workbook exports are snapshots; update the existing bound Apps Script rather than replacing the live spreadsheet.
 - Snapshot engine `tpo-v6` rejects pre-cutover calculation versions rather than reinterpreting archived figures. Regenerate commentary after installing the script and repairing the live sheet.
+
+## 2026-10-07 — v7 monthly customer-revenue authority
+
+- `CustomerRevenueQuarterly` is now a derived sheet. Enter customer revenue only in `CustomerRevenueMonthly`; changing a covered monthly amount recalculates quarter/QTD revenue, contribution, and portfolio totals.
+- Repair backs up historical quarterly values, installs keyed formulas, and removes the old quarterly range from the custom-function arguments. Existing manual inputs, example columns, and tab colors are preserved.
+- Four populated historical customer-quarter totals currently lack monthly coverage: Auntie Aloha Q2 2024 (Apr), Fuzzies Q3 2024 (Jul), Tyson Q1 2025 (Jan/Feb), and Private Label Q1 2025 (Jan). Their automated totals remain blank until those months are verified; enter zero only for actual no-sales months.
+- `Dashboard Inputs` uses column C `Value`; column D `Examples Value` is reference text/data, not an actual report input. New Accounts Opened and Customer Retention Rate remain manual.
+- Snapshot engine `tpo-v7` rejects earlier calculation versions. AI batch checks track monthly customer inputs, not quarterly output caches. Regenerate commentary after installation.
+
 

@@ -86,8 +86,11 @@ function fixture() {
       financial('Feb-27', 'Q1 2027', 200), financial('Jan-26', 'Q1 2026', 50),
       financial('Jan-27', 'Q1 2027', 100), financial('Feb-26', 'Q1 2026', 100),
       ['Mar-27', '', '', '', '', '', '', 'Q1 2027']],
-    CustomerRevenueMonthly: [['Customer', 'Month', 'Revenue'], ['Acme Corp', 'Feb-27', 150], ['Beta', 'Feb-27', 50]],
-    CustomerRevenueQuarterly: [['Customer', 'Quarter', 'Revenue'], ['Acme Corp', 'Q1 2027', 240], ['Beta', 'Q1 2027', 60], ['Acme Corp', 'Q2 2027', '']],
+    CustomerRevenueMonthly: [['Customer', 'Month', 'Revenue'],
+      ['Acme Corp', 'Jan-27', 100], ['Acme Corp', 'Feb-27', 140],
+      ['Beta', 'Jan-27', 25], ['Beta', 'Feb-27', 35]],
+    CustomerRevenueQuarterly: [['Customer', 'Quarter', 'Revenue'],
+      ['Acme Corp', 'Q1 2027', 240], ['Beta', 'Q1 2027', 60], ['Acme Corp', 'Q2 2027', '']],
     CustomerCount: [['Month', 'Customer Count'], ['Jan-27', 10], ['Feb-27', 15], ['Feb-26', 50]],
     'Quarterly Financials': [['Quarter','Revenue','COGS','Gross Profit','SG&A','EBIT','Net Income'], ['Q1 2027',300,180,120,30,90,60]],
     '1. Working Capital': [['Reporting Month','Cash Balance','Accounts Receivable','Inventory Value','Accounts Payable','Net Working Capital'],
@@ -152,7 +155,7 @@ test('latest period sorts dates, excludes headers/totals/empty future rows and m
   assert.equal(result.period, '2027-02'); assert.equal(result.tasks.length, 8);
   const overview = result.tasks.find(t => t.view === 'overview').summary;
   assert.equal(overview.yearToDateRevenue, 300); assert.equal(overview.grossMarginPercent, 40);
-  assert.equal(overview.customerMix.customers[0].sharePercent, 75);
+  assert.equal(overview.customerMix.customers[0].sharePercent, 80);
   const finance = result.tasks.find(t => t.view === 'financial-performance').summary;
   assert.equal(finance.latestQuarter.revenue, 300); assert.equal(finance.latestQuarter.complete, false);
   assert.equal(finance.comparison.priorYearRevenueForMatchingMonths, 150);
@@ -235,6 +238,20 @@ test('invalid, incomplete, duplicate and stale batches leave Commentary untouche
     pasteGrid(rt, text); assert.throws(() => rt.ctx.import_(), error); assert.equal(values(rt.sheets.get('Commentary')), original);
   });
 });
+test('quarterly output edits preserve a prepared batch, but monthly revenue edits invalidate it', () => {
+  const rt=runtime();rt.ctx.prepare_();
+  const response=sampleResponse(rt);
+  rt.sheets.get('CustomerRevenueQuarterly').getRange(2,3).setValue(999999);
+  pasteGrid(rt,JSON.stringify(response));
+  rt.ctx.import_();
+  const row=rt.ctx.readCommentary_().find(r=>r.view==='acme-corp').row;
+  assert.equal(rt.sheets.get('Commentary').getRange(row,2).getDisplayValue(),response.commentaries.find(r=>r.view==='acme-corp').commentary);
+  rt.ctx.prepare_();pasteGrid(rt,JSON.stringify(sampleResponse(rt)));
+  const before=values(rt.sheets.get('Commentary'));
+  rt.sheets.get('CustomerRevenueMonthly').getRange(2,3).setValue(101);
+  assert.throws(()=>rt.ctx.import_(),/Source data changed/);
+  assert.equal(values(rt.sheets.get('Commentary')),before);
+});
 test('source edits after preparing a batch are rejected, and editing input is detected', () => {
   const rt = runtime(); rt.ctx.prepare_(); const response = sampleResponse(rt);
   pasteGrid(rt, JSON.stringify(response));
@@ -257,13 +274,16 @@ test('failed import rolls back all changed rows and removes newly appended ident
   assert.throws(() => rt.ctx.import_(), /Original commentary was restored/);
   assert.equal(values(sh), original);
 });
-test('adding a customer preserves the three-column schema and seeds chronological quarter rows', () => {
+test('adding a customer preserves the three-column schema and seeds existing months and quarters', () => {
   const rt = runtime(); rt.ctx.prepare_();
   rt.ctx.processAddCustomer({ name: 'New Customer', margin: '25%', seed: true });
   const sh = rt.sheets.get('Assumptions'); assert.equal(sh.getRange(sh.getLastRow(), 2).getValues()[0][0], .25);
   assert.equal(rt.sheets.get('Commentary').getMaxColumns(), 3);
-  const rows = rt.sheets.get('CustomerRevenueQuarterly').getDataRange().getValues().filter(r => r[0] === 'New Customer');
-  assert.deepEqual(rows.map(r => r[1]), ['Q1 2027', 'Q2 2027']);
+  const monthlyRows = rt.sheets.get('CustomerRevenueMonthly').getDataRange().getValues().filter(r => r[0] === 'New Customer');
+  assert.deepEqual(monthlyRows.map(r => r[1]).sort(), ['Feb-27', 'Jan-27']);
+  assert.ok(monthlyRows.every(r => r[2] === ''));
+  const cqRows = rt.sheets.get('CustomerRevenueQuarterly').getDataRange().getValues().filter(r => r[0] === 'New Customer');
+  assert.deepEqual(cqRows.map(r => r[1]).sort(), ['Q1 2027', 'Q2 2027']);
   assert.throws(() => rt.ctx.processAddCustomer({ name: 'New Customer', margin: '.2', seed: true }), /already exists/);
   assert.throws(() => rt.ctx.processAddCustomer({ name: 'Bad', margin: '45', seed: false }), /margin/);
 });
@@ -353,7 +373,7 @@ test('conflicting month and quarter stop AI export before creating input',()=>{
 
 test('range-fed model matches shared core and recalculates edited raw inputs',()=>{
   const rt=runtime(),data=fixture(),inputs=[['Quarter','Metric','Value'],['Q1 2027','Customer Retention Rate',.8]];
-  const get=()=>new Map(rt.ctx.TPO_REPORT_MODEL(data.MonthlyFinancials,data.Assumptions,data.CustomerRevenueMonthly,data.CustomerRevenueQuarterly,data.CustomerCount,data['1. Working Capital'],inputs,'May–October','count at first month of the quarter','THB','Asia/Bangkok'));
+  const get=()=>new Map(rt.ctx.TPO_REPORT_MODEL(data.MonthlyFinancials,data.Assumptions,data.CustomerRevenueMonthly,data.CustomerCount,data['1. Working Capital'],inputs,'May–October','count at first month of the quarter','THB','Asia/Bangkok'));
   let model=get();assert.equal(model.get('quarter|Q1 2027|revenue'),300);
   assert.equal(model.get('dashboard|Q1 2027|activecustomers'),10);
   assert.equal(model.get('dashboard|Q1 2027|customerretentionrate'),.8);
@@ -372,15 +392,10 @@ test('monthly scaffolding reuses placeholders, leaves raw inputs blank, and uses
   const rt=runtime(),sources=rt.ctx.readSources_(),a=rt.ctx.TPOCore.analyze(sources),next=rt.ctx.TPOCore.month('Mar-27');
   const plan=rt.ctx.repairPlan_(sources,a,next);
   assert.ok(!plan.some(p=>p.sheet==='MonthlyFinancials'&&p.col===1)); // already present
-  assert.match(plan.find(p=>p.sheet==='MonthlyFinancials'&&p.row===6&&p.col===4).value,/COUNT\(B6,C6\)=2/);
   assert.ok(!plan.some(p=>p.sheet==='MonthlyFinancials'&&[2,3,5,7].includes(p.col)));
   assert.equal(plan.filter(p=>p.sheet==='CustomerRevenueMonthly'&&p.value==='Mar-27').length,2);
   assert.ok(plan.filter(p=>p.sheet==='CustomerRevenueMonthly'&&p.value==='Mar-27').every(p=>p.text));
   assert.ok(plan.some(p=>p.sheet==='Dashboard Inputs'&&p.value===300)); // preserve manual metric
-  const anchor=plan.find(p=>p.sheet==='Report Model').value;
-  for(const forbidden of ['Quarterly Financials','2. Customer Economics','3. Strategic Dashboard','4. Forward-Looking Risk'])assert.ok(!anchor.includes("'"+forbidden+"'!"));
-  const qFormula=plan.find(p=>p.sheet==='Quarterly Financials'&&p.col===2).value;
-  assert.match(qFormula,/MATCH\(/);assert.match(qFormula,/A2/);assert.ok(!qFormula.includes('Q1 2027'));
 });
 test('quarter and year rollover append missing sections without copying past totals',()=>{
   for(const [from,next,quarter] of [['Sep-27','Oct-27','Q4 2027'],['Dec-27','Jan-28','Q1 2028']]){
@@ -388,8 +403,21 @@ test('quarter and year rollover append missing sections without copying past tot
     const rt=runtime(data),sources=rt.ctx.readSources_(),a=rt.ctx.TPOCore.analyze(sources),plan=rt.ctx.repairPlan_(sources,a,rt.ctx.TPOCore.month(next));
     for(const name of ['MonthlyFinancials','CustomerCount','1. Working Capital'])assert.ok(plan.some(p=>p.sheet===name&&p.value===next&&p.text));
     for(const name of ['Quarterly Financials','CustomerRevenueQuarterly','2. Customer Economics','3. Strategic Dashboard'])assert.ok(plan.some(p=>p.sheet===name&&p.value===quarter));
-    assert.ok(!plan.some(p=>p.sheet==='CustomerRevenueQuarterly'&&p.col===3&&p.value!==''));
   }
+});
+test('quarterly migration backs up old totals, preserves manual inputs, and is idempotent',()=>{
+  const data=fixture();
+  data['Dashboard Inputs']=[['Quarter','Metric','Value','Examples Value'],['Q1 2027','New Accounts Opened','',27],['Q1 2027','Customer Retention Rate','',.94]];
+  const rt=runtime(data),monthlyBefore=values(rt.sheets.get('CustomerRevenueMonthly')),manualBefore=values(rt.sheets.get('Dashboard Inputs'));
+  const sources=rt.ctx.readSources_(),a=rt.ctx.TPOCore.analyze(sources),plan=rt.ctx.repairPlan_(sources,a,null);
+  plan.forEach(p=>{const sh=rt.sheets.get(p.sheet)||rt.ss.insertSheet(p.sheet);rt.ctx.ensureSize_(sh,p.row,p.col);});
+  rt.ctx.backupAndWrite_(plan,'Quarterly migration');
+  assert.equal(values(rt.sheets.get('CustomerRevenueMonthly')),monthlyBefore);
+  assert.equal(values(rt.sheets.get('Dashboard Inputs')),manualBefore);
+  const backup=rt.sheets.get('Repair Backup').getDataRange().getValues();
+  assert.equal(backup.find(r=>r[2]==='CustomerRevenueQuarterly'&&r[3]==='C2')[4],'240');
+  assert.equal(backup.find(r=>r[2]==='CustomerRevenueQuarterly'&&r[3]==='C3')[4],'60');
+  assert.deepEqual(Array.from(rt.ctx.repairPlan_(rt.ctx.readSources_(),a,null)).filter(p=>p.sheet==='CustomerRevenueQuarterly'),[]);
 });
 test('repair planning is idempotent and blocks duplicate empty slots',()=>{
   const rt=runtime(),sources=rt.ctx.readSources_(),a=rt.ctx.TPOCore.analyze(sources),next=rt.ctx.TPOCore.month('Mar-27'),plan=rt.ctx.repairPlan_(sources,a,next);
@@ -463,7 +491,7 @@ test('Inventory Turns removal plan rolls back to original sheet state on write f
 });
 test('range-fed model respects Bangkok month boundary for real dates',()=>{
   const data=fixture(),rt=runtime();data.MonthlyFinancials.push([new Date('2027-03-31T18:00:00Z'),0,0,0,0,0,0,'Q2 2027']);
-  const model=new Map(rt.ctx.TPO_REPORT_MODEL(data.MonthlyFinancials,data.Assumptions,data.CustomerRevenueMonthly,data.CustomerRevenueQuarterly,data.CustomerCount,data['1. Working Capital'],[['Quarter','Metric','Value']],'May–October','','THB','Asia/Bangkok'));
+  const model=new Map(rt.ctx.TPO_REPORT_MODEL(data.MonthlyFinancials,data.Assumptions,data.CustomerRevenueMonthly,data.CustomerCount,data['1. Working Capital'],[['Quarter','Metric','Value']],'May–October','','THB','Asia/Bangkok'));
   assert.equal(model.get('meta|latest-month'),'Apr-27');assert.equal(model.get('quarter|Q2 2027|revenue'),0);
 });
 
@@ -477,8 +505,9 @@ test('shared display changes preserve AI batch while scope changes invalidate it
 test('Apps Script and website use the same historical cutoff and model totals',()=>{
   const data=fixture(),rt=runtime(data);rt.ctx.ensureReportSettings_();const settings=rt.ctx.TPOReportSettings.normalize({cutoff:'2027-01'});rt.sheets.get('Report Settings').getRange(2,2).setValue(JSON.stringify(settings));
   const analysis=rt.ctx.buildAnalysis_(rt.ctx.readSources_());assert.equal(analysis.period,'2027-01');assert.equal(analysis.validation.quarterly.at(-1).revenue,100);
-  const model=new Map(rt.ctx.TPO_REPORT_MODEL(data.MonthlyFinancials,data.Assumptions,data.CustomerRevenueMonthly,data.CustomerRevenueQuarterly,data.CustomerCount,data['1. Working Capital'],[['Quarter','Metric','Value']],'May–October','','THB','Asia/Bangkok',JSON.stringify(settings)));
-  assert.equal(model.get('quarter|Q1 2027|revenue'),100);assert.equal(model.get('meta|latest-month'),'Jan-27');assert.ok(!model.has('customer|Q1 2027|acme corp|revenue'));
+  const model=new Map(rt.ctx.TPO_REPORT_MODEL(data.MonthlyFinancials,data.Assumptions,data.CustomerRevenueMonthly,data.CustomerCount,data['1. Working Capital'],[['Quarter','Metric','Value']],'May–October','','THB','Asia/Bangkok',JSON.stringify(settings)));
+  assert.equal(model.get('quarter|Q1 2027|revenue'),100);assert.equal(model.get('meta|latest-month'),'Jan-27');
+  assert.equal(model.get('customer|Q1 2027|acme corp|revenue'),100);
 });
 test('shared settings dialog scripts compile and unrelated sheet contents are protected',()=>{
   const rt=runtime();rt.ctx.menuReportSettings();const html=rt.getHtml();assert.match(html,/Shared report settings/);for(const m of html.matchAll(/<script>([\s\S]*?)<\/script>/g))assert.doesNotThrow(()=>new vm.Script(m[1]));

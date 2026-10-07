@@ -76,12 +76,12 @@ var TPOCore = (function () {
       return result;
     }
     sources.forEach(s=>{
-      if(!defs[s.name]&&!['Assumptions','Dashboard Inputs','3. Strategic Dashboard'].includes(s.name))return;
+      if(s.name==='CustomerRevenueQuarterly'||(!defs[s.name]&&!['Assumptions','Dashboard Inputs','3. Strategic Dashboard'].includes(s.name)))return;
       (s.raw||[]).forEach((r,i)=>r.forEach((v,j)=>{
         if (/^#(?:REF!|VALUE!|DIV\/0!|N\/A|NAME\?|NUM!|ERROR!|SPILL!)/.test(trim(v))) issue('error',s.name,col(j)+(i+1),'Formula error: '+v);
       }));
     });
-    Object.keys(defs).forEach(table);
+    Object.keys(defs).forEach(name=>{if(name!=='CustomerRevenueQuarterly'||sourceMap[name])table(name);});
     ['Assumptions','3. Strategic Dashboard','Dashboard Inputs','Glossary','README','Commentary','Content'].forEach(n=>{
       if(sourceMap[n]) table(n);
     });
@@ -138,7 +138,7 @@ var TPOCore = (function () {
     suppliedQ.forEach(r=>{const calc=quarterly.find(q=>q.quarter===r.period.label); if(!calc)return;
       metrics.forEach((k,i)=>{if(r.values[i]!==calc[k] && !(Number.isFinite(r.values[i])&&Number.isFinite(calc[k])&&Math.abs(r.values[i]-calc[k])<=6))issue('warning','Quarterly Financials',cell('Quarterly Financials',r.row,i+1),'Does not reconcile with monthly '+k+'; monthly rollup used.');});
     });
-    const cm=records('CustomerRevenueMonthly',1,[2],0), cq=records('CustomerRevenueQuarterly',1,[2],0,'quarter');
+    const cm=records('CustomerRevenueMonthly',1,[2],0);
     const counts=records('CustomerCount',0,[1]).filter(r=>r.values[0]!==null);
     const wc=records('1. Working Capital',0,[1,2,3,4,5]).map(r=>{
       const [cash,ar,inventory,ap,reported]=r.values, nwc=sum([cash,ar,inventory,ap===null?null:-ap]);
@@ -152,6 +152,31 @@ var TPOCore = (function () {
       if(/^(Currency|Reporting period\s*\(as-of\)|Active Customers rule|Low season|.*cordon)$/i.test(trim(r[3]))) params[trim(r[3])]=trim(r[4]);
     });
     const seenCustomers=new Set(); customers.forEach(c=>{const key=c.name.toLowerCase(); if(seenCustomers.has(key))issue('error','Assumptions','A:B','Duplicate customer '+c.name);seenCustomers.add(key);});
+    // Quarterly values come only from monthly inputs, never cached quarterly cells.
+    const cmMap=new Map(cm.map(r=>[r.customer.toLowerCase()+'|'+r.period.key,r]));
+    const customerPool=new Map(customers.map(c=>[c.name.toLowerCase(),c.name])), quarterPeriods=new Map();
+    quarterly.forEach(q=>{const p=quarter(q.quarter);quarterPeriods.set(p.key,p);});
+    (tables.CustomerRevenueMonthly||[]).slice(1).forEach(r=>{
+      const name=trim(r[0]),p=month(r[1]);
+      if(!name||!p||!latest||p.key>latest.period.key)return;
+      const key=name.toLowerCase();
+      if(!customerPool.has(key)){customerPool.set(key,name);customers.push({name,margin:null});}
+      const q=quarter(p.quarter);quarterPeriods.set(q.key,q);
+    });
+    const names=Array.from(customerPool).sort(([a],[b])=>a<b?-1:a>b?1:0), cq=[];
+    Array.from(quarterPeriods.values()).sort((a,b)=>a.key-b.key).forEach(p=>{
+      if(!latest)return;
+      const start=p.year*12+(p.q-1)*3,end=Math.min(start+2,latest.period.key);
+      names.forEach(([key,customer])=>{
+        let revenue=0;
+        for(let m=start;m<=end;m++){
+          const value=cmMap.get(key+'|'+m)?.values[0];
+          if(!Number.isFinite(value)){revenue=null;break;}
+          revenue+=value;
+        }
+        cq.push({period:p,row:cq.length+2,customer,values:[revenue]});
+      });
+    });
     let lowSeason=[];
     const ls=trim(params['Low season']).split(/\s*[-–—]\s*/);
     if(ls.length===2){const start=months.findIndex(x=>x.toLowerCase()===ls[0].slice(0,3).toLowerCase()),end=months.findIndex(x=>x.toLowerCase()===ls[1].slice(0,3).toLowerCase());if(start>=0&&end>=0){for(let i=start;;i=(i+1)%12){lowSeason.push(i+1);if(i===end)break;}}}
@@ -163,7 +188,7 @@ var TPOCore = (function () {
       if(missing.length||actual===null||expected===null||Math.abs(actual-expected)>Math.max(2,a.length))issue('warning',name,'A:C','Revenue coverage/reconciliation for '+(period.display||period.label)+': customer total '+actual+', P&L '+expected+(missing.length?'; missing/conflicting '+missing.map(c=>c.name).join(', '):'')+'. Shares of listed customers are not company-wide concentration.');
     }
     monthly.forEach(m=>reconcile('CustomerRevenueMonthly',cm,m.period,m.revenue));
-    quarterly.forEach(q=>reconcile('CustomerRevenueQuarterly',cq,quarter(q.quarter),q.revenue));
+    quarterly.forEach(q=>reconcile('CustomerRevenueMonthly',cq,quarter(q.quarter),q.revenue));
     const econ=cq.map(r=>{
       const rev=r.values[0],cust=customers.find(c=>c.name.toLowerCase()===r.customer.toLowerCase()),base=quarterly.find(x=>x.quarter===r.period.label),margin=cust?cust.margin:null;
       return {name:r.customer,quarter:r.period.label,revenue:rev,concentration:ratio(rev,base&&base.revenue),gp:rev!==null&&margin!==null?rev*margin:null,margin};
@@ -288,14 +313,13 @@ var TPOReportSettings=(function(){
   function fromSources(sources){const s=sources.find(s=>s.name==='Report Settings');if(!s?.raw?.length)return normalize({});if(s.raw[0][0]!=='Setting'||s.raw[0][1]!=='Value'||s.raw[1]?.[0]!=='Configuration')throw new Error('Report Settings: expected Setting | Value, then Configuration in A2.');return normalize(s.raw[1][1]);}
   function filterSources(sources,settings){
     const cutoff=TPOCore.month(settings.cutoff);if(!cutoff)return sources;
-    // A later completed quarterly ledger cannot represent an earlier partial-quarter cut-off.
-    const excludeCurrentQuarter=cutoff.month%3!==0&&TPOCore.analyze(sources).monthly.some(r=>r.period.key>cutoff.key&&r.quarter===cutoff.quarter);
+    // Cut-off blanks rows past the as-of month; quarterly aggregates are derived from monthly entries and stay QTD-aware.
     return sources.map(s=>{
       const def=TPOCore.defs[s.name],raw=s.raw||[];if(!def||!raw.length)return s;
       const period=def.findIndex(a=>a.includes('month')||a.includes('quarter'));if(period<0)return s;
       const norm=v=>String(v).toLowerCase().replace(/[^a-z0-9]/g,''),col=raw[0].findIndex(h=>def[period].includes(norm(h)));
       const quarter=def[period].includes('quarter'),limit=quarter?TPOCore.quarter(cutoff.quarter).key:cutoff.key;
-      return {...s,raw:raw.map((r,i)=>{const p=(quarter?TPOCore.quarter:TPOCore.month)(r[col]);return i&&p&&(p.key>limit||(quarter&&excludeCurrentQuarter&&p.key===limit))?r.map(()=>''):r;})};
+      return {...s,raw:raw.map((r,i)=>{const p=(quarter?TPOCore.quarter:TPOCore.month)(r[col]);return i&&p&&p.key>limit?r.map(()=>''):r;})};
     });
   }
   function available(id,a){if(!a)return false;return ({overview:!!a.latest,financials:!!a.monthly.length,dashboard:!!a.dashboard.periods.length,seasonality:!!a.monthly.length,customers:a.cm.concat(a.cq).some(r=>r.values.some(Number.isFinite)),'working-capital':a.wc.some(r=>[r.cash,r.ar,r.inventory,r.ap,r.nwc].some(Number.isFinite)),'forward-looking':!!a.forward.length,about:true})[id]||false;}

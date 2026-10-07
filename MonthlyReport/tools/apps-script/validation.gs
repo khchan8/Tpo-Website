@@ -109,7 +109,8 @@ function applyFormats_(sources,a) {
     sh.setFrozenRows(1);
     sh.getRange(1,1,1,width).setFontWeight('bold').setBackground('#0B1F3A').setFontColor('#ffffff').setWrap(true);
     sh.setColumnWidth(1,200);
-    const map=a.maps[s.name]; if(!map||map.some(c=>c<0)||sh.getLastRow()<2)return;
+    const map=a.maps[s.name];
+    if(!map||map.some(c=>c<0)||sh.getLastRow()<2)return;
     const nr=sh.getLastRow()-1;
     const numeric={MonthlyFinancials:[1,2,3,4,5,6],'Quarterly Financials':[1,2,3,4,5,6],CustomerRevenueMonthly:[2],CustomerRevenueQuarterly:[2],CustomerCount:[1],
       '1. Working Capital':[1,2,3,4,5],'2. Customer Economics':[2,3,4,5],'4. Forward-Looking Risk':[1,2,3,4,5,6]};
@@ -160,18 +161,19 @@ function menuFormatVerify() {
 }
 
 /** Range-fed custom function: Sheets recalculates when any raw argument changes.
- * No dependent output sheets are read, so the model cannot reference itself.
+ * CustomerRevenueQuarterly is derived from CustomerRevenueMonthly inside the model,
+ * so it must not be an input range here (that would create a Sheets circular reference).
  * @customfunction
  */
-function TPO_REPORT_MODEL(financials, assumptions, monthlyCustomers, quarterlyCustomers, counts, workingCapital, dashboardInputs, lowSeason, activeRule, currency, timezone, reportSettings) {
+function TPO_REPORT_MODEL(financials, assumptions, monthlyCustomers, counts, workingCapital, dashboardInputs, lowSeason, activeRule, currency, timezone, reportSettings) {
   const tz=typeof timezone==='string'&&timezone.trim()?timezone:TPO.timezone;
   const normalize=rows=>(Array.isArray(rows)?rows:[]).map(row=>row.map(v=>v instanceof Date?Utilities.formatDate(v,tz,'yyyy-MM-dd'):v));
   const as=normalize(assumptions).map(r=>r.slice(0,2));
   [['Low season',lowSeason],['Active Customers rule',activeRule],['Currency',currency]].forEach(([k,v],i)=>{
     if(!as[i+1])as[i+1]=[];as[i+1][3]=k;as[i+1][4]=Array.isArray(v)?v[0][0]:v;
   });
-  const names=['MonthlyFinancials','CustomerRevenueMonthly','CustomerRevenueQuarterly','CustomerCount','1. Working Capital','Dashboard Inputs'];
-  const values=[financials,monthlyCustomers,quarterlyCustomers,counts,workingCapital,dashboardInputs];
+  const names=['MonthlyFinancials','CustomerRevenueMonthly','CustomerCount','1. Working Capital','Dashboard Inputs'];
+  const values=[financials,monthlyCustomers,counts,workingCapital,dashboardInputs];
   const sources=names.map((name,i)=>({name,raw:normalize(values[i])}));sources.push({name:'Assumptions',raw:as});
   return TPOCore.modelRows(TPOCore.analyze(TPOReportSettings.filterSources(sources,TPOReportSettings.normalize(reportSettings))));
 }
@@ -194,7 +196,9 @@ function repairPlan_(sources,a,next) {
     const s=byName[sheet]||(byName[sheet]={name:sheet,raw:[],formulas:[]});
     if(!s.raw[row-1])s.raw[row-1]=[];if(!s.formulas[row-1])s.formulas[row-1]=[];
     if((formula?s.formulas[row-1][col-1]:s.raw[row-1][col-1])!==value||(!formula&&value===''&&s.formulas[row-1][col-1])) {
-      plan.push({sheet,row,col,value,reason:reason||'Dynamic keyed calculation',formula:!!formula,text:!!text});
+      const change={sheet,row,col,value,reason:reason||'Dynamic keyed calculation',formula:!!formula,text:!!text};
+      // Remove the legacy quarterly input dependency before binding quarterly outputs.
+      if(sheet==='Report Model')plan.unshift(change);else plan.push(change);
       s.raw[row-1][col-1]=value;s.formulas[row-1][col-1]=formula?value:'';
     }
   }
@@ -231,6 +235,7 @@ function repairPlan_(sources,a,next) {
   const qi=keyedRows('Quarterly Financials',r=>TPOCore.quarter(r[qf[0]])?.label);
   quarters.forEach(q=>slot('Quarterly Financials',qi,q,[[qf[0]+1,q]]));
   const seedQuarters=new Set([a.latest&&a.latest.quarter,next&&next.quarter].filter(Boolean));
+  a.cq.forEach(r=>slot('CustomerRevenueQuarterly',cqi,r.period.label+'|'+r.customer.toLowerCase(),[[crq[0]+1,r.customer],[crq[1]+1,r.period.label]]));
   seedQuarters.forEach(q=>a.customers.forEach(c=>slot('CustomerRevenueQuarterly',cqi,q+'|'+c.name.toLowerCase(),[[crq[0]+1,c.name],[crq[1]+1,q]])));
   // Separate manual dashboard inputs before converting display cells to formulas.
   const legacy=table('3. Strategic Dashboard',['Strategic Metric']),hadInputs=!!byName['Dashboard Inputs']?.raw.length;
@@ -301,18 +306,24 @@ function repairPlan_(sources,a,next) {
     }
     if(/gap/i.test(label)&&row>=4)add('Assumptions',row,5,'=IF(COUNT(E'+(row-2)+':E'+(row-1)+')=2,E'+(row-2)+'-E'+(row-1)+',"")','Blank-safe reconciliation gap',true);
   });
+  // Preserve existing row positions while replacing manual quarterly totals.
+  cqi.forEach(row=>{
+    const nameRef=TPOCore.col(crq[0])+row,qRef=TPOCore.col(crq[1])+row;
+    add('CustomerRevenueQuarterly',row,crq[1]+1,TPOCore.quarter(byName.CustomerRevenueQuarterly.raw[row-1][crq[1]]).label,'Canonical quarter label');
+    add('CustomerRevenueQuarterly',row,crq[2]+1,modelLookup_('"customer|"&'+qRef+'&"|"&LOWER(TRIM('+nameRef+'))&"|revenue"'),'Calculate quarterly revenue from monthly inputs',true);
+  });
   const range=name=>{
     const s=byName[name],sh=sheet_(name),rows=Math.max(1000,sh?sh.getMaxRows():1000,s.raw.length+100),width=Math.max(...s.raw.map(r=>r.length));
     return "'"+name.replace(/'/g,"''")+"'!A1:"+TPOCore.col(width-1)+rows;
   };
   const parameter=(name,fallback)=>{const i=assumptions.raw.findIndex(r=>String(r[3]||'').toLowerCase()===name.toLowerCase());return i<0?literal(fallback):'Assumptions!E'+(i+1);};
-  const args=[range('MonthlyFinancials'),"Assumptions!A1:B"+Math.max(1000,sheet_('Assumptions').getMaxRows(),assumptions.raw.length+100),range('CustomerRevenueMonthly'),range('CustomerRevenueQuarterly'),range('CustomerCount'),range('1. Working Capital'),range('Dashboard Inputs'),parameter('Low season',''),parameter('Active Customers rule','count at first month of the quarter'),parameter('Currency','THB'),literal(TPO.timezone)];
+  const args=[range('MonthlyFinancials'),"Assumptions!A1:B"+Math.max(1000,sheet_('Assumptions').getMaxRows(),assumptions.raw.length+100),range('CustomerRevenueMonthly'),range('CustomerCount'),range('1. Working Capital'),range('Dashboard Inputs'),parameter('Low season',''),parameter('Active Customers rule','count at first month of the quarter'),parameter('Currency','THB'),literal(TPO.timezone)];
   args.push(sheet_('Report Settings')?"'Report Settings'!B2":'""');
   add('Report Model',1,1,'=TPO_REPORT_MODEL('+args.join(',')+')','One range-fed shared calculation engine',true);
   return Array.from(new Map(plan.map(p=>[p.sheet+'|'+p.row+'|'+p.col,p])).values());
 }
 function repairAndScaffold_(nextMonth) {
-  const sources=readSources_(),a=TPOCore.analyze(sources),derived=['Quarterly Financials','2. Customer Economics','3. Strategic Dashboard','4. Forward-Looking Risk'];
+  const sources=readSources_(),a=TPOCore.analyze(sources),derived=['CustomerRevenueQuarterly','Quarterly Financials','2. Customer Economics','3. Strategic Dashboard','4. Forward-Looking Risk'];
   // Derived formula failures are repairable; primary-input errors must be resolved first.
   const blocking=a.issues.filter(i=>i.level==='error'&&!derived.includes(i.sheet)&&!(i.sheet==='Assumptions'&&/^E\d+$/.test(i.cell)));
   if(blocking.length){writeValidation_(a);throw new Error('Resolve Data Validation first: '+blocking[0].sheet+'!'+blocking[0].cell+' '+blocking[0].message);}

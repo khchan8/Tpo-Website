@@ -8,7 +8,7 @@ const TPO = Object.freeze({
   input: 'LLM-Input', output: 'LLM Output', commentary: 'Commentary',
   startRow: 8, chunkSize: 30000, maxPrompt: 1500000, maxSourceCells: 200000,
   stateKey: 'TPO_MANUAL_V1_', version: 'tpo-commentary-v1',
-  build: '2026-10-07-v6', timezone: 'Asia/Bangkok',
+  build: '2026-10-07-v7', timezone: 'Asia/Bangkok',
   sources: ['Assumptions', 'MonthlyFinancials', 'CustomerRevenueMonthly',
     'CustomerRevenueQuarterly', 'CustomerCount', 'Quarterly Financials',
     '1. Working Capital', '2. Customer Economics', '3. Strategic Dashboard',
@@ -335,7 +335,7 @@ function columnName_(n) {
 }
 function sourceHash_(sources) {
   const settings=TPOReportSettings.fromSources(sources),a=TPOCore.analyze(TPOReportSettings.filterSources(sources,settings));
-  return digest_(JSON.stringify([sources.filter(s=>s.name!=='Report Settings'),settings.cutoff,TPOReportSettings.commentaryViews(settings,a)]));
+  return digest_(JSON.stringify([sources.filter(s=>s.name!=='Report Settings'&&s.name!=='CustomerRevenueQuarterly'),settings.cutoff,TPOReportSettings.commentaryViews(settings,a)]));
 }
 function analyzeReportSources_(sources) {return TPOCore.analyze(TPOReportSettings.filterSources(sources,TPOReportSettings.fromSources(sources)));}
 
@@ -851,7 +851,7 @@ function menuAddCustomer() {
   uiAction_('menuAddCustomer', () => dialog_('TPO · Add Customer',
     '<h2>Add customer</h2><label for="name">Customer name</label><input id="name" type="text">' +
     '<label for="margin">Contribution margin (0.45 or 45%)</label><input id="margin" type="text" placeholder="45%">' +
-    '<label><input id="seed" type="checkbox" checked style="width:auto"> Add blank rows for existing customer revenue quarters</label>' +
+    '<label><input id="seed" type="checkbox" checked style="width:auto"> Add blank monthly input rows for existing months; CustomerRevenueQuarterly totals are derived automatically</label>' +
     '<button id="save">Add customer</button><button class="secondary" onclick="google.script.host.close()">Close</button><div id="status" role="status"></div>', `
     document.getElementById('save').onclick = function () {
       const button = this, status = document.getElementById('status'); button.disabled = true;
@@ -869,29 +869,42 @@ function processAddCustomer(payload) {
     const margin = number_(payload && payload.margin);
     if (!name || name.length > 200 || /^[=+@]/.test(name)) throw new Error('Enter a customer name of 1–200 characters that does not start with =, +, or @.');
     if (margin === null || margin < 0 || margin > 1) throw new Error('Use a margin between 0 and 1, or 0% and 100%.');
-    const asmp = sheet_('Assumptions'), revenue = sheet_('CustomerRevenueQuarterly');
+    const asmp = sheet_('Assumptions'), revenue = sheet_('CustomerRevenueQuarterly'), monthly = sheet_('CustomerRevenueMonthly');
     if (!asmp || asmp.getLastRow() < 1) throw new Error('Assumptions needs headers in row 1, names in A and margins in B.');
-    if (payload.seed && !revenue) throw new Error('CustomerRevenueQuarterly is missing.');
+    if (payload.seed && (!revenue || !monthly)) throw new Error('CustomerRevenueMonthly and CustomerRevenueQuarterly are both required to seed a new customer.');
     const table = { raw: asmp.getDataRange().getValues() };
     const existing = customers_(table), id = slugify_(name);
     if (!id || TPO.views.some(v => v[0] === id) || existing.some(c => c.id === id || customerKey_(c.name) === customerKey_(name))) throw new Error('Customer name or View identifier already exists: ' + name);
     if (readCommentary_().some(r => r.view === id)) throw new Error('Commentary already contains View ' + id + '.');
+    // Seed only existing periods so totals stay scoped to known history.
+    const months = payload.seed ? Array.from(new Set(monthly.getDataRange().getValues().slice(1)
+      .map(r => month_(r[1])).filter(Boolean).map(p => p.display))) : [];
     const quarters = payload.seed ? Array.from(new Set(revenue.getDataRange().getValues().slice(1)
       .map(r => quarter_(r[1])).filter(Boolean).map(q => q.label))).sort((a, b) => quarter_(a).key - quarter_(b).key) : [];
     const comm = ensureCommentary_();
     const asmpRow = asmp.getLastRow() + 1, commRow = Math.max(2, comm.getLastRow() + 1);
     const revRow = revenue ? Math.max(2, revenue.getLastRow() + 1) : 0;
+    const monthlyRow = monthly ? Math.max(2, monthly.getLastRow() + 1) : 0;
     ensureSize_(asmp, asmpRow, 2); ensureSize_(comm, commRow, 3);
     if (quarters.length) ensureSize_(revenue, revRow + quarters.length - 1, 3);
+    if (months.length) ensureSize_(monthly, monthlyRow + months.length - 1, 3);
     try {
       plainText_(asmp.getRange(asmpRow, 1), [[name]]);
       asmp.getRange(asmpRow, 2).setValue(margin).setNumberFormat('0.0%');
-      if (quarters.length) plainText_(revenue.getRange(revRow, 1, quarters.length, 3), quarters.map(q => [name, q, '']));
+      if (months.length) plainText_(monthly.getRange(monthlyRow, 1, months.length, 3), months.map(m => [name, m, '']));
+      if (quarters.length) {
+        plainText_(revenue.getRange(revRow, 1, quarters.length, 3), quarters.map(q => [name, q, '']));
+        quarters.forEach((q,i)=>{
+          const row=revRow+i;
+          revenue.getRange(row,3).setFormula(modelLookup_('"customer|"&B'+row+'&"|"&LOWER(TRIM(A'+row+'))&"|revenue"'));
+        });
+      }
       plainText_(comm.getRange(commRow, 1, 1, 3), [[id, '', '']]);
       SpreadsheetApp.flush();
     } catch (e) {
       asmp.getRange(asmpRow, 1, 1, 2).clearContent();
       comm.getRange(commRow, 1, 1, 3).clearContent();
+      if (months.length) monthly.getRange(monthlyRow, 1, months.length, 3).clearContent();
       if (quarters.length) revenue.getRange(revRow, 1, quarters.length, 3).clearContent();
       throw e;
     }
