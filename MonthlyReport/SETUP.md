@@ -67,7 +67,7 @@ Browsers cache and resend the HTTP Basic credentials automatically until the bro
    - **`CustomerRevenueQuarterly`**: Enter quarter-to-date (QTD) `Revenue` for each customer under the quarter row (e.g. enter `Jul + Aug` for `Q3 2026`; update with full quarter when September closes).
    - **`CustomerCount`**: Enter `Customer Count` for the month.
    - **`1. Working Capital`**: Enter `Cash Balance`, `Accounts Receivable`, `Inventory Value`, and `Accounts Payable`. (`Net Working Capital` calculates automatically).
-   - **`Dashboard Inputs`** *(optional)*: Enter any manual operational metrics (such as retention, new accounts, or inventory turns) as `Quarter | Metric | Value`.
+   - **`Dashboard Inputs`** *(optional)*: Enter `New Accounts Opened`, `Customer Retention Rate`, and other non-calculated operational metrics as `Quarter | Metric | Value`. Enter retention as a percentage (e.g. `94%`) or fraction (`0.94`); leave unknown values blank. **Do not enter Inventory Turns**—it calculates automatically from COGS and inventory balances.
 
    > [!IMPORTANT]
    > **Do not type into derived sheets:** **`Quarterly Financials`**, **`2. Customer Economics`**, **`3. Strategic Dashboard`**, and **`4. Forward-Looking Risk`** are calculated automatically from the input sheets via `Report Model`. Manual edits to these sheets overwrite their formulas.
