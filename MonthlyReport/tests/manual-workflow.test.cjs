@@ -11,12 +11,15 @@ class RichText {
 }
 class Sheet {
   constructor(name, values = [], cols = 26, sheetId = 0) {
-    this.name = name; this.sheetId = sheetId;
+    this._name = name; this.sheetId = sheetId;
     this.maxRows = Math.max(100, values.length); this.maxCols = Math.max(cols, ...values.map(r => r.length));
     this.cells = new Map(); this.writes = []; this.failOnce = null;
     values.forEach((row, r) => row.forEach((v, c) => this.cells.set(`${r + 1},${c + 1}`, { value: v, formula: '', rich: null })));
   }
   getSheetId() { return this.sheetId; }
+  getName() { return this._name; }
+  // Real Apps Script Sheet objects have no .name member; product code must use getName().
+  get name() { throw new Error('Sheet.name is not part of the Apps Script API; use getName()'); }
   cell(r, c) { return this.cells.get(`${r},${c}`) || { value: '', formula: '', rich: null }; }
   put(r, c, data) {
     if (this.failOnce && this.failOnce(r, c)) { this.failOnce = null; throw new Error('simulated Sheets write failure'); }
@@ -363,7 +366,7 @@ test('numeric formatting plan preserves formulas and blanks and backs up changed
 test('repair failure rolls back earlier writes and preserves backup', () => {
   const rt=runtime();const sh=rt.sheets.get('CustomerRevenueQuarterly');const before=values(sh);
   sh.failOnce=(r,c)=>r===3&&c===3;
-  assert.throws(()=>rt.ctx.backupAndWrite_([{sheet:sh.name,row:2,col:3,value:1},{sheet:sh.name,row:3,col:3,value:2}],'Test'),/simulated/);
+  assert.throws(()=>rt.ctx.backupAndWrite_([{sheet:sh.getName(),row:2,col:3,value:1},{sheet:sh.getName(),row:3,col:3,value:2}],'Test'),/simulated/);
   assert.equal(values(sh),before);assert.ok(rt.sheets.has('Repair Backup'));
 });
 
@@ -689,7 +692,7 @@ test('combined response import updates Commentary, stores literal JSON, selects 
   const text = JSON.stringify(response, null, 2);
   const result = rt.ctx.importPastedLLMOutput(text, response.batch_id);
   assert.equal(result.count, 8); assert.equal(result.already, false);
-  assert.equal(rt.getSelected().name, 'Commentary');
+  assert.equal(rt.getSelected().getName(), 'Commentary');
   assert.equal(rt.ctx.readOutput_(rt.ctx.readState_()), text);
   assert.equal(sh.getRange(2, 2).getDisplayValue(), response.commentaries.find(r => r.view === 'beta').commentary);
   assert.equal(sh.getRange(4, 2).getFormulas()[0][0], '="Unrelated formula"');

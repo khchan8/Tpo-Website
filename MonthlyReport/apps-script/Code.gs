@@ -1408,11 +1408,11 @@ function workbookCleanupPlan_() {
   }
   function planWrite(sh,snap,row,col,value,reason) {
     if(row<1||col<1)return;
-    const key=sh.name+'|'+row+'|'+col;if(planned.has(key))return;
+    const name=sh.getName(),key=name+'|'+row+'|'+col;if(planned.has(key))return;
     const v=snap.values[row-1]?snap.values[row-1][col-1]:undefined;
     const f=snap.formulas[row-1]?String(snap.formulas[row-1][col-1]||''):'';
     if(!f&&String(v==null?'':v)===String(value))return; // include only value/formula differences
-    planned.add(key);plan.push({sheet:sh.name,row,col,value,reason,text:true});
+    planned.add(key);plan.push({sheet:name,row,col,value,reason,text:true});
   }
   const assumptions=sheet_('Assumptions');
   if(assumptions) {
