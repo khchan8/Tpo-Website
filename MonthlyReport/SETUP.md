@@ -20,6 +20,8 @@ Copying Code.gs into GitHub does not install it in Google Sheets. The website an
 
 Install build **`2026-10-19-v9`** (replace the complete contents of `apps-script/Code.gs` into the bound Google script, save, and reload Sheets).
 
+Apps Script compatibility: exact satang arithmetic uses `BigInt(0)` rather than a BigInt literal. This avoids the editor's `Unexpected token ILLEGAL` save error without changing rounding or overflow checks.
+
 #### 1. Extract accounting actuals pack
 Use the pinned Python virtualenv (`openpyxl==3.1.5`) to extract the validated accounting export:
 ```sh

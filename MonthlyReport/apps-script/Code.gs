@@ -1966,7 +1966,7 @@ function monthlyValueToCents_(value) {
 
 /** Exact safe integer addition/subtraction. Uses BigInt to prevent intermediate overflow or cancellation drift. */
 function safeCentsSum_(parts) {
-  var total = 0n;
+  var total = BigInt(0); // Constructor form: Apps Script's parser rejects BigInt literals.
   for (var i = 0; i < parts.length; i++) {
     var v = parts[i];
     if (v === null || v === undefined) return null;
