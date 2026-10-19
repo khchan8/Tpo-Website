@@ -1,4 +1,4 @@
-# TPO monthly report — manual AI workflow, v8
+# TPO monthly report — manual AI workflow, v9
 
 The Apps Script, calculated Google Sheets cells, and website use the same calculation engine. By default, the reporting period follows the latest month with valid actual revenue in MonthlyFinancials; Report settings can apply a historical cut-off. Blank future rows such as Aug-27 and Sep-27 are allowed and ignored; an explicit zero is actual data. An expense-only future row remains pending until revenue is entered.
 
@@ -12,6 +12,15 @@ The Apps Script, calculated Google Sheets cells, and website use the same calcul
 6. Run **📊 TPO → 5. Review Commentary**, then reload the website.
 
 The prose style remains 2–4 English sentences, 50–90 words per section. No LLM API key is needed. The script does not send data to an AI provider; you choose where to paste it.
+
+### Accounting actuals import (v9)
+
+A read-only Python extractor (`tools/extract-monthly-input.py`) extracts monthly financial and working-capital actuals from the validated P&L/BS export (`TPO FS Program.xlsm`) into a narrow JSON import pack and a human-readable XLSX review copy. In Google Sheets, **📊 TPO → 1. Enter monthly data → Import accounting actuals…** opens an interactive dialog to preview every proposed change (including historical corrections, old/new amounts, signed THB differences, and percentage changes versus absolute previous values), choose approved months, and apply them using existing transactional backup and rollback (`Repair Backup`).
+
+- **Inputs imported**: `MonthlyFinancials` (Revenue, COGS, SG&A, Net Income) and `1. Working Capital` (Cash, Accounts Receivable, Inventory, Accounts Payable).
+- **Separately maintained inputs**: Customer revenue, customer counts, assumptions, and operational dashboard inputs remain separate manual entries; the importer never overwrites or alters them.
+- **Derived formulas**: GP, EBIT, and NWC convert blank or literal cells into blank-safe canonical formulas (`=IF(COUNT(...), ...)`) while preserving recognized legacy direct arithmetic formulas; custom formulas are flagged as blocking conflicts.
+- **Recalculation and owner installation**: Formula cache presence in the source workbook does not guarantee freshness; recalculate and save the source file in Excel before extraction. In Google Sheets, replacing the bound script with regenerated `apps-script/Code.gs` and running **2. Check & calculate** is owner-run and separate from repository commits.
 
 ## Installation
 

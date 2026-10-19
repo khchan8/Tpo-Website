@@ -1,0 +1,20 @@
+# Excel workbooks
+*.xlsm
+*.xlsx
+**/*.xlsm
+**/*.xlsx
+
+# Python and test artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Node dependencies
+node_modules/
+
+# OS and editor artifacts
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

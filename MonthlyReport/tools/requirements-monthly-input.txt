@@ -1,0 +1,5 @@
+# Isolated environment for tools/extract-monthly-input.py and its tests.
+# Install into a private virtualenv, never the system interpreter:
+#   python3 -m venv /tmp/tpo-monthly-import-venv
+#   /tmp/tpo-monthly-import-venv/bin/python -m pip install -r tools/requirements-monthly-input.txt
+openpyxl==3.1.5

@@ -16,6 +16,37 @@ The script maintains **LLM-Input**, **LLM Output**, and **Commentary**. Commenta
 
 Copying Code.gs into GitHub does not install it in Google Sheets. The website and the bound Apps Script are updated separately.
 
+### v9: accounting actuals import (`2026-10-19-v9`)
+
+Install build **`2026-10-19-v9`** (replace the complete contents of `apps-script/Code.gs` into the bound Google script, save, and reload Sheets).
+
+#### 1. Extract accounting actuals pack
+Use the pinned Python virtualenv (`openpyxl==3.1.5`) to extract the validated accounting export:
+```sh
+python3 -m venv /tmp/tpo-monthly-import-venv
+/tmp/tpo-monthly-import-venv/bin/python -m pip install -r tools/requirements-monthly-input.txt
+/tmp/tpo-monthly-import-venv/bin/python tools/extract-monthly-input.py \
+  --source 'TPO FS Program (updated 2026-10-14).xlsm' \
+  --output-prefix /tmp/tpo-monthly-input-pack
+```
+This writes:
+- `<prefix>.json` — validated actuals pack containing integer-satang amounts and per-cell provenance (`sourceRefs`).
+- `<prefix>.xlsx` — three-sheet human review copy (`MonthlyFinancials`, `1. Working Capital`, `Source Map`). Note: review copy only; do not paste over calculated columns.
+
+*Prerequisite:* The source workbook must be recalculated and saved in Excel before extraction. Formula cache presence does not prove freshness.
+
+#### 2. Import into Google Sheets
+1. In Google Sheets, open **📊 TPO → 1. Enter monthly data → Import accounting actuals…**.
+2. Upload the JSON import pack (`/tmp/tpo-monthly-input-pack.json`).
+3. Click **Preview differences**. Inspect summary counts, month checkboxes, old/new amounts, signed THB differences, percentage changes versus absolute previous values, and source cell provenance.
+4. Select approved months. The latest source actual month is checked by default when it is at least the destination reporting month; historical revisions remain opt-in.
+5. Click **Apply selected months**. The script applies approved months in a single transactional write using `backupAndWrite_`, recording previous values and formulas in **Repair Backup**.
+6. Run **📊 TPO → 2. Check & calculate**, review **Data Validation** warnings, and prepare a fresh AI prompt.
+
+*Operational limits:*
+- `backupAndWrite_` serializes script actions under document lock and provides backup-backed recovery, recording previous values/formulas in **Repair Backup** before writes; if restoration fails during error handling, it reports an incomplete restore with cell coordinates so the operator can restore from the backup. It is not a concurrent human-edit-safe Sheets transaction; do not edit `MonthlyFinancials` or `1. Working Capital` while applying.
+- Automated tests verified local VM runtime, Node test runner, and managed Chromium DOM interactions; explicit live Google Sheets formula recalculation was not observed and requires owner-run execution in the live workbook.
+- *Owner-run live installation:* Code delivery is `apps-script/Code.gs`. The bound script must be replaced in full by the sheet owner, followed by saving, reloading Sheets, opening **📊 TPO → 1. Enter monthly data → Import accounting actuals…**, uploading the JSON pack, reviewing differences, selecting approved months, applying, inspecting **Repair Backup**, and running **📊 TPO → 2. Check & calculate** to verify recalculation, review Data Validation, and prepare a fresh AI prompt.
 ### v8: guided monthly workflow and one-step response import
 
 Install build **`2026-10-07-v8`** (replace the whole bound script, save, reload). Then run **TPO → 2. Check & calculate**, or **TPO → Tools & settings → Clean up obsolete information**. Cleanup clears the retired Assumptions D10:E13 reconciliation block (original formulas are recorded in **Repair Backup**), refreshes the README/Glossary guides, and removes the empty **Old Commentary** header in D1; custom content is preserved and reported. Prepare a **new** AI prompt afterwards if source helper cells were cleared. The menu is now ordered around the monthly flow: **1. Enter monthly data → 2. Check & calculate → 3. Prepare AI prompt + copy → 4. Paste AI response & update Commentary → 5. Review Commentary**, with the remaining tools under **Tools & settings**. Step 4 saves the JSON response in **LLM Output** and updates Commentary in one action.

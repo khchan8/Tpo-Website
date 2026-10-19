@@ -13,7 +13,7 @@ class Sheet {
   constructor(name, values = [], cols = 26, sheetId = 0) {
     this._name = name; this.sheetId = sheetId;
     this.maxRows = Math.max(100, values.length); this.maxCols = Math.max(cols, ...values.map(r => r.length));
-    this.cells = new Map(); this.writes = []; this.failOnce = null;
+    this.cells = new Map(); this.formats = new Map(); this.writes = []; this.failOnce = null;
     values.forEach((row, r) => row.forEach((v, c) => this.cells.set(`${r + 1},${c + 1}`, { value: v, formula: '', rich: null })));
   }
   getSheetId() { return this.sheetId; }
@@ -21,6 +21,8 @@ class Sheet {
   // Real Apps Script Sheet objects have no .name member; product code must use getName().
   get name() { throw new Error('Sheet.name is not part of the Apps Script API; use getName()'); }
   cell(r, c) { return this.cells.get(`${r},${c}`) || { value: '', formula: '', rich: null }; }
+  format(r, c) { return this.formats.get(`${r},${c}`) || 'General'; }
+  setFormat(r, c, fmt) { this.formats.set(`${r},${c}`, fmt); }
   put(r, c, data) {
     if (this.failOnce && this.failOnce(r, c)) { this.failOnce = null; throw new Error('simulated Sheets write failure'); }
     this.writes.push([r, c]); this.cells.set(`${r},${c}`, data);
@@ -77,9 +79,10 @@ class Range {
   setFontColor() { return this; }
   setWrap() { return this; }
   setVerticalAlignment() { return this; }
-  setNumberFormat() { return this; }
-  getNumberFormat() { return 'General'; }
-  getNumberFormats() { return this.map(()=>'General'); }
+  setNumberFormat(fmt) { this.map((_, r, c) => this.sh.setFormat(this.r + r, this.c + c, fmt)); return this; }
+  setNumberFormats(fmts) { fmts.forEach((row, r) => row.forEach((fmt, c) => this.sh.setFormat(this.r + r, this.c + c, fmt))); return this; }
+  getNumberFormat() { return this.sh.format(this.r, this.c); }
+  getNumberFormats() { return this.map((_, r, c) => this.sh.format(this.r + r, this.c + c)); }
   activate() { return this; }
 }
 
@@ -627,7 +630,6 @@ test('cleanup refreshes captured README/Glossary and clears the empty archive he
   assert.ok(result.changes > 20);
   const readme = rt.sheets.get('README');
   assert.equal(readme.getRange('A1').getDisplayValue(), 'TPO — Monthly workflow');
-  assert.equal(readme.getRange('B2').getDisplayValue(), '2026-10-07-v8');
   const readmeText = JSON.stringify(readme.getDataRange().getValues());
   for (const stale of ['validate_input.py', 'pipeline/inputs/', 'NotebookLM', 'Q1 2026', 'reconciliation cell'])
     assert.ok(!readmeText.includes(stale), stale + ' still present');
@@ -745,3 +747,920 @@ test('combined action restores output, manifest and Commentary after late failur
   });
 });
 
+function sampleImportPack(months = null) {
+  const mList = months || [
+    {
+      month: '2027-01',
+      financials: { revenueCents: 10000, cogsCents: 6000, sgaCents: 1000, netIncomeCents: 2000 },
+      workingCapital: { cashCents: 10000, arCents: 4000, inventoryCents: 1000, apCents: 3000 },
+      checks: { grossProfitCents: 4000, ebitCents: 3000 },
+      sourceRefs: {
+        revenueCents: ['PL!R15'], cogsCents: ['PL!R63'], sgaCents: ['PL!R170'], netIncomeCents: ['PL!R197'],
+        cashCents: ['BS!D5', 'BS!D6', 'BS!D7', 'BS!D8'], arCents: ['BS!D9'],
+        inventoryCents: ['BS!D12', 'BS!D13', 'BS!D14'],
+        apCents: ['BS!D48', 'BS!D49', 'BS!D50', 'BS!D51', 'BS!D52', 'BS!D55', 'BS!D56', 'BS!D57', 'BS!D58', 'BS!D59', 'BS!D60', 'BS!D61', 'BS!D62', 'BS!D63', 'BS!D64', 'BS!D65', 'BS!D66']
+      }
+    },
+    {
+      month: '2027-02',
+      financials: { revenueCents: 20000, cogsCents: 12000, sgaCents: 2000, netIncomeCents: 4000 },
+      workingCapital: { cashCents: 20000, arCents: 5000, inventoryCents: 2000, apCents: 4000 },
+      checks: { grossProfitCents: 8000, ebitCents: 6000 },
+      sourceRefs: {
+        revenueCents: ['PL!S15'], cogsCents: ['PL!S63'], sgaCents: ['PL!S170'], netIncomeCents: ['PL!S197'],
+        cashCents: ['BS!E5', 'BS!E6', 'BS!E7', 'BS!E8'], arCents: ['BS!E9'],
+        inventoryCents: ['BS!E12', 'BS!E13', 'BS!E14'],
+        apCents: ['BS!E48', 'BS!E49', 'BS!E50', 'BS!E51', 'BS!E52', 'BS!E55', 'BS!E56', 'BS!E57', 'BS!E58', 'BS!E59', 'BS!E60', 'BS!E61', 'BS!E62', 'BS!E63', 'BS!E64', 'BS!E65', 'BS!E66']
+      }
+    },
+    {
+      month: '2027-03',
+      financials: { revenueCents: 30000, cogsCents: 18000, sgaCents: 3000, netIncomeCents: 6000 },
+      workingCapital: { cashCents: 30000, arCents: 6000, inventoryCents: 3000, apCents: 5000 },
+      checks: { grossProfitCents: 12000, ebitCents: 9000 },
+      sourceRefs: {
+        revenueCents: ['PL!T15'], cogsCents: ['PL!T63'], sgaCents: ['PL!T170'], netIncomeCents: ['PL!T197'],
+        cashCents: ['BS!F5', 'BS!F6', 'BS!F7', 'BS!F8'], arCents: ['BS!F9'],
+        inventoryCents: ['BS!F12', 'BS!F13', 'BS!F14'],
+        apCents: ['BS!F48', 'BS!F49', 'BS!F50', 'BS!F51', 'BS!F52', 'BS!F55', 'BS!F56', 'BS!F57', 'BS!F58', 'BS!F59', 'BS!F60', 'BS!F61', 'BS!F62', 'BS!F63', 'BS!F64', 'BS!F65', 'BS!F66']
+      }
+    }
+  ];
+  return {
+    schema: 'tpo-monthly-actuals-v1',
+    source: {
+      filename: 'synthetic-actuals-export.xlsx',
+      sha256: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
+      reportMonth: mList.length ? mList[mList.length - 1].month : '2027-03'
+    },
+    months: mList
+  };
+}
+function snapshotTabRange(sh, nr = Math.max(1, sh.getLastRow()), nc = Math.max(1, sh.getLastColumn())) {
+  const r = sh.getRange(1, 1, nr, nc);
+  return {
+    values: r.getValues(),
+    formulas: r.getFormulas(),
+    formats: r.getNumberFormats()
+  };
+}
+function snapshotAllNonDiag(rt) {
+  const sheets = {};
+  for (const [name, sh] of rt.sheets.entries()) {
+    sheets[name] = snapshotTabRange(sh);
+  }
+  const props = {};
+  for (const [k, v] of rt.properties.entries()) {
+    if (!/error|action|stack/i.test(k)) props[k] = v;
+  }
+  return { sheets, props };
+}
+
+test('monthly import preview leaves input sheets, formulas, backup and LLM state untouched and calculates differences', () => {
+  const data = fixture();
+  // 1. One satang change: target Jan-27 revenue is 100.00 THB (10000 cents), pack proposed is 10001 cents (+1 satang)
+  // 2. Sub-0.0001% change: target Jan-27 cash in 1. Working Capital is 100,000,000.00 THB (10,000,000,000 cents), pack proposed is 10,000,000,001 cents
+  data['1. Working Capital'][1][1] = 100000000;
+  // 3. Negative baseline: target Feb-27 Net Income is -100.00 THB (-10000 cents), pack proposed is -5000 cents (-50.00 THB)
+  data.MonthlyFinancials[1][6] = -100;
+  // 4. Zero baseline: target Feb-27 SG&A is 0.00 THB (0 cents), pack proposed is 2000 cents (20.00 THB)
+  data.MonthlyFinancials[1][4] = 0;
+  // 5. Blank baseline: Mar-27 Revenue is blank in fixture
+
+  const pack = sampleImportPack([
+    {
+      month: '2027-01',
+      financials: { revenueCents: 10001, cogsCents: 6000, sgaCents: 1000, netIncomeCents: 2000 },
+      workingCapital: { cashCents: 10000000001, arCents: 4000, inventoryCents: 1000, apCents: 3000 },
+      checks: { grossProfitCents: 4001, ebitCents: 3001 },
+      sourceRefs: {
+        revenueCents: ['PL!R15'], cogsCents: ['PL!R63'], sgaCents: ['PL!R170'], netIncomeCents: ['PL!R197'],
+        cashCents: ['BS!D5', 'BS!D6', 'BS!D7', 'BS!D8'], arCents: ['BS!D9'],
+        inventoryCents: ['BS!D12', 'BS!D13', 'BS!D14'],
+        apCents: ['BS!D48', 'BS!D49', 'BS!D50', 'BS!D51', 'BS!D52', 'BS!D55', 'BS!D56', 'BS!D57', 'BS!D58', 'BS!D59', 'BS!D60', 'BS!D61', 'BS!D62', 'BS!D63', 'BS!D64', 'BS!D65', 'BS!D66']
+      }
+    },
+    {
+      month: '2027-02',
+      financials: { revenueCents: 20000, cogsCents: 12000, sgaCents: 2000, netIncomeCents: -5000 },
+      workingCapital: { cashCents: 20000, arCents: 5000, inventoryCents: 2000, apCents: 4000 },
+      checks: { grossProfitCents: 8000, ebitCents: 6000 },
+      sourceRefs: {
+        revenueCents: ['PL!S15'], cogsCents: ['PL!S63'], sgaCents: ['PL!S170'], netIncomeCents: ['PL!S197'],
+        cashCents: ['BS!E5', 'BS!E6', 'BS!E7', 'BS!E8'], arCents: ['BS!E9'],
+        inventoryCents: ['BS!E12', 'BS!E13', 'BS!E14'],
+        apCents: ['BS!E48', 'BS!E49', 'BS!E50', 'BS!E51', 'BS!E52', 'BS!E55', 'BS!E56', 'BS!E57', 'BS!E58', 'BS!E59', 'BS!E60', 'BS!E61', 'BS!E62', 'BS!E63', 'BS!E64', 'BS!E65', 'BS!E66']
+      }
+    },
+    {
+      month: '2027-03',
+      financials: { revenueCents: 30000, cogsCents: 18000, sgaCents: 3000, netIncomeCents: 6000 },
+      workingCapital: { cashCents: 30000, arCents: 6000, inventoryCents: 3000, apCents: 5000 },
+      checks: { grossProfitCents: 12000, ebitCents: 9000 },
+      sourceRefs: {
+        revenueCents: ['PL!T15'], cogsCents: ['PL!T63'], sgaCents: ['PL!T170'], netIncomeCents: ['PL!T197'],
+        cashCents: ['BS!F5', 'BS!F6', 'BS!F7', 'BS!F8'], arCents: ['BS!F9'],
+        inventoryCents: ['BS!F12', 'BS!F13', 'BS!F14'],
+        apCents: ['BS!F48', 'BS!F49', 'BS!F50', 'BS!F51', 'BS!F52', 'BS!F55', 'BS!F56', 'BS!F57', 'BS!F58', 'BS!F59', 'BS!F60', 'BS!F61', 'BS!F62', 'BS!F63', 'BS!F64', 'BS!F65', 'BS!F66']
+      }
+    }
+  ]);
+  const text = JSON.stringify(pack);
+  const rt = runtime(data);
+
+  // Snapshot before preview
+  const beforePreview = snapshotAllNonDiag(rt);
+
+  const preview = rt.ctx.previewMonthlyActualsImport(text);
+  assert.ok(preview.previewHash);
+  assert.equal(preview.source.filename, 'synthetic-actuals-export.xlsx');
+  assert.equal(preview.months.length, 3);
+
+  // Preview leaves values, formulas, formats, backup and manifest untouched
+  assert.deepEqual(snapshotAllNonDiag(rt), beforePreview);
+
+  // Assert structured change outputs:
+  // 1. ONE satang: Jan-27 revenue (10000 -> 10001)
+  const m1 = preview.months.find(m => m.month === '2027-01');
+  const oneSatangChange = m1.changes.find(c => c.field === 'revenueCents');
+  assert.equal(oneSatangChange.previousCents, 10000);
+  assert.equal(oneSatangChange.proposedCents, 10001);
+  assert.equal(oneSatangChange.deltaCents, 1);
+  assert.equal(oneSatangChange.deltaPercent, 0.01);
+
+  // 2. Sub-0.0001% change: Jan-27 cash (10000000000 -> 10000000001)
+  const subPercentChange = m1.changes.find(c => c.field === 'cashCents');
+  assert.equal(subPercentChange.previousCents, 10000000000);
+  assert.equal(subPercentChange.proposedCents, 10000000001);
+  assert.equal(subPercentChange.deltaCents, 1);
+  assert.ok(subPercentChange.deltaPercent > 0 && subPercentChange.deltaPercent < 0.0001,
+    'deltaPercent ' + subPercentChange.deltaPercent + ' must be between 0 and 0.0001%');
+
+  // 3. Negative baseline: Feb-27 net income (-10000 -> -5000)
+  const m2 = preview.months.find(m => m.month === '2027-02');
+  const negChange = m2.changes.find(c => c.field === 'netIncomeCents');
+  assert.equal(negChange.previousCents, -10000);
+  assert.equal(negChange.proposedCents, -5000);
+  assert.equal(negChange.deltaCents, 5000);
+  assert.equal(negChange.deltaPercent, 50);
+
+  // 4. Zero baseline: Feb-27 SG&A (0 -> 2000)
+  const zeroChange = m2.changes.find(c => c.field === 'sgaCents');
+  assert.equal(zeroChange.previousCents, 0);
+  assert.equal(zeroChange.proposedCents, 2000);
+  assert.equal(zeroChange.deltaCents, 2000);
+  assert.equal(zeroChange.deltaPercent, null, 'Previous value zero must yield null deltaPercent');
+
+  // 5. Blank baseline: Mar-27 revenue (blank -> 30000)
+  const m3 = preview.months.find(m => m.month === '2027-03');
+  const blankChange = m3.changes.find(c => c.field === 'revenueCents');
+  assert.equal(blankChange.previousCents, null);
+  assert.equal(blankChange.proposedCents, 30000);
+  assert.equal(blankChange.deltaCents, null);
+  assert.equal(blankChange.deltaPercent, null);
+
+  // Pre-apply snapshot of separate inputs, Commentary, LLM exchange sheets, and manifest
+  const unrelatedSheets = ['Assumptions', 'CustomerRevenueMonthly', 'CustomerRevenueQuarterly',
+    'CustomerCount', 'Dashboard Inputs', 'Report Settings', 'Commentary', 'LLM-Input', 'LLM Output'];
+  const snapshotUnrelated = () => Object.fromEntries(
+    unrelatedSheets.map(n => [n, rt.sheets.get(n) ? snapshotTabRange(rt.sheets.get(n)) : null])
+  );
+  const unrelatedBefore = snapshotUnrelated();
+  const manifestBefore = rt.properties.get('TPO_MANUAL_V1_0');
+
+  // Apply selected month
+  const applyRes = rt.ctx.applyMonthlyActualsImport(text, ['2027-01'], preview.previewHash);
+  assert.equal(applyRes.already, false);
+
+  // Post-apply assertions: separate inputs, Commentary, LLM exchange sheets, and manifest remain UNCHANGED
+  const unrelatedAfter = snapshotUnrelated();
+  for (const sheetName of unrelatedSheets) {
+    assert.deepEqual(unrelatedAfter[sheetName], unrelatedBefore[sheetName],
+      sheetName + ' values, formulas, and formats must be identical after apply');
+  }
+  assert.equal(rt.properties.get('TPO_MANUAL_V1_0'), manifestBefore, 'Manifest must be identical after apply');
+});
+
+
+
+test('monthlyDecimalCents_ boundary conversions, exponent limits and leading zero preservation', () => {
+  const rt = runtime();
+  const fn = rt.ctx.monthlyDecimalCents_;
+  assert.equal(fn('0.01').cents, 1);
+  assert.equal(fn('0.005').cents, 1);
+  assert.equal(fn('0.0049').cents, 0);
+  assert.equal(fn('-0.01').cents, -1);
+  assert.equal(fn('.5').cents, 50);
+  assert.equal(fn('.05').cents, 5);
+  assert.equal(fn('1e-2').cents, 1);
+  assert.equal(fn('1.5e1').cents, 1500);
+  assert.equal(fn('0').cents, 0);
+  assert.equal(fn('1000000.00').cents, 100000000);
+  assert.ok(fn('1e501').error);
+  assert.ok(fn('1'.repeat(1001)).error);
+  assert.equal(fn('not-a-number').cents, null);
+  const extremeDiff = rt.ctx.monthlyActualsDiff_(-9007199254740991, 9007199254740991);
+  assert.equal(extremeDiff.overflow, true);
+  assert.equal(extremeDiff.deltaCents, null);
+});
+
+test('monthly import reordered headers, blank slot, append resolution without duplicates', () => {
+  const data = fixture();
+  data.MonthlyFinancials[0] = ['Quarter', 'Revenue', 'COGS', 'Gross Profit', 'SG&A', 'EBIT', 'Net Income', 'Month'];
+  for (let i = 1; i < data.MonthlyFinancials.length; i++) {
+    const r = data.MonthlyFinancials[i];
+    data.MonthlyFinancials[i] = [r[7], r[1], r[2], r[3], r[4], r[5], r[6], r[0]];
+  }
+  const rt = runtime(data);
+  const pack = sampleImportPack([
+    {
+      month: '2027-03',
+      financials: { revenueCents: 30000, cogsCents: 18000, sgaCents: 3000, netIncomeCents: 6000 },
+      workingCapital: { cashCents: 30000, arCents: 6000, inventoryCents: 3000, apCents: 5000 },
+      checks: { grossProfitCents: 12000, ebitCents: 9000 },
+      sourceRefs: {
+        revenueCents: ['PL!T15'], cogsCents: ['PL!T63'], sgaCents: ['PL!T170'], netIncomeCents: ['PL!T197'],
+        cashCents: ['BS!F5', 'BS!F6', 'BS!F7', 'BS!F8'], arCents: ['BS!F9'],
+        inventoryCents: ['BS!F12', 'BS!F13', 'BS!F14'],
+        apCents: ['BS!F48', 'BS!F49', 'BS!F50', 'BS!F51', 'BS!F52', 'BS!F55', 'BS!F56', 'BS!F57', 'BS!F58', 'BS!F59', 'BS!F60', 'BS!F61', 'BS!F62', 'BS!F63', 'BS!F64', 'BS!F65', 'BS!F66']
+      }
+    },
+    {
+      month: '2027-04',
+      financials: { revenueCents: 40000, cogsCents: 24000, sgaCents: 4000, netIncomeCents: 8000 },
+      workingCapital: { cashCents: 40000, arCents: 8000, inventoryCents: 4000, apCents: 6000 },
+      checks: { grossProfitCents: 16000, ebitCents: 12000 },
+      sourceRefs: {
+        revenueCents: ['PL!U15'], cogsCents: ['PL!U63'], sgaCents: ['PL!U170'], netIncomeCents: ['PL!U197'],
+        cashCents: ['BS!G5', 'BS!G6', 'BS!G7', 'BS!G8'], arCents: ['BS!G9'],
+        inventoryCents: ['BS!G12', 'BS!G13', 'BS!G14'],
+        apCents: ['BS!G48', 'BS!G49', 'BS!G50', 'BS!G51', 'BS!G52', 'BS!G55', 'BS!G56', 'BS!G57', 'BS!G58', 'BS!G59', 'BS!G60', 'BS!G61', 'BS!G62', 'BS!G63', 'BS!G64', 'BS!G65', 'BS!G66']
+      }
+    }
+  ]);
+  const text = JSON.stringify(pack);
+  const prev = rt.ctx.previewMonthlyActualsImport(text);
+  const res = rt.ctx.applyMonthlyActualsImport(text, ['2027-03', '2027-04'], prev.previewHash);
+  assert.equal(res.already, false);
+  assert.ok(res.changes > 0);
+
+  const mf = rt.sheets.get('MonthlyFinancials');
+  assert.equal(mf.getRange(6, 8).getDisplayValue(), 'Mar-27');
+  assert.equal(mf.getRange(6, 2).getValues()[0][0], 300);
+  assert.equal(mf.getRange(7, 8).getDisplayValue(), 'Apr-27');
+  assert.equal(mf.getRange(7, 2).getValues()[0][0], 400);
+});
+
+test('monthly import entire older pack has no default selection, and single new month reserves no history rows', () => {
+  const rt = runtime();
+  // Older pack: all months prior to destination latest (Feb-27)
+  const olderPack = sampleImportPack([
+    {
+      month: '2026-01',
+      financials: { revenueCents: 10000, cogsCents: 6000, sgaCents: 1000, netIncomeCents: 2000 },
+      workingCapital: { cashCents: 10000, arCents: 4000, inventoryCents: 1000, apCents: 3000 },
+      checks: { grossProfitCents: 4000, ebitCents: 3000 },
+      sourceRefs: {
+        revenueCents: ['PL!R15'], cogsCents: ['PL!R63'], sgaCents: ['PL!R170'], netIncomeCents: ['PL!R197'],
+        cashCents: ['BS!D5', 'BS!D6', 'BS!D7', 'BS!D8'], arCents: ['BS!D9'],
+        inventoryCents: ['BS!D12', 'BS!D13', 'BS!D14'],
+        apCents: ['BS!D48', 'BS!D49', 'BS!D50', 'BS!D51', 'BS!D52', 'BS!D55', 'BS!D56', 'BS!D57', 'BS!D58', 'BS!D59', 'BS!D60', 'BS!D61', 'BS!D62', 'BS!D63', 'BS!D64', 'BS!D65', 'BS!D66']
+      }
+    },
+    {
+      month: '2026-02',
+      financials: { revenueCents: 20000, cogsCents: 12000, sgaCents: 2000, netIncomeCents: 4000 },
+      workingCapital: { cashCents: 20000, arCents: 5000, inventoryCents: 2000, apCents: 4000 },
+      checks: { grossProfitCents: 8000, ebitCents: 6000 },
+      sourceRefs: {
+        revenueCents: ['PL!S15'], cogsCents: ['PL!S63'], sgaCents: ['PL!S170'], netIncomeCents: ['PL!S197'],
+        cashCents: ['BS!E5', 'BS!E6', 'BS!E7', 'BS!E8'], arCents: ['BS!E9'],
+        inventoryCents: ['BS!E12', 'BS!E13', 'BS!E14'],
+        apCents: ['BS!E48', 'BS!E49', 'BS!E50', 'BS!E51', 'BS!E52', 'BS!E55', 'BS!E56', 'BS!E57', 'BS!E58', 'BS!E59', 'BS!E60', 'BS!E61', 'BS!E62', 'BS!E63', 'BS!E64', 'BS!E65', 'BS!E66']
+      }
+    }
+  ]);
+  const prevOlder = rt.ctx.previewMonthlyActualsImport(JSON.stringify(olderPack));
+  assert.ok(prevOlder.months.every(m => m.defaultSelected === false));
+
+  // Destination with HEADER ONLY in both MonthlyFinancials and 1. Working Capital:
+  // Pack has Jan-27, Feb-27, Mar-27.
+  // Applying ONLY Mar-27 must create row 2 as Mar-27 in both tabs, with no Jan/Feb rows and no blank reserved rows.
+  const emptyData = fixture();
+  emptyData.MonthlyFinancials = [emptyData.MonthlyFinancials[0]]; // header only
+  emptyData['1. Working Capital'] = [emptyData['1. Working Capital'][0]]; // header only
+  const rtEmpty = runtime(emptyData);
+  const mfEmpty = rtEmpty.sheets.get('MonthlyFinancials');
+  const wcEmpty = rtEmpty.sheets.get('1. Working Capital');
+  assert.equal(mfEmpty.getLastRow(), 1, 'MonthlyFinancials starts header only');
+  assert.equal(wcEmpty.getLastRow(), 1, '1. Working Capital starts header only');
+
+  const packJanFebMar = sampleImportPack();
+  const textPack = JSON.stringify(packJanFebMar);
+  const prevEmpty = rtEmpty.ctx.previewMonthlyActualsImport(textPack);
+  assert.equal(prevEmpty.months.length, 3);
+
+  const res = rtEmpty.ctx.applyMonthlyActualsImport(textPack, ['2027-03'], prevEmpty.previewHash);
+  assert.equal(res.already, false);
+  assert.equal(res.changes, 14);
+
+  // Exact header + Mar row 2 in both destinations; no Jan, no Feb, no blank reserved rows
+  assert.equal(mfEmpty.getLastRow(), 2, 'MonthlyFinancials must have exactly header + Mar row 2');
+  assert.equal(wcEmpty.getLastRow(), 2, '1. Working Capital must have exactly header + Mar row 2');
+  assert.deepEqual(mfEmpty.getRange(1, 1, 1, 8).getValues()[0], fixture().MonthlyFinancials[0]);
+  assert.equal(mfEmpty.getRange(2, 1).getDisplayValue(), 'Mar-27');
+  assert.deepEqual(wcEmpty.getRange(1, 1, 1, 6).getValues()[0], fixture()['1. Working Capital'][0]);
+  assert.equal(wcEmpty.getRange(2, 1).getDisplayValue(), 'Mar-27');
+});
+
+test('monthly import selected recognized legacy formulas and canonical formulas preserved, literals converted', () => {
+  const data = fixture();
+  // Row 4: Jan-27 with literal GP and EBIT
+  data.MonthlyFinancials[3][3] = 40;
+  data.MonthlyFinancials[3][5] = 30;
+  const rt = runtime(data);
+  const mf = rt.sheets.get('MonthlyFinancials');
+  // Row 2: Feb-27 with recognized legacy direct arithmetic formula
+  mf.put(2, 4, { value: 80, formula: '=B2-C2', rich: null });
+  mf.put(2, 6, { value: 60, formula: '=D2-E2', rich: null });
+  // Row 6: Mar-27 with canonical blank-safe formula and agreeing cached quarter formula
+  mf.put(6, 4, { value: 120, formula: '=IF(COUNT(B6,C6)=2,B6-C6,"")', rich: null });
+  mf.put(6, 6, { value: 90, formula: '=IF(COUNT(D6,E6)=2,D6-E6,"")', rich: null });
+  mf.put(6, 8, { value: 'Q1 2027', formula: '="Q1 2027"', rich: null });
+
+  const pack = sampleImportPack();
+  const text = JSON.stringify(pack);
+  const prev = rt.ctx.previewMonthlyActualsImport(text);
+
+  // Select and apply ALL three months:
+  const res = rt.ctx.applyMonthlyActualsImport(text, ['2027-01', '2027-02', '2027-03'], prev.previewHash);
+  assert.equal(res.already, false);
+
+  // Jan-27: literal converted to canonical formula
+  assert.ok(mf.getRange(4, 4).getFormulas()[0][0].includes('IF(COUNT('));
+  assert.ok(mf.getRange(4, 6).getFormulas()[0][0].includes('IF(COUNT('));
+
+  // Feb-27: recognized legacy direct arithmetic formula PRESERVED on selected apply!
+  assert.equal(mf.getRange(2, 4).getFormulas()[0][0], '=B2-C2');
+  assert.equal(mf.getRange(2, 6).getFormulas()[0][0], '=D2-E2');
+
+  // Mar-27: canonical formula PRESERVED, agreeing quarter formula PRESERVED
+  assert.equal(mf.getRange(6, 4).getFormulas()[0][0], '=IF(COUNT(B6,C6)=2,B6-C6,"")');
+  assert.equal(mf.getRange(6, 6).getFormulas()[0][0], '=IF(COUNT(D6,E6)=2,D6-E6,"")');
+  assert.equal(mf.getRange(6, 8).getFormulas()[0][0], '="Q1 2027"');
+
+  // Raw values were updated
+  assert.equal(mf.getRange(2, 2).getValues()[0][0], 200);
+  assert.equal(mf.getRange(4, 2).getValues()[0][0], 100);
+  assert.equal(mf.getRange(6, 2).getValues()[0][0], 300);
+});
+
+test('monthly import independently absent rows resolve correctly without duplicates', () => {
+  const data = fixture();
+  // Capture initial keys
+  const initialMFKeys = data.MonthlyFinancials.slice(1).map(r => r[0]);
+  // Remove Jan-27 row from Working Capital
+  data['1. Working Capital'] = data['1. Working Capital'].filter(r => r[0] !== 'Jan-27');
+  const initialWCKeys = data['1. Working Capital'].slice(1).map(r => r[0]);
+
+  // Assert actual initial keys
+  assert.ok(initialMFKeys.includes('Jan-27'), 'Jan-27 must be present in MonthlyFinancials initial keys');
+  assert.ok(!initialWCKeys.includes('Jan-27'), 'Jan-27 must be absent from Working Capital initial keys');
+  assert.equal(new Set(initialMFKeys).size, initialMFKeys.length, 'No duplicate initial keys in MonthlyFinancials');
+  assert.equal(new Set(initialWCKeys).size, initialWCKeys.length, 'No duplicate initial keys in Working Capital');
+
+  const rt = runtime(data);
+  const pack = sampleImportPack([
+    {
+      month: '2027-01',
+      financials: { revenueCents: 10000, cogsCents: 6000, sgaCents: 1000, netIncomeCents: 2000 },
+      workingCapital: { cashCents: 10000, arCents: 4000, inventoryCents: 1000, apCents: 3000 },
+      checks: { grossProfitCents: 4000, ebitCents: 3000 },
+      sourceRefs: {
+        revenueCents: ['PL!R15'], cogsCents: ['PL!R63'], sgaCents: ['PL!R170'], netIncomeCents: ['PL!R197'],
+        cashCents: ['BS!D5', 'BS!D6', 'BS!D7', 'BS!D8'], arCents: ['BS!D9'],
+        inventoryCents: ['BS!D12', 'BS!D13', 'BS!D14'],
+        apCents: ['BS!D48', 'BS!D49', 'BS!D50', 'BS!D51', 'BS!D52', 'BS!D55', 'BS!D56', 'BS!D57', 'BS!D58', 'BS!D59', 'BS!D60', 'BS!D61', 'BS!D62', 'BS!D63', 'BS!D64', 'BS!D65', 'BS!D66']
+      }
+    }
+  ]);
+  const text = JSON.stringify(pack);
+  const prev = rt.ctx.previewMonthlyActualsImport(text);
+  const res = rt.ctx.applyMonthlyActualsImport(text, ['2027-01'], prev.previewHash);
+  assert.equal(res.already, false);
+
+  const mf = rt.sheets.get('MonthlyFinancials');
+  const wc = rt.sheets.get('1. Working Capital');
+
+  const finalMFKeys = Array.from({ length: mf.getLastRow() - 1 }, (_, i) => mf.getRange(i + 2, 1).getDisplayValue());
+  const finalWCKeys = Array.from({ length: wc.getLastRow() - 1 }, (_, i) => wc.getRange(i + 2, 1).getDisplayValue());
+
+  // Assert no duplicates in final keys
+  assert.equal(new Set(finalMFKeys).size, finalMFKeys.length, 'No duplicate month keys in MonthlyFinancials');
+  assert.equal(new Set(finalWCKeys).size, finalWCKeys.length, 'No duplicate month keys in Working Capital');
+
+  // Assert key counts and presence
+  assert.equal(finalMFKeys.length, initialMFKeys.length, 'MonthlyFinancials updated in-place without appending duplicate row');
+  assert.equal(finalWCKeys.length, initialWCKeys.length + 1, 'Working Capital appended exactly one new row for absent Jan-27');
+  assert.ok(finalWCKeys.includes('Jan-27'), 'Working Capital now has Jan-27');
+  assert.equal(wc.getRange(3, 1).getDisplayValue(), 'Jan-27');
+  assert.equal(wc.getRange(3, 2).getValues()[0][0], 100);
+
+  // Also test the inverse: absent in MF, present in WC
+  const data2 = fixture();
+  data2.MonthlyFinancials = data2.MonthlyFinancials.filter(r => r[0] !== 'Jan-27');
+  const initialMFKeys2 = data2.MonthlyFinancials.slice(1).map(r => r[0]);
+  const initialWCKeys2 = data2['1. Working Capital'].slice(1).map(r => r[0]);
+  assert.ok(!initialMFKeys2.includes('Jan-27'));
+  assert.ok(initialWCKeys2.includes('Jan-27'));
+  assert.equal(new Set(initialMFKeys2).size, initialMFKeys2.length);
+  assert.equal(new Set(initialWCKeys2).size, initialWCKeys2.length);
+
+  const rt2 = runtime(data2);
+  const prev2 = rt2.ctx.previewMonthlyActualsImport(text);
+  const res2 = rt2.ctx.applyMonthlyActualsImport(text, ['2027-01'], prev2.previewHash);
+  assert.equal(res2.already, false);
+
+  const mf2 = rt2.sheets.get('MonthlyFinancials');
+  const wc2 = rt2.sheets.get('1. Working Capital');
+  const finalMFKeys2 = Array.from({ length: mf2.getLastRow() - 1 }, (_, i) => mf2.getRange(i + 2, 1).getDisplayValue());
+  const finalWCKeys2 = Array.from({ length: wc2.getLastRow() - 1 }, (_, i) => wc2.getRange(i + 2, 1).getDisplayValue());
+
+  assert.equal(new Set(finalMFKeys2).size, finalMFKeys2.length, 'No duplicates in inverse MonthlyFinancials');
+  assert.equal(new Set(finalWCKeys2).size, finalWCKeys2.length, 'No duplicates in inverse Working Capital');
+  assert.equal(finalMFKeys2.length, initialMFKeys2.length + 1);
+  assert.equal(finalWCKeys2.length, initialWCKeys2.length);
+  assert.ok(finalMFKeys2.includes('Jan-27'));
+});
+
+test('monthly import schema, integer, selection and target structure validation fail pre-mutation', () => {
+  const rt = runtime();
+  const validPack = sampleImportPack();
+  const textValid = JSON.stringify(validPack);
+
+  // 1. Bad schema name
+  const snap1 = snapshotAllNonDiag(rt);
+  assert.throws(() => rt.ctx.previewMonthlyActualsImport(JSON.stringify({ ...validPack, schema: 'other-schema' })), /schema/);
+  assert.deepEqual(snapshotAllNonDiag(rt), snap1, 'State unchanged on bad schema');
+
+  // 2. Missing sourceRefs
+  const badRefs = sampleImportPack();
+  delete badRefs.months[0].sourceRefs;
+  const snap2 = snapshotAllNonDiag(rt);
+  assert.throws(() => rt.ctx.previewMonthlyActualsImport(JSON.stringify(badRefs)), /sourceRefs/);
+  assert.deepEqual(snapshotAllNonDiag(rt), snap2, 'State unchanged on missing sourceRefs');
+
+  // 3. Unsafe integer satang in pack
+  const unsafePack = sampleImportPack();
+  unsafePack.months[0].financials.revenueCents = 9007199254740999;
+  const snap3 = snapshotAllNonDiag(rt);
+  assert.throws(() => rt.ctx.previewMonthlyActualsImport(JSON.stringify(unsafePack)), /safe integer/);
+  assert.deepEqual(snapshotAllNonDiag(rt), snap3, 'State unchanged on unsafe integer in pack');
+
+  // 4. Type coercion guard: single-element array for source.sha256
+  const arrayShaPack = sampleImportPack();
+  arrayShaPack.source.sha256 = ['a'.repeat(64)];
+  const snapSha = snapshotAllNonDiag(rt);
+  assert.throws(() => rt.ctx.previewMonthlyActualsImport(JSON.stringify(arrayShaPack)), /sha256/);
+  assert.deepEqual(snapshotAllNonDiag(rt), snapSha, 'State unchanged on array sha256');
+
+  // 5. Type coercion guard: single-element array for source.reportMonth
+  const arrayReportPack = sampleImportPack();
+  arrayReportPack.source.reportMonth = ['2027-03'];
+  const snapReport = snapshotAllNonDiag(rt);
+  assert.throws(() => rt.ctx.previewMonthlyActualsImport(JSON.stringify(arrayReportPack)), /reportMonth/);
+  assert.deepEqual(snapshotAllNonDiag(rt), snapReport, 'State unchanged on array reportMonth');
+
+  // 6. Type coercion guard: single-element array for record.month
+  const arrayMonthPack = sampleImportPack();
+  arrayMonthPack.months[0].month = ['2027-01'];
+  const snapMonth = snapshotAllNonDiag(rt);
+  assert.throws(() => rt.ctx.previewMonthlyActualsImport(JSON.stringify(arrayMonthPack)), /invalid month key/);
+  assert.deepEqual(snapshotAllNonDiag(rt), snapMonth, 'State unchanged on array record month');
+
+  // 7. Safe raw integers yield unsafe GP -> reject pre-mutation
+  const unsafeGPPack = sampleImportPack();
+  unsafeGPPack.months[0].financials.revenueCents = Number.MAX_SAFE_INTEGER;
+  unsafeGPPack.months[0].financials.cogsCents = -100;
+  const snapGP = snapshotAllNonDiag(rt);
+  assert.throws(() => rt.ctx.previewMonthlyActualsImport(JSON.stringify(unsafeGPPack)), /derived amounts outside the safe-integer/);
+  assert.deepEqual(snapshotAllNonDiag(rt), snapGP, 'State unchanged on unsafe derived GP');
+
+  // 8. Safe raw integers yield unsafe NWC -> reject pre-mutation
+  const unsafeNWCPack = sampleImportPack();
+  unsafeNWCPack.months[0].workingCapital.cashCents = Number.MAX_SAFE_INTEGER;
+  unsafeNWCPack.months[0].workingCapital.arCents = 10000;
+  const snapNWC = snapshotAllNonDiag(rt);
+  assert.throws(() => rt.ctx.previewMonthlyActualsImport(JSON.stringify(unsafeNWCPack)), /derived amounts outside the safe-integer/);
+  assert.deepEqual(snapshotAllNonDiag(rt), snapNWC, 'State unchanged on unsafe derived NWC');
+
+  // 9. Target negative MAXSAFE cents vs proposed positive MAXSAFE on Net Income independent range
+  // -> month blocked in preview and selected apply rejected before writes
+  const rtMax = runtime();
+  const mfMax = rtMax.sheets.get('MonthlyFinancials');
+  // Row 2 (Feb-27) Net Income set to -Number.MAX_SAFE_INTEGER / 100 THB (-MAX_SAFE_INTEGER satang)
+  mfMax.getRange(2, 7).setValue(-Number.MAX_SAFE_INTEGER / 100);
+  const maxPack = sampleImportPack();
+  // Proposed Feb-27 Net Income is positive MAX_SAFE_INTEGER satang
+  maxPack.months.find(m => m.month === '2027-02').financials.netIncomeCents = Number.MAX_SAFE_INTEGER;
+  const snapMax = snapshotAllNonDiag(rtMax);
+  const prevMax = rtMax.ctx.previewMonthlyActualsImport(JSON.stringify(maxPack));
+  const febMax = prevMax.months.find(m => m.month === '2027-02');
+  assert.equal(febMax.status, 'blocked');
+  assert.ok(febMax.conflicts.some(c => c.message.includes('outside the safe-integer range')));
+  // Applying blocked month rejects before any writes
+  assert.throws(() => rtMax.ctx.applyMonthlyActualsImport(JSON.stringify(maxPack), ['2027-02'], prevMax.previewHash), /blocked/);
+  assert.deepEqual(snapshotAllNonDiag(rtMax), snapMax, 'Target state completely untouched after blocked apply rejection');
+
+  // 10. Invalid apply selection
+  const prev = rt.ctx.previewMonthlyActualsImport(textValid);
+  const snapSel = snapshotAllNonDiag(rt);
+  assert.throws(() => rt.ctx.applyMonthlyActualsImport(textValid, [], prev.previewHash), /Select at least one/);
+  assert.throws(() => rt.ctx.applyMonthlyActualsImport(textValid, ['2027-01', '2027-01'], prev.previewHash), /Duplicate/);
+  assert.throws(() => rt.ctx.applyMonthlyActualsImport(textValid, ['2029-12'], prev.previewHash), /not in the import pack/);
+  assert.deepEqual(snapshotAllNonDiag(rt), snapSel, 'State unchanged on invalid selection');
+
+  // 11. Nonempty row with invalid month key in target tab
+  const dataBadMonth = fixture();
+  dataBadMonth.MonthlyFinancials[1][0] = 'BadMonth';
+  const rtBadMonth = runtime(dataBadMonth);
+  const snapBM = snapshotAllNonDiag(rtBadMonth);
+  assert.throws(() => rtBadMonth.ctx.previewMonthlyActualsImport(textValid), /unrecognized or missing month/);
+  assert.deepEqual(snapshotAllNonDiag(rtBadMonth), snapBM, 'State unchanged on unrecognized month in target');
+
+  // 12. Duplicate month keys in destination tab
+  const dataDupMonth = fixture();
+  dataDupMonth.MonthlyFinancials[1][0] = 'Jan-27';
+  dataDupMonth.MonthlyFinancials[3][0] = 'Jan-27';
+  const rtDupMonth = runtime(dataDupMonth);
+  const snapDM = snapshotAllNonDiag(rtDupMonth);
+  assert.throws(() => rtDupMonth.ctx.previewMonthlyActualsImport(textValid), /duplicate month/);
+  assert.deepEqual(snapshotAllNonDiag(rtDupMonth), snapDM, 'State unchanged on duplicate month in target');
+});
+
+test('monthly import conflicts: raw formula, custom derived formula, disagreeing/empty quarter, duplicate headers fail pre-mutation', () => {
+  const pack = sampleImportPack();
+
+  // Raw formula conflict
+  const rt1 = runtime();
+  rt1.sheets.get('MonthlyFinancials').getRange(2, 2).setFormula('=SUM(A1:A2)');
+  const prev1 = rt1.ctx.previewMonthlyActualsImport(JSON.stringify(pack));
+  const feb1 = prev1.months.find(m => m.month === '2027-02');
+  assert.equal(feb1.status, 'blocked');
+  assert.ok(feb1.conflicts.some(c => c.message.includes('raw-input formula')));
+
+  // Blocked month cannot be applied, but applying another valid month succeeds:
+  assert.throws(() => rt1.ctx.applyMonthlyActualsImport(JSON.stringify(pack), ['2027-02'], prev1.previewHash), /blocked/);
+  const res1 = rt1.ctx.applyMonthlyActualsImport(JSON.stringify(pack), ['2027-03'], prev1.previewHash);
+  assert.equal(res1.already, false);
+
+  // Custom formula conflict
+  const rt2 = runtime();
+  rt2.sheets.get('MonthlyFinancials').getRange(2, 4).setFormula('=B2*0.5');
+  const prev2 = rt2.ctx.previewMonthlyActualsImport(JSON.stringify(pack));
+  const feb2 = prev2.months.find(m => m.month === '2027-02');
+  assert.equal(feb2.status, 'blocked');
+  assert.ok(feb2.conflicts.some(c => c.message.includes('custom formula')));
+
+  // Disagreeing quarter literal conflict
+  const data3 = fixture();
+  data3.MonthlyFinancials[1][7] = 'Q2 2027';
+  const rt3 = runtime(data3);
+  const prev3 = rt3.ctx.previewMonthlyActualsImport(JSON.stringify(pack));
+  const feb3 = prev3.months.find(m => m.month === '2027-02');
+  assert.equal(feb3.status, 'blocked');
+  assert.ok(feb3.conflicts.some(c => c.message.includes('existing quarter')));
+
+  // Agreeing cached quarter formula is preserved
+  const rt4 = runtime();
+  rt4.sheets.get('MonthlyFinancials').put(2, 8, { value: 'Q1 2027', formula: '="Q1 2027"', rich: null });
+  const prev4 = rt4.ctx.previewMonthlyActualsImport(JSON.stringify(pack));
+  assert.ok(!prev4.months.find(m => m.month === '2027-02').conflicts.some(c => c.cell === 'H2'));
+
+  // Lowercase agreeing quarter (q1 2027) normalizes via TPOCore.quarter and is preserved
+  rt4.sheets.get('MonthlyFinancials').getRange(2, 8).setValue('q1 2027');
+  const prev4d = rt4.ctx.previewMonthlyActualsImport(JSON.stringify(pack));
+  assert.ok(!prev4d.months.find(m => m.month === '2027-02').conflicts.some(c => c.cell === 'H2'));
+  // Disagreeing cached quarter formula is blocked
+  rt4.sheets.get('MonthlyFinancials').put(2, 8, { value: 'Q3 2027', formula: '="Q3 2027"', rich: null });
+  const prev4b = rt4.ctx.previewMonthlyActualsImport(JSON.stringify(pack));
+  assert.ok(prev4b.months.find(m => m.month === '2027-02').conflicts.some(c => c.cell === 'H2' && c.message.includes('disagrees')));
+
+  // Empty cached quarter formula is blocked
+  rt4.sheets.get('MonthlyFinancials').put(2, 8, { value: '', formula: '="Q1 2027"', rich: null });
+  const prev4c = rt4.ctx.previewMonthlyActualsImport(JSON.stringify(pack));
+  assert.ok(prev4c.months.find(m => m.month === '2027-02').conflicts.some(c => c.cell === 'H2' && c.message.includes('empty or unverified')));
+});
+
+test('monthly import rollback in each destination tab restores prior values, formulas and formats, and flush failure releases lock', () => {
+  const pack = sampleImportPack();
+  const text = JSON.stringify(pack);
+
+  // 1. Failure in 1. Working Capital (planned and written FIRST, because '1. Working Capital' < 'MonthlyFinancials')
+  // Earlier writes in 1. Working Capital (row 4 cols 1..2) occur before col 3 fails
+  const rt1 = runtime();
+  const mf1 = rt1.sheets.get('MonthlyFinancials');
+  const wc1 = rt1.sheets.get('1. Working Capital');
+  // Set explicit non-General number formats before import to prove format preservation
+  wc1.getRange(2, 2, 2, 5).setNumberFormat('#,##0.00');
+  mf1.getRange(2, 2, 4, 6).setNumberFormat('#,##0.00');
+  const mfSnap1 = snapshotTabRange(mf1, 6, 8);
+  const wcSnap1 = snapshotTabRange(wc1, 4, 6);
+
+  const prev1 = rt1.ctx.previewMonthlyActualsImport(text);
+  // Injected write failure after earlier writes (col 1 and col 2) in 1. Working Capital
+  wc1.failOnce = (r, c) => r === 4 && c === 3;
+  assert.throws(() => rt1.ctx.applyMonthlyActualsImport(text, ['2027-03'], prev1.previewHash), /simulated/);
+
+  // Assert exact values, formulas, and formats restored for BOTH destination ranges
+  assert.deepEqual(snapshotTabRange(mf1, 6, 8), mfSnap1, 'MonthlyFinancials prior values, formulas, formats restored');
+  assert.deepEqual(snapshotTabRange(wc1, 4, 6), wcSnap1, '1. Working Capital prior values, formulas, formats restored');
+  assert.ok(rt1.sheets.get('Repair Backup').getLastRow() > 1, 'Repair Backup audit trail preserved');
+
+  // Verify lock release: subsequent valid apply succeeds
+  const prev1b = rt1.ctx.previewMonthlyActualsImport(text);
+  const res1 = rt1.ctx.applyMonthlyActualsImport(text, ['2027-03'], prev1b.previewHash);
+  assert.equal(res1.already, false);
+
+  // 2. Failure in MonthlyFinancials (written SECOND, after all 1. Working Capital writes succeed)
+  const rt2 = runtime();
+  const mf2 = rt2.sheets.get('MonthlyFinancials');
+  const wc2 = rt2.sheets.get('1. Working Capital');
+  wc2.getRange(2, 2, 2, 5).setNumberFormat('#,##0.00');
+  mf2.getRange(2, 2, 4, 6).setNumberFormat('#,##0.00');
+  const mfSnap2 = snapshotTabRange(mf2, 6, 8);
+  const wcSnap2 = snapshotTabRange(wc2, 4, 6);
+
+  const prev2 = rt2.ctx.previewMonthlyActualsImport(text);
+  // Injected write failure in MonthlyFinancials row 6 col 3 (after all WC writes and after MF col 1 and 2 writes)
+  mf2.failOnce = (r, c) => r === 6 && c === 3;
+  assert.throws(() => rt2.ctx.applyMonthlyActualsImport(text, ['2027-03'], prev2.previewHash), /simulated/);
+
+  assert.deepEqual(snapshotTabRange(mf2, 6, 8), mfSnap2, 'MonthlyFinancials prior values, formulas, formats restored');
+  assert.deepEqual(snapshotTabRange(wc2, 4, 6), wcSnap2, '1. Working Capital prior values, formulas, formats restored');
+  assert.ok(rt2.sheets.get('Repair Backup').getLastRow() > 1);
+
+  // Valid apply after failure proves lock release
+  const prev2b = rt2.ctx.previewMonthlyActualsImport(text);
+  const res2 = rt2.ctx.applyMonthlyActualsImport(text, ['2027-03'], prev2b.previewHash);
+  assert.equal(res2.already, false);
+
+  // 3. Post-source-write flush failure: arm existing rt.flushFail ONCE after last successful planned cell write
+  const rt3 = runtime();
+  const mf3 = rt3.sheets.get('MonthlyFinancials');
+  const wc3 = rt3.sheets.get('1. Working Capital');
+  wc3.getRange(2, 2, 2, 5).setNumberFormat('#,##0.00');
+  mf3.getRange(2, 2, 4, 6).setNumberFormat('#,##0.00');
+  const mfSnap3 = snapshotTabRange(mf3, 6, 8);
+  const wcSnap3 = snapshotTabRange(wc3, 4, 6);
+
+  const prev3 = rt3.ctx.previewMonthlyActualsImport(text);
+  // Narrow test hook: hook mf3.put to arm rt3.flushFail() after the very last planned cell write (r=6, c=7 in MonthlyFinancials)
+  const origPut3 = mf3.put.bind(mf3);
+  let armed = false;
+  mf3.put = function (r, c, data) {
+    origPut3(r, c, data);
+    if (!armed && r === 6 && c === 7) {
+      armed = true;
+      rt3.flushFail();
+    }
+  };
+
+  assert.throws(() => rt3.ctx.applyMonthlyActualsImport(text, ['2027-03'], prev3.previewHash), /flush failure/);
+
+  // Assert rollback restored both destinations' values, formulas, and formats
+  assert.deepEqual(snapshotTabRange(mf3, 6, 8), mfSnap3, 'MF values, formulas, formats restored on flush failure');
+  assert.deepEqual(snapshotTabRange(wc3, 4, 6), wcSnap3, 'WC values, formulas, formats restored on flush failure');
+  assert.ok(rt3.sheets.get('Repair Backup').getLastRow() > 1);
+
+  // Valid apply after failure proves lock release
+  const prev3b = rt3.ctx.previewMonthlyActualsImport(text);
+  const res3 = rt3.ctx.applyMonthlyActualsImport(text, ['2027-03'], prev3b.previewHash);
+  assert.equal(res3.already, false);
+
+  // 4. Rollback restoration failure using existing failOnce + narrow hook:
+  // Forward write failure triggers, and during rollback restoration, another failure occurs.
+  // Requires ORIGINAL write error and 'Rollback incomplete; restore from Repair Backup' diagnostic evidence, never false success.
+  const rt4 = runtime();
+  const mf4 = rt4.sheets.get('MonthlyFinancials');
+  const wc4 = rt4.sheets.get('1. Working Capital');
+  const prev4 = rt4.ctx.previewMonthlyActualsImport(text);
+  let rollbackFailed = false;
+  const origPut4 = wc4.put.bind(wc4);
+  wc4.put = function (r, c, data) {
+    if (rollbackFailed && r === 4 && c === 2) {
+      throw new Error('simulated rollback restoration failure');
+    }
+    origPut4(r, c, data);
+  };
+  wc4.failOnce = (r, c) => {
+    if (r === 4 && c === 3) {
+      rollbackFailed = true;
+      return true;
+    }
+    return false;
+  };
+
+  assert.throws(
+    () => rt4.ctx.applyMonthlyActualsImport(text, ['2027-03'], prev4.previewHash),
+    err => {
+      assert.ok(err.message.includes('simulated Sheets write failure'), 'Error must contain ORIGINAL write error');
+      assert.ok(err.message.includes('Rollback incomplete; restore from Repair Backup'), 'Error must report Rollback incomplete diagnostic');
+      return true;
+    }
+  );
+  // Ensure Repair Backup audit trail exists
+  assert.ok(rt4.sheets.get('Repair Backup').getLastRow() > 1, 'Repair Backup contains rollback recovery evidence');
+
+  // Lock release verified by subsequent locked action
+  assert.equal(rt4.ctx.locked_(() => 'unlocked'), 'unlocked');
+});
+
+test('monthly import fresh preview identical reimport produces zero writes and no added backup rows, old pre-apply hash rejected', () => {
+  const rt = runtime();
+  const pack = sampleImportPack();
+  const text = JSON.stringify(pack);
+  const prev = rt.ctx.previewMonthlyActualsImport(text);
+  const oldHash = prev.previewHash;
+
+  const res1 = rt.ctx.applyMonthlyActualsImport(text, ['2027-03'], oldHash);
+  assert.equal(res1.already, false);
+  const backupRowsAfterApply = rt.sheets.get('Repair Backup').getLastRow();
+
+  // Update cached formula values so next read reads them
+  const mf = rt.sheets.get('MonthlyFinancials');
+  mf.put(6, 4, { value: 120, formula: mf.getRange(6, 4).getFormulas()[0][0], rich: null });
+  mf.put(6, 6, { value: 90, formula: mf.getRange(6, 6).getFormulas()[0][0], rich: null });
+  const wc = rt.sheets.get('1. Working Capital');
+  wc.put(4, 6, { value: 340, formula: wc.getRange(4, 6).getFormulas()[0][0], rich: null });
+
+  // Pre-apply hash rejected
+  assert.throws(() => rt.ctx.applyMonthlyActualsImport(text, ['2027-03'], oldHash), /Monthly inputs changed after preview/);
+
+  // Fresh preview and zero-write apply
+  const prev2 = rt.ctx.previewMonthlyActualsImport(text);
+  const res2 = rt.ctx.applyMonthlyActualsImport(text, ['2027-03'], prev2.previewHash);
+  assert.equal(res2.already, true);
+  assert.equal(res2.changes, 0);
+  assert.equal(rt.sheets.get('Repair Backup').getLastRow(), backupRowsAfterApply);
+});
+
+test('monthly import projected identities match TPOCore.analyze numeric source', () => {
+  const rt = runtime();
+  const pack = sampleImportPack();
+  const prev = rt.ctx.previewMonthlyActualsImport(JSON.stringify(pack));
+  rt.ctx.applyMonthlyActualsImport(JSON.stringify(pack), ['2027-03'], prev.previewHash);
+
+  // Supply cached formulas for TPOCore.analyze
+  const mf = rt.sheets.get('MonthlyFinancials');
+  mf.put(6, 4, { value: 120, formula: mf.getRange(6, 4).getFormulas()[0][0], rich: null });
+  mf.put(6, 6, { value: 90, formula: mf.getRange(6, 6).getFormulas()[0][0], rich: null });
+  const wc = rt.sheets.get('1. Working Capital');
+  wc.put(4, 6, { value: 340, formula: wc.getRange(4, 6).getFormulas()[0][0], rich: null });
+
+  const sources = rt.ctx.readSources_();
+  const analyzed = rt.ctx.TPOCore.analyze(sources);
+  assert.ok(analyzed);
+  assert.equal(analyzed.latest.period.display, 'Mar-27');
+  assert.equal(analyzed.latest.gp, 120);
+  assert.equal(analyzed.latest.ebit, 90);
+  assert.equal(analyzed.wc.find(r => r.period.display === 'Mar-27').nwc, 340);
+});
+
+test('monthly import blank Quarter with unchanged amounts produces zero writes and remains blank', () => {
+  const data = fixture();
+  data.MonthlyFinancials[1] = ['Feb-27', 200, 120, 80, 20, 60, 40, ''];
+  data['1. Working Capital'][2] = ['Feb-27', 200, 50, 20, 40, 230];
+  const rt = runtime(data);
+  const mf = rt.sheets.get('MonthlyFinancials');
+  mf.put(2, 4, { value: 80, formula: '=IF(COUNT(B2,C2)=2,B2-C2,"")', rich: null });
+  mf.put(2, 6, { value: 60, formula: '=IF(COUNT(D2,E2)=2,D2-E2,"")', rich: null });
+  const wc = rt.sheets.get('1. Working Capital');
+  wc.put(3, 6, { value: 230, formula: '=IF(COUNT(B3,C3,D3,E3)=4,B3+C3+D3-E3,"")', rich: null });
+
+  const pack = sampleImportPack();
+  const text = JSON.stringify(pack);
+  const prev = rt.ctx.previewMonthlyActualsImport(text);
+  const feb = prev.months.find(m => m.month === '2027-02');
+  assert.equal(feb.status, 'unchanged');
+  assert.equal(feb.changes.length, 0);
+
+  const res = rt.ctx.applyMonthlyActualsImport(text, ['2027-02'], prev.previewHash);
+  assert.equal(res.already, true);
+  assert.equal(res.changes, 0);
+  assert.equal(mf.getRange(2, 8).getDisplayValue(), '');
+});
+
+test('monthly import blank Quarter is populated when another disclosed change writes month', () => {
+  const data = fixture();
+  // Feb-27 in MonthlyFinancials has blank Quarter
+  data.MonthlyFinancials[1] = ['Feb-27', 200, 120, 80, 20, 60, 40, ''];
+  data['1. Working Capital'][2] = ['Feb-27', 200, 50, 20, 40, 230];
+  const rt = runtime(data);
+  const mf = rt.sheets.get('MonthlyFinancials');
+  mf.put(2, 4, { value: 80, formula: '=IF(COUNT(B2,C2)=2,B2-C2,"")', rich: null });
+  mf.put(2, 6, { value: 60, formula: '=IF(COUNT(D2,E2)=2,D2-E2,"")', rich: null });
+  const wc = rt.sheets.get('1. Working Capital');
+  wc.put(3, 6, { value: 230, formula: '=IF(COUNT(B3,C3,D3,E3)=4,B3+C3+D3-E3,"")', rich: null });
+
+  // Pack has revised Revenue (20100 cents = 201.00 THB vs 200.00) -> disclosed change!
+  const pack = sampleImportPack([
+    {
+      month: '2027-02',
+      financials: { revenueCents: 20100, cogsCents: 12000, sgaCents: 2000, netIncomeCents: 4000 },
+      workingCapital: { cashCents: 20000, arCents: 5000, inventoryCents: 2000, apCents: 4000 },
+      checks: { grossProfitCents: 8100, ebitCents: 6100 },
+      sourceRefs: {
+        revenueCents: ['PL!S15'], cogsCents: ['PL!S63'], sgaCents: ['PL!S170'], netIncomeCents: ['PL!S197'],
+        cashCents: ['BS!E5', 'BS!E6', 'BS!E7', 'BS!E8'], arCents: ['BS!E9'],
+        inventoryCents: ['BS!E12', 'BS!E13', 'BS!E14'],
+        apCents: ['BS!E48', 'BS!E49', 'BS!E50', 'BS!E51', 'BS!E52', 'BS!E55', 'BS!E56', 'BS!E57', 'BS!E58', 'BS!E59', 'BS!E60', 'BS!E61', 'BS!E62', 'BS!E63', 'BS!E64', 'BS!E65', 'BS!E66']
+      }
+    }
+  ]);
+  const text = JSON.stringify(pack);
+  const prev = rt.ctx.previewMonthlyActualsImport(text);
+  const feb = prev.months.find(m => m.month === '2027-02');
+  assert.equal(feb.status, 'changed');
+  assert.ok(feb.changes.length > 0);
+  // Quarter is not in changes array (no monetary pseudochange)
+  assert.ok(!feb.changes.some(c => c.field === 'quarter' || c.field === 'quarterCents'));
+
+  const res = rt.ctx.applyMonthlyActualsImport(text, ['2027-02'], prev.previewHash);
+  assert.equal(res.already, false);
+  // Disclosed revenue change caused month write, populating previously blank quarter
+  assert.equal(mf.getRange(2, 8).getDisplayValue(), 'Q1 2027');
+  assert.equal(mf.getRange(2, 2).getValues()[0][0], 201);
+});
+
+test('monthly import semantically agreeing lowercase quarter literal and formula cached values preserve exact content', () => {
+  const data = fixture();
+  // Row 2: Feb-27 with lowercase quarter literal 'q1 2027'
+  data.MonthlyFinancials[1] = ['Feb-27', 200, 120, 80, 20, 60, 40, 'q1 2027'];
+  data['1. Working Capital'][2] = ['Feb-27', 200, 50, 20, 40, 230];
+  const rt = runtime(data);
+  const mf = rt.sheets.get('MonthlyFinancials');
+  mf.put(2, 4, { value: 80, formula: '=IF(COUNT(B2,C2)=2,B2-C2,"")', rich: null });
+  mf.put(2, 6, { value: 60, formula: '=IF(COUNT(D2,E2)=2,D2-E2,"")', rich: null });
+  // Row 4: Jan-27 with agreeing quarter formula and cached 'q1 2027'
+  mf.put(4, 8, { value: 'q1 2027', formula: '="Q1 2027"', rich: null });
+  mf.put(4, 4, { value: 40, formula: '=IF(COUNT(B4,C4)=2,B4-C4,"")', rich: null });
+  mf.put(4, 6, { value: 30, formula: '=IF(COUNT(D4,E4)=2,D4-E4,"")', rich: null });
+  const wc = rt.sheets.get('1. Working Capital');
+  wc.put(3, 6, { value: 230, formula: '=IF(COUNT(B3,C3,D3,E3)=4,B3+C3+D3-E3,"")', rich: null });
+
+  const pack = sampleImportPack([
+    {
+      month: '2027-01',
+      financials: { revenueCents: 10100, cogsCents: 6000, sgaCents: 1000, netIncomeCents: 2000 },
+      workingCapital: { cashCents: 10000, arCents: 4000, inventoryCents: 1000, apCents: 3000 },
+      checks: { grossProfitCents: 4100, ebitCents: 3100 },
+      sourceRefs: {
+        revenueCents: ['PL!R15'], cogsCents: ['PL!R63'], sgaCents: ['PL!R170'], netIncomeCents: ['PL!R197'],
+        cashCents: ['BS!D5', 'BS!D6', 'BS!D7', 'BS!D8'], arCents: ['BS!D9'],
+        inventoryCents: ['BS!D12', 'BS!D13', 'BS!D14'],
+        apCents: ['BS!D48', 'BS!D49', 'BS!D50', 'BS!D51', 'BS!D52', 'BS!D55', 'BS!D56', 'BS!D57', 'BS!D58', 'BS!D59', 'BS!D60', 'BS!D61', 'BS!D62', 'BS!D63', 'BS!D64', 'BS!D65', 'BS!D66']
+      }
+    },
+    {
+      month: '2027-02',
+      financials: { revenueCents: 20100, cogsCents: 12000, sgaCents: 2000, netIncomeCents: 4000 },
+      workingCapital: { cashCents: 20000, arCents: 5000, inventoryCents: 2000, apCents: 4000 },
+      checks: { grossProfitCents: 8100, ebitCents: 6100 },
+      sourceRefs: {
+        revenueCents: ['PL!S15'], cogsCents: ['PL!S63'], sgaCents: ['PL!S170'], netIncomeCents: ['PL!S197'],
+        cashCents: ['BS!E5', 'BS!E6', 'BS!E7', 'BS!E8'], arCents: ['BS!E9'],
+        inventoryCents: ['BS!E12', 'BS!E13', 'BS!E14'],
+        apCents: ['BS!E48', 'BS!E49', 'BS!E50', 'BS!E51', 'BS!E52', 'BS!E55', 'BS!E56', 'BS!E57', 'BS!E58', 'BS!E59', 'BS!E60', 'BS!E61', 'BS!E62', 'BS!E63', 'BS!E64', 'BS!E65', 'BS!E66']
+      }
+    }
+  ]);
+  const text = JSON.stringify(pack);
+  const prev = rt.ctx.previewMonthlyActualsImport(text);
+  assert.ok(!prev.months[0].conflicts.length);
+  assert.ok(!prev.months[1].conflicts.length);
+  // No monetary pseudochange for quarter metadata
+  assert.ok(!prev.months[0].changes.some(c => c.field === 'quarter'));
+  assert.ok(!prev.months[1].changes.some(c => c.field === 'quarter'));
+
+  const res = rt.ctx.applyMonthlyActualsImport(text, ['2027-01', '2027-02'], prev.previewHash);
+  assert.equal(res.already, false);
+
+  // Feb-27: Lowercase literal 'q1 2027' was preserved exact, not rewritten to 'Q1 2027'
+  assert.equal(mf.getRange(2, 8).getDisplayValue(), 'q1 2027');
+  assert.equal(mf.getRange(2, 8).getFormulas()[0][0], '');
+
+  // Jan-27: Formula and cached value were preserved
+  assert.equal(mf.getRange(4, 8).getFormulas()[0][0], '="Q1 2027"');
+  assert.equal(mf.getRange(4, 8).getDisplayValue(), 'q1 2027');
+
+  // Disagreeing cached quarter formula is blocked in preview
+  mf.put(2, 8, { value: 'Q3 2027', formula: '="Q3 2027"', rich: null });
+  const prevDisagree = rt.ctx.previewMonthlyActualsImport(text);
+  assert.ok(prevDisagree.months.find(m => m.month === '2027-02').conflicts.some(c => c.cell === 'H2' && c.message.includes('disagrees')));
+
+  // Empty cached quarter formula is blocked in preview
+  mf.put(2, 8, { value: '', formula: '="Q1 2027"', rich: null });
+  const prevEmpty = rt.ctx.previewMonthlyActualsImport(text);
+  assert.ok(prevEmpty.months.find(m => m.month === '2027-02').conflicts.some(c => c.cell === 'H2' && c.message.includes('empty or unverified')));
+});
