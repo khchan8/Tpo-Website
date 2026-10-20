@@ -43,7 +43,7 @@ This writes:
 1. In Google Sheets, open **📊 TPO → 1. Enter monthly data → Import accounting actuals…**.
 2. Upload the JSON import pack (`/tmp/tpo-monthly-input-pack.json`).
 3. Click **Preview differences**. Inspect summary counts, month checkboxes, old/new amounts, signed THB differences, percentage changes versus absolute previous values, and source cell provenance.
-4. Select approved months. The latest source actual month is checked by default when it is at least the destination reporting month; historical revisions remain opt-in.
+4. Select approved months individually, or click **Select all months** to check every available month (blocked months remain unselected). The latest source actual month is checked by default when it is at least the destination reporting month; historical revisions remain opt-in. **Unselected historical corrections** updates whenever the selection changes and includes blocked historical corrections until their conflicts are resolved.
 5. Click **Apply selected months**. The script applies approved months in a single transactional write using `backupAndWrite_`, recording previous values and formulas in **Repair Backup**.
 6. Run **📊 TPO → 2. Check & calculate**, review **Data Validation** warnings, and prepare a fresh AI prompt.
 

@@ -2321,7 +2321,6 @@ function monthlyActualsPlan_(pack, targets, selectedMonths) {
       else summary.changedExisting++;
     });
     delete record.packMonth;
-    delete record.historical;
   });
   return { months: records, summary: summary, plan: plan };
 }
@@ -2369,6 +2368,7 @@ function menuImportMonthlyActuals() {
       '<label for="file">JSON import pack</label><input id="file" type="file" accept=".json,application/json">' +
       '<button id="preview" disabled>Preview differences</button>' +
       '<button id="apply" disabled>Apply selected months</button>' +
+      '<button id="select-all" class="secondary" disabled>Select all months</button>' +
       '<button id="close" class="secondary" onclick="google.script.host.close()">Close</button>' +
       '<div id="summary" class="meta"></div>' +
       '<div id="months" style="overflow:auto;max-height:330px;margin-top:8px;border:1px solid #ccd4d5;border-radius:6px;background:white"></div>' +
@@ -2377,19 +2377,28 @@ function menuImportMonthlyActuals() {
       (function () {
         const file = document.getElementById('file'), previewBtn = document.getElementById('preview'),
           applyBtn = document.getElementById('apply'), months = document.getElementById('months'),
+          selectAllBtn = document.getElementById('select-all'),
           summary = document.getElementById('summary'), status = document.getElementById('status');
         const state = { text: null, hash: null, records: null, busy: false };
         const monthCell = key => document.querySelector('input[data-month="' + key + '"]');
         const monthBoxes = () => Array.from(document.querySelectorAll('input[data-month]'));
         function setBusy(busy, label) {
           state.busy = busy;
-          [file, previewBtn, applyBtn].forEach(control => control.disabled = busy ||
-            (control === previewBtn && !state.text) || control === applyBtn);
+          [file, previewBtn, applyBtn, selectAllBtn].forEach(control => control.disabled = busy ||
+            (control === previewBtn && !state.text) || control === applyBtn || control === selectAllBtn);
           if (busy) monthBoxes().forEach(box => box.disabled = true);
           if (busy) { status.className = ''; status.textContent = label; }
           else { file.disabled = false; previewBtn.disabled = !state.text; refreshApply(); }
         }
         function refreshApply() {
+          const boxes = monthBoxes();
+          const selected = new Set(boxes.filter(box => box.checked).map(box => box.dataset.month));
+          const historicalCount = document.getElementById('historical-count');
+          if (historicalCount) historicalCount.textContent = (state.records || []).filter(record =>
+            record.historical && (record.status === 'changed' || record.status === 'blocked') &&
+            !selected.has(record.month)).length;
+          selectAllBtn.disabled = state.busy || !state.hash ||
+            !boxes.some(box => !box.disabled && !box.checked);
           if (state.busy) { applyBtn.disabled = true; return; }
           const ok = state.hash && monthBoxes().some(box => box.checked && !box.disabled);
           applyBtn.disabled = !ok;
@@ -2397,7 +2406,7 @@ function menuImportMonthlyActuals() {
         function invalidatePreview() {
           state.hash = null;
           monthBoxes().forEach(box => { box.checked = false; });
-          applyBtn.disabled = true;
+          refreshApply();
         }
         function thb(cents) {
           if (cents === null || cents === undefined) return 'New value';
@@ -2417,10 +2426,14 @@ function menuImportMonthlyActuals() {
         function render(result) {
           months.textContent = ''; summary.textContent = '';
           const s = result.summary;
-          summary.textContent = 'Changed existing values: ' + s.changedExisting + ' · New values: ' + s.newValues +
-            ' · Unselected historical corrections: ' + s.historicalMonths + ' · Unchanged months: ' + s.unchanged +
+          summary.appendChild(document.createTextNode('Changed existing values: ' + s.changedExisting +
+            ' · New values: ' + s.newValues + ' · Unselected historical corrections: '));
+          const historicalCount = document.createElement('span');
+          historicalCount.id = 'historical-count';
+          summary.appendChild(historicalCount);
+          summary.appendChild(document.createTextNode(' · Unchanged months: ' + s.unchanged +
             ' · Pack: ' + result.source.filename + ' · report ' + result.source.reportMonth +
-            ' · Difference (%) is the change versus the absolute previous value.';
+            ' · Difference (%) is the change versus the absolute previous value.'));
           const hasDifferences = result.months.some(m => m.status === 'changed' || m.status === 'new');
           if (!hasDifferences) {
             status.className = '';
@@ -2503,10 +2516,15 @@ function menuImportMonthlyActuals() {
             table.appendChild(row);
           });
         }
+        selectAllBtn.addEventListener('click', function () {
+          if (state.busy || !state.hash) return;
+          monthBoxes().forEach(box => { if (!box.disabled) box.checked = true; });
+          refreshApply();
+        });
         file.addEventListener('change', function () {
           state.text = null; state.hash = null; state.records = null;
           months.textContent = ''; summary.textContent = '';
-          applyBtn.disabled = true; previewBtn.disabled = !file.files.length;
+          applyBtn.disabled = true; selectAllBtn.disabled = true; previewBtn.disabled = !file.files.length;
           status.className = '';
           status.textContent = file.files.length ? 'Ready to preview ' + file.files[0].name + '.' : '';
         });
@@ -2543,6 +2561,7 @@ function menuImportMonthlyActuals() {
             state.busy = false;
             state.hash = null;
             applyBtn.disabled = true; previewBtn.disabled = false; file.disabled = false;
+            selectAllBtn.disabled = true;
             monthBoxes().forEach(box => box.disabled = true);
             status.className = '';
             status.textContent = (result.already ? 'No writes were needed; the selected months already match the pack. '
