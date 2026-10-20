@@ -8,6 +8,7 @@ directly because openpyxl never calculates formulas.
 
 import importlib.util
 import json
+import os
 import re
 import shutil
 import sys
@@ -546,6 +547,53 @@ class TestCommandLine(ExtractorTestCase):
         self.assertEqual(self.run_main('--source', str(self.tmp / 'nope.xlsx'),
                                        '--output-prefix',
                                        str(self.tmp / 'x')), 2)
+
+    def test_dragged_workbook_writes_same_named_outputs_beside_source(self):
+        source = self.source(name='TPO FS Program (updated 2026-10-14).xlsm')
+        self.assertEqual(self.run_main(str(source)), 0)
+        pack = json.loads(source.with_suffix('.json').read_text())
+        self.assertEqual(pack['schema'], 'tpo-monthly-actuals-v1')
+        self.assertEqual(pack['source']['filename'], source.name)
+        self.assertTrue(source.with_suffix('.xlsx').exists())
+
+    def test_dragged_relative_path_writes_beside_source_not_cwd(self):
+        source = self.source(name='rel.xlsm')
+        previous = os.getcwd()
+        os.chdir(self.tmp)
+        self.addCleanup(os.chdir, previous)
+        self.assertEqual(self.run_main('rel.xlsm'), 0)
+        self.assertTrue(source.with_suffix('.json').exists())
+        self.assertTrue(source.with_suffix('.xlsx').exists())
+
+    def test_dragged_default_outputs_refuse_overwrite(self):
+        source = self.source(name='book.xlsx')
+        source.with_suffix('.json').write_text('old')
+        self.assertEqual(self.run_main(str(source)), 2)
+        self.assertEqual(source.with_suffix('.json').read_text(), 'old')
+        self.assertFalse(source.with_suffix('.review.xlsx').exists())
+
+    def test_dragged_xlsx_source_writes_review_suffixed_copy(self):
+        source = self.source(name='book.xlsx')
+        before = source.read_bytes()
+        self.assertEqual(self.run_main(str(source)), 0)
+        pack = json.loads(source.with_suffix('.json').read_text())
+        self.assertEqual(pack['schema'], 'tpo-monthly-actuals-v1')
+        self.assertTrue(source.with_suffix('.review.xlsx').exists())
+        self.assertEqual(source.read_bytes(), before)
+
+    def test_no_workbook_guides_to_drag_and_drop(self):
+        self.assertEqual(self.run_main(), 2)
+
+    def test_multiple_workbooks_are_rejected(self):
+        first = self.source(name='one.xlsx')
+        second = self.source(name='two.xlsx')
+        self.assertEqual(self.run_main(str(first), str(second)), 2)
+        self.assertFalse(first.with_suffix('.json').exists())
+        self.assertFalse(second.with_suffix('.json').exists())
+
+    def test_positional_and_source_flag_together_are_rejected(self):
+        source = self.source()
+        self.assertEqual(self.run_main(str(source), '--source', str(source)), 2)
 
 
 if __name__ == '__main__':

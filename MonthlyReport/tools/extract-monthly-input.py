@@ -9,6 +9,12 @@ without modifying it and produces:
 * ``<prefix>.xlsx`` — a three-sheet human review copy (MonthlyFinancials,
   1. Working Capital, Source Map).
 
+Dragging the workbook onto this script file (Windows drag-and-drop, or a Linux
+``.desktop`` launcher) passes it as the first argument; without
+``--output-prefix``, the outputs are written beside the source using the
+workbook's own name (a ``.xlsx`` source gets a ``<name>.review.xlsx`` review
+copy so the source is never overwritten).
+
 The source workbook is never written, recalculated or macro-executed, and the
 existing compensation-model outputs are never treated as actuals.  Public API:
 ``extract_monthly_inputs(source) -> dict``, ``write_review_workbook(pack,
@@ -32,17 +38,39 @@ from pathlib import Path
 
 warnings.filterwarnings('ignore', message='Data Validation extension is not supported')
 
+
+def _pause_if_drop_launched() -> None:
+    """Hold open a console Windows created just for this process.
+
+    Explorer-launched drag-and-drop (and double-click) attaches exactly one
+    process to the fresh console; shells and test runners attach themselves as
+    well, so interactive runs never pause. No-op on other platforms and on
+    windowless runs.
+    """
+    if os.name != 'nt':
+        return
+    try:
+        import ctypes
+        attached = ctypes.windll.kernel32.GetConsoleProcessList(None, 0)
+        if attached != 1:
+            return
+        input('\nPress Enter to close...')
+    except (AttributeError, EOFError, OSError, ValueError):
+        pass  # windowless run or closed stdin: nothing to hold open
+
+
 try:
     import openpyxl
     from openpyxl.utils import get_column_letter
     from openpyxl.worksheet.formula import ArrayFormula
 except ImportError as exc:  # pragma: no cover - environment guard
-    raise SystemExit(
-        'openpyxl is required. Install tools/requirements-monthly-input.txt into an '
-        'isolated environment, never system pip, e.g.:\n'
-        '  python3 -m venv /tmp/tpo-monthly-import-venv\n'
-        '  /tmp/tpo-monthly-import-venv/bin/python -m pip install -r '
-        'tools/requirements-monthly-input.txt') from exc
+    print('openpyxl is required. Install tools/requirements-monthly-input.txt into an '
+          'isolated environment, never system pip, e.g.:\n'
+          '  python3 -m venv /tmp/tpo-monthly-import-venv\n'
+          '  /tmp/tpo-monthly-import-venv/bin/python -m pip install -r '
+          'tools/requirements-monthly-input.txt', file=sys.stderr)
+    _pause_if_drop_launched()
+    raise SystemExit(1) from exc
 
 SCHEMA = 'tpo-monthly-actuals-v1'
 MAX_MONTHS = 24
@@ -617,19 +645,41 @@ def write_review_workbook(pack: dict, output: Path) -> None:
     wb.save(output)
 
 
-def main(argv=None) -> int:
+def _run(argv) -> int:
     parser = argparse.ArgumentParser(
         description='Extract a read-only monthly accounting-actuals JSON pack and '
-                    'XLSX review copy from the TPO FS workbook.')
-    parser.add_argument('--source', required=True,
-                        help='accounting .xlsm/.xlsx export (never modified)')
-    parser.add_argument('--output-prefix', required=True,
-                        help='output path without extension; writes <prefix>.json '
-                             'and <prefix>.xlsx')
+                    'XLSX review copy from the TPO FS workbook. Drag the workbook '
+                    'onto this script to write <workbook>.json and <workbook>.xlsx '
+                    'beside it.')
+    parser.add_argument('dropped', nargs='*', metavar='workbook',
+                        help='accounting .xlsm/.xlsx export, e.g. dropped onto this '
+                             'script (never modified)')
+    parser.add_argument('--source',
+                        help='accounting .xlsm/.xlsx export (never modified); '
+                             'alternative to the positional workbook')
+    parser.add_argument('--output-prefix',
+                        help='output path without extension; writes <prefix>.json and '
+                             '<prefix>.xlsx (default: the workbook\'s own name beside '
+                             'the source)')
     args = parser.parse_args(argv)
-    source = Path(args.source)
-    prefix = Path(args.output_prefix)
+    given = list(args.dropped) + ([args.source] if args.source else [])
+    if not given:
+        print('error: no workbook given. Drag the accounting export onto this '
+              'script, or pass it as the first argument or via --source.',
+              file=sys.stderr)
+        return 2
+    if len(given) > 1:
+        names = ', '.join(given)
+        print(f'error: drop or pass exactly one workbook (got {len(given)}: '
+              f'{names}).', file=sys.stderr)
+        return 2
+    source = Path(given[0])
+    resolved_source = source.resolve()
+    prefix = Path(args.output_prefix) if args.output_prefix else \
+        resolved_source.parent / resolved_source.stem
     outputs = [Path(f'{prefix}.json'), Path(f'{prefix}.xlsx')]
+    if not args.output_prefix and outputs[1].resolve(strict=False) == resolved_source:
+        outputs[1] = Path(f'{prefix}.review.xlsx')  # .xlsx source: never self-overwrite
     try:
         if not source.is_file():
             raise MonthlyInputError(f'{source}: source workbook not found.')
@@ -637,7 +687,6 @@ def main(argv=None) -> int:
             if out.exists():
                 raise MonthlyInputError(
                     f'{out}: output already exists; refusing to overwrite.')
-        resolved_source = source.resolve()
         for out in outputs:
             if out.resolve(strict=False) == resolved_source:
                 raise MonthlyInputError(
@@ -668,6 +717,13 @@ def main(argv=None) -> int:
           f"{pack['source']['filename']} (report {pack['source']['reportMonth']}).")
     print(f"Wrote {outputs[0]} and {outputs[1]}.")
     return 0
+
+
+def main(argv=None) -> int:
+    """CLI entry point; a drag-launched console is held open so output stays readable."""
+    rc = _run(argv)
+    _pause_if_drop_launched()
+    return rc
 
 
 if __name__ == '__main__':

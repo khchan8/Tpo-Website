@@ -37,6 +37,8 @@ This writes:
 
 *Prerequisite:* The source workbook must be recalculated and saved in Excel before extraction. Formula cache presence does not prove freshness.
 
+*Drag-and-drop shortcut:* drop the accounting export onto `tools/extract-monthly-input.py`. Windows drag-and-drop passes the file as the first argument (the interpreter owning `.py` needs the pinned openpyxl; the console stays open so the result or error is readable). On Linux, create a `.desktop` launcher with `Exec=<python-with-openpyxl> /path/to/tools/extract-monthly-input.py %f` and `Terminal=true`. Without `--output-prefix`, `<workbook>.json` and `<workbook>.xlsx` are written beside the source with the workbook's own name (a `.xlsx` source gets `<name>.review.xlsx` so the source is never overwritten).
+
 #### 2. Import into Google Sheets
 1. In Google Sheets, open **📊 TPO → 1. Enter monthly data → Import accounting actuals…**.
 2. Upload the JSON import pack (`/tmp/tpo-monthly-input-pack.json`).
