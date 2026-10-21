@@ -6,7 +6,7 @@ Create a new `tpoSalesToken` that provides the most limited access - only showin
 ## Current System Analysis
 - **Authentication System**: Token-based using localStorage and Google Apps Script
 - **Current Tokens**: tpoEmployeeToken, tpoCRMToken, tpoCRMManagerToken, tpoFuzziesToken, tpoTysonToken
-- **Pages with Employee Portal**: index.html, Sales-James.html, erp.html, performance.html, CRMv4.html, CRMv4-M.html, oem-edibles-manufacturing.html, oem-preroll-production.html, stores.html
+- **Pages with Employee Portal**: index.html, Sales-James.html, erp.html, performance.html, CRMv4.html, CRMv4-M.html, oem-gummy-manufacturing.html, oem-herbal-manufacturing.html, stores.html
 - **Employee Portal Structure**: Contains Sales Tools, Performance, ERP, CRM, and Customer Portal sections
 
 ## Implementation Strategy
@@ -67,7 +67,7 @@ Add CSS classes to all Employee Portal dropdown menu items across all pages:
 Modify authentication checks on restricted pages:
 - **Sales-James.html**: Allow access with tpoSalesToken but hide non-sales menu items
 - **performance.html, erp.html, CRMv4.html, etc.**: Block access if user only has tpoSalesToken
-- **Sales Tools pages** (AA-Sales-Tools.html, etc.): Allow access with any token
+- **Sales Tools pages** (HT-Sales-Tools.html, etc.): Allow access with any token
 
 #### Step 4: CSS for Menu Visibility
 Add CSS classes to control visibility:
@@ -97,12 +97,12 @@ body.sales-only-user .menu-customer-portal {
 6. **CRMv4-M.html** - Block sales-only users
 
 #### Should Modify:
-7. **oem-edibles-manufacturing.html** - Consistent Employee Portal
-8. **oem-preroll-production.html** - Consistent Employee Portal
+7. **oem-gummy-manufacturing.html** - Consistent Employee Portal
+8. **oem-herbal-manufacturing.html** - Consistent Employee Portal
 9. **stores.html** - Consistent Employee Portal
 
 #### No Changes Needed:
-- **Tyson-data.html, Fuzzies-data.html** - No Employee Portal dropdown
+- **performance-line-data.html, daily-wellness-data.html** - No Employee Portal dropdown
 
 ### 5. Google Sheet Integration
 No changes needed to the Google Apps Script - the token system already supports multiple tokens per user. Just need to add users with `tpoSalesToken` in the Type column.

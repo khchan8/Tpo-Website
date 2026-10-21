@@ -73,7 +73,7 @@ And for the HTML, make sure the canvas has a proper z-index that's lower than th
 <section id="hero" class="d-flex align-items-center">
   <div class="container" data-aos="fade-up" data-aos-delay="500">
     <h1>Welcome to TPO Wellness</h1>
-    <h2>Your Trusted Cannabis White Label Manufacturer in Thailand</h2>
+    <h2>Your Trusted Supplement &amp; Wellness White Label Manufacturer in Thailand</h2>
     <a href="#about" class="btn-get-started scrollto">Learn More</a>
   </div>
   <!-- Inside the #hero section, before its closing tag -->

@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>TPO Wellness - Daily Wellness Dashboard</title>
+  <meta content="Daily Wellness Line performance metrics and analytics for TPO Wellness" name="description">
+  <meta content="daily wellness, performance, analytics, sales, inventory, production" name="keywords">
+
+  <!-- Favicons -->
+  <link href="assets/img/favicon.png" rel="icon">
+  <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Raleway:300,300i,400,400i,500,500i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="assets/vendor/aos/aos.css" rel="stylesheet">
+  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="assets/vendor/boxicons/css/boxicons.min.css" rel="stylesheet">
+  <link href="assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+  <link href="assets/vendor/remixicon/remixicon.css" rel="stylesheet">
+  <link href="assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+
+  <!-- Template Main CSS File -->
+  <link href="assets/css/style.css" rel="stylesheet">
+
+  <!-- Added jQuery Library -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+  <style>
+    /* Additional styles for performance dashboard */
+    .dashboard-section {
+      padding: 60px 0;
+      overflow: hidden;
+    }
+
+    .dashboard-container {
+      background: #fff;
+      padding: 30px;
+      border-radius: 5px;
+      box-shadow: 0px 0 30px rgba(21, 21, 21, 0.08);
+      margin-bottom: 30px;
+    }
+
+    .dashboard-title {
+      font-size: 20px;
+      font-weight: 700;
+      padding: 0 0 20px 0;
+      margin: 0;
+      color: #151515;
+    }
+
+    .submenu-container {
+      margin-bottom: 40px;
+    }
+
+    .submenu-nav {
+      padding: 0;
+      margin: 0 0 20px 0;
+      list-style: none;
+      background: #f9f9f9;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+
+    .submenu-nav li {
+      display: inline-block;
+      margin: 0;
+      padding: 10px 15px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .submenu-nav li:hover, .submenu-nav li.active {
+      background: #e03a3c;
+      color: #fff;
+    }
+
+    .submenu-content {
+      display: none;
+    }
+
+    .submenu-content.active {
+      display: block;
+    }
+
+    .iframe-container {
+      position: relative;
+      overflow: hidden;
+      width: 100%;
+      padding-top: 56.25%; /* 16:9 Aspect Ratio */
+    }
+
+    .responsive-iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      right: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .loader {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+    }
+
+    .loader .spinner-border {
+      width: 3rem;
+      height: 3rem;
+    }
+    /* Top Bar Visibility Logic */
+    #topbar .user-info { display: none; } /* Hide user info by default */
+    #topbar .contact-info { display: flex; } /* Show contact info by default */
+    #topbar #loginStatus { /* Style for login status text */
+         font-size: 14px;
+         color: #fff; /* White text on dark top bar */
+         /* Add margin if needed, e.g., margin-right: 15px; */
+    }
+
+    /* Desktop: Logged in - Show both */
+    @media (min-width: 768px) { /* Adjust breakpoint as needed (e.g., 992px for lg) */
+       body.logged-in #topbar .contact-info { display: flex !important; } /* Ensure contact is shown */
+       body.logged-in #topbar .user-info { display: flex !important; } /* Ensure user info is shown */
+    }
+
+    /* Mobile: Logged in - Show only user info */
+    @media (max-width: 767.98px) { /* Adjust breakpoint as needed */
+       body.logged-in #topbar .contact-info { display: none !important; } /* Hide contact */
+       body.logged-in #topbar .user-info { display: flex !important; } /* Show user info */
+    }
+    /* Logout button styles removed */
+  </style>
+</head>
+
+<body>
+
+  <!-- ======= Top Bar ======= -->
+  <section id="topbar" class="d-flex align-items-center">
+    <div class="container d-flex justify-content-center justify-content-md-between">
+      <!-- Contact Info (Visibility controlled by JS/CSS) -->
+      <div class="contact-info d-flex align-items-center">
+        <i class="bi bi-envelope d-flex align-items-center"><a href="mailto:info@tpo-wellness.com">info@tpo-wellness.com</a></i>
+        <i class="bi bi-phone d-flex align-items-center ms-4"><span>+66 87 789 4950</span></i>
+      </div>
+      <!-- User Info (Re-added for status display) -->
+      <div class="user-info d-flex align-items-center" style="display: none;"> <!-- Initially hidden -->
+          <span id="loginStatus"></span>
+          <!-- Logout Button REMOVED from here -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ======= Header ======= -->
+  <header id="header" class="d-flex align-items-center">
+    <div class="container d-flex align-items-center justify-content-between">
+      <h1 class="logo"><a href="index.html"><img src="./assets/img/TPOLogo.png" alt="TPO Wellness Logo" class="img-fluid"></a></h1>
+      <nav id="navbar" class="navbar">
+        <ul>
+          <li><a class="nav-link scrollto" href="index.html">Home</a></li>
+          <li><a class="nav-link scrollto active" href="#daily-wellness-data">Daily Wellness Data</a></li>
+          <li><a class="nav-link" href="https://docs.google.com/spreadsheets/d/1kbn0HL0STM9-gkZRnKTfTqvy-TYBet59AeKSuqJKVxA">Daily Wellness Dashboard</a></li> <!-- Keep CRM Link -->
+          <li><a class="nav-link" href="CRMv4.html">CRM</a></li> <!-- Keep CRM Link -->
+          <!-- Login Link (Initially Visible, hidden by JS if logged in) -->
+          <!-- Dynamic Login/Logout Link -->
+          <li id="loginLogoutItem"><a id="loginLogoutLink" class="nav-link" href="#">Login</a></li>
+        </ul>
+        <i class="bi bi-list mobile-nav-toggle"></i>
+      </nav><!-- .navbar -->
+    </div>
+  </header><!-- End Header -->
+
+  <!-- ======= Hero Section ======= -->
+  <section id="hero" class="d-flex align-items-center">
+    <div class="container position-relative" data-aos="fade-up" data-aos-delay="500">
+      <h1>Daily Wellness Performance Dashboard</h1>
+      <h2>Daily Wellness Line Analytics and Business Intelligence</h2>
+      <a href="#daily-wellness-data" class="btn-get-started scrollto">View Reports</a>
+    </div>
+    <!-- Add the canvas for energy stream effect -->
+    <canvas class="energy-stream-canvas" id="hero-energy-stream"></canvas>
+  </section><!-- End Hero -->
+
+  <main id="main">
+
+    <!-- ======= Daily Wellness Data Section ======= -->
+    <section id="daily-wellness-data" class="dashboard-section">
+      <div class="container" data-aos="fade-up">
+        <div class="section-title">
+          <span>Daily Wellness Data</span>
+          <h2>Daily Wellness Data</h2>
+          <p>Analyze Daily Wellness Line performance and trends</p>
+        </div>
+
+        <div class="submenu-container">
+          <ul class="submenu-nav" id="white-label-submenu"> <!-- Keep original ID or make unique if needed -->
+            <li class="active" data-target="client-performance">Daily Wellness Performance</li>
+            <li data-target="product-popularity">Product Popularity</li>
+            <li data-target="client-growth">Client Growth</li>
+            <li data-target="samples-unit">Samples Unit</li>
+          </ul>
+
+          <!-- Client Performance -->
+          <div class="submenu-content active" id="client-performance">
+            <div class="dashboard-container">
+              <h3 class="dashboard-title">Daily Wellness Performance</h3>
+              <div class="iframe-container">
+                <div id="client-performance-loader" class="loader">
+                  <div class="spinner-border text-danger" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
+                </div>
+                <iframe id="client-performance-iframe" class="responsive-iframe" src="about:blank" data-src="https://lookerstudio.google.com/embed/reporting/acb2de1d-c764-4f44-ad81-0eebe38f0ac3/page/KrJ6E" frameborder="0" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"></iframe>
+              </div>
+            </div>
+          </div>
+
+          <!-- Product Popularity -->
+          <div class="submenu-content" id="product-popularity">
+            <div class="dashboard-container">
+              <h3 class="dashboard-title">Product Popularity</h3>
+              <div class="iframe-container">
+                <div id="product-popularity-loader" class="loader">
+                  <div class="spinner-border text-danger" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
+                </div>
+                <iframe id="product-popularity-iframe" class="responsive-iframe" src="about:blank" data-src="https://lookerstudio.google.com/embed/reporting/11b54691-1e79-4300-91f3-1b616e13a4e6/page/KrJ6E" frameborder="0" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"></iframe>
+              </div>
+            </div>
+          </div>
+
+          <!-- Client Growth -->
+          <div class="submenu-content" id="client-growth">
+            <div class="dashboard-container">
+              <h3 class="dashboard-title">Client Growth</h3>
+              <div class="iframe-container">
+                <div id="client-growth-loader" class="loader">
+                  <div class="spinner-border text-danger" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
+                </div>
+                <iframe id="client-growth-iframe" class="responsive-iframe" src="about:blank" data-src="https://lookerstudio.google.com/embed/reporting/1f103099-6a94-4159-a7e3-486036c9e428/page/KrJ6E" frameborder="0" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"></iframe>
+              </div>
+            </div>
+          </div>
+
+          <!-- Samples Unit -->
+          <div class="submenu-content" id="samples-unit">
+            <div class="dashboard-container">
+              <h3 class="dashboard-title">Samples Unit</h3>
+              <div class="iframe-container">
+                <div id="samples-unit-loader" class="loader">
+                  <div class="spinner-border text-danger" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
+                </div>
+                <iframe id="samples-unit-iframe" class="responsive-iframe" src="about:blank" data-src="https://lookerstudio.google.com/embed/reporting/ec018ecd-729e-47c2-bc91-b3ad7040ac77/page/KrJ6E" frameborder="0" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"></iframe>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section><!-- End Daily Wellness Data Section -->
+
+  </main><!-- End #main -->
+
+  <!-- ======= Footer ======= -->
+  <footer id="footer">
+    <div class="footer-top">
+      <div class="container">
+        <div class="row">
+
+          <div class="col-lg-4 col-md-6">
+            <div class="footer-info">
+              <h3>TPO Wellness</h3>
+              <p>
+                TPO Wellness Ltd. (Head Office)<br>
+                No. 122/7 Moo5, Pakkret Sub-District, Pakkret District.<br>
+                Nonthaburi Province 11120<br><br>
+                <strong>Phone:</strong> +66 87 789 4950<br>
+                <strong>Email:</strong> info@tpo-wellness.com<br>
+              </p>
+              <div class="social-links mt-3">
+                <a href="#" class="twitter"><i class="bx bxl-twitter"></i></a>
+                <a href="#" class="facebook"><i class="bx bxl-facebook"></i></a>
+                <a href="#" class="instagram"><i class="bx bxl-instagram"></i></a>
+                <a href="#" class="linkedin"><i class="bx bxl-linkedin"></i></a>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-2 col-md-6 footer-links">
+            <h4>Useful Links</h4>
+            <ul>
+              <li><i class="bx bx-chevron-right"></i> <a href="index.html">Home</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="#daily-wellness-data">Daily Wellness Data</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="#">Terms of service</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="#">Privacy policy</a></li>
+            </ul>
+          </div>
+
+          <div class="col-lg-2 col-md-6 footer-links">
+            <h4>Our Services</h4>
+            <ul>
+              <li><i class="bx bx-chevron-right"></i> <a href="#">Supplement Gummy OEM Manufacturing</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="#">White-Label &amp; Private-Label Gummies</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="#">Herbal Shop &amp; Traditional Clinic</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="#">R&D Services</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="#">Quality Control & Assurance</a></li>
+            </ul>
+          </div>
+
+          <div class="col-lg-4 col-md-6 footer-newsletter">
+            <h4>Our Newsletter</h4>
+            <p>Subscribe to our newsletter for the latest updates on our products and services</p>
+            <form id="newsletterForm">
+              <input type="email" name="email" required><input type="submit" value="Subscribe">
+            </form>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="copyright">
+        © Copyright <strong><span>TPO Wellness</span></strong>. All Rights Reserved
+      </div>
+      <div class="credits">
+        Designed by <a href="#">KH</a>
+      </div>
+    </div>
+  </footer><!-- End Footer -->
+
+  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+  <div id="preloader"></div>
+
+  <!-- Vendor JS Files -->
+  <script src="assets/vendor/aos/aos.js"></script>
+  <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/vendor/glightbox/js/glightbox.min.js"></script>
+  <script src="assets/vendor/isotope-layout/isotope.pkgd.min.js"></script>
+  <script src="assets/vendor/swiper/swiper-bundle.min.js"></script>
+
+  <!-- Template Main JS File -->
+  <script src="assets/js/main.js"></script>
+
+  <!-- Added JavaScript for Form Submission -->
+  <script>
+    $(document).ready(function() {
+      // Form submission handler for newsletter form
+      $('#newsletterForm').submit(function(e) {
+        e.preventDefault();
+
+        var $form = $(this);
+        var formData = {
+          action: 'newsletter'
+        };
+
+        $form.serializeArray().forEach(function(item) {
+          formData[item.name] = item.value;
+        });
+
+        submitForm(formData, $form);
+      });
+
+      function submitForm(formData, $form) {
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbwJDAeDBi1-_iodvcl_4bFZ6HlFXouWRkZ0kiCOlj7g4lXbI6yXQsi33QjAVYMYKb09/exec';
+
+        fetch(scriptURL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(formData)
+        })
+        .then(response => {
+          console.log('Response (no-cors):', response);
+          $form.find('.loading').hide();
+          $('#newsletterForm .sent-message').text('Thank you for subscribing!').show();
+          $('#newsletterForm')[0].reset();
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          $form.find('.loading').hide();
+          $form.find('.error-message').text('An error occurred during form submission.').show();
+        });
+      }
+
+      // Function to load iframe content
+      function loadIframeContent(iframeId, loaderId) {
+        var iframe = $('#' + iframeId);
+        var loader = $('#' + loaderId);
+
+        if (iframe.length && loader.length && iframe.data('src')) {
+          // Show loader
+          loader.show();
+
+          // Set the iframe src from data-src attribute
+          if (iframe.attr('src') === 'about:blank') {
+            iframe.attr('src', iframe.data('src'));
+          } else {
+            // If already loaded once, reload to ensure proper rendering
+            iframe.attr('src', iframe.attr('src'));
+          }
+
+          // Remove any existing load handlers to prevent multiple handlers
+          iframe.off('load');
+
+          // Hide loader when iframe is loaded
+          iframe.on('load', function() {
+            setTimeout(function() {
+              loader.fadeOut();
+            }, 1500); // Give extra time for the report to render
+          });
+        }
+      }
+
+      // Submenu navigation functionality
+      $('.submenu-nav li').click(function() {
+        var targetId = $(this).data('target');
+        var parentContainer = $(this).closest('.submenu-container');
+
+        // Update active class on nav items
+        $(this).siblings().removeClass('active');
+        $(this).addClass('active');
+
+        // Show the target content and hide others
+        parentContainer.find('.submenu-content').removeClass('active');
+        parentContainer.find('#' + targetId).addClass('active');
+
+        // Handle iframe loading for Looker Studio reports
+        var iframeId = targetId + '-iframe';
+        var loaderId = targetId + '-loader';
+
+        // Special case for sales-by-agent which might have a different ID pattern
+        if (targetId === 'sales-by-agent') {
+          iframeId = 'sales-agent-iframe';
+          loaderId = 'sales-agent-loader';
+        }
+
+        loadIframeContent(iframeId, loaderId);
+      });
+
+      // Load all active tabs on page load
+      function loadInitialTabs() {
+        // Get all active submenu content sections
+        $('.submenu-content.active').each(function() {
+          var tabId = $(this).attr('id');
+          var iframeId = tabId + '-iframe';
+          var loaderId = tabId + '-loader';
+
+          // Special case for sales-by-agent
+          if (tabId === 'sales-by-agent') {
+            iframeId = 'sales-agent-iframe';
+            loaderId = 'sales-agent-loader';
+          }
+
+          loadIframeContent(iframeId, loaderId);
+        });
+      }
+
+      // Load initial tabs when document is ready
+      loadInitialTabs();
+
+      // Check if we need to load iframes on page load based on URL hash
+      if (window.location.hash) {
+        var targetId = window.location.hash.substring(1);
+        $('li[data-target="' + targetId + '"]').click();
+      }
+    });
+  </script>
+
+  <!-- Add the energy stream effect JavaScript before closing body tag -->
+  <script>
+    // --- Flowing Energy Stream Effect (Section Specific) ---
+    window.addEventListener('load', function() {
+        const canvases = document.querySelectorAll('.energy-stream-canvas');
+        if (canvases.length === 0) {
+            console.warn("No elements with class '.energy-stream-canvas' found.");
+            return;
+        }
+
+        let animationFrameId = null;
+        let time = 0; // Shared time/phase offset
+
+        // --- Effect Configuration ---
+        const config = {
+            streamColor: '#1e56a0', // Theme blue
+            glowColor: 'rgba(30, 86, 160, 0.5)', // Theme blue with alpha for glow
+            glowBlur: 18,
+            numStreamLayers: 8,
+            streamLineWidthBase: 4.0,
+            streamAlphaBase: 0.05,
+            numParticles: 150,
+            particleColor: 'rgba(255, 255, 255, 0.7)',
+            particleSize: 6.4,
+            particleSpeedFactor: 0.5
+        };
+
+        // Wave parameters for each layer
+        const layerParams = [];
+        for (let i = 0; i < config.numStreamLayers; i++) {
+            layerParams.push({
+                freq1: 0.005 + Math.random() * 0.01,
+                amp1: (20 + Math.random() * 30) * 4,
+                speed1: 0.01 + Math.random() * 0.01,
+                freq2: 0.01 + Math.random() * 0.03,
+                amp2: (5 + Math.random() * 15) * 4,
+                speed2: 0.02 + Math.random() * 0.03,
+                phaseOffset: Math.random() * Math.PI * 2,
+                alpha: config.streamAlphaBase + (Math.random() * 0.1),
+                lineWidth: config.streamLineWidthBase + Math.random() * 1.0
+            });
+        }
+
+        const activeCanvases = [];
+
+        // --- Particle Class ---
+        class Particle {
+            constructor(canvasWidth, canvasHeight, streamCenterYFunc) {
+                this.width = canvasWidth;
+                this.height = canvasHeight;
+                this.getStreamCenterY = streamCenterYFunc;
+                this.reset();
+            }
+
+            reset() {
+                this.x = Math.random() * this.width;
+                this.y = Math.random() * this.height;
+                this.vx = (Math.random() - 0.5) * 2 * config.particleSpeedFactor;
+                this.vy = (Math.random() - 0.5) * 0.5 * config.particleSpeedFactor;
+                this.life = 0;
+                this.maxLife = 50 + Math.random() * 100;
+                this.alpha = 0;
+                this.targetAlpha = 0.5 + Math.random() * 0.4;
+            }
+
+            update() {
+                this.life++;
+                const streamY = this.getStreamCenterY(this.x);
+                this.vy += (streamY - this.y) * 0.005 * config.particleSpeedFactor;
+                this.vx += (Math.random() - 0.5) * 0.1 * config.particleSpeedFactor;
+                this.vy += (Math.random() - 0.5) * 0.1 * config.particleSpeedFactor;
+                this.vx *= 0.96;
+                this.vy *= 0.96;
+                this.x += this.vx;
+                this.y += this.vy;
+                if (this.life < 30) this.alpha += (this.targetAlpha - this.alpha) * 0.1;
+                else this.alpha += (this.targetAlpha - this.alpha) * 0.05;
+
+                if (this.life > this.maxLife || this.alpha < 0.01 || this.x < -10 || this.x > this.width + 10) {
+                    this.reset();
+                    this.y = this.getStreamCenterY(this.x) + (Math.random() - 0.5) * 50;
+                    this.alpha = 0;
+                }
+            }
+
+            draw(ctx) {
+                if (this.alpha <= 0.01) return;
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.alpha * 0.7})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, config.particleSize, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function setupCanvas(canvas) {
+            const ctx = canvas.getContext('2d');
+            if (!ctx) { console.error("No context for", canvas.id); return null; }
+
+            const parentRect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = parentRect.width || 300;
+            canvas.height = parentRect.height || 150;
+
+            const getStreamCenterY = (xPos) => {
+                let avgY = canvas.height * 0.75;
+                let totalAmpEffect = 0;
+                layerParams.forEach((p, i) => {
+                    const phase1 = time * p.speed1 + p.phaseOffset;
+                    const phase2 = time * p.speed2 * (i % 2 === 0 ? 1 : -1.1) + p.phaseOffset;
+                    const freqScale = (Math.PI / 180) * (canvas.width / 150);
+                    const y1 = Math.sin(xPos * p.freq1 * freqScale + phase1) * p.amp1;
+                    const y2 = Math.sin(xPos * p.freq2 * freqScale + phase2) * p.amp2;
+                    totalAmpEffect += (y1 + y2);
+                });
+                return avgY + (totalAmpEffect / layerParams.length) * 0.8;
+            };
+
+            const particles = [];
+            for (let i = 0; i < config.numParticles; i++) {
+                particles.push(new Particle(canvas.width, canvas.height, getStreamCenterY));
+            }
+
+            return { canvas, ctx, width: canvas.width, height: canvas.height, particles, getStreamCenterY };
+        }
+
+        function drawEffect(canvasData) {
+            const { canvas, ctx, width, height, particles } = canvasData;
+
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+            ctx.fillRect(0, 0, width, height);
+
+            ctx.save();
+            ctx.globalCompositeOperation = 'lighter';
+            ctx.shadowColor = config.glowColor;
+            ctx.shadowBlur = config.glowBlur;
+
+            layerParams.forEach((p, i) => {
+                ctx.beginPath();
+                ctx.lineWidth = p.lineWidth;
+                const layerBrightness = 70 + Math.sin(i / config.numStreamLayers * Math.PI) * 10;
+                const baseHue = 217;
+                const baseSaturation = 70;
+                ctx.strokeStyle = `hsla(${baseHue}, ${baseSaturation}%, ${layerBrightness}%, ${p.alpha})`;
+
+                const centerY = height * 0.75;
+                for (let x = -10; x < width + 10; x += 5) {
+                    let y = centerY;
+                    const phase1 = time * p.speed1 + p.phaseOffset;
+                    const phase2 = time * p.speed2 * (i % 2 === 0 ? 1 : -1.1) + p.phaseOffset;
+                    const freqScale = (Math.PI / 180) * (width / 150);
+                    const y1 = Math.sin(x * p.freq1 * freqScale + phase1) * p.amp1;
+                    const y2 = Math.sin(x * p.freq2 * freqScale + phase2) * p.amp2;
+                    y += y1 + y2;
+
+                    if (x <= -5) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+                ctx.stroke();
+            });
+            ctx.restore();
+
+            particles.forEach(p => {
+                p.update();
+                p.draw(ctx);
+            });
+        }
+
+        function loop() {
+            time += 1;
+            activeCanvases.forEach(canvasData => {
+                if (canvasData) drawEffect(canvasData);
+            });
+            animationFrameId = requestAnimationFrame(loop);
+        }
+
+        function initialize() {
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            activeCanvases.length = 0;
+
+            canvases.forEach(canvas => {
+                const canvasData = setupCanvas(canvas);
+                if (canvasData) activeCanvases.push(canvasData);
+            });
+
+            if (activeCanvases.length > 0) loop();
+        }
+
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(initialize, 250);
+        });
+
+        initialize();
+    });
+  </script>
+
+  <!-- Authentication & Authorization Script -->
+  <script>
+    // --- Global Variables ---
+    // Function to detect mobile devices
+    function isMobileDevice() {
+      return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    }
+    // Set login page based on device
+    const loginPage = isMobileDevice() ? 'tpologin-m.html' : 'tpologin.html';
+    const requiredToken = 'tpoFuzziesToken'; // Specific token for this page
+
+    // --- Helper: Redirect to Login ---
+    function redirectToLogin(reason) {
+      console.log('Redirecting to login: ' + reason);
+      localStorage.removeItem('tpoSessionToken');
+      localStorage.removeItem('tpoGrantedTokens');
+      localStorage.removeItem('tpoCrmApiToken'); // Clear potentially related tokens
+      localStorage.removeItem('tpoUserEmail');
+      const redirectUrl = loginPage + '?redirectUrl=' + encodeURIComponent(window.location.pathname + window.location.search) + '&error=' + encodeURIComponent(reason);
+      window.top.location.href = redirectUrl;
+    }
+
+    // --- Logout Function ---
+    function logout() {
+        console.log("Logging out...");
+        localStorage.removeItem('tpoSessionToken');
+        localStorage.removeItem('tpoGrantedTokens');
+        localStorage.removeItem('tpoCrmApiToken');
+        localStorage.removeItem('tpoUserEmail');
+        window.top.location.href = loginPage;
+    }
+
+    // --- Authorization Check (Runs on Load - LOCAL STORAGE ONLY) ---
+    function checkAuthorization(specificRequiredToken) { // Added parameter
+      const sessionToken = localStorage.getItem('tpoSessionToken');
+      const userEmail = localStorage.getItem('tpoUserEmail');
+      const grantedTokensString = localStorage.getItem('tpoGrantedTokens');
+
+      console.log(`Checking local authentication for Daily Wellness page, requiring: ${specificRequiredToken}`);
+
+      // Get UI elements for Navbar and Topbar
+      const loginLogoutLink = document.getElementById('loginLogoutLink');
+      // const employeePortalDropdown = document.getElementById('employeePortalDropdown'); // Not on this page
+      const loginStatusSpan = document.getElementById('loginStatus'); // Re-add for top bar status
+      const bodyElement = document.body; // Needed for body class
+
+      // Check if elements exist before manipulating
+      if (!loginLogoutLink || !loginStatusSpan || !bodyElement) {
+          console.error("Required UI elements for auth check not found (loginLogoutLink, loginStatusSpan, body).");
+          // Don't redirect, just log error, as basic page content might still be viewable
+          return; // Indicate failure but don't redirect (checkAuthentication equivalent handles redirect)
+      }
+
+      if (!sessionToken || !grantedTokensString) {
+        console.log("Session or permissions not found locally.");
+        bodyElement.classList.remove('logged-in'); // Ensure logged-out state
+        loginStatusSpan.textContent = ''; // Clear status
+        // Configure Login link
+        loginLogoutLink.textContent = 'Login';
+        loginLogoutLink.href = loginPage;
+        loginLogoutLink.onclick = null;
+        // No Employee Portal to hide
+        redirectToLogin('Session or permissions not found locally. Please login.'); // Redirect if essential tokens missing
+        return;
+      }
+
+      console.log('Session token and granted tokens string found locally.');
+
+      let grantedTokens = [];
+      try {
+        grantedTokens = JSON.parse(grantedTokensString);
+         if (!Array.isArray(grantedTokens)) {
+           console.error('Parsed grantedTokens is not an array:', grantedTokensString);
+           // Configure Login link before redirect
+           bodyElement.classList.remove('logged-in'); // Ensure logged-out state
+           loginStatusSpan.textContent = ''; // Clear status
+           loginLogoutLink.textContent = 'Login';
+           loginLogoutLink.href = loginPage;
+           loginLogoutLink.onclick = null;
+           redirectToLogin('Invalid local permissions format. Please login again.');
+           return;
+         }
+      } catch (e) {
+        console.error('Error parsing granted tokens from localStorage:', e);
+        // Configure Login link before redirect
+        bodyElement.classList.remove('logged-in'); // Ensure logged-out state
+        loginStatusSpan.textContent = ''; // Clear status
+        loginLogoutLink.textContent = 'Login';
+        loginLogoutLink.href = loginPage;
+        loginLogoutLink.onclick = null;
+        redirectToLogin('Error reading local permissions. Please login again.');
+        return;
+      }
+
+      // Check for the *specific* required token for this page
+      if (!grantedTokens.includes(specificRequiredToken)) {
+          // Configure Login link before redirect
+          bodyElement.classList.remove('logged-in'); // Ensure logged-out state
+          loginStatusSpan.textContent = ''; // Clear status
+          loginLogoutLink.textContent = 'Login';
+          loginLogoutLink.href = loginPage;
+          loginLogoutLink.onclick = null;
+          redirectToLogin(`Access denied. Required permission (${specificRequiredToken}) not found.`);
+          return;
+      }
+
+      // User is logged in AND has the required token
+      console.log("Authorization successful.");
+      bodyElement.classList.add('logged-in'); // Add class for CSS rules
+
+      // Update Top Bar Status
+      if (userEmail) {
+          loginStatusSpan.textContent = `Logged in as: ${userEmail}`;
+      } else {
+          loginStatusSpan.textContent = `Logged in`; // Fallback
+      }
+
+      // Configure Logout link
+      loginLogoutLink.textContent = 'Logout';
+      loginLogoutLink.href = '#'; // Set href to # to prevent navigation
+      loginLogoutLink.onclick = (e) => { // Add onclick handler
+          e.preventDefault(); // Prevent default link behavior
+          logout();
+      };
+      // No Employee Portal to show/hide on this page
+
+    }
+
+    // --- Run Authentication Check on Page Load ---
+    document.addEventListener('DOMContentLoaded', () => checkAuthorization(requiredToken)); // Pass the specific token
+  </script>
+
+</body>
+</html>

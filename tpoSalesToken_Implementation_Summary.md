@@ -22,8 +22,8 @@ The tpoSalesToken system has been successfully implemented across all relevant p
 - ✅ **CRMv4-M.html** - Blocks sales-only users with specific error message
 
 #### Consistency Updates (Menu Structure Only):
-- ✅ **oem-edibles-manufacturing.html** - Added CSS classes to menu items
-- ✅ **oem-preroll-production.html** - Added CSS classes to menu items
+- ✅ **oem-gummy-manufacturing.html** - Added CSS classes to menu items
+- ✅ **oem-herbal-manufacturing.html** - Added CSS classes to menu items
 - ✅ **stores.html** - Added CSS classes to menu items
 
 ### 3. Technical Implementation
@@ -37,7 +37,7 @@ The tpoSalesToken system has been successfully implemented across all relevant p
 
 #### Authentication Logic:
 - **Sales-only detection**: `tokensArray.length === 1 && tokensArray.includes('tpoSalesToken')`
-- **Body class management**: Adds `.sales-only-user` class for CSS targeting
+- **Body class handling**: Adds `.sales-only-user` class for CSS targeting
 - **Selective menu hiding**: JavaScript hides non-sales menu items for sales-only users
 - **Page-level blocking**: Each protected page checks for sales-only users and redirects
 
@@ -54,7 +54,7 @@ The tpoSalesToken system has been successfully implemented across all relevant p
 3. **Expected Results**:
    - ✅ Employee Portal dropdown shows only "Sales Tools"
    - ✅ Can access Sales-James.html
-   - ✅ Can access all Sales Tools pages (AA-Sales-Tools.html, etc.)
+   - ✅ Can access all Sales Tools pages (HT-Sales-Tools.html, etc.)
    - ❌ Blocked from performance.html (redirect to login)
    - ❌ Blocked from erp.html (redirect to login)
    - ❌ Blocked from CRMv4.html (redirect to login)

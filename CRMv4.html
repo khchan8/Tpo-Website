@@ -171,10 +171,10 @@
                 <ul>
                   <li class="dropdown menu-sales-tools"><a href="#"><span>Sales Tools</span> <i class="bi bi-chevron-right"></i></a>
                     <ul>
-                      <li><a href="AA-Sales-Tools.html">Auntie Aloha</a></li>
-                      <li><a href="MC-Sales-Tools.html">Mana Cannabis</a></li>
-                      <li><a href="TF-Sales-Tools.html">Fuzzies</a></li>
-                      <li><a href="TY-Sales-Tools.html">Tyson</a></li>
+                      <li><a href="HT-Sales-Tools.html">Herbal &amp; Traditional</a></li>
+                      <li><a href="SR-Sales-Tools.html">Sleep &amp; Relax</a></li>
+                      <li><a href="DW-Sales-Tools.html">Daily Wellness</a></li>
+                      <li><a href="PP-Sales-Tools.html">Peak Performance</a></li>
                     </ul>
                   </li>
                   <li class="menu-performance"><a href="performance.html">Performance</a></li>
@@ -182,8 +182,8 @@
                   <li><a href="CRMv4.html">CRM</a></li>
                   <li class="dropdown menu-customer-portal"><a href="#"><span>Customer Portal</span> <i class="bi bi-chevron-right"></i></a>
                      <ul>
-                       <li><a href="Fuzzies-data.html">Fuzzies</a></li>
-                       <li><a href="Tyson-data.html">Tyson</a></li>
+                       <li><a href="daily-wellness-data.html">Daily Wellness</a></li>
+                       <li><a href="performance-line-data.html">Peak Performance</a></li>
                      </ul>
                   </li>
                 </ul>
@@ -227,8 +227,8 @@
                             </select>
                         </div>
                         <div class="form-group col-md-6">
-                            <label for="searchDispensary">Filter Dispensary Name</label>
-                            <input type="text" id="searchDispensary" class="form-control" placeholder="Type Dispensary Name...">
+                            <label for="searchDispensary">Filter Shop Name</label>
+                            <input type="text" id="searchDispensary" class="form-control" placeholder="Type Shop Name...">
                         </div>
                     </div>
                     <div class="form-row">
@@ -240,7 +240,7 @@
                             </select>
                         </div>
                         <div class="form-group col-md-6">
-                            <label for="filterDispensaryAddress">Filter Dispensary Address</label>
+                            <label for="filterDispensaryAddress">Filter Shop Address</label>
                             <input type="text" id="filterDispensaryAddress" class="form-control" placeholder="Type Address...">
                         </div>
                     </div>
@@ -255,20 +255,20 @@
             <!-- Dispensary Info Section -->
             <div class="collapsible-section active" id="dispensaryInfoSection">
                 <div class="collapsible-header">
-                    <span>Dispensary Information</span>
+                    <span>Retail Partner Information</span>
                     <i class="fas fa-chevron-down collapsible-icon"></i>
                 </div>
                 <div class="collapsible-content">
                    <div class="form-row">
                         <div class="form-group col-md-6">
-                            <label for="selectDispensary">Select Dispensary</label>
+                            <label for="selectDispensary">Select Retail Partner</label>
                             <select id="selectDispensary" class="form-control" name="selectDispensary" required>
-                                <option value="">Select a dispensary</option>
-                                <option value="new">New Dispensary</option>
+                                <option value="">Select a retail partner</option>
+                                <option value="new">New Retail Partner</option>
                             </select>
                         </div>
                          <div class="form-group col-md-6" id="newDispensaryNameGroup" style="display: none;">
-                            <label for="newDispensaryName">New Dispensary Name <span class="required-indicator">*</span></label>
+                            <label for="newDispensaryName">New Retail Partner Name <span class="required-indicator">*</span></label>
                             <input type="text" id="newDispensaryName" class="form-control" name="newDispensaryName" placeholder="Enter new shop name">
                         </div>
                     </div>
@@ -291,7 +291,7 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="dispensaryAddress">Dispensary Address<span class="required-indicator">*</span></label>
+                        <label for="dispensaryAddress">Shop Address<span class="required-indicator">*</span></label>
                         <input type="text" id="dispensaryAddress" class="form-control" name="Dispensary Address" required placeholder="Enter full address">
                     </div>
                      <!-- Lat/Lon and Map -->
@@ -496,9 +496,9 @@
             <div class="col-lg-2 col-md-6 footer-links">
                 <h4>Our Services</h4>
                 <ul>
-                <li><i class="bx bx-chevron-right"></i> <a href="#">Edibles Manufacturing</a></li>
-                <li><i class="bx bx-chevron-right"></i> <a href="#">Pre-Roll Production</a></li>
-                <li><i class="bx bx-chevron-right"></i> <a href="#">Cannabis Flower Packaging</a></li>
+                <li><i class="bx bx-chevron-right"></i> <a href="#">Supplement Gummy OEM Manufacturing</a></li>
+                <li><i class="bx bx-chevron-right"></i> <a href="#">White-Label &amp; Private-Label Gummies</a></li>
+                <li><i class="bx bx-chevron-right"></i> <a href="#">Herbal Shop &amp; Traditional Clinic</a></li>
                 <li><i class="bx bx-chevron-right"></i> <a href="#">R&D Services</a></li>
                 <li><i class="bx bx-chevron-right"></i> <a href="#">Quality Control & Assurance</a></li>
                 </ul>
@@ -879,7 +879,7 @@
             }
 
             function fetchFreshData(showLoadingIndicator = true) {
-                if(showLoadingIndicator) showLoading('Fetching dispensary data...');
+                if(showLoadingIndicator) showLoading('Fetching retail partner data...');
                 const sessionToken = localStorage.getItem('tpoSessionToken'); // Use Session token
                 if (!sessionToken) {
                     console.error("Cannot fetch data: Session token missing.");
@@ -905,8 +905,8 @@
                             cacheData('dispensaryData', data.data);
                             populateDispensarySelect();
                         } else {
-                            console.error('Error fetching dispensary data:', data ? data.message : 'Invalid response');
-                            showMessage(errorMessageElement, 'Error fetching dispensary list: ' + (data ? data.message : 'Invalid response'));
+                            console.error('Error fetching retail partner data:', data ? data.message : 'Invalid response');
+                            showMessage(errorMessageElement, 'Error fetching retail partner list: ' + (data ? data.message : 'Invalid response'));
                         }
                     })
                     .catch(error => {
@@ -916,7 +916,7 @@
                             showMessage(errorMessageElement, 'Your session has expired. Please log in again.');
                             logout(); // Redirect to login on unauthorized
                         } else {
-                            showMessage(errorMessageElement, 'Network or server error fetching dispensary list: ' + error);
+                            showMessage(errorMessageElement, 'Network or server error fetching retail partner list: ' + error);
                         }
                     });
             }
@@ -1059,7 +1059,7 @@
                 const addressFilter = currentAddressFilter.toLowerCase(); // Use stored value for filtering logic
                 const additionalFilter = currentAdditionalFilter.toLowerCase(); // Use stored value for filtering logic
 
-                selectDispensary.innerHTML = '<option value="">Select a dispensary</option><option value="new">New Dispensary</option>';
+                selectDispensary.innerHTML = '<option value="">Select a retail partner</option><option value="new">New Retail Partner</option>';
 
                 if (Array.isArray(dispensariesData) && dispensariesData.length > 0) {
                     dispensariesData.forEach(dispensary => {
@@ -1349,14 +1349,14 @@
                 if (selectedDispensaryValue === 'new') {
                     const newName = newNameInput.value.trim();
                     if (!newName) {
-                        showMessage(errorMessageElement, 'Please enter a name for the new dispensary.');
+                        showMessage(errorMessageElement, 'Please enter a name for the new retail partner.');
                         hideLoading();
                         return; // Stop submission if new name is required but empty
                     }
                     // formData.append('selectedDispensary', 'new'); // Already captured by FormData(form)
                     // formData.append('newDispensaryName', newName); // Already captured by FormData(form)
                 } else if (!selectedDispensaryValue) {
-                     showMessage(errorMessageElement, 'Please select a dispensary or choose "New Dispensary".');
+                     showMessage(errorMessageElement, 'Please select a retail partner or choose "New Retail Partner".');
                      hideLoading();
                      return;
                 } else {

@@ -1,0 +1,467 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lion's Peak™ Pre-Workout Elixir — Introduction &amp; User Guide</title>
+<meta name="description" content="Lion's Peak™ Pre-Workout Elixir from TPO Wellness — a liquid pre-workout with Lion's Mane, green-tea caffeine, L-citrulline and electrolytes. 30 servings per bottle, manufactured in Bangkok at a Thai FDA approved &amp; GMP certified facility.">
+<style>
+:root {
+  --bg: #f7f8fa;
+  --surface: #ffffff;
+  --surface-warm: #eef3f8;
+  --fg: #111827;
+  --fg-2: #334155;
+  --muted: #64748b;
+  --meta: #0066b1;
+  --border: #d7dee8;
+  --border-soft: #edf1f6;
+  --accent: #0066b1;
+  --accent-on: #ffffff;
+  --accent-hover: color-mix(in oklab, var(--accent), black 8%);
+  --accent-active: color-mix(in oklab, var(--accent), black 14%);
+  --success: #16a34a;
+  --warn: #f59e0b;
+  --danger: #e4002b;
+  --font-display: "BMWTypeNext", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "BMWTypeNext", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "SF Mono", ui-monospace, Menlo, monospace;
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 16px;
+  --text-lg: 18px;
+  --text-xl: 24px;
+  --text-2xl: 36px;
+  --text-3xl: 56px;
+  --text-4xl: 78px;
+  --leading-body: 1.5;
+  --leading-tight: 1.02;
+  --tracking-display: -0.025em;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --section-y-desktop: 104px;
+  --section-y-tablet: 76px;
+  --section-y-phone: 52px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 14px;
+  --radius-pill: 9999px;
+  --elev-flat: none;
+  --elev-ring: 0 0 0 1px var(--border);
+  --elev-raised: 0 22px 56px rgba(17, 24, 39, 0.12);
+  --focus-ring: 0 0 0 4px rgba(0, 102, 177, 0.24);
+  --motion-fast: 130ms;
+  --motion-base: 220ms;
+  --ease-standard: cubic-bezier(0.16, 1, 0.3, 1);
+  --container-max: 1220px;
+  --container-gutter-desktop: 40px;
+  --container-gutter-tablet: 28px;
+  --container-gutter-phone: 18px;
+  /* BMW M tricolor — documented brand tokens */
+  --m-blue-light: #0066b1;
+  --m-blue-dark: #1c69d4;
+  --m-red: #e22718;
+  --ink: #0b0c10;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-body);
+  color: var(--fg);
+  background: #d9dfe8;
+  line-height: 1.7;
+  font-size: var(--text-base);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.manual {
+  max-width: 840px;
+  margin: 0 auto;
+  background: var(--bg);
+  box-shadow: 0 24px 70px rgba(13, 20, 38, 0.20);
+  overflow: hidden;
+}
+
+/* ---------- tricolor stripe ---------- */
+.m-stripe {
+  height: 4px;
+  width: 100%;
+  border: 0;
+  background: linear-gradient(90deg, var(--m-blue-light) 0, var(--m-blue-dark) 50%, var(--m-red) 100%);
+}
+.m-stripe-sm { width: 64px; height: 4px; }
+
+/* ---------- cover ---------- */
+.cover {
+  background: var(--ink);
+  color: #fff;
+  padding: 64px 60px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+}
+.cover::after {
+  content: "";
+  position: absolute;
+  right: -120px;
+  bottom: -120px;
+  width: 420px;
+  height: 420px;
+  border-radius: 50%;
+  background: radial-gradient(circle at center, rgba(0,102,177,.30), rgba(11,12,16,0) 65%);
+  pointer-events: none;
+}
+.cover-top { position: relative; z-index: 2; }
+.brand-mark { font-size: 15px; font-weight: 700; letter-spacing: .22em; }
+.brand-mark .tm { font-size: 9px; vertical-align: super; margin-left: 2px; }
+.cover-eyebrow { display: block; margin-top: 6px; font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: #9fb4c9; }
+.cover-mid { position: relative; z-index: 2; }
+.hero-title {
+  font-family: var(--font-display);
+  font-size: clamp(48px, 11vw, 104px);
+  font-weight: 300;
+  line-height: .98;
+  letter-spacing: -.02em;
+  margin: 22px 0 0;
+  text-transform: uppercase;
+}
+.hero-sub { max-width: 34ch; margin: 24px 0 0; font-size: 16px; line-height: 1.55; color: #c7d2df; }
+.cover-toc { position: relative; z-index: 2; display: grid; grid-template-columns: 1fr 1fr; gap: 0 32px; margin-top: 8px; }
+.cover-toc div { font-size: 14px; letter-spacing: .03em; color: #e7edf4; padding: 12px 0; border-top: 1px solid rgba(255,255,255,.16); }
+.cover-toc span { color: #6fb0ee; font-weight: 700; margin-right: 14px; letter-spacing: .08em; }
+.cover-foot { position: relative; z-index: 2; font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: #8090a6; }
+
+/* ---------- content blocks ---------- */
+.block { padding: 60px 60px; }
+.opener { margin-bottom: 6px; }
+.eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--accent); display: inline-block; }
+.sec-title {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: clamp(32px, 7vw, 50px);
+  line-height: 1.03;
+  letter-spacing: -.015em;
+  text-transform: uppercase;
+  margin: 8px 0 0;
+  color: var(--fg);
+}
+.kicker { font-size: 14px; color: var(--fg-2); margin: 8px 0 0; }
+.lead { font-size: 18px; line-height: 1.6; color: var(--fg-2); margin: 22px 0 6px; }
+
+h3.sub { font-size: 21px; font-weight: 600; letter-spacing: -.005em; margin: 34px 0 8px; color: var(--fg); }
+h3.sub .num { color: var(--accent); font-weight: 700; margin-right: 10px; }
+
+p { margin: 0 0 15px; color: var(--fg); }
+p.muted { color: var(--muted); }
+
+/* ---------- figures ---------- */
+figure { margin: 28px 0; break-inside: avoid; }
+figure img { width: 100%; height: auto; display: block; border: 1px solid var(--border); border-radius: var(--radius-md); }
+figure.fig-sm { max-width: 80%; margin-left: auto; margin-right: auto; }
+figcaption { margin-top: 9px; font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+figcaption b { color: var(--fg-2); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; font-size: 11px; margin-right: 6px; }
+
+/* ---------- anatomy ---------- */
+.anatomy { display: grid; grid-template-columns: 1.05fr 1fr; gap: 30px; align-items: center; margin-top: 24px; break-inside: avoid; }
+.anatomy img { width: 100%; border: 1px solid var(--border); border-radius: var(--radius-md); }
+.anatomy-list { list-style: none; counter-reset: anat; padding: 0; margin: 0; }
+.anatomy-list li { position: relative; padding: 12px 0 12px 42px; border-bottom: 1px solid var(--border-soft); counter-increment: anat; font-size: 15px; line-height: 1.45; }
+.anatomy-list li:last-child { border-bottom: 0; }
+.anatomy-list li::before { content: counter(anat); position: absolute; left: 0; top: 11px; width: 28px; height: 28px; background: var(--ink); color: #fff; font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-sm); }
+
+/* ---------- panels / callouts ---------- */
+.callout, .quickstart { position: relative; overflow: hidden; border-radius: var(--radius-lg); padding: 24px 26px 22px; margin: 28px 0; break-inside: avoid; }
+.callout { background: var(--surface-warm); }
+.quickstart { background: var(--surface); border: 1px solid var(--border); }
+.callout::before, .quickstart::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--m-blue-light), var(--m-blue-dark), var(--m-red)); }
+.callout .eyebrow, .quickstart .eyebrow { margin-bottom: 10px; }
+.pull-inline { font-size: 17px; font-weight: 500; color: var(--fg); margin: 2px 0 10px; line-height: 1.5; }
+
+/* ---------- ordered steps ---------- */
+ol.steps, ol.qs { list-style: none; counter-reset: step; margin: 14px 0 6px; padding: 0; }
+ol.steps li, ol.qs li { position: relative; padding-left: 44px; margin-bottom: 13px; break-inside: avoid; counter-increment: step; }
+ol.steps li::before, ol.qs li::before { content: counter(step); position: absolute; left: 0; top: 1px; width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; }
+ol.qs li b { color: var(--fg); font-weight: 700; }
+
+/* ---------- pull quote ---------- */
+.pull { font-family: var(--font-display); font-size: clamp(22px, 4.4vw, 30px); font-weight: 300; line-height: 1.24; letter-spacing: -.01em; color: var(--fg-2); margin: 40px 0 6px; }
+.pull::before { content: ""; display: block; width: 48px; height: 4px; margin-bottom: 18px; background: linear-gradient(90deg, var(--m-blue-light), var(--m-blue-dark), var(--m-red)); }
+
+/* ---------- back page ---------- */
+.back .back-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px 36px; margin-top: 32px; }
+.back-grid div { padding: 16px 0; border-top: 1px solid var(--border); }
+.back-grid p { margin: 6px 0 0; font-size: 15px; color: var(--fg); }
+.fineprint { font-size: 11px; color: var(--muted); line-height: 1.55; margin-top: 30px; padding-top: 16px; border-top: 1px solid var(--border-soft); }
+
+
+/* ---------- responsive ---------- */
+@media (max-width: 720px) {
+  .cover, .block { padding-left: 26px; padding-right: 26px; }
+  .cover-toc { grid-template-columns: 1fr; }
+  .anatomy { grid-template-columns: 1fr; }
+  .back .back-grid { grid-template-columns: 1fr; }
+}
+
+/* ---------- print ---------- */
+@media print {
+  body { background: #fff; font-size: 10.5pt; }
+  .manual { max-width: none; box-shadow: none; overflow: visible; }
+  .cover { page: cover; min-height: 100vh; padding: 22mm 18mm; break-after: page; }
+  .block { padding: 0; }
+  .page-break { break-before: page; }
+  figure, .callout, .quickstart, .pull, .anatomy, ol.steps li, ol.qs li { break-inside: avoid; }
+  h2, h3 { break-after: avoid; }
+  .hero-title { font-size: 56pt; }
+  .sec-title { font-size: 25pt; }
+  .lead { font-size: 12pt; }
+  p { font-size: 10.5pt; }
+  figcaption { font-size: 8.5pt; }
+  @page { margin: 15mm 14mm; }
+  @page cover { margin: 0; }
+}
+</style>
+</head>
+<body>
+
+<main class="manual">
+
+  <!-- ============ COVER ============ -->
+  <header class="cover">
+    <div class="cover-top">
+      <div class="brand-mark">LION'S PEAK<span class="tm">™</span></div>
+      <span class="cover-eyebrow">Pre-Workout Elixir · TPO Wellness</span>
+    </div>
+    <div class="cover-mid">
+      <hr class="m-stripe m-stripe-sm">
+      <h1 class="hero-title">Fuel. Focus.<br>Peak.</h1>
+      <p class="hero-sub">Introduction &amp; User Guide for the Lion's Peak™ Pre-Workout Elixir — clean liquid energy from Lion's Mane, green-tea caffeine, L-citrulline and electrolytes for training, focus and hydration.</p>
+    </div>
+    <div>
+      <div class="cover-toc">
+        <div><span>01</span> Anatomy &amp; Introduction</div>
+        <div><span>02</span> How to Fuel in 2026</div>
+        <div><span>03</span> Mix &amp; Stack</div>
+        <div><span>04</span> Training-Day Protocol</div>
+      </div>
+      <p class="cover-foot" style="margin-top:18px;">A liquid pre-workout elixir · 30 servings · Thai FDA &amp; GMP manufactured in Bangkok</p>
+    </div>
+  </header>
+
+  <!-- ============ PART 01 — INTRO & ANATOMY ============ -->
+  <section class="block" id="intro">
+    <div class="opener">
+      <hr class="m-stripe m-stripe-sm">
+      <span class="eyebrow">Part 01 · Introduction</span>
+      <h2 class="sec-title">Meet the Lion's Peak™<br>Pre-Workout Elixir</h2>
+    </div>
+    <p class="lead">The Lion's Peak™ Pre-Workout Elixir is a ready-to-mix liquid pre-workout supplement from TPO Wellness — built for clean, repeatable fueling whether you are lifting, running, cycling or training for competition. Twist the cap, pour your serving, mix with cold water, and re-seal to lock in freshness.</p>
+
+    <div class="quickstart">
+      <span class="eyebrow">Quick start</span>
+      <ol class="qs">
+        <li><b>Twist</b> open the precision dosing cap on your bottle.</li>
+        <li><b>Pour</b> one measured serving into cold water — the liquid blends instantly.</li>
+        <li><b>Re-seal</b> to preserve the elixir and eliminate any chance of spills.</li>
+      </ol>
+    </div>
+
+    <h3 class="sub"><span class="num">›</span>Anatomy of the elixir</h3>
+    <div class="anatomy">
+      <figure>
+        <img src="mqzd1cwp-Elixir-01.jpg" alt="Lion's Peak Pre-Workout Elixir anatomy diagram showing six numbered components">
+        <figcaption><b>Fig. 1</b> The Lion's Peak™ Pre-Workout Elixir — six core components, from precision cap to no-drip pour spout.</figcaption>
+      </figure>
+      <ol class="anatomy-list">
+        <li>Precision twist-cap dosing chamber with clear single-serving lines</li>
+        <li>One twist and pour for a repeatable dose — no scoops, no powder mess</li>
+        <li>Area available for partner branding</li>
+        <li>Amber, BPA-free bottle that shields light-sensitive botanicals and holds 30 servings</li>
+        <li>Brandable, leak-proof snap-on overcap that protects the spout and prevents leaks</li>
+        <li>No-drip precision pour spout for clean dispensing of the liquid elixir</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ============ PART 02 — FUELING ============ -->
+  <section class="block page-break" id="fuel">
+    <div class="opener">
+      <hr class="m-stripe m-stripe-sm">
+      <span class="eyebrow">Part 02 · Fueling</span>
+      <h2 class="sec-title">How to Fuel in 2026</h2>
+      <p class="kicker">Pre-workout timing, dosing and tools</p>
+    </div>
+    <p class="lead">There are several things to consider when building a pre-workout routine. Among other things, you should know how your body responds to caffeine. You should also read the label for properly dosed ingredients and choose a formula made in a certified facility. There are many resources on the web that can guide you through the process.</p>
+
+    <h3 class="sub"><span class="num">›</span>What is a pre-workout?</h3>
+    <p>A pre-workout is a supplement taken before training to support energy, focus, blood flow and endurance. A well-made liquid pre-workout such as Lion's Peak™ gets to work quickly, and many athletes find the lift cleaner than other methods of fueling up, such as capsules, sugary energy drinks or your third office coffee.</p>
+
+    <h3 class="sub"><span class="num">›</span>How to take your serving</h3>
+    <p>There are several ways to take a pre-workout, but the most common method is a shaker bottle. A shaker looks similar to a water bottle, but it has a few key differences. First, shaker bottles have a mixing ball or grid instead of a plain lid. The elixir is poured into cold water, the lid is sealed, and the bottle is shaken for ten to fifteen seconds. The motion blends the liquid evenly, and you drink it about twenty to thirty minutes before training. Also, look for a bottle with measurement marks so you can match your water to your serving.</p>
+    <figure>
+      <img src="mqzd1cxa-Elixir-05.jpg" alt="A shaker bottle and pre-workout setup on a counter">
+      <figcaption><b>Fig. 2</b> A shaker bottle with cold water is the classic setup for mixing a pre-workout elixir.</figcaption>
+    </figure>
+
+    <h3 class="sub"><span class="num">›</span>Alternatives to powdered pre-workouts</h3>
+    <p>Several alternatives to powdered pre-workouts are available, the most popular being ready-to-drink cans and pre-portioned sachets. Ready-to-drink formulas skip the mixing step entirely, so you don't have to blend anything yourself. As long as the can is chilled and sealed, it is ready to drink the moment you open it. Many come with extra touches, such as zero-sugar formulations, added electrolytes and recyclable packaging. If you want fuel that travels light, pre-portioned sachets work like single-serve packets. But sachets typically offer fewer ingredient combinations, and you still need water and a bottle to mix them. A liquid elixir ultimately gives you the best of both worlds: pre-blended ingredients that pour instantly, in a bottle that carries all 30 servings to the gym, the track or the trail.</p>
+    <figure class="fig-sm">
+      <img src="mqzd1cwz-Elixir-03.jpg" alt="Hands holding a bottle of liquid pre-workout with a precision dosing cap">
+      <figcaption><b>Fig. 3</b> A liquid elixir mixes at the pour of a cap — ideal for fueling on the go.</figcaption>
+    </figure>
+
+    <h3 class="sub"><span class="num">›</span>Ideal timing for your serving</h3>
+    <p>There are many different opinions on the ideal timing for a pre-workout. Ultimately, the ideal window depends on the user and their personal preferences. Generally, taking it closer to your first set brings peak energy mid-session, while taking it earlier spreads the lift across a longer warm-up. There are trade-offs between the two, but many athletes prefer a 20–30 minute head start so the green-tea caffeine and L-citrulline arrive together at the barbell.</p>
+    <p>Generally, lighter sessions call for a half serving while heavier sessions call for a full serving. If you're not sure what you prefer, as with many things in training, experiment by starting with a half serving and increasing gradually until you find your clean-energy sweet spot.</p>
+
+    <h3 class="sub"><span class="num">›</span>Keeping your bottle fresh with a quick rinse</h3>
+    <p>A quick rinse under warm water is some of the best maintenance you can do for your bottle. A fueling best practice is to rinse the cap and spout after every use. This prevents residue from affecting the quality of your next serving. Many people choose liquid formulas for their taste, and rinsing the cap will ensure your next serving is fresh and clean-flavored.</p>
+    <p>A quick rinse is not a luxury, but it is an essential part of the routine. This habit keeps the pour spout clear, prevents the cap from getting sticky, and ensures you get the best possible taste from every serving. It will also let you toss the bottle into your gym bag without a second thought about lingering smells or spills.</p>
+
+    <h3 class="sub"><span class="num">›</span>Half-serving starts preserve smooth energy</h3>
+    <p>When athletes want to keep their energy smooth, a half-serving start is the way to go. This approach delivers the Lion's Mane, green-tea caffeine and L-citrulline without overwhelming your system. Spacing smaller pours across a longer window distributes the lift evenly across the session. The spout should be clean and free from any residue before your next pour.</p>
+    <p>The benefits of starting low are numerous. First, it preserves steady focus for longer workouts. Moreover, this method doesn't generate a large spike-and-crash swing the way high-stimulant formulas can. It also allows you to enjoy more of the clean, botanical taste of the formula in every sip.</p>
+
+    <h3 class="sub"><span class="num">›</span>Choosing your pre-workout</h3>
+    <p>If you're looking to start a pre-workout, one of the first things you'll want to consider is the quality of the formula. It's important to choose a well-made product, so you'll be able to enjoy your training support for many years to come. Look for formulas made in Thai FDA-approved, GMP-certified facilities with transparent, properly dosed ingredients. Ready-to-mix liquids and capsules are also great options. Look for products with clear labeling and third-party testing that are easy to verify. Cheaper formulas cut corners on dosing and will need to be replaced with something better sooner.</p>
+    <figure>
+      <img src="mqzd1cx4-Elixir-04.jpg" alt="Pouring a measured serving of liquid pre-workout into a glass">
+      <figcaption><b>Fig. 4</b> Precision dosing and consistent ingredients keep every session clean and repeatable.</figcaption>
+    </figure>
+
+    <div class="callout">
+      <span class="eyebrow">Why Lion's Peak™</span>
+      <p class="pull-inline">Pre-workouts come in a variety of shapes and sizes. The most common formats are tubs of powder and capsules, but these do not provide consistent or easy dosing. With the Lion's Peak™ Pre-Workout Elixir, everyone can fuel cleanly and efficiently at home.</p>
+      <p class="muted">And the Lion's Peak™ Pre-Workout Elixir isn't only for lifting days. Whether you use it for morning focus, afternoon training or competition, the Lion's Peak™ Pre-Workout Elixir ensures a mess-free and precisely dosed experience every time. Consumers and wholesalers can learn more about the Lion's Peak™ Pre-Workout Elixir on our website.</p>
+    </div>
+  </section>
+
+  <!-- ============ PART 03 — MIXING ============ -->
+  <section class="block page-break" id="mix">
+    <div class="opener">
+      <hr class="m-stripe m-stripe-sm">
+      <span class="eyebrow">Part 03 · Mixing</span>
+      <h2 class="sec-title">Mix &amp; Stack</h2>
+      <p class="kicker">How to mix and stack the Lion's Peak™ Pre-Workout Elixir into your daily routine</p>
+    </div>
+    <p class="lead">There is lots to know before adding a pre-workout to your routine. For instance, you can learn more about water-soluble botanical extracts and how quickly they absorb. You can also calculate how much green-tea caffeine is in each serving, or check out mix ideas that fit different kinds of training. Plus, learn how the Lion's Peak™ Pre-Workout Elixir makes mixing easy, every time.</p>
+
+    <h3 class="sub"><span class="num">›</span>Liquid extracts absorb fast</h3>
+    <p>The botanicals in Lion's Peak™ are water-soluble, which means they dissolve and disperse instantly in water. They are gently extracted from Lion's Mane fruiting bodies and green tea leaves, then standardized at our Thai FDA-approved facility in Bangkok. They are then delivered to the body through a ready-blended liquid carrier. Because the formula is already dissolved, it can be added to water and other beverages without grit or settling.</p>
+    <p>Lion's Mane is a functional mushroom long valued in traditional wellness practice. Aside from Lion's Mane, the TPO Wellness range draws on other botanicals, including Reishi and Chaga mushrooms and a full cabinet of Thai herbal teas from the TPO Herbal Shop. These ingredients are prepared as standardized extracts, so each serving delivers a consistent amount that dissolves fully in water for fast uptake.</p>
+
+    <h3 class="sub"><span class="num">›</span>How green-tea caffeine releases its energy</h3>
+    <p>One of the questions posed by any caffeinated formula is how smoothly the energy arrives. Green tea provides caffeine alongside natural L-theanine, which helps smooth the release of the stimulant. These compounds are absorbed into the bloodstream via the gastrointestinal tract and support alertness and focus. The steadier the release, the longer the clean energy lasts.</p>
+    <p>Unlike sugary energy drinks that spike and crash, green-tea caffeine is released gradually by the body. Paired with L-citrulline for blood flow and electrolytes for hydration, the elixir supports steady output across a full session. That steady base is what keeps training consistent for weeks or even months on end.</p>
+    <figure class="fig-sm">
+      <img src="mqzd1cxo-Elixir-07.jpg" alt="Golden liquid elixir being poured from a supplement bottle into a glass">
+      <figcaption><b>Fig. 5</b> Because the botanicals arrive pre-blended, the liquid carrier helps maximize fast uptake.</figcaption>
+    </figure>
+
+    <h3 class="sub"><span class="num">›</span>How to calculate your caffeine per serving</h3>
+    <p>A caffeine calculator is a handy tool when planning your daily intake. It is not a replacement for reading the label, but it will give you an estimate of the total stimulant load of your routine. It takes into account all of your coffees, teas and pre-workout servings across the day.</p>
+    <p>First, calculate the caffeine per serving. For example, if you are training four times a week, you would multiply the caffeine per serving by your four sessions to see your weekly intake. If your target is 150mg of caffeine per day, then a single serving of the elixir should fit comfortably within it. You would also divide your remaining allowance across your other drinks of the day.</p>
+    <div class="callout">
+      <span class="eyebrow">Repeatable dosing with Lion's Peak™</span>
+      <p class="pull-inline">Once you know your numbers, the Lion's Peak™ is the perfect solution for repeatable dosing, as the precision cap delivers one exact single-serving pour every time.</p>
+    </div>
+    <figure class="fig-sm">
+      <img src="mqzd1cxq-Elixir-08.jpg" alt="A supplement bottle with a precision cap dispensing a serving into a glass">
+      <figcaption><b>Fig. 6</b> Pour to the line for a repeatable, mess-free serving — every time.</figcaption>
+    </figure>
+
+    <h3 class="sub"><span class="num">›</span>Mix ideas for training days</h3>
+    <p>If you've ever wanted to upgrade your pre-training drink, you'll be excited to learn that you can create simple, delicious mixes with the Lion's Peak™ Pre-Workout Elixir. The first step is deciding how much cold water you'd like to use. The next step is deciding what to blend it with.</p>
+    <p>The elixir is a great option, because you can steer the flavor whether you're mixing with cold water, sparkling water or coconut water! With the Lion's Peak™ Pre-Workout Elixir, everyone can make their own clean-energy creations at home. And the Lion's Peak™ Pre-Workout Elixir is great for stacking and sipping too! Whether you use it for lifting, running or competing, the Lion's Peak™ Pre-Workout Elixir ensures a mess-free and precisely dosed experience every time.</p>
+    <figure>
+      <img src="mqzd1cxl-Elixir-06.jpg" alt="Pouring a liquid supplement into a glass of water">
+      <figcaption><b>Fig. 7</b> A measured pour transforms everyday water into clean pre-training fuel.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ============ PART 04 — PROTOCOL ============ -->
+  <section class="block page-break" id="protocol">
+    <div class="opener">
+      <hr class="m-stripe m-stripe-sm">
+      <span class="eyebrow">Part 04 · Protocol</span>
+      <h2 class="sec-title">Training-Day Protocol</h2>
+      <p class="kicker">Things to consider when building your session-day routine</p>
+    </div>
+    <p class="lead">Modern training culture has expanded the way athletes warm up, fuel and recover. With those changes also come new habits to learn, and we've got another one for your playbook: the training-day protocol is the new backbone of a consistent program. You might not recognize the term, but you probably already follow most of the steps it describes.</p>
+
+    <h3 class="sub"><span class="num">›</span>What is a training-day protocol?</h3>
+    <p>A training-day protocol is the routine you follow from first sip to last set — hydration, timing and supplementation working alongside your warm-up. It can be planned the night before, or adjusted session by session as your schedule changes.</p>
+    <p>Since training days come in a variety of forms, from short gym sessions to long endurance rides, a good protocol lets athletes express their own strategy — while banking some high-quality output, of course. Some of the most disciplined athletes map every serving and sip in a training log. Others take pride in keeping things minimal and intuitive.</p>
+
+    <h3 class="sub"><span class="num">›</span>How to run the protocol</h3>
+    <p>A protocol is a flexible framework. The only rule is that the final plan still needs to fit your session. Otherwise, your fueling can take whatever form and use whichever combination of timing and servings you prefer.</p>
+    <p>However, due to the varying demands of different sports, each kind of session has to be fueled in a specific way, or has to be prepared before you can perform at your best. Keep reading for protocol guidance for specific sessions:</p>
+    <figure>
+      <img src="mqzd1cxy-Elixir-09.jpg" alt="An athlete preparing a pre-workout drink before a training session">
+      <figcaption><b>Fig. 8</b> Plan your servings and timing before the session starts — not halfway through it.</figcaption>
+    </figure>
+
+    <h3 class="sub"><span class="num">›</span>Protocol for strength days</h3>
+    <p>Strength days call for a full serving about thirty minutes before your first working set. In plain language? That is one capful of Lion's Peak™ in 350mL of cold water while you change and warm up. The green-tea caffeine sharpens focus while the L-citrulline supports the pump for heavy lifts, and you can sip the rest between sets. The upside is that, because the liquid is pre-blended, there is no grit at the bottom of the bottle — every sip is as smooth as the first.</p>
+
+    <h3 class="sub"><span class="num">›</span>Protocol for endurance sessions</h3>
+    <p>Endurance sessions are some of the longest fueling challenges in training, with demands similar to back-to-back double workouts. Endurance athletes have to carefully pace caffeine timing and hydration in order to stay strong from the first kilometer to the last. If you take your full serving too late, the energy will arrive after the finish instead of before it. With all this planning needed to place each serving just right across a three-hour ride, endurance fueling is one of the most difficult protocols to master.</p>
+
+    <h3 class="sub"><span class="num">›</span>Protocol with the Lion's Peak™ Pre-Workout Elixir</h3>
+    <p>Fueling sessions with tubs of powder and loose scoops can make a training-day routine a messy challenge, but the Lion's Peak™ Pre-Workout Elixir makes fueling all types of sessions easy! There's no prep required before you head to the gym, the track or the trail, and no loose powder that can spill in your bag. With a simple twist, pour and re-seal, you'll be fueled in no time — you can pick up a bottle today at the TPO Herbal Shop in central Bangkok, or contact our wholesale team to stock Lion's Peak™ at your gym or store.</p>
+
+    <h3 class="sub"><span class="num">›</span>Before the session: the 30-minute countdown</h3>
+    <p>With the Lion's Peak™ Pre-Workout Elixir, anyone can run a professional pre-training ritual. To set up your session for success, just follow these instructions. Pack your bag and fill your bottle — but wait, don't sip yet!</p>
+    <ol class="steps">
+      <li>Remove the cap from the Lion's Peak™ Pre-Workout Elixir, then pour one serving into your bottle of cold water.</li>
+      <li>Shake the bottle for ten seconds until the liquid is fully blended.</li>
+      <li>About thirty minutes before your first set, start sipping while you mobilize and warm up — steady sips beat gulping.</li>
+      <li>Re-seal the bottle to preserve the elixir and eliminate any chance of spills in your gym bag.</li>
+      <li>Log the session in your training journal — the ideal time to note how the energy felt, so your next serving can be tuned even better.</li>
+    </ol>
+
+    <h3 class="sub"><span class="num">›</span>During the session: intra-workout sipping</h3>
+    <p>Intra-workout fueling is less dramatic than the pre-training ritual, but just as effective (and maybe a little easier) — a great way to make your own steady-output session. To fuel the inside of a long session, just follow these instructions:</p>
+    <ol class="steps">
+      <li>Fill a second bottle with cold water and set it beside your mat or bike.</li>
+      <li>Remove the cap from the Lion's Peak™ Pre-Workout Elixir, then pour a half serving into the bottle — or split it into multiple small pours spread across the session.</li>
+      <li>Re-seal the cap after each pour to preserve the elixir and eliminate any chance of mess.</li>
+      <li>Sip between sets, or every fifteen minutes on longer rides, so your session stays hydrated and fueled from start to finish.</li>
+    </ol>
+
+    <div class="pull">One elixir. Three pillars. Energy, focus and hydration — mess-free and precisely dosed, every time.</div>
+  </section>
+
+  <!-- ============ CLOSING ============ -->
+  <section class="block page-break back" id="back">
+    <hr class="m-stripe m-stripe-sm">
+    <span class="eyebrow">The Lion's Peak™ Pre-Workout Elixir</span>
+    <h2 class="sec-title">Clean energy.<br>Sharp focus.<br>Every session.</h2>
+    <p class="lead">Whether you use it for lifting, running or competing, the Lion's Peak™ Pre-Workout Elixir ensures a mess-free and precisely dosed experience — every time.</p>
+    <div class="back-grid">
+      <div><span class="eyebrow">Key ingredients</span><p>Lion's Mane · Green-Tea Caffeine · L-Citrulline · Electrolytes</p></div>
+      <div><span class="eyebrow">Servings</span><p>30 servings per bottle</p></div>
+      <div><span class="eyebrow">Dosing</span><p>Precision twist-cap with single-serving pour line</p></div>
+      <div><span class="eyebrow">Manufacturing</span><p>Thai FDA approved &amp; GMP certified facility, Bangkok, Thailand</p></div>
+    </div>
+    <p class="fineprint">For education and product guidance only. Dietary supplements are not intended to diagnose, treat, cure or prevent any disease. Consult a physician before use, especially if you are sensitive to caffeine, pregnant or nursing, and keep all supplements out of the reach of children.</p>
+  </section>
+
+</main>
+
+</body>
+</html>

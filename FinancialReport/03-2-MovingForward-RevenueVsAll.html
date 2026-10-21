@@ -699,23 +699,23 @@
         debugLog('Loading sample data for local testing...');
         
         financialData = [
-            // Current THC Products - Historical
-            {"Month": "01/2024", "DataType": "Historical", "Project": "Current THC Products", "Revenue": 55800, "COGS": 133712, "Admin Expense": 90979, "Selling Expense": 84732, "Total Expenses": 175711, "Profit & Loss": -253622},
-            {"Month": "02/2024", "DataType": "Historical", "Project": "Current THC Products", "Revenue": 152100, "COGS": 718, "Admin Expense": 129804, "Selling Expense": 84962, "Total Expenses": 214766, "Profit & Loss": -63383},
-            {"Month": "07/2025", "DataType": "Historical", "Project": "Current THC Products", "Revenue": 830435, "COGS": 466414, "Admin Expense": 1490633, "Selling Expense": 783667, "Total Expenses": 2274300, "Profit & Loss": -1910280},
+            // Legacy Wellness Products - Historical
+            {"Month": "01/2024", "DataType": "Historical", "Project": "Legacy Wellness Products", "Revenue": 55800, "COGS": 133712, "Admin Expense": 90979, "Selling Expense": 84732, "Total Expenses": 175711, "Profit & Loss": -253622},
+            {"Month": "02/2024", "DataType": "Historical", "Project": "Legacy Wellness Products", "Revenue": 152100, "COGS": 718, "Admin Expense": 129804, "Selling Expense": 84962, "Total Expenses": 214766, "Profit & Loss": -63383},
+            {"Month": "07/2025", "DataType": "Historical", "Project": "Legacy Wellness Products", "Revenue": 830435, "COGS": 466414, "Admin Expense": 1490633, "Selling Expense": 783667, "Total Expenses": 2274300, "Profit & Loss": -1910280},
             
-            // Current THC Products - Projected
-            {"Month": "08/2025", "DataType": "Projected", "Project": "Current THC Products", "Revenue": 1686108, "COGS": 655925, "Admin Expense": 1418141, "Selling Expense": 807073, "Total Expenses": 2225213, "Profit & Loss": -1195030},
-            {"Month": "12/2026", "DataType": "Projected", "Project": "Current THC Products", "Revenue": 1939024, "COGS": 754314, "Admin Expense": 1418141, "Selling Expense": 807073, "Total Expenses": 2225213, "Profit & Loss": -1040503},
+            // Legacy Wellness Products - Projected
+            {"Month": "08/2025", "DataType": "Projected", "Project": "Legacy Wellness Products", "Revenue": 1686108, "COGS": 655925, "Admin Expense": 1418141, "Selling Expense": 807073, "Total Expenses": 2225213, "Profit & Loss": -1195030},
+            {"Month": "12/2026", "DataType": "Projected", "Project": "Legacy Wellness Products", "Revenue": 1939024, "COGS": 754314, "Admin Expense": 1418141, "Selling Expense": 807073, "Total Expenses": 2225213, "Profit & Loss": -1040503},
             
             // Creatine Powder - Projected
             {"Month": "12/2025", "DataType": "Projected", "Project": "Creatine Powder", "Revenue": 150000, "COGS": 37500, "Admin Expense": 0, "Selling Expense": 40000, "Total Expenses": 40000, "Profit & Loss": 72500},
             {"Month": "07/2026", "DataType": "Projected", "Project": "Creatine Powder", "Revenue": 700000, "COGS": 175000, "Admin Expense": 7143, "Selling Expense": 160000, "Total Expenses": 167143, "Profit & Loss": 357857},
             {"Month": "12/2026", "DataType": "Projected", "Project": "Creatine Powder", "Revenue": 1000000, "COGS": 250000, "Admin Expense": 7143, "Selling Expense": 200000, "Total Expenses": 207143, "Profit & Loss": 542857},
             
-            // CBD/CBN Sleep aid gummies - Projected  
-            {"Month": "12/2025", "DataType": "Projected", "Project": "CBD/CBN Sleep aid gummies", "Revenue": 150000, "COGS": 37500, "Admin Expense": 0, "Selling Expense": 40000, "Total Expenses": 40000, "Profit & Loss": 72500},
-            {"Month": "12/2026", "DataType": "Projected", "Project": "CBD/CBN Sleep aid gummies", "Revenue": 600000, "COGS": 150000, "Admin Expense": 7143, "Selling Expense": 120000, "Total Expenses": 127143, "Profit & Loss": 322857}
+            // Sleep Aid Gummies - Projected
+            {"Month": "12/2025", "DataType": "Projected", "Project": "Sleep Aid Gummies", "Revenue": 150000, "COGS": 37500, "Admin Expense": 0, "Selling Expense": 40000, "Total Expenses": 40000, "Profit & Loss": 72500},
+            {"Month": "12/2026", "DataType": "Projected", "Project": "Sleep Aid Gummies", "Revenue": 600000, "COGS": 150000, "Admin Expense": 7143, "Selling Expense": 120000, "Total Expenses": 127143, "Profit & Loss": 322857}
         ];
         
         debugLog(`Loaded ${financialData.length} sample rows for testing`);
@@ -755,8 +755,8 @@
             const projectItem = document.createElement('div');
             projectItem.className = 'project-item';
             
-            // Check Current THC Products by default
-            const isDefault = project.toLowerCase().includes('thc') || project.toLowerCase().includes('current');
+            // Check Legacy Wellness Products by default
+            const isDefault = project.toLowerCase().includes('legacy');
             
             projectItem.innerHTML = `
                 <label class="toggle">

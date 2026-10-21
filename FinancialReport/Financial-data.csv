@@ -1,76 +1,76 @@
 Month,DataType,Project,Revenue,COGS,Admin Expense,Selling Expense,Total Expenses,Profit & Loss
-Jan-24,Historical,1-Current THC Business,"฿55,800","฿133,712","฿90,979","฿84,732","฿175,711","-฿253,622"
-Feb-24,Historical,1-Current THC Business,"฿152,100",฿718,"฿129,804","฿84,962","฿214,766","-฿63,383"
-Mar-24,Historical,1-Current THC Business,"฿67,750","฿195,970","฿73,929","฿63,210","฿137,139","-฿265,359"
-Apr-24,Historical,1-Current THC Business,"฿326,235",฿630,"฿119,190","-฿1,231","฿117,959","฿207,645"
-May-24,Historical,1-Current THC Business,"฿163,983","฿102,899","฿132,908","฿16,324","฿149,232","-฿88,148"
-Jun-24,Historical,1-Current THC Business,"฿685,982","฿918,133","฿324,122","฿78,953","฿403,075","-฿635,226"
-Jul-24,Historical,1-Current THC Business,"฿262,138","฿118,177","฿1,373,794","฿5,850","฿1,379,644","-฿1,235,683"
-Aug-24,Historical,1-Current THC Business,"฿258,660","฿61,708","฿1,363,211","฿11,085","฿1,374,296","-฿1,177,344"
-Sep-24,Historical,1-Current THC Business,"฿388,542","฿386,972","฿1,423,656","฿100,825","฿1,524,481","-฿1,522,911"
-Oct-24,Historical,1-Current THC Business,"฿914,767","฿134,637","฿1,449,210","฿149,745","฿1,598,955","-฿818,826"
-Nov-24,Historical,1-Current THC Business,"฿1,503,622","฿289,287","฿1,430,081","฿135,954","฿1,566,035","-฿351,699"
-Dec-24,Historical,1-Current THC Business,"฿2,726,811","-฿467,671","฿1,305,401","฿3,361,520","฿4,666,921","-฿1,472,440"
-Jan-25,Historical,1-Current THC Business,"฿2,998,751","฿313,665","฿1,313,581","฿928,467","฿2,242,048","฿443,038"
-Feb-25,Historical,1-Current THC Business,"฿2,863,000","฿673,820","฿1,332,778","฿739,073","฿2,071,851","฿117,329"
-Mar-25,Historical,1-Current THC Business,"฿1,368,652","฿186,713","฿1,387,512","฿924,474","฿2,311,986","-฿1,130,047"
-Apr-25,Historical,1-Current THC Business,"฿2,396,530","฿549,718","฿1,369,981","฿830,981","฿2,200,962","-฿354,149"
-May-25,Historical,1-Current THC Business,"฿2,049,392","฿177,482","฿1,444,567","฿932,601","฿2,377,168","-฿505,257"
-Jun-25,Historical,1-Current THC Business,"฿1,686,108","฿655,925","฿1,418,141","฿807,073","฿2,225,214","-฿1,195,031"
-Jul-25,Historical,1-Current THC Business,"฿830,435","฿466,414","฿1,490,633","฿783,667","฿2,274,300","-฿1,910,280"
-Aug-25,Projected,1-Current THC Business,"฿1,686,108","฿655,925","฿1,418,141","฿807,073","฿2,225,213","-฿1,195,030"
-Sep-25,Projected,1-Current THC Business,"฿1,686,108","฿655,925","฿1,418,141","฿807,073","฿2,225,213","-฿1,195,030"
-Oct-25,Projected,1-Current THC Business,"฿1,939,024","฿754,314","฿1,418,141","฿807,073","฿2,225,213","-฿1,040,503"
-Nov-25,Projected,1-Current THC Business,"฿1,939,024","฿754,314","฿1,418,141","฿807,073","฿2,225,213","-฿1,040,503"
-Dec-25,Projected,1-Current THC Business,"฿1,939,024","฿754,314","฿1,418,141","฿807,073","฿2,225,213","-฿1,040,503"
-Jan-26,Projected,1-Current THC Business,"฿1,939,024","฿754,314","฿1,418,141","฿807,073","฿2,225,213","-฿1,040,503"
-Feb-26,Projected,1-Current THC Business,"฿1,686,108","฿655,925","฿1,418,141","฿807,073","฿2,225,213","-฿1,195,030"
-Mar-26,Projected,1-Current THC Business,"฿1,686,108","฿655,925","฿1,418,141","฿807,073","฿2,225,213","-฿1,195,030"
-Apr-26,Projected,1-Current THC Business,"฿1,686,108","฿655,925","฿1,418,141","฿807,073","฿2,225,213","-฿1,195,030"
-May-26,Projected,1-Current THC Business,"฿1,686,108","฿655,925","฿1,418,141","฿807,073","฿2,225,213","-฿1,195,030"
-Jun-26,Projected,1-Current THC Business,"฿1,686,108","฿655,925","฿1,418,141","฿807,073","฿2,225,213","-฿1,195,030"
-Jul-26,Projected,1-Current THC Business,"฿1,686,108","฿655,925","฿1,418,141","฿807,073","฿2,225,213","-฿1,195,030"
-Aug-26,Projected,1-Current THC Business,"฿1,686,108","฿655,925","฿1,418,141","฿807,073","฿2,225,213","-฿1,195,030"
-Sep-26,Projected,1-Current THC Business,"฿1,686,108","฿655,925","฿1,418,141","฿807,073","฿2,225,213","-฿1,195,030"
-Oct-26,Projected,1-Current THC Business,"฿1,939,024","฿754,314","฿1,418,141","฿807,073","฿2,225,213","-฿1,040,503"
-Nov-26,Projected,1-Current THC Business,"฿1,939,024","฿754,314","฿1,418,141","฿807,073","฿2,225,213","-฿1,040,503"
-Dec-26,Projected,1-Current THC Business,"฿1,939,024","฿754,314","฿1,418,141","฿807,073","฿2,225,213","-฿1,040,503"
-Jan-24,Historical,6-CBD/CBN Sleep aid gummies,0,0,0,0,0,0
-Feb-24,Historical,6-CBD/CBN Sleep aid gummies,0,0,0,0,0,0
-Mar-24,Historical,6-CBD/CBN Sleep aid gummies,0,0,0,0,0,0
-Apr-24,Historical,6-CBD/CBN Sleep aid gummies,0,0,0,0,0,0
-May-24,Historical,6-CBD/CBN Sleep aid gummies,0,0,0,0,0,0
-Jun-24,Historical,6-CBD/CBN Sleep aid gummies,0,0,0,0,0,0
-Jul-24,Historical,6-CBD/CBN Sleep aid gummies,0,0,0,0,0,0
-Aug-24,Historical,6-CBD/CBN Sleep aid gummies,0,0,0,0,0,0
-Sep-24,Historical,6-CBD/CBN Sleep aid gummies,0,0,0,0,0,0
-Oct-24,Historical,6-CBD/CBN Sleep aid gummies,0,0,0,0,0,0
-Nov-24,Historical,6-CBD/CBN Sleep aid gummies,0,0,0,0,0,0
-Dec-24,Historical,6-CBD/CBN Sleep aid gummies,0,0,0,0,0,0
-Jan-25,Historical,6-CBD/CBN Sleep aid gummies,0,0,0,0,0,0
-Feb-25,Historical,6-CBD/CBN Sleep aid gummies,0,0,0,0,0,0
-Mar-25,Historical,6-CBD/CBN Sleep aid gummies,0,0,0,0,0,0
-Apr-25,Historical,6-CBD/CBN Sleep aid gummies,0,0,0,0,0,0
-May-25,Historical,6-CBD/CBN Sleep aid gummies,0,0,0,0,0,0
-Jun-25,Historical,6-CBD/CBN Sleep aid gummies,0,0,0,0,0,0
-Jul-25,Historical,6-CBD/CBN Sleep aid gummies,0,0,0,0,0,0
-Aug-25,Projected,6-CBD/CBN Sleep aid gummies,฿0,฿0,฿0,฿0,฿0,฿0
-Sep-25,Projected,6-CBD/CBN Sleep aid gummies,฿0,฿0,"฿15,000",฿0,฿0,฿0
-Oct-25,Projected,6-CBD/CBN Sleep aid gummies,฿0,฿0,"฿20,000",฿0,฿0,฿0
-Nov-25,Projected,6-CBD/CBN Sleep aid gummies,฿0,฿0,"฿25,000","฿30,000","฿30,000","-฿30,000"
-Dec-25,Projected,6-CBD/CBN Sleep aid gummies,"฿150,000","฿37,500","฿30,000","฿40,000","฿40,000","฿72,500"
-Jan-26,Projected,6-CBD/CBN Sleep aid gummies,"฿200,000","฿50,000",฿0,"฿50,000","฿50,000","฿100,000"
-Feb-26,Projected,6-CBD/CBN Sleep aid gummies,"฿250,000","฿62,500",฿0,"฿60,000","฿60,000","฿127,500"
-Mar-26,Projected,6-CBD/CBN Sleep aid gummies,"฿300,000","฿75,000",฿0,"฿70,000","฿70,000","฿155,000"
-Apr-26,Projected,6-CBD/CBN Sleep aid gummies,"฿350,000","฿87,500",฿0,"฿100,000","฿100,000","฿162,500"
-May-26,Projected,6-CBD/CBN Sleep aid gummies,"฿500,000","฿125,000",฿0,"฿100,000","฿100,000","฿275,000"
-Jun-26,Projected,6-CBD/CBN Sleep aid gummies,"฿500,000","฿125,000",฿0,"฿100,000","฿100,000","฿275,000"
-Jul-26,Projected,6-CBD/CBN Sleep aid gummies,"฿500,000","฿125,000","฿7,143","฿100,000","฿107,143","฿267,857"
-Aug-26,Projected,6-CBD/CBN Sleep aid gummies,"฿500,000","฿125,000","฿7,143","฿110,000","฿117,143","฿257,857"
-Sep-26,Projected,6-CBD/CBN Sleep aid gummies,"฿550,000","฿137,500","฿7,143","฿110,000","฿117,143","฿295,357"
-Oct-26,Projected,6-CBD/CBN Sleep aid gummies,"฿550,000","฿137,500","฿7,143","฿120,000","฿127,143","฿285,357"
-Nov-26,Projected,6-CBD/CBN Sleep aid gummies,"฿600,000","฿150,000","฿7,143","฿120,000","฿127,143","฿322,857"
-Dec-26,Projected,6-CBD/CBN Sleep aid gummies,"฿600,000","฿150,000","฿7,143","฿120,000","฿127,143","฿322,857"
+Jan-24,Historical,1-Legacy Wellness Business,"฿55,800","฿133,712","฿90,979","฿84,732","฿175,711","-฿253,622"
+Feb-24,Historical,1-Legacy Wellness Business,"฿152,100",฿718,"฿129,804","฿84,962","฿214,766","-฿63,383"
+Mar-24,Historical,1-Legacy Wellness Business,"฿67,750","฿195,970","฿73,929","฿63,210","฿137,139","-฿265,359"
+Apr-24,Historical,1-Legacy Wellness Business,"฿326,235",฿630,"฿119,190","-฿1,231","฿117,959","฿207,645"
+May-24,Historical,1-Legacy Wellness Business,"฿163,983","฿102,899","฿132,908","฿16,324","฿149,232","-฿88,148"
+Jun-24,Historical,1-Legacy Wellness Business,"฿685,982","฿918,133","฿324,122","฿78,953","฿403,075","-฿635,226"
+Jul-24,Historical,1-Legacy Wellness Business,"฿262,138","฿118,177","฿1,373,794","฿5,850","฿1,379,644","-฿1,235,683"
+Aug-24,Historical,1-Legacy Wellness Business,"฿258,660","฿61,708","฿1,363,211","฿11,085","฿1,374,296","-฿1,177,344"
+Sep-24,Historical,1-Legacy Wellness Business,"฿388,542","฿386,972","฿1,423,656","฿100,825","฿1,524,481","-฿1,522,911"
+Oct-24,Historical,1-Legacy Wellness Business,"฿914,767","฿134,637","฿1,449,210","฿149,745","฿1,598,955","-฿818,826"
+Nov-24,Historical,1-Legacy Wellness Business,"฿1,503,622","฿289,287","฿1,430,081","฿135,954","฿1,566,035","-฿351,699"
+Dec-24,Historical,1-Legacy Wellness Business,"฿2,726,811","-฿467,671","฿1,305,401","฿3,361,520","฿4,666,921","-฿1,472,440"
+Jan-25,Historical,1-Legacy Wellness Business,"฿2,998,751","฿313,665","฿1,313,581","฿928,467","฿2,242,048","฿443,038"
+Feb-25,Historical,1-Legacy Wellness Business,"฿2,863,000","฿673,820","฿1,332,778","฿739,073","฿2,071,851","฿117,329"
+Mar-25,Historical,1-Legacy Wellness Business,"฿1,368,652","฿186,713","฿1,387,512","฿924,474","฿2,311,986","-฿1,130,047"
+Apr-25,Historical,1-Legacy Wellness Business,"฿2,396,530","฿549,718","฿1,369,981","฿830,981","฿2,200,962","-฿354,149"
+May-25,Historical,1-Legacy Wellness Business,"฿2,049,392","฿177,482","฿1,444,567","฿932,601","฿2,377,168","-฿505,257"
+Jun-25,Historical,1-Legacy Wellness Business,"฿1,686,108","฿655,925","฿1,418,141","฿807,073","฿2,225,214","-฿1,195,031"
+Jul-25,Historical,1-Legacy Wellness Business,"฿830,435","฿466,414","฿1,490,633","฿783,667","฿2,274,300","-฿1,910,280"
+Aug-25,Projected,1-Legacy Wellness Business,"฿1,686,108","฿655,925","฿1,418,141","฿807,073","฿2,225,213","-฿1,195,030"
+Sep-25,Projected,1-Legacy Wellness Business,"฿1,686,108","฿655,925","฿1,418,141","฿807,073","฿2,225,213","-฿1,195,030"
+Oct-25,Projected,1-Legacy Wellness Business,"฿1,939,024","฿754,314","฿1,418,141","฿807,073","฿2,225,213","-฿1,040,503"
+Nov-25,Projected,1-Legacy Wellness Business,"฿1,939,024","฿754,314","฿1,418,141","฿807,073","฿2,225,213","-฿1,040,503"
+Dec-25,Projected,1-Legacy Wellness Business,"฿1,939,024","฿754,314","฿1,418,141","฿807,073","฿2,225,213","-฿1,040,503"
+Jan-26,Projected,1-Legacy Wellness Business,"฿1,939,024","฿754,314","฿1,418,141","฿807,073","฿2,225,213","-฿1,040,503"
+Feb-26,Projected,1-Legacy Wellness Business,"฿1,686,108","฿655,925","฿1,418,141","฿807,073","฿2,225,213","-฿1,195,030"
+Mar-26,Projected,1-Legacy Wellness Business,"฿1,686,108","฿655,925","฿1,418,141","฿807,073","฿2,225,213","-฿1,195,030"
+Apr-26,Projected,1-Legacy Wellness Business,"฿1,686,108","฿655,925","฿1,418,141","฿807,073","฿2,225,213","-฿1,195,030"
+May-26,Projected,1-Legacy Wellness Business,"฿1,686,108","฿655,925","฿1,418,141","฿807,073","฿2,225,213","-฿1,195,030"
+Jun-26,Projected,1-Legacy Wellness Business,"฿1,686,108","฿655,925","฿1,418,141","฿807,073","฿2,225,213","-฿1,195,030"
+Jul-26,Projected,1-Legacy Wellness Business,"฿1,686,108","฿655,925","฿1,418,141","฿807,073","฿2,225,213","-฿1,195,030"
+Aug-26,Projected,1-Legacy Wellness Business,"฿1,686,108","฿655,925","฿1,418,141","฿807,073","฿2,225,213","-฿1,195,030"
+Sep-26,Projected,1-Legacy Wellness Business,"฿1,686,108","฿655,925","฿1,418,141","฿807,073","฿2,225,213","-฿1,195,030"
+Oct-26,Projected,1-Legacy Wellness Business,"฿1,939,024","฿754,314","฿1,418,141","฿807,073","฿2,225,213","-฿1,040,503"
+Nov-26,Projected,1-Legacy Wellness Business,"฿1,939,024","฿754,314","฿1,418,141","฿807,073","฿2,225,213","-฿1,040,503"
+Dec-26,Projected,1-Legacy Wellness Business,"฿1,939,024","฿754,314","฿1,418,141","฿807,073","฿2,225,213","-฿1,040,503"
+Jan-24,Historical,6-Sleep Aid Gummies,0,0,0,0,0,0
+Feb-24,Historical,6-Sleep Aid Gummies,0,0,0,0,0,0
+Mar-24,Historical,6-Sleep Aid Gummies,0,0,0,0,0,0
+Apr-24,Historical,6-Sleep Aid Gummies,0,0,0,0,0,0
+May-24,Historical,6-Sleep Aid Gummies,0,0,0,0,0,0
+Jun-24,Historical,6-Sleep Aid Gummies,0,0,0,0,0,0
+Jul-24,Historical,6-Sleep Aid Gummies,0,0,0,0,0,0
+Aug-24,Historical,6-Sleep Aid Gummies,0,0,0,0,0,0
+Sep-24,Historical,6-Sleep Aid Gummies,0,0,0,0,0,0
+Oct-24,Historical,6-Sleep Aid Gummies,0,0,0,0,0,0
+Nov-24,Historical,6-Sleep Aid Gummies,0,0,0,0,0,0
+Dec-24,Historical,6-Sleep Aid Gummies,0,0,0,0,0,0
+Jan-25,Historical,6-Sleep Aid Gummies,0,0,0,0,0,0
+Feb-25,Historical,6-Sleep Aid Gummies,0,0,0,0,0,0
+Mar-25,Historical,6-Sleep Aid Gummies,0,0,0,0,0,0
+Apr-25,Historical,6-Sleep Aid Gummies,0,0,0,0,0,0
+May-25,Historical,6-Sleep Aid Gummies,0,0,0,0,0,0
+Jun-25,Historical,6-Sleep Aid Gummies,0,0,0,0,0,0
+Jul-25,Historical,6-Sleep Aid Gummies,0,0,0,0,0,0
+Aug-25,Projected,6-Sleep Aid Gummies,฿0,฿0,฿0,฿0,฿0,฿0
+Sep-25,Projected,6-Sleep Aid Gummies,฿0,฿0,"฿15,000",฿0,฿0,฿0
+Oct-25,Projected,6-Sleep Aid Gummies,฿0,฿0,"฿20,000",฿0,฿0,฿0
+Nov-25,Projected,6-Sleep Aid Gummies,฿0,฿0,"฿25,000","฿30,000","฿30,000","-฿30,000"
+Dec-25,Projected,6-Sleep Aid Gummies,"฿150,000","฿37,500","฿30,000","฿40,000","฿40,000","฿72,500"
+Jan-26,Projected,6-Sleep Aid Gummies,"฿200,000","฿50,000",฿0,"฿50,000","฿50,000","฿100,000"
+Feb-26,Projected,6-Sleep Aid Gummies,"฿250,000","฿62,500",฿0,"฿60,000","฿60,000","฿127,500"
+Mar-26,Projected,6-Sleep Aid Gummies,"฿300,000","฿75,000",฿0,"฿70,000","฿70,000","฿155,000"
+Apr-26,Projected,6-Sleep Aid Gummies,"฿350,000","฿87,500",฿0,"฿100,000","฿100,000","฿162,500"
+May-26,Projected,6-Sleep Aid Gummies,"฿500,000","฿125,000",฿0,"฿100,000","฿100,000","฿275,000"
+Jun-26,Projected,6-Sleep Aid Gummies,"฿500,000","฿125,000",฿0,"฿100,000","฿100,000","฿275,000"
+Jul-26,Projected,6-Sleep Aid Gummies,"฿500,000","฿125,000","฿7,143","฿100,000","฿107,143","฿267,857"
+Aug-26,Projected,6-Sleep Aid Gummies,"฿500,000","฿125,000","฿7,143","฿110,000","฿117,143","฿257,857"
+Sep-26,Projected,6-Sleep Aid Gummies,"฿550,000","฿137,500","฿7,143","฿110,000","฿117,143","฿295,357"
+Oct-26,Projected,6-Sleep Aid Gummies,"฿550,000","฿137,500","฿7,143","฿120,000","฿127,143","฿285,357"
+Nov-26,Projected,6-Sleep Aid Gummies,"฿600,000","฿150,000","฿7,143","฿120,000","฿127,143","฿322,857"
+Dec-26,Projected,6-Sleep Aid Gummies,"฿600,000","฿150,000","฿7,143","฿120,000","฿127,143","฿322,857"
 Jan-24,Historical,7-Creatine Gummies,0,0,0,0,0,0
 Feb-24,Historical,7-Creatine Gummies,0,0,0,0,0,0
 Mar-24,Historical,7-Creatine Gummies,0,0,0,0,0,0
