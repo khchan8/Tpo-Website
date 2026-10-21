@@ -1,0 +1,2613 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+
+  <title>TPO Wellness Ltd. — Supplement Gummy OEM, Herbal Dispensary &amp; Traditional Clinic | Bangkok</title>
+  <meta name="description" content="TPO Wellness Ltd. is a Thai FDA and GMP certified contract manufacturer in Bangkok specializing in pectin and gelatin supplement gummies (Creatine, Protein, Sleep, Relax, and custom formulas), alongside TPO Herbal Shop and our Thai Traditional Medicine Clinic.">
+  <meta name="keywords" content="TPO Wellness, Supplement Gummy Manufacturer Thailand, OEM Gummies Bangkok, White Label Creatine Gummies, Protein Gummies OEM, Sleep Gummies Thailand, TPO Herbal Shop, Thai Traditional Clinic">
+
+  <!-- Google Fonts: Editorial Serif (Newsreader) + Clean Sans (DM Sans) + Technical Mono (JetBrains Mono) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+
+  <!-- jQuery Library -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+  <!-- Three.js & Vanta.js 3D Clouds Background from GitHub (tengbao/vanta) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vanta@0.5.24/dist/vanta.clouds.min.js"></script>
+
+  <style>
+    :root {
+      --bg-paper: #f6f4ef;
+      --bg-Warm-white: #ffffff;
+      --bg-stone: #ede9e0;
+      --ink-dark: #18221f;
+      --ink-body: #2d3834;
+      --ink-muted: #5c6661;
+      --forest: #1f4737;
+      --forest-hover: #163629;
+      --terracotta: #b55428;
+      --rule-color: #d8d3c8;
+      --font-serif: 'Newsreader', Georgia, serif;
+      --font-sans: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      color: var(--ink-body);
+      background-color: var(--bg-paper);
+      overflow-x: hidden;
+      margin: 0;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    h1, h2, h3, h4, .serif-heading {
+      font-family: var(--font-serif);
+      color: var(--ink-dark);
+      font-weight: 500;
+      letter-spacing: -0.015em;
+    }
+
+    .mono-label {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--ink-muted);
+    }
+
+    a {
+      text-decoration: none;
+      transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+    }
+
+    /* ======= Top Bar Visibility & Styling (Preserved Auth Logic) ======= */
+    #topbar {
+      background: #141d1a;
+      color: rgba(255, 255, 255, 0.82);
+      height: 38px;
+      font-size: 12.5px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      z-index: 1035;
+      position: relative;
+    }
+
+    #topbar .contact-info i {
+      color: #a3bfb2;
+      font-style: normal;
+    }
+
+    #topbar .contact-info a,
+    #topbar .contact-info span {
+      padding-left: 6px;
+      color: rgba(255, 255, 255, 0.82);
+    }
+
+    #topbar .contact-info a:hover {
+      color: #ffffff;
+    }
+
+    #topbar .user-info {
+      display: none;
+    }
+
+    #topbar .contact-info {
+      display: flex;
+    }
+
+    #topbar #loginStatus {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: #c7dfd4;
+    }
+
+    @media (min-width: 768px) {
+      body.logged-in #topbar .contact-info { display: flex !important; }
+      body.logged-in #topbar .user-info { display: flex !important; }
+    }
+
+    @media (max-width: 767.98px) {
+      body.logged-in #topbar .contact-info { display: none !important; }
+      body.logged-in #topbar .user-info { display: flex !important; }
+    }
+
+    /* Sales Token Menu Visibility Styles */
+    .menu-sales-tools { display: block !important; }
+    .menu-performance, .menu-erp, .menu-crm, .menu-customer-portal {
+      transition: display 0.3s ease;
+    }
+
+    body.sales-only-user .menu-performance,
+    body.sales-only-user .menu-erp,
+    body.sales-only-user .menu-crm,
+    body.sales-only-user .menu-customer-portal {
+      display: none !important;
+    }
+
+    /* ======= Header & Navigation ======= */
+    #header {
+      background: rgba(246, 244, 239, 0.96);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--rule-color);
+      height: 74px;
+      position: sticky;
+      top: 0;
+      z-index: 1030;
+    }
+
+    .logo-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--ink-dark);
+    }
+
+    .logo-brand:hover {
+      color: var(--ink-dark);
+    }
+
+    .logo-mark {
+      width: 38px;
+      height: 38px;
+      border-radius: 4px;
+      background: var(--forest);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #f6f4ef;
+      font-family: var(--font-serif);
+      font-weight: 600;
+      font-size: 1.05rem;
+      letter-spacing: 0.03em;
+    }
+
+    .navbar ul {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      list-style: none;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .navbar > ul > li {
+      position: relative;
+    }
+
+    .navbar a.nav-link {
+      display: flex;
+      align-items: center;
+      padding: 8px 12px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--ink-body);
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+
+    .navbar a.nav-link:hover,
+    .navbar a.nav-link.active {
+      color: var(--forest);
+      background: rgba(31, 71, 55, 0.06);
+    }
+
+    .navbar .btn-nav-cta {
+      background: var(--forest);
+      color: #ffffff !important;
+      font-weight: 500;
+      padding: 8px 16px !important;
+      border-radius: 4px;
+      margin-left: 8px;
+    }
+
+    .navbar .btn-nav-cta:hover {
+      background: var(--forest-hover);
+    }
+
+    /* Dropdown Menus */
+    .navbar .dropdown ul {
+      display: block;
+      position: absolute;
+      left: 0;
+      top: calc(100% + 8px);
+      margin: 0;
+      padding: 8px 0;
+      z-index: 99;
+      opacity: 0;
+      visibility: hidden;
+      background: #ffffff;
+      border: 1px solid var(--rule-color);
+      box-shadow: 0 12px 28px rgba(24, 34, 31, 0.12);
+      border-radius: 6px;
+      min-width: 220px;
+      transition: 0.2s;
+    }
+
+    .navbar .dropdown:hover > ul {
+      opacity: 1;
+      top: 100%;
+      visibility: visible;
+    }
+
+    .navbar .dropdown ul li {
+      min-width: 220px;
+      position: relative;
+    }
+
+    .navbar .dropdown ul a {
+      padding: 8px 16px;
+      font-size: 13.5px;
+      color: var(--ink-body);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .navbar .dropdown ul a:hover {
+      background: var(--bg-paper);
+      color: var(--forest);
+    }
+
+    .navbar .dropdown .dropdown ul {
+      top: 0;
+      left: 100%;
+    }
+
+    .mobile-nav-toggle {
+      color: var(--ink-dark);
+      font-size: 26px;
+      cursor: pointer;
+      display: none;
+      line-height: 0;
+      background: none;
+      border: none;
+    }
+
+    @media (max-width: 1199px) {
+      .mobile-nav-toggle {
+        display: inline-flex;
+      }
+      .navbar ul {
+        display: none;
+      }
+      .navbar.navbar-mobile ul {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        position: fixed;
+        top: 112px;
+        right: 16px;
+        left: 16px;
+        background: #ffffff;
+        border: 1px solid var(--rule-color);
+        border-radius: 8px;
+        padding: 16px;
+        max-height: calc(100vh - 130px);
+        overflow-y: auto;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.18);
+      }
+      .navbar.navbar-mobile .dropdown ul {
+        position: static;
+        opacity: 1;
+        visibility: visible;
+        background: var(--bg-paper);
+        box-shadow: none;
+        margin-top: 4px;
+      }
+    }
+
+    /* ======= Hero Section with Vanta.js 3D Clouds ======= */
+    #hero {
+      width: 100%;
+      min-height: 82vh;
+      background-color: #2b4c5e;
+      position: relative;
+      display: flex;
+      align-items: center;
+      padding: 88px 0 76px 0;
+      overflow: hidden;
+      border-bottom: 1px solid var(--rule-color);
+    }
+
+    /* Subtle dark atmospheric gradient on left so editorial typography reads crisply over moving clouds */
+    #hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, rgba(16, 28, 34, 0.78) 0%, rgba(16, 28, 34, 0.52) 55%, rgba(16, 28, 34, 0.18) 100%);
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    #hero .hero-content {
+      position: relative;
+      z-index: 2;
+    }
+
+    .hero-kicker {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #e2ece9;
+      display: inline-block;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+      margin-bottom: 22px;
+    }
+
+    #hero h1 {
+      margin: 0 0 20px 0;
+      font-size: clamp(2.25rem, 4.2vw, 3.6rem);
+      font-weight: 500;
+      line-height: 1.12;
+      color: #ffffff;
+    }
+
+    #hero h2 {
+      font-family: var(--font-sans);
+      color: rgba(255, 255, 255, 0.88);
+      margin-bottom: 32px;
+      font-size: 1.08rem;
+      font-weight: 400;
+      line-height: 1.65;
+      max-width: 620px;
+    }
+
+    .btn-primary-editorial {
+      background: var(--forest);
+      color: #ffffff;
+      font-weight: 500;
+      font-size: 14.5px;
+      padding: 13px 24px;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--forest);
+    }
+
+    .btn-primary-editorial:hover {
+      background: var(--forest-hover);
+      border-color: var(--forest-hover);
+      color: #ffffff;
+    }
+
+    .btn-outline-editorial {
+      background: rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.45);
+      font-weight: 500;
+      font-size: 14.5px;
+      padding: 13px 24px;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-outline-editorial:hover {
+      background: #ffffff;
+      color: var(--ink-dark);
+    }
+
+    .hero-ledger {
+      margin-top: 44px;
+      padding-top: 24px;
+      border-top: 1px solid rgba(255, 255, 255, 0.24);
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 20px;
+      max-width: 680px;
+    }
+
+    .hero-ledger-item strong {
+      display: block;
+      font-family: var(--font-serif);
+      color: #ffffff;
+      font-size: 1.3rem;
+      font-weight: 500;
+    }
+
+    .hero-ledger-item span {
+      color: rgba(255, 255, 255, 0.76);
+      font-size: 0.82rem;
+    }
+
+    /* ======= Section General Styling ======= */
+    section {
+      padding: 84px 0;
+    }
+
+    .section-header {
+      margin-bottom: 48px;
+      border-bottom: 1px solid var(--rule-color);
+      padding-bottom: 24px;
+    }
+
+    .section-header h2 {
+      font-size: clamp(1.85rem, 3vw, 2.5rem);
+      margin: 6px 0 10px 0;
+    }
+
+    .section-header p {
+      color: var(--ink-muted);
+      max-width: 640px;
+      margin: 0;
+      font-size: 1rem;
+    }
+
+    /* ======= About Section ======= */
+    .editorial-panel {
+      background: #ffffff;
+      border: 1px solid var(--rule-color);
+      border-radius: 6px;
+      padding: 36px;
+    }
+
+    .about-list {
+      list-style: none;
+      padding: 0;
+      margin: 24px 0;
+      border-top: 1px solid var(--rule-color);
+    }
+
+    .about-list li {
+      padding: 14px 0;
+      border-bottom: 1px solid var(--rule-color);
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      font-size: 0.95rem;
+    }
+
+    .about-list li i {
+      color: var(--forest);
+      margin-top: 3px;
+    }
+
+    .process-ledger {
+      background: var(--ink-dark);
+      color: #f6f4ef;
+      border-radius: 6px;
+      padding: 36px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .process-step {
+      padding: 14px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .process-step:last-child {
+      border-bottom: none;
+    }
+
+    .process-step .step-num {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      color: #9ab8aa;
+    }
+
+    .process-step strong {
+      display: block;
+      font-size: 1rem;
+      color: #ffffff;
+      margin-top: 2px;
+    }
+
+    .process-step small {
+      color: rgba(255, 255, 255, 0.68);
+      font-size: 0.85rem;
+    }
+
+    /* ======= Services / OEM Capabilities ======= */
+    .services {
+      background: #ffffff;
+      border-top: 1px solid var(--rule-color);
+      border-bottom: 1px solid var(--rule-color);
+    }
+
+    .capability-card {
+      background: var(--bg-paper);
+      border: 1px solid var(--rule-color);
+      border-radius: 6px;
+      padding: 28px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: border-color 0.2s ease;
+    }
+
+    .capability-card:hover {
+      border-color: var(--forest);
+    }
+
+    .capability-card .cap-code {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--terracotta);
+      margin-bottom: 12px;
+      display: block;
+    }
+
+    .capability-card h4 {
+      font-size: 1.25rem;
+      margin-bottom: 10px;
+    }
+
+    .capability-card p {
+      color: var(--ink-muted);
+      font-size: 0.92rem;
+      margin-bottom: 20px;
+    }
+
+    /* ======= Mid-Page Call-To-Action ======= */
+    #cta {
+      background-color: var(--ink-dark);
+      color: #f6f4ef;
+      padding: 72px 0;
+      border-bottom: 1px solid var(--rule-color);
+    }
+
+    /* ======= Portfolio / Formulations Catalog ======= */
+    #portfolio-flters {
+      padding: 0;
+      margin: 0 0 32px 0;
+      list-style: none;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    #portfolio-flters li {
+      cursor: pointer;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ink-body);
+      background: #ffffff;
+      border: 1px solid var(--rule-color);
+      border-radius: 4px;
+      transition: all 0.2s ease;
+    }
+
+    #portfolio-flters li:hover,
+    #portfolio-flters li.filter-active {
+      color: #ffffff;
+      background: var(--forest);
+      border-color: var(--forest);
+    }
+
+    /* Authentic Apothecary / Contract Manufacturer Datasheet Cards */
+    .datasheet-card {
+      background: #ffffff;
+      border: 1px solid var(--rule-color);
+      border-radius: 6px;
+      padding: 24px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .datasheet-card:hover {
+      border-color: var(--ink-dark);
+      box-shadow: 0 8px 24px rgba(24, 34, 31, 0.06);
+    }
+
+    .datasheet-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 12px;
+      margin-bottom: 14px;
+      border-bottom: 1px solid var(--rule-color);
+    }
+
+    .datasheet-code {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--forest);
+      background: rgba(31, 71, 55, 0.08);
+      padding: 3px 8px;
+      border-radius: 3px;
+    }
+
+    .datasheet-format {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--ink-muted);
+    }
+
+    .datasheet-card h4 {
+      font-size: 1.2rem;
+      margin-bottom: 8px;
+    }
+
+    .datasheet-card p {
+      font-size: 0.89rem;
+      color: var(--ink-muted);
+      margin-bottom: 16px;
+    }
+
+    .spec-table-mini {
+      font-size: 12px;
+      border-top: 1px solid var(--bg-stone);
+      margin-bottom: 18px;
+    }
+
+    .spec-table-mini div {
+      display: flex;
+      justify-content: space-between;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--bg-stone);
+    }
+
+    .spec-table-mini span:first-child {
+      color: var(--ink-muted);
+    }
+
+    .spec-table-mini span:last-child {
+      font-weight: 500;
+      color: var(--ink-dark);
+    }
+
+    /* ======= TPO Herbal Shop & Thai Traditional Clinic Section ======= */
+    .division-box {
+      background: #ffffff;
+      border: 1px solid var(--rule-color);
+      border-radius: 6px;
+      padding: 36px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .division-box.clinic-box {
+      background: var(--bg-stone);
+    }
+
+    /* ======= Quote Builder & Meeting Scheduler Hub ======= */
+    #quote-booking {
+      background: var(--bg-stone);
+      border-top: 1px solid var(--rule-color);
+      border-bottom: 1px solid var(--rule-color);
+    }
+
+    .booking-hub-card {
+      background: #ffffff;
+      border: 1px solid var(--rule-color);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .hub-tab-btn {
+      flex: 1;
+      padding: 18px 24px;
+      font-weight: 600;
+      font-size: 0.98rem;
+      border: none;
+      background: var(--bg-paper);
+      color: var(--ink-muted);
+      border-bottom: 2px solid var(--rule-color);
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .hub-tab-btn.active {
+      background: #ffffff;
+      color: var(--ink-dark);
+      border-bottom: 2px solid var(--forest);
+    }
+
+    .selectable-pill-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .selectable-pill {
+      border: 1px solid var(--rule-color);
+      background: var(--bg-paper);
+      color: var(--ink-body);
+      padding: 7px 14px;
+      border-radius: 4px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+
+    .selectable-pill.active {
+      background: var(--forest);
+      border-color: var(--forest);
+      color: #ffffff;
+    }
+
+    .time-slot-btn {
+      border: 1px solid var(--rule-color);
+      background: #ffffff;
+      color: var(--ink-dark);
+      border-radius: 4px;
+      padding: 9px 14px;
+      font-size: 13px;
+      font-family: var(--font-mono);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .time-slot-btn.active {
+      background: var(--forest);
+      border-color: var(--forest);
+      color: #ffffff;
+    }
+
+    .form-control, .form-select {
+      border-radius: 4px;
+      border-color: var(--rule-color);
+      font-size: 14px;
+      padding: 10px 12px;
+    }
+
+    .form-control:focus, .form-select:focus {
+      border-color: var(--forest);
+      box-shadow: 0 0 0 2px rgba(31, 71, 55, 0.12);
+    }
+
+    /* ======= Contact & Footer ======= */
+    .contact .info-box {
+      background: #ffffff;
+      border-radius: 6px;
+      padding: 24px;
+      border: 1px solid var(--rule-color);
+      height: 100%;
+    }
+
+    .contact .info-box i {
+      font-size: 22px;
+      color: var(--forest);
+      margin-bottom: 10px;
+      display: inline-block;
+    }
+
+    #footer {
+      background: #141d1a;
+      color: rgba(255, 255, 255, 0.78);
+      font-size: 14px;
+    }
+
+    #footer .footer-top {
+      padding: 60px 0 36px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    #footer h4 {
+      font-family: var(--font-sans);
+      font-size: 14px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #ffffff;
+      margin-bottom: 16px;
+    }
+
+    #footer .footer-links ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    #footer .footer-links ul li {
+      padding: 6px 0;
+      display: flex;
+      align-items: center;
+    }
+
+    #footer .footer-links ul i {
+      color: #9ab8aa;
+      margin-right: 6px;
+    }
+
+    #footer .footer-links ul a {
+      color: rgba(255, 255, 255, 0.72);
+    }
+
+    #footer .footer-links ul a:hover {
+      color: #ffffff;
+    }
+
+    .back-to-top {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      z-index: 996;
+      background: var(--forest);
+      width: 40px;
+      height: 40px;
+      border-radius: 4px;
+      color: #ffffff;
+      font-size: 22px;
+    }
+
+    .back-to-top:hover {
+      background: var(--forest-hover);
+      color: #ffffff;
+    }
+  </style>
+</head>
+
+<body id="top">
+
+  <!-- ======= Top Bar (Preserved Structure & Auth Status) ======= -->
+  <section id="topbar" class="d-flex align-items-center py-0">
+    <div class="container d-flex justify-content-center justify-content-md-between align-items-center">
+      <div class="contact-info d-flex align-items-center flex-wrap gap-3">
+        <i class="bi bi-envelope d-flex align-items-center">
+          <a href="mailto:info@tpo-wellness.com">info@tpo-wellness.com</a>
+        </i>
+        <i class="bi bi-phone d-flex align-items-center">
+          <a href="tel:+66877894950">+66 87 789 4950</a>
+        </i>
+        <span class="d-none d-lg-inline-flex align-items-center ms-2" style="color: #c7dfd4;">
+          Bangkok, Thailand &mdash; Thai FDA &amp; GMP Licensed Contract Manufacturer
+        </span>
+      </div>
+      <div class="user-info d-flex align-items-center">
+        <span id="loginStatus"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======= Header ======= -->
+  <header id="header" class="d-flex align-items-center">
+    <div class="container d-flex align-items-center justify-content-between">
+
+      <a href="#hero" class="logo-brand" title="TPO Wellness Ltd. Bangkok">
+        <span class="logo-mark">TPO</span>
+        <div>
+          <span class="d-block fw-bold lh-1" style="font-size: 1.15rem;">TPO Wellness Ltd.</span>
+          <small class="mono-label d-block mt-1" style="font-size: 10px;">Bangkok OEM Gummies &bull; Herbal &bull; Clinic</small>
+        </div>
+      </a>
+
+      <nav id="navbar" class="navbar">
+        <ul>
+          <li><a class="nav-link scrollto active" href="#hero">Home</a></li>
+          <li><a class="nav-link scrollto" href="#about">Facility</a></li>
+          <li><a class="nav-link scrollto" href="#services">OEM Gummies</a></li>
+          <li><a class="nav-link scrollto" href="#products">Formulations</a></li>
+          <li><a class="nav-link scrollto" href="#herbal-clinic">Herbal Shop &amp; Clinic</a></li>
+          <li><a class="nav-link" href="#locationsModal" data-bs-toggle="modal" data-bs-target="#locationsModal">Locations</a></li>
+          <li><a class="nav-link scrollto" href="#contact">Contact</a></li>
+
+          <!-- Employee Portal Dropdown (Preserved Auth Structure) -->
+          <li class="dropdown" id="employeePortalDropdown" style="display: none;">
+            <a href="#quote-booking" class="nav-link"><span>Employee Portal</span> <i class="bi bi-chevron-down ms-1"></i></a>
+            <ul>
+              <li class="dropdown menu-sales-tools">
+                <a href="#products"><span>OEM Sales Tools</span> <i class="bi bi-chevron-right"></i></a>
+                <ul>
+                  <li><a href="#products" data-portal-tool="Creatine &amp; Protein Gummy Spec Sheet">Creatine &amp; Protein Gummies</a></li>
+                  <li><a href="#products" data-portal-tool="Sleep &amp; Relax Gummy Spec Sheet">Sleep &amp; Relax Gummies</a></li>
+                  <li><a href="#herbal-clinic" data-portal-tool="TPO Herbal Shop Wholesale Catalog">TPO Herbal Shop Catalog</a></li>
+                  <li><a href="#herbal-clinic" data-portal-tool="Thai Traditional Clinic Treatments">Thai Traditional Clinic</a></li>
+                </ul>
+              </li>
+              <li class="menu-performance"><a href="#quote-booking" data-portal-tool="Manufacturing Batch Performance">Performance</a></li>
+              <li class="menu-erp"><a href="#quote-booking" data-portal-tool="GMP Production ERP">ERP</a></li>
+              <li class="menu-crm"><a href="#quote-booking" data-portal-tool="B2B OEM Client CRM">CRM</a></li>
+              <li class="dropdown menu-customer-portal">
+                <a href="#quote-booking"><span>Customer Portal</span> <i class="bi bi-chevron-right"></i></a>
+                <ul>
+                  <li><a href="#quote-booking" data-portal-tool="OEM Gummy Batch CoA Tracker">OEM Batch &amp; CoA Tracker</a></li>
+                  <li><a href="#quote-booking" data-portal-tool="Private Label Packaging Proofs">Packaging Approvals</a></li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+
+          <!-- Dynamic Login/Logout Link -->
+          <li id="loginLogoutItem">
+            <a id="loginLogoutLink" class="nav-link" href="#portalLoginModal" data-bs-toggle="modal" data-bs-target="#portalLoginModal">Login</a>
+          </li>
+
+          <li>
+            <a class="nav-link btn-nav-cta scrollto" href="#quote-booking">Request Quote / Book Call</a>
+          </li>
+        </ul>
+        <button type="button" class="mobile-nav-toggle" id="mobileNavToggle" aria-label="Toggle Navigation">
+          <i class="bi bi-list"></i>
+        </button>
+      </nav>
+
+    </div>
+  </header>
+
+  <!-- ======= Hero Section with Vanta.js 3D Clouds Background ======= -->
+  <section id="hero">
+    <div class="container hero-content">
+      <div class="row">
+        <div class="col-lg-8">
+          <span class="hero-kicker">Bangkok Contract Manufacturing &bull; Thai FDA &amp; GMP Certified</span>
+          <h1>
+            White-Label Supplement Gummy Manufacturing in Thailand.
+          </h1>
+          <h2>
+            TPO Wellness formulates and manufactures commercial-scale <strong>Creatine, Protein, Sleep, and Relax Gummies</strong> in Bangkok. We also operate our retail <strong>TPO Herbal Shop</strong> and licensed <strong>Thai Traditional Clinic</strong>.
+          </h2>
+
+          <div class="d-flex flex-wrap gap-3">
+            <a href="#quote-booking" class="btn-primary-editorial" id="heroQuoteBtn">
+              Request an OEM Quote <i class="bi bi-arrow-right"></i>
+            </a>
+            <a href="#quote-booking" class="btn-outline-editorial" id="heroMeetingBtn">
+              Schedule R&amp;D Meeting
+            </a>
+          </div>
+
+          <div class="hero-ledger">
+            <div class="hero-ledger-item">
+              <strong>GMP &amp; Thai FDA</strong>
+              <span>Audited Bangkok Facility</span>
+            </div>
+            <div class="hero-ledger-item">
+              <strong>Pectin &amp; Gelatin</strong>
+              <span>Heat-Stable Tropical Matrices</span>
+            </div>
+            <div class="hero-ledger-item">
+              <strong>3,000 Units</strong>
+              <span>Pilot MOQ per Formulation</span>
+            </div>
+            <div class="hero-ledger-item">
+              <strong>3 Divisions</strong>
+              <span>OEM Factory &bull; Herbal &bull; Clinic</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <main id="main">
+
+    <!-- ======= About / Facility Section ======= -->
+    <section id="about" class="about">
+      <div class="container">
+        <div class="row g-4 align-items-stretch">
+          <div class="col-lg-7">
+            <div class="editorial-panel h-100 d-flex flex-column justify-content-between">
+              <div>
+                <span class="mono-label">About TPO Wellness Ltd. &mdash; Bangkok</span>
+                <h2 class="mt-2 mb-3">Contract Gummy Manufacturing Rooted in Food Science and Thai Botanical Practice</h2>
+                <p class="text-muted">
+                  Based in Bangkok, <strong>TPO Wellness Ltd.</strong> works with supplement brands, gym chains, and regional distributors to develop shelf-stable functional gummies and herbal formulations. Every batch is produced in-house under Thai FDA and Good Manufacturing Practice (GMP) standards.
+                </p>
+                <ul class="about-list">
+                  <li>
+                    <i class="bi bi-check2"></i>
+                    <div><strong>Tropical Heat-Resistant Gummy Base:</strong> High-methoxyl vegan pectin and hybrid matrices engineered to hold texture up to 40&deg;C without sticking or sweating in transit.</div>
+                  </li>
+                  <li>
+                    <i class="bi bi-check2"></i>
+                    <div><strong>High-Load Active Masking:</strong> Proprietary bitterness masking for high-dose Creatine Monohydrate, Collagen/BCAA peptides, minerals, and standardized Thai botanical extracts.</div>
+                  </li>
+                  <li>
+                    <i class="bi bi-check2"></i>
+                    <div><strong>Full Regulatory &amp; Lab Documentation:</strong> Certificate of Analysis (CoA), microbial and heavy-metal testing, Thai FDA registration (SorBor), and export certificates.</div>
+                  </li>
+                </ul>
+              </div>
+              <div class="d-flex flex-wrap gap-3 pt-2">
+                <a href="#quote-booking" class="btn-primary-editorial" id="aboutStartQuoteBtn">
+                  Configure Your Formula <i class="bi bi-arrow-right"></i>
+                </a>
+                <button type="button" class="btn btn-outline-dark rounded-1 px-4" data-bs-toggle="modal" data-bs-target="#locationsModal">
+                  Visit Bangkok HQ &amp; Clinic
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-5">
+            <div class="process-ledger">
+              <div>
+                <span class="mono-label" style="color: #9ab8aa;">Production Timeline</span>
+                <h3 class="text-white mt-2 mb-3">How We Work With OEM Clients</h3>
+                <div class="process-step">
+                  <span class="step-num">STAGE 01 &bull; DAYS 1–10</span>
+                  <strong>Lab Bench Prototyping &amp; Tasting</strong>
+                  <small>We compound active dosages, adjust sweetness (sugar-free allulose, stevia, or cane syrup), and ship physical samples from Bangkok.</small>
+                </div>
+                <div class="process-step">
+                  <span class="step-num">STAGE 02 &bull; DAYS 11–20</span>
+                  <strong>Thai FDA Dossier &amp; Packaging Proofs</strong>
+                  <small>Label compliance review, nutrition panel verification, and dieline setup for pouches, PET bottles, or glass jars.</small>
+                </div>
+                <div class="process-step">
+                  <span class="step-num">STAGE 03 &bull; DAYS 21–30</span>
+                  <strong>GMP Depositing, Curing &amp; CoA Release</strong>
+                  <small>Automated depositing, controlled-humidity curing, third-party lab verification, and domestic or export dispatch.</small>
+                </div>
+              </div>
+
+              <div class="mt-4 pt-3 border-top border-secondary border-opacity-25 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <span class="mono-label" style="color: #c7dfd4;">Direct Line: +66 87 789 4950</span>
+                <a href="https://lin.ee/nW4iuoH" target="_blank" rel="noopener" class="btn btn-sm btn-light rounded-1 px-3 fw-medium">
+                  Message on LINE
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======= Services / OEM Supplement Gummy Capabilities ======= -->
+    <section id="services" class="services">
+      <div class="container">
+        <div class="section-header d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3">
+          <div>
+            <span class="mono-label">Manufacturing Capabilities</span>
+            <h2>OEM Supplement Gummy &amp; Nutraceutical Lines</h2>
+          </div>
+          <p>Available as white-label stock formulations (3,000-unit MOQ) or custom R&amp;D builds tailored to your brand's target active profile.</p>
+        </div>
+
+        <div class="row g-4">
+          <div class="col-lg-4 col-md-6">
+            <div class="capability-card">
+              <div>
+                <span class="cap-code">01 / SPORTS NUTRITION</span>
+                <h4>Creatine Gummies</h4>
+                <p>Micronized Creatine Monohydrate gummies formulated at 3g to 5g per serving with smooth pectin bite and zero chalky sediment.</p>
+              </div>
+              <button type="button" class="btn btn-sm btn-outline-dark rounded-1 align-self-start select-quote-category" data-category="Creatine Gummies">
+                Quote Creatine Gummies
+              </button>
+            </div>
+          </div>
+
+          <div class="col-lg-4 col-md-6">
+            <div class="capability-card">
+              <div>
+                <span class="cap-code">02 / MUSCLE &amp; RECOVERY</span>
+                <h4>Protein &amp; Amino Gummies</h4>
+                <p>Hydrolyzed collagen peptides, BCAA 2:1:1, and essential amino acid gummies engineered with clean citrus and tropical fruit profiles.</p>
+              </div>
+              <button type="button" class="btn btn-sm btn-outline-dark rounded-1 align-self-start select-quote-category" data-category="Protein Gummies">
+                Quote Protein Gummies
+              </button>
+            </div>
+          </div>
+
+          <div class="col-lg-4 col-md-6">
+            <div class="capability-card">
+              <div>
+                <span class="cap-code">03 / NIGHTTIME REST</span>
+                <h4>Sleep Support Gummies</h4>
+                <p>Melatonin-free or precision melatonin formulas pairing L-Theanine, Magnesium Glycinate, Chamomile, Tart Cherry, and Reishi.</p>
+              </div>
+              <button type="button" class="btn btn-sm btn-outline-dark rounded-1 align-self-start select-quote-category" data-category="Sleep Gummies">
+                Quote Sleep Gummies
+              </button>
+            </div>
+          </div>
+
+          <div class="col-lg-4 col-md-6">
+            <div class="capability-card">
+              <div>
+                <span class="cap-code">04 / CALM &amp; ADAPTOGENS</span>
+                <h4>Relax &amp; De-Stress Gummies</h4>
+                <p>Daily calm formulations featuring Ashwagandha, GABA, Lemon Balm, Rhodiola, and standardized Thai botanical extracts.</p>
+              </div>
+              <button type="button" class="btn btn-sm btn-outline-dark rounded-1 align-self-start select-quote-category" data-category="Relax / Stress Gummies">
+                Quote Relax Gummies
+              </button>
+            </div>
+          </div>
+
+          <div class="col-lg-4 col-md-6">
+            <div class="capability-card">
+              <div>
+                <span class="cap-code">05 / BESPOKE R&amp;D</span>
+                <h4>Custom Supplement Formulations</h4>
+                <p>Custom active development for Nootropics (Lion's Mane), Electrolytes, Immunity, Women's/Men's Vitality, capsules, powders, and liquid shots.</p>
+              </div>
+              <button type="button" class="btn btn-sm btn-outline-dark rounded-1 align-self-start select-quote-category" data-category="Custom Gummy Formulation">
+                Start Custom Formulation
+              </button>
+            </div>
+          </div>
+
+          <div class="col-lg-4 col-md-6">
+            <div class="capability-card">
+              <div>
+                <span class="cap-code">06 / CO-PACKING &amp; REGULATORY</span>
+                <h4>Packaging &amp; Thai FDA Registration</h4>
+                <p>Printed mylar pouches, PET/HDPE bottles, amber glass jars, induction sealing, label design review, and Thai FDA filing.</p>
+              </div>
+              <button type="button" class="btn btn-sm btn-outline-dark rounded-1 align-self-start select-quote-category" data-category="Full Turnkey Packaging &amp; FDA">
+                Request Packaging Specs
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======= Mid-Page Call-To-Action ======= -->
+    <section id="cta" class="cta">
+      <div class="container">
+        <div class="row align-items-center justify-content-between g-4">
+          <div class="col-lg-7">
+            <span class="mono-label" style="color: #9ab8aa;">R&amp;D Sample Bench &mdash; Bangkok</span>
+            <h3 class="text-white mt-2 mb-2" style="font-size: 2rem;">Request Unlabeled Sample Pouches or Book a Formulation Review</h3>
+            <p class="text-white-50 mb-0">
+              Test our pectin texture, heat stability, and flavor masking firsthand before committing to a production run.
+            </p>
+          </div>
+          <div class="col-lg-5 d-flex flex-wrap justify-content-lg-end gap-3">
+            <a class="btn-primary-editorial" href="#quote-booking" id="ctaRequestQuoteBtn">
+              Configure OEM Quote
+            </a>
+            <a class="btn-outline-editorial" href="#quote-booking" id="ctaBookMeetingBtn">
+              Book Discovery Call
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======= Products & Formulations Catalog Section ======= -->
+    <section class="portfolio" id="products">
+      <div class="container">
+        <div class="section-header">
+          <span class="mono-label">Reference Catalog</span>
+          <h2>Stock &amp; Custom Formulation Datasheets</h2>
+          <p>Select a category below to filter our reference formulas. Any base formula can be modified for dosage, sweetener, and flavor.</p>
+        </div>
+
+        <ul id="portfolio-flters">
+          <li class="filter-active" data-filter="all">All Formulations (12)</li>
+          <li data-filter="gummy">Core Gummy Lines (4)</li>
+          <li data-filter="performance">Performance, Hydration &amp; Vitality (6)</li>
+          <li data-filter="mind">Sleep, Relax, Focus &amp; Immune (6)</li>
+        </ul>
+
+        <div class="row g-4" id="portfolioGrid">
+
+          <!-- 1. Creatine Gummies -->
+          <div class="col-lg-4 col-md-6 portfolio-item" data-category="gummy performance">
+            <div class="datasheet-card">
+              <div>
+                <div class="datasheet-header">
+                  <span class="datasheet-code">FORM-CR01</span>
+                  <span class="datasheet-format">PECTIN GUMMY &bull; 4G/PC</span>
+                </div>
+                <h4>Creatine Power Gummies</h4>
+                <p>Micronized Creatine Monohydrate suspended in a smooth citrus or berry pectin matrix for strength and cellular ATP output.</p>
+                <div class="spec-table-mini">
+                  <div><span>Active Load</span><span>5,000mg / 4-Gummy Serving</span></div>
+                  <div><span>Base Matrix</span><span>Heat-Stable Vegan Pectin</span></div>
+                  <div><span>Sweetener</span><span>Sugar-Free Allulose or Cane</span></div>
+                </div>
+              </div>
+              <div class="d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary w-50 rounded-1 view-spec-btn" data-product="Creatine Power Gummies" data-actives="5,000mg Micronized Creatine Monohydrate, Vitamin B12, Electrolytes" data-base="Heat-Stable High-Methoxyl Vegan Pectin" data-moq="3,000 Bottles / Pouches">Specs</button>
+                <button type="button" class="btn btn-sm btn-dark w-50 rounded-1 select-quote-category" data-category="Creatine Gummies">Quote This</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. Protein & Collagen Gummies -->
+          <div class="col-lg-4 col-md-6 portfolio-item" data-category="gummy performance">
+            <div class="datasheet-card">
+              <div>
+                <div class="datasheet-header">
+                  <span class="datasheet-code">FORM-PR02</span>
+                  <span class="datasheet-format">HYBRID GUMMY &bull; 4.5G/PC</span>
+                </div>
+                <h4>Pro-Peptide Protein &amp; Amino Gummies</h4>
+                <p>Bioactive Collagen Peptides paired with 2:1:1 BCAAs and EAAs for post-training recovery without chalky shake residue.</p>
+                <div class="spec-table-mini">
+                  <div><span>Active Load</span><span>12g Protein + Amino / Pack</span></div>
+                  <div><span>Base Matrix</span><span>Gelatin or Pectin Hybrid</span></div>
+                  <div><span>Flavor Profile</span><span>Tropical Mango / Passionfruit</span></div>
+                </div>
+              </div>
+              <div class="d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary w-50 rounded-1 view-spec-btn" data-product="Pro-Peptide Protein &amp; Amino Gummies" data-actives="Hydrolyzed Protein Peptides, L-Leucine, L-Isoleucine, L-Valine, Vitamin C" data-base="Gelatin or Vegan Pectin Hybrid" data-moq="3,000 Bottles / Pouches">Specs</button>
+                <button type="button" class="btn btn-sm btn-dark w-50 rounded-1 select-quote-category" data-category="Protein Gummies">Quote This</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. Deep Slumber Sleep Gummies -->
+          <div class="col-lg-4 col-md-6 portfolio-item" data-category="gummy mind">
+            <div class="datasheet-card">
+              <div>
+                <div class="datasheet-header">
+                  <span class="datasheet-code">FORM-SL03</span>
+                  <span class="datasheet-format">PECTIN GUMMY &bull; 3.5G/PC</span>
+                </div>
+                <h4>Deep Slumber Nighttime Gummies</h4>
+                <p>Restorative evening formula combining L-Theanine, Magnesium Glycinate, Chamomile, Reishi, and optional Melatonin.</p>
+                <div class="spec-table-mini">
+                  <div><span>Active Load</span><span>200mg L-Theanine + Mg</span></div>
+                  <div><span>Base Matrix</span><span>100% Vegan Pectin</span></div>
+                  <div><span>Sweetener</span><span>Sugar-Free Allulose / Stevia</span></div>
+                </div>
+              </div>
+              <div class="d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary w-50 rounded-1 view-spec-btn" data-product="Deep Slumber Nighttime Gummies" data-actives="200mg L-Theanine, 150mg Magnesium Glycinate, Chamomile Extract, Reishi" data-base="100% Vegan Pectin (Sugar-Free Option)" data-moq="3,000 Bottles / Pouches">Specs</button>
+                <button type="button" class="btn btn-sm btn-dark w-50 rounded-1 select-quote-category" data-category="Sleep Gummies">Quote This</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. Zen Botanica Relax Gummies -->
+          <div class="col-lg-4 col-md-6 portfolio-item" data-category="gummy mind">
+            <div class="datasheet-card">
+              <div>
+                <div class="datasheet-header">
+                  <span class="datasheet-code">FORM-RX04</span>
+                  <span class="datasheet-format">PECTIN GUMMY &bull; 3.5G/PC</span>
+                </div>
+                <h4>Zen Botanica Relax &amp; Calm Gummies</h4>
+                <p>Daytime stress relief and cortisol balance formulated with KSM-66 Ashwagandha, GABA, Lemon Balm, and Thai Holy Basil.</p>
+                <div class="spec-table-mini">
+                  <div><span>Active Load</span><span>300mg Ashwagandha + GABA</span></div>
+                  <div><span>Base Matrix</span><span>100% Vegan Pectin</span></div>
+                  <div><span>Flavor Profile</span><span>Yuzu Lychee Botanical</span></div>
+                </div>
+              </div>
+              <div class="d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary w-50 rounded-1 view-spec-btn" data-product="Zen Botanica Relax &amp; Calm Gummies" data-actives="300mg Ashwagandha Root Extract, 100mg GABA, Lemon Balm, Vitamin B6" data-base="100% Vegan Pectin" data-moq="3,000 Bottles / Pouches">Specs</button>
+                <button type="button" class="btn btn-sm btn-dark w-50 rounded-1 select-quote-category" data-category="Relax / Stress Gummies">Quote This</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 5. Lion's Peak Pre-Workout Formula -->
+          <div class="col-lg-4 col-md-6 portfolio-item" data-category="performance">
+            <div class="datasheet-card">
+              <div>
+                <div class="datasheet-header">
+                  <span class="datasheet-code">FORM-PW05</span>
+                  <span class="datasheet-format">GUMMY OR ELIXIR SHOT</span>
+                </div>
+                <h4>Lion's Peak Pre-Workout Formula</h4>
+                <p>Nitric oxide and endurance blend combining L-Citrulline Malate, Beta-Alanine, Cordyceps Militaris, and Green Tea Caffeine.</p>
+                <div class="spec-table-mini">
+                  <div><span>Key Actives</span><span>Citrulline + Cordyceps</span></div>
+                  <div><span>Delivery Format</span><span>Pectin Gummy / 60ml Shot</span></div>
+                  <div><span>Pilot MOQ</span><span>3,000 Units</span></div>
+                </div>
+              </div>
+              <div class="d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary w-50 rounded-1 view-spec-btn" data-product="Lion's Peak Pre-Workout Formula" data-actives="L-Citrulline Malate, Cordyceps Militaris, Natural Caffeine, B-Complex" data-base="Gummy / Functional Elixir / Stick Pack" data-moq="3,000 Units">Specs</button>
+                <button type="button" class="btn btn-sm btn-dark w-50 rounded-1 select-quote-category" data-category="Custom Gummy Formulation">Quote This</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 6. Reishi Restore Post-Workout Recovery -->
+          <div class="col-lg-4 col-md-6 portfolio-item" data-category="performance">
+            <div class="datasheet-card">
+              <div>
+                <div class="datasheet-header">
+                  <span class="datasheet-code">FORM-RC06</span>
+                  <span class="datasheet-format">GUMMY OR CAPSULE</span>
+                </div>
+                <h4>Reishi Restore Recovery Blend</h4>
+                <p>Post-exercise joint and cellular recovery pairing dual-extracted Organic Reishi, Curcuminoids, Tart Cherry, and L-Glutamine.</p>
+                <div class="spec-table-mini">
+                  <div><span>Key Actives</span><span>Reishi + Thai Curcumin C3</span></div>
+                  <div><span>Delivery Format</span><span>Pectin Gummy / VegeCap</span></div>
+                  <div><span>Pilot MOQ</span><span>3,000 Units</span></div>
+                </div>
+              </div>
+              <div class="d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary w-50 rounded-1 view-spec-btn" data-product="Reishi Restore Recovery Blend" data-actives="Reishi Dual-Extract, Curcuminoids, Piperine, Tart Cherry, L-Glutamine" data-base="Pectin Gummy or VegeCap" data-moq="3,000 Units">Specs</button>
+                <button type="button" class="btn btn-sm btn-dark w-50 rounded-1 select-quote-category" data-category="Custom Gummy Formulation">Quote This</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 7. Himalayan Hydration Electrolyte -->
+          <div class="col-lg-4 col-md-6 portfolio-item" data-category="performance">
+            <div class="datasheet-card">
+              <div>
+                <div class="datasheet-header">
+                  <span class="datasheet-code">FORM-HY07</span>
+                  <span class="datasheet-format">GUMMY / SACHET / POP</span>
+                </div>
+                <h4>Himalayan Hydration Electrolyte</h4>
+                <p>Rapid mineral replenishment using Himalayan Pink Salt, Potassium Citrate, Magnesium, and freeze-dried Coconut Water.</p>
+                <div class="spec-table-mini">
+                  <div><span>Key Actives</span><span>Na + K + Mg Electrolytes</span></div>
+                  <div><span>Delivery Format</span><span>Chewable Gummy / Sachet</span></div>
+                  <div><span>Pilot MOQ</span><span>5,000 Units</span></div>
+                </div>
+              </div>
+              <div class="d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary w-50 rounded-1 view-spec-btn" data-product="Himalayan Hydration Electrolyte" data-actives="Sodium (Pink Salt), Potassium Citrate, Magnesium, Coconut Water Powder" data-base="Electrolyte Gummy / Stick Pack / Hydro-Pop" data-moq="5,000 Units">Specs</button>
+                <button type="button" class="btn btn-sm btn-dark w-50 rounded-1 select-quote-category" data-category="Custom Gummy Formulation">Quote This</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 8. Lion's Mane Mind Fuel Nootropic -->
+          <div class="col-lg-4 col-md-6 portfolio-item" data-category="mind">
+            <div class="datasheet-card">
+              <div>
+                <div class="datasheet-header">
+                  <span class="datasheet-code">FORM-NF08</span>
+                  <span class="datasheet-format">NOOTROPIC GUMMY</span>
+                </div>
+                <h4>Lion's Mane Mind Fuel Nootropic</h4>
+                <p>Cognitive focus and memory formula combining fruiting-body Lion's Mane (30% Beta-Glucans), Thai Brahmi (Bacopa), and L-Tyrosine.</p>
+                <div class="spec-table-mini">
+                  <div><span>Key Actives</span><span>500mg Lion's Mane + Brahmi</span></div>
+                  <div><span>Delivery Format</span><span>Vegan Pectin Gummy</span></div>
+                  <div><span>Pilot MOQ</span><span>3,000 Units</span></div>
+                </div>
+              </div>
+              <div class="d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary w-50 rounded-1 view-spec-btn" data-product="Lion's Mane Mind Fuel Nootropic" data-actives="500mg Lion's Mane Extract, Thai Brahmi (Bacopa), L-Tyrosine, Vitamin B12" data-base="Vegan Pectin Gummy or Capsule" data-moq="3,000 Units">Specs</button>
+                <button type="button" class="btn btn-sm btn-dark w-50 rounded-1 select-quote-category" data-category="Custom Gummy Formulation">Quote This</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 9. Mushroom Defense Immune Shield -->
+          <div class="col-lg-4 col-md-6 portfolio-item" data-category="mind">
+            <div class="datasheet-card">
+              <div>
+                <div class="datasheet-header">
+                  <span class="datasheet-code">FORM-IM09</span>
+                  <span class="datasheet-format">IMMUNE GUMMY</span>
+                </div>
+                <h4>Mushroom Defense Immune Shield</h4>
+                <p>5-mushroom fruiting body extract (Turkey Tail, Chaga, Reishi, Shiitake, Maitake) paired with Elderberry, Vitamin C, D3, and Zinc.</p>
+                <div class="spec-table-mini">
+                  <div><span>Key Actives</span><span>5-Mushroom + Elderberry</span></div>
+                  <div><span>Delivery Format</span><span>Vegan Pectin Gummy</span></div>
+                  <div><span>Pilot MOQ</span><span>3,000 Units</span></div>
+                </div>
+              </div>
+              <div class="d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary w-50 rounded-1 view-spec-btn" data-product="Mushroom Defense Immune Shield" data-actives="5-Mushroom Fruiting Body Extract, Black Elderberry, Zinc Citrate, Vit C &amp; D3" data-base="Vegan Pectin Gummy / Tincture" data-moq="3,000 Units">Specs</button>
+                <button type="button" class="btn btn-sm btn-dark w-50 rounded-1 select-quote-category" data-category="Herbal Bulk Supply">Quote This</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 10. Chill Chaga Nighttime Tonic -->
+          <div class="col-lg-4 col-md-6 portfolio-item" data-category="mind">
+            <div class="datasheet-card">
+              <div>
+                <div class="datasheet-header">
+                  <span class="datasheet-code">FORM-SL10</span>
+                  <span class="datasheet-format">TONIC OR GUMMY</span>
+                </div>
+                <h4>Chill Chaga Nighttime Tonic</h4>
+                <p>Evening wind-down tonic and gummy formulation crafted with Wild Chaga extract, L-Theanine, Lemon Balm, and Valerian Root.</p>
+                <div class="spec-table-mini">
+                  <div><span>Key Actives</span><span>Chaga + Valerian + Theanine</span></div>
+                  <div><span>Delivery Format</span><span>Botanical Shot / Gummy</span></div>
+                  <div><span>Pilot MOQ</span><span>3,000 Units</span></div>
+                </div>
+              </div>
+              <div class="d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary w-50 rounded-1 view-spec-btn" data-product="Chill Chaga Nighttime Tonic" data-actives="Chaga Mushroom Extract, L-Theanine, Valerian Root, Chamomile, Magnesium" data-base="Liquid Shot Elixir or Vegan Pectin Gummy" data-moq="3,000 Units">Specs</button>
+                <button type="button" class="btn btn-sm btn-dark w-50 rounded-1 select-quote-category" data-category="Sleep Gummies">Quote This</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 11. Tribulus & Thai Black Ginger Vitality -->
+          <div class="col-lg-4 col-md-6 portfolio-item" data-category="performance">
+            <div class="datasheet-card">
+              <div>
+                <div class="datasheet-header">
+                  <span class="datasheet-code">FORM-VT11</span>
+                  <span class="datasheet-format">BOTANICAL GUMMY / CAP</span>
+                </div>
+                <h4>Tribulus &amp; Thai Black Ginger Vitality</h4>
+                <p>Stamina and circulation formula featuring standardized Thai Krachai Dam (Black Ginger), Tribulus Terrestris, Maca, and Zinc.</p>
+                <div class="spec-table-mini">
+                  <div><span>Key Actives</span><span>Krachai Dam + Tribulus</span></div>
+                  <div><span>Delivery Format</span><span>Pectin Gummy / VegeCap</span></div>
+                  <div><span>Pilot MOQ</span><span>3,000 Units</span></div>
+                </div>
+              </div>
+              <div class="d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary w-50 rounded-1 view-spec-btn" data-product="Tribulus &amp; Thai Black Ginger Vitality" data-actives="Tribulus Terrestris, Thai Black Ginger (Kaempferia parviflora), Maca Root, Zinc" data-base="Vegan Pectin Gummy or Capsule" data-moq="3,000 Units">Specs</button>
+                <button type="button" class="btn btn-sm btn-dark w-50 rounded-1 select-quote-category" data-category="Custom Gummy Formulation">Quote This</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 12. Adaptogen Zen Balance Blend -->
+          <div class="col-lg-4 col-md-6 portfolio-item" data-category="mind">
+            <div class="datasheet-card">
+              <div>
+                <div class="datasheet-header">
+                  <span class="datasheet-code">FORM-AD12</span>
+                  <span class="datasheet-format">BOTANICAL GUMMY</span>
+                </div>
+                <h4>Adaptogen Zen Balance Blend</h4>
+                <p>Non-drowsy daytime mood and stress resilience blend featuring Rhodiola Rosea, Thai Holy Basil, Schisandra Berry, and Vitamin B6.</p>
+                <div class="spec-table-mini">
+                  <div><span>Key Actives</span><span>Rhodiola + Schisandra</span></div>
+                  <div><span>Delivery Format</span><span>Vegan Pectin Gummy</span></div>
+                  <div><span>Pilot MOQ</span><span>3,000 Units</span></div>
+                </div>
+              </div>
+              <div class="d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary w-50 rounded-1 view-spec-btn" data-product="Adaptogen Zen Balance Blend" data-actives="Rhodiola Rosea, Thai Holy Basil, Schisandra Chinensis, L-Theanine, Vit B6" data-base="Vegan Pectin Gummy / Botanical Capsule" data-moq="3,000 Units">Specs</button>
+                <button type="button" class="btn btn-sm btn-dark w-50 rounded-1 select-quote-category" data-category="Relax / Stress Gummies">Quote This</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ======= TPO Herbal Shop & Thai Traditional Clinic Section ======= -->
+    <section id="herbal-clinic" class="bg-white border-top">
+      <div class="container">
+        <div class="section-header">
+          <span class="mono-label">Retail &amp; Clinical Practice &mdash; Bangkok</span>
+          <h2>TPO Herbal Shop &amp; Thai Traditional Medicine Clinic</h2>
+          <p>Alongside contract manufacturing, TPO Wellness operates our flagship herbal dispensary and licensed traditional medicine clinic in Bangkok.</p>
+        </div>
+
+        <div class="row g-4">
+          <!-- TPO Herbal Shop -->
+          <div class="col-lg-6">
+            <div class="division-box">
+              <div>
+                <span class="mono-label" style="color: var(--forest);">01 / Retail Dispensary &amp; Bulk Extracts</span>
+                <h3 class="mt-2 mb-3">TPO Herbal Shop</h3>
+                <p class="text-muted mb-4">
+                  Our Bangkok dispensary stocks standardized Thai botanical extracts, dual-extracted mushroom tinctures, herbal sleep and digestive teas, Plai muscle balms, and small-batch wellness gummies produced in our GMP facility.
+                </p>
+                <div class="row g-2 mb-4 small">
+                  <div class="col-sm-6"><i class="bi bi-check2 text-success me-2"></i>Standardized Curcumin &amp; Krachai Dam</div>
+                  <div class="col-sm-6"><i class="bi bi-check2 text-success me-2"></i>Fruiting-Body Mushroom Tinctures</div>
+                  <div class="col-sm-6"><i class="bi bi-check2 text-success me-2"></i>Compounded Herbal Teas &amp; Balms</div>
+                  <div class="col-sm-6"><i class="bi bi-check2 text-success me-2"></i>Wholesale Raw Botanical Supply</div>
+                </div>
+              </div>
+              <div class="d-flex flex-wrap gap-3 pt-2">
+                <button type="button" class="btn-primary-editorial" data-bs-toggle="modal" data-bs-target="#locationsModal">
+                  Find TPO Herbal Shop Locations
+                </button>
+                <button type="button" class="btn btn-outline-dark rounded-1 px-3 select-quote-category" data-category="Herbal Bulk Supply">
+                  Wholesale Herbal Inquiry
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Thai Traditional Clinic -->
+          <div class="col-lg-6">
+            <div class="division-box clinic-box">
+              <div>
+                <span class="mono-label" style="color: var(--terracotta);">02 / Ministry of Public Health Licensed Clinic</span>
+                <h3 class="mt-2 mb-3">TPO Thai Traditional Clinic</h3>
+                <p class="text-muted mb-4">
+                  Staffed by licensed Thai Traditional Medicine (TTM) physicians in Bangkok. We offer individual diagnostic consultations, custom herbal compounding, sleep and burnout recovery programs, and therapeutic acupressure bodywork.
+                </p>
+                <div class="row g-2 mb-4 small">
+                  <div class="col-sm-6"><i class="bi bi-check2 text-dark me-2"></i>Licensed TTM Physician Consultations</div>
+                  <div class="col-sm-6"><i class="bi bi-check2 text-dark me-2"></i>Custom Herbal Prescription Compounding</div>
+                  <div class="col-sm-6"><i class="bi bi-check2 text-dark me-2"></i>Insomnia, Stress &amp; Digestive Care</div>
+                  <div class="col-sm-6"><i class="bi bi-check2 text-dark me-2"></i>Clinical Formulation Advisory for OEM Brands</div>
+                </div>
+              </div>
+              <div class="d-flex flex-wrap gap-3 pt-2">
+                <button type="button" class="btn-primary-editorial" id="bookClinicConsultBtn">
+                  Book Clinic Consultation
+                </button>
+                <button type="button" class="btn btn-outline-dark rounded-1 px-3" data-bs-toggle="modal" data-bs-target="#locationsModal">
+                  Clinic Hours &amp; Map
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======= Interactive Request a Quote & Schedule a Meeting Hub ======= -->
+    <section id="quote-booking">
+      <div class="container">
+        <div class="section-header">
+          <span class="mono-label">Direct Factory &amp; Clinic Desk</span>
+          <h2>Request an OEM Quote or Schedule a Meeting</h2>
+          <p>Submit your target formulation specifications for a factory quotation, or book a video call / in-person sample review at our Bangkok office.</p>
+        </div>
+
+        <div class="booking-hub-card">
+          <!-- Tab Headers -->
+          <div class="d-flex border-bottom flex-column flex-md-row">
+            <button type="button" class="hub-tab-btn active" id="tabBtnQuote" data-hub-tab="quotePane">
+              <i class="bi bi-file-earmark-spreadsheet"></i>
+              <span>1. Request OEM / White-Label Quote</span>
+            </button>
+            <button type="button" class="hub-tab-btn" id="tabBtnMeeting" data-hub-tab="meetingPane">
+              <i class="bi bi-calendar-event"></i>
+              <span>2. Schedule R&amp;D Meeting or Clinic Visit</span>
+            </button>
+          </div>
+
+          <div class="p-4 p-lg-5">
+
+            <!-- TAB PANE 1: REQUEST A QUOTE -->
+            <div id="quotePane">
+              <form id="quoteForm">
+                <input type="hidden" name="action" value="quote_request">
+                <input type="hidden" name="selectedCategories" id="selectedCategoriesInput" value="Creatine Gummies">
+
+                <div class="row g-4">
+                  <div class="col-lg-8">
+                    <div class="mono-label mb-2">Step 01 &mdash; Product Line</div>
+                    <div class="selectable-pill-group mb-4" id="quoteCategoryPills">
+                      <span class="selectable-pill active" data-val="Creatine Gummies">Creatine Gummies</span>
+                      <span class="selectable-pill" data-val="Protein Gummies">Protein Gummies</span>
+                      <span class="selectable-pill" data-val="Sleep Gummies">Sleep Gummies</span>
+                      <span class="selectable-pill" data-val="Relax / Stress Gummies">Relax / Stress Gummies</span>
+                      <span class="selectable-pill" data-val="Custom Gummy Formulation">Custom Gummy Formulation</span>
+                      <span class="selectable-pill" data-val="Other Supplement (Capsule/Powder/Elixir)">Other Supplement (Capsule/Powder/Elixir)</span>
+                      <span class="selectable-pill" data-val="Herbal Bulk Supply">TPO Herbal Bulk Supply</span>
+                    </div>
+
+                    <div class="mono-label mb-2">Step 02 &mdash; Base &amp; Packaging Specifications</div>
+                    <div class="row g-3 mb-4">
+                      <div class="col-md-6">
+                        <label class="form-label fw-medium small" for="gummyBaseSelect">Gummy Matrix / Base</label>
+                        <select class="form-select" id="gummyBaseSelect" name="gummyBase">
+                          <option value="Vegan Pectin (Tropical Heat-Stable)">Vegan Pectin (100% Plant-Based, Heat-Stable)</option>
+                          <option value="Standard Beef/Pork Gelatin">Standard Gelatin Matrix</option>
+                          <option value="Agar / Carrageenan Botanical">Agar / Carrageenan Botanical Gel</option>
+                          <option value="Non-Gummy (Capsule / Powder / Tincture)">Non-Gummy (Capsule / Powder / Tincture)</option>
+                          <option value="Need R&amp;D Recommendation">Need R&amp;D Lab Recommendation</option>
+                        </select>
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label fw-medium small" for="sweetenerSelect">Sweetener Profile</label>
+                        <select class="form-select" id="sweetenerSelect" name="sweetener">
+                          <option value="Sugar-Free (Allulose / Erythritol / Stevia)">Sugar-Free / Keto (Allulose, Stevia, Monk Fruit)</option>
+                          <option value="Organic Cane Sugar &amp; Tapioca Syrup">Organic Cane Sugar &amp; Tapioca Syrup</option>
+                          <option value="Low-Sugar Honey / Coconut Nectar">Low-Sugar Thai Honey / Coconut Nectar</option>
+                        </select>
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label fw-medium small" for="packagingSelect">Packaging Format</label>
+                        <select class="form-select" id="packagingSelect" name="packaging">
+                          <option value="Custom Printed Stand-Up Pouches (Mylar)">Custom Printed Stand-Up Pouches (Mylar)</option>
+                          <option value="PET / HDPE Supplement Bottles (60ct)">PET / HDPE Supplement Bottles (30ct–90ct)</option>
+                          <option value="Amber Glass Apothecary Jars">Amber Glass Apothecary Jars</option>
+                          <option value="Single-Serve Sachet / Travel Packs">Single-Serve Sachet / Travel Packs</option>
+                          <option value="Bulk Unpackaged Gummies (by kg)">Bulk Unpackaged Gummies (by kg)</option>
+                        </select>
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label fw-medium small" for="moqSelect">Estimated Order Volume (MOQ Tier)</label>
+                        <select class="form-select" id="moqSelect" name="moqTier">
+                          <option value="Pilot Run (3,000 – 5,000 units)">Pilot Run (3,000 – 5,000 units)</option>
+                          <option value="Growth Run (10,000 – 25,000 units)">Growth Run (10,000 – 25,000 units)</option>
+                          <option value="Scale Production (50,000+ units)">Scale Production (50,000+ units)</option>
+                          <option value="Bulk Raw Weight (100 kg – 1,000+ kg)">Bulk Raw Weight (100 kg – 1,000+ kg)</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div class="mono-label mb-2">Step 03 &mdash; Contact &amp; Formulation Notes</div>
+                    <div class="row g-3">
+                      <div class="col-md-6">
+                        <input type="text" class="form-control" name="name" placeholder="Your Full Name *" required>
+                      </div>
+                      <div class="col-md-6">
+                        <input type="text" class="form-control" name="company" placeholder="Brand / Company Name *" required>
+                      </div>
+                      <div class="col-md-6">
+                        <input type="email" class="form-control" name="email" placeholder="Work Email Address *" required>
+                      </div>
+                      <div class="col-md-6">
+                        <input type="text" class="form-control" name="phone" placeholder="Phone / WhatsApp / LINE ID *" required>
+                      </div>
+                      <div class="col-12">
+                        <textarea class="form-control" name="message" id="quoteNotesTextarea" rows="3" placeholder="Target active dosage per serving, flavor preferences, destination market (Thailand FDA or Export), and target timeline..."></textarea>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Live Quote Spec Summary Sidebar -->
+                  <div class="col-lg-4">
+                    <div class="p-4 rounded-1 h-100 d-flex flex-column justify-content-between" style="background: var(--bg-paper); border: 1px solid var(--rule-color);">
+                      <div>
+                        <span class="mono-label">Specification Summary</span>
+                        <h4 class="mt-1 mb-3">Draft RFQ Sheet</h4>
+                        <div class="small border-top pt-3" style="border-color: var(--rule-color) !important;">
+                          <div class="mb-2"><span class="text-muted d-block">Selected Product(s):</span><strong id="summaryCategory">Creatine Gummies</strong></div>
+                          <div class="mb-2"><span class="text-muted d-block">Matrix Base:</span><strong id="summaryBase">Vegan Pectin (Tropical Heat-Stable)</strong></div>
+                          <div class="mb-2"><span class="text-muted d-block">Sweetener:</span><strong id="summarySweetener">Sugar-Free (Allulose / Erythritol / Stevia)</strong></div>
+                          <div class="mb-2"><span class="text-muted d-block">Packaging:</span><strong id="summaryPackaging">Custom Printed Stand-Up Pouches (Mylar)</strong></div>
+                          <div class="mb-3"><span class="text-muted d-block">Volume Tier:</span><strong id="summaryMoq">Pilot Run (3,000 – 5,000 units)</strong></div>
+                        </div>
+                        <div class="p-3 rounded-1 small bg-white border" style="border-color: var(--rule-color) !important;">
+                          <strong>Standard R&amp;D Bench Lead Time:</strong> 7–10 business days from our Bangkok lab.
+                        </div>
+                      </div>
+
+                      <div class="mt-4">
+                        <button type="submit" class="btn-primary-editorial w-100 justify-content-center">
+                          Submit OEM Quote Request
+                        </button>
+                        <div class="loading text-center small text-muted mt-2" style="display: none;">Sending RFQ to TPO Wellness Bangkok...</div>
+                        <div class="error-message text-center small text-danger mt-2" style="display: none;"></div>
+                        <div class="sent-message text-center small text-success fw-medium mt-2" style="display: none;"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </form>
+            </div>
+
+            <!-- TAB PANE 2: SCHEDULE A MEETING -->
+            <div id="meetingPane" style="display: none;">
+              <form id="meetingForm">
+                <input type="hidden" name="action" value="schedule_meeting">
+                <input type="hidden" name="selectedTimeSlot" id="selectedTimeSlotInput" value="14:00 ICT (Bangkok UTC+7)">
+
+                <div class="row g-4">
+                  <div class="col-lg-7">
+                    <div class="mono-label mb-2">Step 01 &mdash; Meeting Type</div>
+                    <div class="row g-3 mb-4">
+                      <div class="col-md-4">
+                        <label class="border rounded-1 p-3 d-block h-100">
+                          <input type="radio" name="meetingType" value="OEM / White-Label R&amp;D Video Call (30 Min)" class="form-check-input me-2" checked>
+                          <strong class="d-block small">OEM R&amp;D Video Call</strong>
+                          <span class="text-muted" style="font-size: 12px;">30-min discussion on formulation, MOQs &amp; pricing.</span>
+                        </label>
+                      </div>
+                      <div class="col-md-4">
+                        <label class="border rounded-1 p-3 d-block h-100">
+                          <input type="radio" name="meetingType" value="Bangkok Factory Tour &amp; Gummy Sample Tasting" class="form-check-input me-2">
+                          <strong class="d-block small">Factory &amp; Sample Tasting</strong>
+                          <span class="text-muted" style="font-size: 12px;">In-person visit at TPO Wellness Bangkok HQ.</span>
+                        </label>
+                      </div>
+                      <div class="col-md-4">
+                        <label class="border rounded-1 p-3 d-block h-100">
+                          <input type="radio" name="meetingType" id="clinicMeetingRadio" value="TPO Herbal Shop &amp; Thai Traditional Clinic Consultation" class="form-check-input me-2">
+                          <strong class="d-block small">Herbal &amp; Clinic Consult</strong>
+                          <span class="text-muted" style="font-size: 12px;">TTM physician appointment or wholesale herbal inquiry.</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    <div class="mono-label mb-2">Step 02 &mdash; Date &amp; Time Slot (Bangkok ICT / UTC+7)</div>
+                    <div class="row g-3 mb-3">
+                      <div class="col-md-6">
+                        <label class="form-label small fw-medium" for="meetingDateInput">Preferred Date *</label>
+                        <input type="date" class="form-control" id="meetingDateInput" name="meetingDate" required>
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label small fw-medium" for="meetingPlatformSelect">Meeting Channel *</label>
+                        <select class="form-select" id="meetingPlatformSelect" name="meetingPlatform">
+                          <option value="Google Meet">Google Meet (Video Link)</option>
+                          <option value="Zoom">Zoom Video Conference</option>
+                          <option value="Microsoft Teams">Microsoft Teams</option>
+                          <option value="LINE Call (@TPO-Wellness)">LINE Official Call</option>
+                          <option value="In-Person (Bangkok TPO Wellness HQ)">In-Person (Bangkok TPO Wellness HQ)</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div class="mb-4">
+                      <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="small fw-medium">Select Time (Bangkok ICT / UTC+7):</span>
+                        <span class="mono-label" id="visitorTimezoneBadge">Detecting timezone...</span>
+                      </div>
+                      <div class="d-flex flex-wrap gap-2" id="timeSlotGroup">
+                        <button type="button" class="time-slot-btn" data-slot="09:30 ICT (Bangkok UTC+7)" data-hour="09:30">09:30 AM ICT</button>
+                        <button type="button" class="time-slot-btn" data-slot="11:00 ICT (Bangkok UTC+7)" data-hour="11:00">11:00 AM ICT</button>
+                        <button type="button" class="time-slot-btn active" data-slot="14:00 ICT (Bangkok UTC+7)" data-hour="14:00">02:00 PM ICT</button>
+                        <button type="button" class="time-slot-btn" data-slot="15:30 ICT (Bangkok UTC+7)" data-hour="15:30">03:30 PM ICT</button>
+                        <button type="button" class="time-slot-btn" data-slot="17:00 ICT (Bangkok UTC+7)" data-hour="17:00">05:00 PM ICT</button>
+                      </div>
+                    </div>
+
+                    <div class="mono-label mb-2">Step 03 &mdash; Your Details</div>
+                    <div class="row g-3">
+                      <div class="col-md-6">
+                        <input type="text" class="form-control" name="name" id="meetingAttendeeName" placeholder="Your Name *" required>
+                      </div>
+                      <div class="col-md-6">
+                        <input type="email" class="form-control" name="email" id="meetingAttendeeEmail" placeholder="Your Email *" required>
+                      </div>
+                      <div class="col-md-6">
+                        <input type="text" class="form-control" name="phone" placeholder="Phone / WhatsApp / LINE ID *" required>
+                      </div>
+                      <div class="col-md-6">
+                        <input type="text" class="form-control" name="company" placeholder="Company / Organization">
+                      </div>
+                      <div class="col-12">
+                        <textarea class="form-control" name="message" id="meetingAgendaInput" rows="2" placeholder="Topics or specific formulations you would like to review..."></textarea>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Meeting Confirmation & Instant Calendar Invite Box -->
+                  <div class="col-lg-5">
+                    <div class="p-4 rounded-1 h-100 d-flex flex-column justify-content-between" style="background: var(--bg-paper); border: 1px solid var(--rule-color);">
+                      <div>
+                        <span class="mono-label">Appointment Summary</span>
+                        <h4 class="mt-1 mb-3">TPO Wellness Bangkok</h4>
+                        <p class="small text-muted">
+                          Once confirmed, your request is logged with our Bangkok team and you can download a calendar file (`.ics`) or add it directly to Google Calendar.
+                        </p>
+                        <div class="p-3 rounded-1 mb-3 small bg-white border" style="border-color: var(--rule-color) !important;">
+                          <div class="mb-1"><span class="text-muted">Department:</span> <strong>OEM R&amp;D / Clinical Desk</strong></div>
+                          <div class="mb-1"><span class="text-muted">Location:</span> <strong>Bangkok, Thailand / Video</strong></div>
+                          <div class="mb-1"><span class="text-muted">Selected Slot:</span> <strong id="summarySlotText">14:00 ICT (Bangkok UTC+7)</strong></div>
+                          <div><span class="text-muted">Contact:</span> <strong>info@tpo-wellness.com | +66 87 789 4950</strong></div>
+                        </div>
+
+                        <!-- Dynamic Calendar Links (Revealed upon submission) -->
+                        <div id="calendarInviteActions" class="p-3 rounded-1 mb-3 bg-white border border-success" style="display: none;">
+                          <div class="fw-bold text-success small mb-2">Booking Logged &mdash; Save to Calendar:</div>
+                          <div class="d-flex flex-wrap gap-2">
+                            <a href="https://calendar.google.com" target="_blank" rel="noopener" id="gcalInviteLink" class="btn btn-sm btn-success rounded-1">
+                              Add to Google Calendar
+                            </a>
+                            <button type="button" id="downloadIcsBtn" class="btn btn-sm btn-outline-dark rounded-1">
+                              Download .ics Invite
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div>
+                        <button type="submit" class="btn-primary-editorial w-100 justify-content-center">
+                          Confirm Meeting Slot
+                        </button>
+                        <div class="loading text-center small text-muted mt-2" style="display: none;">Scheduling session...</div>
+                        <div class="error-message text-center small text-danger mt-2" style="display: none;"></div>
+                        <div class="sent-message text-center small text-success fw-medium mt-2" style="display: none;"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </form>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======= Contact Section (Preserved Contact Info, Map & Form) ======= -->
+    <section id="contact" class="contact">
+      <div class="container">
+        <div class="section-header">
+          <span class="mono-label">Bangkok Headquarters</span>
+          <h2>Contact TPO Wellness Ltd.</h2>
+          <p>Direct inquiries for contract gummy manufacturing, TPO Herbal Shop, or our Thai Traditional Medicine Clinic.</p>
+        </div>
+
+        <div class="row g-4 mb-4">
+          <div class="col-lg-3 col-md-6">
+            <div class="info-box">
+              <i class="bx bx-map"></i>
+              <h5 class="serif-heading mb-1">Address</h5>
+              <p class="text-muted small mb-0">TPO Wellness Ltd.<br>Bangkok, Thailand</p>
+            </div>
+          </div>
+
+          <div class="col-lg-3 col-md-6">
+            <div class="info-box">
+              <i class="bx bx-envelope"></i>
+              <h5 class="serif-heading mb-1">Email</h5>
+              <p class="small mb-0"><a href="mailto:info@tpo-wellness.com" class="text-dark fw-medium">info@tpo-wellness.com</a></p>
+            </div>
+          </div>
+
+          <div class="col-lg-3 col-md-6">
+            <div class="info-box">
+              <i class="bx bx-phone-call"></i>
+              <h5 class="serif-heading mb-1">Telephone</h5>
+              <p class="small mb-0"><a href="tel:+66877894950" class="text-dark fw-medium">+66 87 789 4950</a></p>
+            </div>
+          </div>
+
+          <div class="col-lg-3 col-md-6">
+            <div class="info-box">
+              <i class="bi bi-chat-dots"></i>
+              <h5 class="serif-heading mb-1">LINE Official</h5>
+              <p class="small mb-0">
+                <a href="https://lin.ee/nW4iuoH" target="_blank" rel="noopener" class="text-dark fw-medium">lin.ee/nW4iuoH &rarr;</a>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-4">
+          <div class="col-lg-6">
+            <div class="rounded-1 overflow-hidden border h-100" style="min-height: 384px; border-color: var(--rule-color) !important;">
+              <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d496115.3313133451!2d100.35290282935726!3d13.724699806600398!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x311d6032280d61f3%3A0x10100b25de24820!2sBangkok%2C%20Thailand!5e0!3m2!1sen!2sus!4v1691035652862!5m2!1sen!2sus"
+                width="600"
+                height="450"
+                style="border:0; width: 100%; height: 100%; min-height: 384px;"
+                allowfullscreen=""
+                loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade"
+                title="TPO Wellness Ltd. Bangkok Location Map">
+              </iframe>
+            </div>
+          </div>
+
+          <div class="col-lg-6">
+            <form id="contactForm" class="bg-white p-4 p-lg-5 rounded-1 border h-100" style="border-color: var(--rule-color) !important;">
+              <h3 class="mb-3">Send a Message</h3>
+              <div class="row g-3">
+                <div class="col-md-6 form-group">
+                  <input type="text" name="name" class="form-control" id="name" placeholder="Your Name" required>
+                </div>
+                <div class="col-md-6 form-group">
+                  <input type="email" class="form-control" name="email" id="email" placeholder="Your Email" required>
+                </div>
+                <div class="col-12 form-group">
+                  <input type="text" class="form-control" name="subject" id="subject" placeholder="Subject (OEM Gummies / Herbal Shop / Clinic)" required>
+                </div>
+                <div class="col-12 form-group">
+                  <textarea class="form-control" name="message" rows="5" placeholder="Message" required></textarea>
+                </div>
+              </div>
+              <div class="my-3">
+                <div class="loading small text-muted" style="display: none;">Sending...</div>
+                <div class="error-message small text-danger" style="display: none;"></div>
+                <div class="sent-message small text-success fw-medium" style="display: none;"></div>
+              </div>
+              <button type="submit" class="btn-primary-editorial w-100 justify-content-center">Send Message</button>
+            </form>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ======= Footer ======= -->
+  <footer id="footer">
+    <div class="footer-top">
+      <div class="container">
+        <div class="row g-4">
+
+          <div class="col-lg-4 col-md-6">
+            <div class="footer-info">
+              <h3 class="text-white mb-3" style="font-size: 1.4rem;">TPO Wellness Ltd.</h3>
+              <p class="text-white-50 small">
+                Thai FDA &amp; GMP certified contract manufacturer of functional supplement gummies, operating TPO Herbal Shop and TPO Thai Traditional Clinic in Bangkok.
+              </p>
+              <p class="small mb-2">
+                <strong>Location:</strong> Bangkok, Thailand<br>
+                <strong>Phone:</strong> <a href="tel:+66877894950" class="text-white">+66 87 789 4950</a><br>
+                <strong>Email:</strong> <a href="mailto:info@tpo-wellness.com" class="text-white">info@tpo-wellness.com</a>
+              </p>
+            </div>
+          </div>
+
+          <div class="col-lg-2 col-md-6 footer-links">
+            <h4>Navigation</h4>
+            <ul>
+              <li><i class="bx bx-chevron-right"></i> <a href="#hero">Home</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="#about">Facility</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="#services">OEM Gummies</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="#products">Formulations</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="#herbal-clinic">Herbal &amp; Clinic</a></li>
+            </ul>
+          </div>
+
+          <div class="col-lg-3 col-md-6 footer-links">
+            <h4>Divisions</h4>
+            <ul>
+              <li><i class="bx bx-chevron-right"></i> <a href="#services">Creatine &amp; Protein Gummies OEM</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="#services">Sleep &amp; Relax Gummies OEM</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="#services">Custom Nutraceutical R&amp;D</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="#herbal-clinic">TPO Herbal Shop Bangkok</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="#herbal-clinic">Thai Traditional Clinic</a></li>
+            </ul>
+          </div>
+
+          <div class="col-lg-3 col-md-6 footer-newsletter">
+            <h4>Manufacturing Updates</h4>
+            <p class="text-white-50 small">Receive quarterly updates on new gummy bases, Thai FDA regulations, and botanical harvests.</p>
+            <form id="newsletterForm" class="d-flex gap-2">
+              <input type="email" name="email" class="form-control form-control-sm" placeholder="Email address" required>
+              <button type="submit" class="btn btn-sm btn-light fw-medium px-3">Subscribe</button>
+            </form>
+            <div class="loading small text-white-50 mt-2" style="display: none;">Subscribing...</div>
+            <div class="error-message small text-danger mt-2" style="display: none;"></div>
+            <div class="sent-message small text-white fw-medium mt-2" style="display: none;"></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="container py-4 d-flex flex-wrap justify-content-between align-items-center">
+      <div class="copyright small text-white-50">
+        &copy; Copyright <strong><span class="text-white">TPO Wellness Ltd.</span></strong> All Rights Reserved.
+      </div>
+      <div class="credits small text-white-50">
+        Bangkok, Thailand
+      </div>
+    </div>
+  </footer>
+
+  <!-- Back to top -->
+  <a href="#top" class="back-to-top d-flex align-items-center justify-content-center" title="Back to Top">
+    <i class="bi bi-arrow-up-short"></i>
+  </a>
+
+  <!-- ======= MODAL 1: Formulation Technical Spec Sheet ======= -->
+  <div class="modal fade" id="specModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content rounded-1 border-0 shadow">
+        <div class="modal-header border-bottom" style="background: var(--bg-paper);">
+          <h5 class="modal-title serif-heading" id="specModalTitle">Formulation Technical Sheet</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <span class="mono-label d-block mb-2">Thai FDA &amp; GMP Reference Specification</span>
+          <p class="small text-muted mb-3">Active concentrations, natural flavor systems, and sweetener ratios can be adjusted during bench sampling in our Bangkok lab.</p>
+          <div class="list-group list-group-flush small mb-3">
+            <div class="list-group-item px-0"><strong>Active Ingredients:</strong> <span id="specModalActives" class="text-muted d-block mt-1"></span></div>
+            <div class="list-group-item px-0"><strong>Matrix &amp; Base Options:</strong> <span id="specModalBase" class="text-muted d-block mt-1"></span></div>
+            <div class="list-group-item px-0"><strong>Standard Pilot MOQ:</strong> <span id="specModalMoq" class="text-muted d-block mt-1"></span></div>
+            <div class="list-group-item px-0"><strong>Testing &amp; Stability:</strong> <span class="text-muted d-block mt-1">Certificate of Analysis (CoA), microbial assay, and 40&deg;C tropical stability verification.</span></div>
+          </div>
+          <button type="button" class="btn-primary-editorial w-100 justify-content-center" id="specModalQuoteBtn" data-bs-dismiss="modal">
+            Request Quote &amp; Lab Samples for This Formula
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======= MODAL 2: Bangkok Locations (OEM Factory, Herbal Shop & Clinic) ======= -->
+  <div class="modal fade" id="locationsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content rounded-1 border-0 shadow">
+        <div class="modal-header border-bottom" style="background: var(--bg-paper);">
+          <h5 class="modal-title serif-heading">TPO Wellness Ltd. &mdash; Bangkok Locations</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <div class="border rounded-1 p-3 h-100">
+                <span class="mono-label d-block mb-1">01 / Manufacturing</span>
+                <h6 class="fw-bold">OEM Gummy Factory &amp; Lab</h6>
+                <p class="small text-muted mb-2">Bangkok Metropolitan Area, Thailand. Open by appointment for B2B client audits and R&amp;D tastings.</p>
+                <div class="small fw-medium">Mon–Fri: 09:00 – 18:00 ICT</div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="border rounded-1 p-3 h-100">
+                <span class="mono-label d-block mb-1">02 / Dispensary</span>
+                <h6 class="fw-bold">TPO Herbal Shop</h6>
+                <p class="small text-muted mb-2">Standardized Thai herbal extracts, mushroom tinctures, teas, and wellness gummies in central Bangkok.</p>
+                <div class="small fw-medium">Daily: 10:00 – 20:00 ICT</div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="border rounded-1 p-3 h-100">
+                <span class="mono-label d-block mb-1">03 / Clinical Care</span>
+                <h6 class="fw-bold">TPO Thai Traditional Clinic</h6>
+                <p class="small text-muted mb-2">Licensed Thai Traditional Medicine physicians offering consultations and compounded herbal prescriptions.</p>
+                <div class="small fw-medium">Tue–Sun: 10:00 – 19:00 ICT</div>
+              </div>
+            </div>
+          </div>
+          <div class="mt-3 p-3 rounded-1 d-flex flex-wrap justify-content-between align-items-center gap-2 small" style="background: var(--bg-paper);">
+            <div><strong>Telephone:</strong> +66 87 789 4950 &nbsp;|&nbsp; <strong>Email:</strong> info@tpo-wellness.com</div>
+            <a href="https://lin.ee/nW4iuoH" target="_blank" rel="noopener" class="btn btn-sm btn-dark rounded-1 px-3">Message on LINE</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======= MODAL 3: Employee Portal Login (Preserves localStorage Token Workflow) ======= -->
+  <div class="modal fade" id="portalLoginModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content rounded-1 border-0 shadow">
+        <div class="modal-header border-bottom" style="background: var(--bg-paper);">
+          <h5 class="modal-title serif-heading">TPO Wellness Staff &amp; Partner Sign In</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <p class="small text-muted">Sign in to access internal OEM Sales Tools, ERP, CRM, and Customer Batch Portals.</p>
+          <form id="portalLoginForm">
+            <div class="mb-3">
+              <label class="form-label small fw-medium" for="portalEmailInput">Staff / Partner Email</label>
+              <input type="email" class="form-control" id="portalEmailInput" placeholder="name@tpo-wellness.com" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small fw-medium" for="portalRoleSelect">Access Role</label>
+              <select class="form-select" id="portalRoleSelect">
+                <option value="full">Full Admin / R&amp;D / ERP / CRM Access</option>
+                <option value="sales">Sales Representative (tpoSalesToken Only)</option>
+              </select>
+            </div>
+            <button type="submit" class="btn-primary-editorial w-100 justify-content-center">Sign In to Portal</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="position-fixed bottom-0 start-0 p-3" style="z-index: 1080;">
+    <div id="tpoToast" class="toast align-items-center text-bg-dark border-0 rounded-1 shadow" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body small" id="tpoToastBody">Action completed.</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap 5 Bundle JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- ======= Main Interactive Application Script ======= -->
+  <script>
+    const safeStorage = {
+      getItem(key) {
+        try { return window.localStorage.getItem(key); } catch (e) { return null; }
+      },
+      setItem(key, val) {
+        try { window.localStorage.setItem(key, val); } catch (e) {}
+      },
+      removeItem(key) {
+        try { window.localStorage.removeItem(key); } catch (e) {}
+      }
+    };
+
+    function showToast(message) {
+      const toastEl = document.getElementById('tpoToast');
+      const toastBody = document.getElementById('tpoToastBody');
+      if (toastEl && toastBody && window.bootstrap) {
+        toastBody.textContent = message;
+        const toast = bootstrap.Toast.getOrCreateInstance(toastEl, { delay: 4000 });
+        toast.show();
+      }
+    }
+
+    // --- 1. Vanta.js 3D Clouds Background (Single Clean Effect on Hero) ---
+    let heroVantaEffect = null;
+
+    function initHeroClouds() {
+      const heroEl = document.getElementById('hero');
+      if (!heroEl || typeof VANTA === 'undefined' || !VANTA.CLOUDS) return;
+
+      if (heroVantaEffect && typeof heroVantaEffect.destroy === 'function') {
+        heroVantaEffect.destroy();
+        heroVantaEffect = null;
+      }
+
+      try {
+        heroVantaEffect = VANTA.CLOUDS({
+          el: '#hero',
+          mouseControls: true,
+          touchControls: true,
+          gyroControls: false,
+          minHeight: 360.00,
+          minWidth: 200.00,
+          skyColor: 0x3b6982,
+          cloudColor: 0xc8d6e5,
+          cloudShadowColor: 0x162d3d,
+          sunColor: 0xf59e0b,
+          sunGlareColor: 0xd97706,
+          sunlightColor: 0xfde68a,
+          speed: 0.70
+        });
+      } catch (err) {
+        console.warn('Vanta Clouds initialization notice:', err);
+      }
+    }
+
+    // --- 2. Preserved Employee Portal Authentication & Token Logic ---
+    function logout() {
+      safeStorage.removeItem('tpoSessionToken');
+      safeStorage.removeItem('tpoGrantedTokens');
+      safeStorage.removeItem('tpoCrmApiToken');
+      safeStorage.removeItem('tpoUserEmail');
+      checkAuthorization();
+      showToast('Signed out of TPO Wellness Portal.');
+    }
+
+    function checkAuthorizationWithSalesToken(grantedTokens, userEmail) {
+      const loginLogoutLink = document.getElementById('loginLogoutLink');
+      const employeePortalDropdown = document.getElementById('employeePortalDropdown');
+      const loginStatusSpan = document.getElementById('loginStatus');
+      const bodyElement = document.body;
+
+      if (!loginLogoutLink || !employeePortalDropdown || !loginStatusSpan || !bodyElement) {
+        return false;
+      }
+
+      const tokensArray = Array.isArray(grantedTokens) ? grantedTokens : [];
+      const hasOnlySalesToken = tokensArray.length === 1 && tokensArray.includes('tpoSalesToken');
+
+      if (hasOnlySalesToken) {
+        bodyElement.classList.add('sales-only-user');
+        bodyElement.classList.add('logged-in');
+        document.querySelectorAll('.menu-performance, .menu-erp, .menu-crm, .menu-customer-portal').forEach(item => {
+          item.style.display = 'none';
+        });
+      } else if (tokensArray.length > 0) {
+        bodyElement.classList.remove('sales-only-user');
+        bodyElement.classList.add('logged-in');
+        document.querySelectorAll('.menu-sales-tools, .menu-performance, .menu-erp, .menu-crm, .menu-customer-portal').forEach(item => {
+          item.style.display = 'block';
+        });
+      }
+
+      loginStatusSpan.textContent = userEmail ? `Signed in: ${userEmail}` : 'Signed in';
+      loginLogoutLink.textContent = 'Logout';
+      loginLogoutLink.removeAttribute('data-bs-toggle');
+      loginLogoutLink.removeAttribute('data-bs-target');
+      loginLogoutLink.href = '#top';
+      loginLogoutLink.onclick = (e) => {
+        e.preventDefault();
+        logout();
+      };
+
+      employeePortalDropdown.style.display = 'list-item';
+      return true;
+    }
+
+    function checkAuthorization() {
+      const sessionToken = safeStorage.getItem('tpoSessionToken');
+      const userEmail = safeStorage.getItem('tpoUserEmail');
+      const grantedTokensString = safeStorage.getItem('tpoGrantedTokens');
+
+      const loginLogoutLink = document.getElementById('loginLogoutLink');
+      const employeePortalDropdown = document.getElementById('employeePortalDropdown');
+      const loginStatusSpan = document.getElementById('loginStatus');
+      const bodyElement = document.body;
+
+      if (!loginLogoutLink || !employeePortalDropdown || !loginStatusSpan || !bodyElement) return;
+
+      if (sessionToken && userEmail && grantedTokensString) {
+        try {
+          const grantedTokens = JSON.parse(grantedTokensString);
+          if (Array.isArray(grantedTokens)) {
+            checkAuthorizationWithSalesToken(grantedTokens, userEmail);
+            return;
+          }
+        } catch (e) {
+          console.error('Error parsing granted tokens:', e);
+        }
+      }
+
+      bodyElement.classList.remove('logged-in', 'sales-only-user');
+      loginStatusSpan.textContent = '';
+      loginLogoutLink.textContent = 'Login';
+      loginLogoutLink.href = '#portalLoginModal';
+      loginLogoutLink.setAttribute('data-bs-toggle', 'modal');
+      loginLogoutLink.setAttribute('data-bs-target', '#portalLoginModal');
+      loginLogoutLink.onclick = null;
+      employeePortalDropdown.style.display = 'none';
+    }
+
+    // --- 3. Interactive UI, Tabs, Quote Builder, Calendar Generator & Google Apps Script Submission ---
+    document.addEventListener('DOMContentLoaded', function() {
+      initHeroClouds();
+      checkAuthorization();
+
+      let resizeTimer;
+      window.addEventListener('resize', function() {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function() {
+          if (heroVantaEffect && typeof heroVantaEffect.resize === 'function') {
+            heroVantaEffect.resize();
+          }
+        }, 200);
+      });
+
+      // Mobile Navbar Toggle
+      const mobileNavToggle = document.getElementById('mobileNavToggle');
+      const navbar = document.getElementById('navbar');
+      if (mobileNavToggle && navbar) {
+        mobileNavToggle.addEventListener('click', function() {
+          navbar.classList.toggle('navbar-mobile');
+          const icon = this.querySelector('i');
+          if (icon) {
+            icon.classList.toggle('bi-list');
+            icon.classList.toggle('bi-x');
+          }
+        });
+      }
+
+      // Portfolio Category Filter
+      const filterItems = document.querySelectorAll('#portfolio-flters li');
+      const portfolioCards = document.querySelectorAll('#portfolioGrid .portfolio-item');
+      filterItems.forEach(item => {
+        item.addEventListener('click', function() {
+          filterItems.forEach(li => li.classList.remove('filter-active'));
+          this.classList.add('filter-active');
+          const targetFilter = this.getAttribute('data-filter');
+          portfolioCards.forEach(card => {
+            const cats = card.getAttribute('data-category') || '';
+            if (targetFilter === 'all' || cats.includes(targetFilter)) {
+              card.style.display = '';
+            } else {
+              card.style.display = 'none';
+            }
+          });
+        });
+      });
+
+      // Hub Tab Switching (Quote vs Meeting Scheduler)
+      function switchHubTab(targetPaneId) {
+        const quotePane = document.getElementById('quotePane');
+        const meetingPane = document.getElementById('meetingPane');
+        const tabBtnQuote = document.getElementById('tabBtnQuote');
+        const tabBtnMeeting = document.getElementById('tabBtnMeeting');
+
+        if (targetPaneId === 'meetingPane') {
+          quotePane.style.display = 'none';
+          meetingPane.style.display = 'block';
+          tabBtnQuote.classList.remove('active');
+          tabBtnMeeting.classList.add('active');
+        } else {
+          quotePane.style.display = 'block';
+          meetingPane.style.display = 'none';
+          tabBtnQuote.classList.add('active');
+          tabBtnMeeting.classList.remove('active');
+        }
+      }
+
+      document.querySelectorAll('[data-hub-tab]').forEach(btn => {
+        btn.addEventListener('click', function() {
+          switchHubTab(this.getAttribute('data-hub-tab'));
+        });
+      });
+
+      const heroQuoteBtn = document.getElementById('heroQuoteBtn');
+      const ctaRequestQuoteBtn = document.getElementById('ctaRequestQuoteBtn');
+      const heroMeetingBtn = document.getElementById('heroMeetingBtn');
+      const ctaBookMeetingBtn = document.getElementById('ctaBookMeetingBtn');
+      const bookClinicConsultBtn = document.getElementById('bookClinicConsultBtn');
+
+      [heroQuoteBtn, ctaRequestQuoteBtn].forEach(btn => {
+        if (btn) btn.addEventListener('click', () => switchHubTab('quotePane'));
+      });
+
+      [heroMeetingBtn, ctaBookMeetingBtn].forEach(btn => {
+        if (btn) btn.addEventListener('click', () => switchHubTab('meetingPane'));
+      });
+
+      if (bookClinicConsultBtn) {
+        bookClinicConsultBtn.addEventListener('click', function() {
+          switchHubTab('meetingPane');
+          const clinicRadio = document.getElementById('clinicMeetingRadio');
+          if (clinicRadio) clinicRadio.checked = true;
+          document.getElementById('quote-booking').scrollIntoView({ behavior: 'smooth' });
+        });
+      }
+
+      // Quote Category Pill Selection
+      const quotePills = document.querySelectorAll('#quoteCategoryPills .selectable-pill');
+      const selectedCategoriesInput = document.getElementById('selectedCategoriesInput');
+      const summaryCategory = document.getElementById('summaryCategory');
+
+      function updateSelectedCategories() {
+        const activeVals = Array.from(document.querySelectorAll('#quoteCategoryPills .selectable-pill.active'))
+          .map(el => el.getAttribute('data-val'));
+        const joined = activeVals.length > 0 ? activeVals.join(', ') : 'Custom Gummy Formulation';
+        if (selectedCategoriesInput) selectedCategoriesInput.value = joined;
+        if (summaryCategory) summaryCategory.textContent = joined;
+      }
+
+      quotePills.forEach(pill => {
+        pill.addEventListener('click', function() {
+          this.classList.toggle('active');
+          updateSelectedCategories();
+        });
+      });
+
+      // Select Category from Service or Product Cards
+      document.querySelectorAll('.select-quote-category').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const targetCat = this.getAttribute('data-category');
+          switchHubTab('quotePane');
+          quotePills.forEach(p => {
+            if (p.getAttribute('data-val') === targetCat) {
+              p.classList.add('active');
+            } else {
+              p.classList.remove('active');
+            }
+          });
+          updateSelectedCategories();
+          document.getElementById('quote-booking').scrollIntoView({ behavior: 'smooth' });
+        });
+      });
+
+      // Live Quote Spec Summary Sync
+      const specSelectMap = [
+        { selectId: 'gummyBaseSelect', summaryId: 'summaryBase' },
+        { selectId: 'sweetenerSelect', summaryId: 'summarySweetener' },
+        { selectId: 'packagingSelect', summaryId: 'summaryPackaging' },
+        { selectId: 'moqSelect', summaryId: 'summaryMoq' }
+      ];
+      specSelectMap.forEach(pair => {
+        const sel = document.getElementById(pair.selectId);
+        const sum = document.getElementById(pair.summaryId);
+        if (sel && sum) {
+          sel.addEventListener('change', function() {
+            sum.textContent = this.value;
+          });
+        }
+      });
+
+      // Product Spec Modal Handler
+      let currentModalProduct = '';
+      document.querySelectorAll('.view-spec-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          currentModalProduct = this.getAttribute('data-product') || 'OEM Formulation';
+          document.getElementById('specModalTitle').textContent = currentModalProduct;
+          document.getElementById('specModalActives').textContent = this.getAttribute('data-actives') || '';
+          document.getElementById('specModalBase').textContent = this.getAttribute('data-base') || '';
+          document.getElementById('specModalMoq').textContent = this.getAttribute('data-moq') || '';
+          const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('specModal'));
+          modal.show();
+        });
+      });
+
+      const specModalQuoteBtn = document.getElementById('specModalQuoteBtn');
+      if (specModalQuoteBtn) {
+        specModalQuoteBtn.addEventListener('click', function() {
+          switchHubTab('quotePane');
+          const notes = document.getElementById('quoteNotesTextarea');
+          if (notes && currentModalProduct) {
+            notes.value = `Requesting sample & OEM pricing for: ${currentModalProduct}. `;
+          }
+          document.getElementById('quote-booking').scrollIntoView({ behavior: 'smooth' });
+        });
+      }
+
+      // Meeting Scheduler Date & Timezone Setup
+      const meetingDateInput = document.getElementById('meetingDateInput');
+      if (meetingDateInput) {
+        const tomorrow = new Date(Date.now() + 86400000);
+        const yyyy = tomorrow.getFullYear();
+        const mm = String(tomorrow.getMonth() + 1).padStart(2, '0');
+        const dd = String(tomorrow.getDate()).padStart(2, '0');
+        meetingDateInput.min = `${yyyy}-${mm}-${dd}`;
+        meetingDateInput.value = `${yyyy}-${mm}-${dd}`;
+      }
+
+      const tzBadge = document.getElementById('visitorTimezoneBadge');
+      if (tzBadge) {
+        try {
+          const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Local Time';
+          tzBadge.textContent = `Your Timezone: ${userTz} (Bangkok is UTC+7)`;
+        } catch (e) {
+          tzBadge.textContent = 'All times in Bangkok ICT (UTC+7)';
+        }
+      }
+
+      // Time Slot Selection
+      const timeSlotBtns = document.querySelectorAll('#timeSlotGroup .time-slot-btn');
+      const selectedTimeSlotInput = document.getElementById('selectedTimeSlotInput');
+      const summarySlotText = document.getElementById('summarySlotText');
+
+      timeSlotBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+          timeSlotBtns.forEach(b => b.classList.remove('active'));
+          this.classList.add('active');
+          const slot = this.getAttribute('data-slot');
+          if (selectedTimeSlotInput) selectedTimeSlotInput.value = slot;
+          if (summarySlotText) summarySlotText.textContent = slot;
+        });
+      });
+
+      // Calendar Invite Generator (.ics & Google Calendar)
+      let latestMeetingDetails = null;
+
+      function buildCalendarUrls(details) {
+        const dateStr = (details.meetingDate || '2026-10-25').replace(/-/g, '');
+        const activeBtn = document.querySelector('#timeSlotGroup .time-slot-btn.active');
+        const hourStr = activeBtn ? activeBtn.getAttribute('data-hour') : '14:00';
+        const [hh, min] = hourStr.split(':').map(Number);
+
+        const startDateUtc = new Date(Date.UTC(
+          Number(dateStr.slice(0, 4)),
+          Number(dateStr.slice(4, 6)) - 1,
+          Number(dateStr.slice(6, 8)),
+          hh - 7,
+          min,
+          0
+        ));
+        const endDateUtc = new Date(startDateUtc.getTime() + 30 * 60000);
+
+        const formatUtc = (d) => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+        const startIso = formatUtc(startDateUtc);
+        const endIso = formatUtc(endDateUtc);
+
+        const title = `TPO Wellness Bangkok — ${details.meetingType || 'OEM Consultation'}`;
+        const desc = `TPO Wellness Ltd. Consultation (${details.meetingPlatform || 'Google Meet'}). Attendee: ${details.name || ''} (${details.email || ''}). Notes: ${details.message || 'OEM Supplement Gummies / Herbal / Clinic Discussion'}`;
+        const loc = `${details.meetingPlatform || 'Video Call'} — TPO Wellness Ltd., Bangkok, Thailand`;
+
+        const gcalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${startIso}/${endIso}&details=${encodeURIComponent(desc)}&location=${encodeURIComponent(loc)}`;
+
+        const icsContent = [
+          'BEGIN:VCALENDAR',
+          'VERSION:2.0',
+          'PRODID:-//TPO Wellness Ltd.//Bangkok OEM Consultation//EN',
+          'BEGIN:VEVENT',
+          `DTSTART:${startIso}`,
+          `DTEND:${endIso}`,
+          `SUMMARY:${title}`,
+          `DESCRIPTION:${desc.replace(/\n/g, ' ')}`,
+          `LOCATION:${loc}`,
+          'END:VEVENT',
+          'END:VCALENDAR'
+        ].join('\r\n');
+
+        return { gcalUrl, icsContent };
+      }
+
+      const downloadIcsBtn = document.getElementById('downloadIcsBtn');
+      if (downloadIcsBtn) {
+        downloadIcsBtn.addEventListener('click', function() {
+          if (!latestMeetingDetails) return;
+          const { icsContent } = buildCalendarUrls(latestMeetingDetails);
+          const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'TPO-Wellness-Bangkok-Consultation.ics';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        });
+      }
+
+      // Portal Login Form Handler
+      const portalLoginForm = document.getElementById('portalLoginForm');
+      if (portalLoginForm) {
+        portalLoginForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          const email = document.getElementById('portalEmailInput').value.trim();
+          const role = document.getElementById('portalRoleSelect').value;
+          const tokens = role === 'sales' ? ['tpoSalesToken'] : ['tpoSalesToken', 'tpoAdminToken', 'tpoErpToken'];
+
+          safeStorage.setItem('tpoSessionToken', 'tpo_live_session_' + Date.now());
+          safeStorage.setItem('tpoUserEmail', email);
+          safeStorage.setItem('tpoGrantedTokens', JSON.stringify(tokens));
+
+          checkAuthorization();
+          const modalEl = document.getElementById('portalLoginModal');
+          if (modalEl && window.bootstrap) {
+            bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+          }
+          showToast(`Signed in as ${email}. Employee Portal active.`);
+        });
+      }
+
+      document.querySelectorAll('[data-portal-tool]').forEach(link => {
+        link.addEventListener('click', function() {
+          const toolName = this.getAttribute('data-portal-tool');
+          showToast(`Opened ${toolName}.`);
+        });
+      });
+
+      // --- 4. Unified Google Apps Script Form Submission (Preserved Endpoint) ---
+      const scriptURL = 'https://script.google.com/macros/s/AKfycbwJDAeDBi1-_iodvcl_4bFZ6HlFXouWRkZ0kiCOlj7g4lXbI6yXQsi33QjAVYMYKb09/exec';
+
+      $('#contactForm, #newsletterForm, #quoteForm, #meetingForm').submit(function(e) {
+        e.preventDefault();
+
+        const $form = $(this);
+        const formId = $form.attr('id');
+        const formData = {
+          action: formId === 'newsletterForm' ? 'newsletter' : (formId === 'quoteForm' ? 'quote_request' : (formId === 'meetingForm' ? 'schedule_meeting' : 'contact')),
+          submittedAt: new Date().toISOString()
+        };
+
+        $form.serializeArray().forEach(function(item) {
+          formData[item.name] = item.value;
+        });
+
+        $form.find('.loading').show();
+        $form.find('.error-message, .sent-message').hide();
+
+        fetch(scriptURL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(formData)
+        })
+        .then(() => {
+          $form.find('.loading').hide();
+          if (formId === 'newsletterForm') {
+            $form.siblings('.sent-message').text('Subscribed to TPO Wellness updates.').show();
+            $form[0].reset();
+            showToast('Subscribed to quarterly updates.');
+          } else if (formId === 'quoteForm') {
+            $form.find('.sent-message').text('RFQ received. Our Bangkok team will respond within 1 business day.').show();
+            showToast('OEM Quote Request sent.');
+          } else if (formId === 'meetingForm') {
+            latestMeetingDetails = formData;
+            const { gcalUrl } = buildCalendarUrls(formData);
+            const gcalLink = document.getElementById('gcalInviteLink');
+            if (gcalLink) gcalLink.href = gcalUrl;
+            document.getElementById('calendarInviteActions').style.display = 'block';
+            $form.find('.sent-message').text('Meeting confirmed. Use the links above to add it to your calendar.').show();
+            showToast('Meeting scheduled.');
+          } else {
+            $form.find('.sent-message').text('Message sent. We will reply shortly.').show();
+            $form[0].reset();
+            showToast('Message sent.');
+          }
+        })
+        .catch(error => {
+          console.error('Submission error:', error);
+          $form.find('.loading').hide();
+          $form.find('.error-message').text('Could not reach server. Please email info@tpo-wellness.com or contact us on LINE.').show();
+        });
+      });
+    });
+  </script>
+
+</body>
+</html>
