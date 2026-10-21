@@ -940,7 +940,7 @@
 
           <!-- Dynamic Login/Logout Link -->
           <li id="loginLogoutItem">
-            <a id="loginLogoutLink" class="nav-link" href="#portalLoginModal" data-bs-toggle="modal" data-bs-target="#portalLoginModal">Login</a>
+            <a id="loginLogoutLink" class="nav-link" href="Login.html">Login</a>
           </li>
 
           <li>
@@ -2060,34 +2060,6 @@
     </div>
   </div>
 
-  <!-- ======= MODAL 3: Employee Portal Login (Preserves localStorage Token Workflow) ======= -->
-  <div class="modal fade" id="portalLoginModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content rounded-1 border-0 shadow">
-        <div class="modal-header border-bottom" style="background: var(--bg-paper);">
-          <h5 class="modal-title serif-heading">TPO Wellness Staff &amp; Partner Sign In</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body p-4">
-          <p class="small text-muted">Sign in to access internal OEM Sales Tools, ERP, CRM, and Customer Batch Portals.</p>
-          <form id="portalLoginForm">
-            <div class="mb-3">
-              <label class="form-label small fw-medium" for="portalEmailInput">Staff / Partner Email</label>
-              <input type="email" class="form-control" id="portalEmailInput" placeholder="name@tpo-wellness.com" required>
-            </div>
-            <div class="mb-3">
-              <label class="form-label small fw-medium" for="portalRoleSelect">Access Role</label>
-              <select class="form-select" id="portalRoleSelect">
-                <option value="full">Full Admin / R&amp;D / ERP / CRM Access</option>
-                <option value="sales">Sales Representative (tpoSalesToken Only)</option>
-              </select>
-            </div>
-            <button type="submit" class="btn-primary-editorial w-100 justify-content-center">Sign In to Portal</button>
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <!-- Toast Notification Container -->
   <div class="position-fixed bottom-0 start-0 p-3" style="z-index: 1080;">
@@ -2165,6 +2137,9 @@
       safeStorage.removeItem('tpoGrantedTokens');
       safeStorage.removeItem('tpoCrmApiToken');
       safeStorage.removeItem('tpoUserEmail');
+      safeStorage.removeItem('tpoCrmToken');
+      safeStorage.removeItem('tpoCrmUserEmail');
+      safeStorage.removeItem('tpoCrmIsManager');
       checkAuthorization();
       showToast('Signed out of TPO Wellness Portal.');
     }
@@ -2237,9 +2212,9 @@
       bodyElement.classList.remove('logged-in', 'sales-only-user');
       loginStatusSpan.textContent = '';
       loginLogoutLink.textContent = 'Login';
-      loginLogoutLink.href = '#portalLoginModal';
-      loginLogoutLink.setAttribute('data-bs-toggle', 'modal');
-      loginLogoutLink.setAttribute('data-bs-target', '#portalLoginModal');
+      loginLogoutLink.href = 'Login.html';
+      loginLogoutLink.removeAttribute('data-bs-toggle');
+      loginLogoutLink.removeAttribute('data-bs-target');
       loginLogoutLink.onclick = null;
       employeePortalDropdown.style.display = 'none';
     }
@@ -2520,27 +2495,6 @@
         });
       }
 
-      // Portal Login Form Handler
-      const portalLoginForm = document.getElementById('portalLoginForm');
-      if (portalLoginForm) {
-        portalLoginForm.addEventListener('submit', function(e) {
-          e.preventDefault();
-          const email = document.getElementById('portalEmailInput').value.trim();
-          const role = document.getElementById('portalRoleSelect').value;
-          const tokens = role === 'sales' ? ['tpoSalesToken'] : ['tpoSalesToken', 'tpoAdminToken', 'tpoErpToken'];
-
-          safeStorage.setItem('tpoSessionToken', 'tpo_live_session_' + Date.now());
-          safeStorage.setItem('tpoUserEmail', email);
-          safeStorage.setItem('tpoGrantedTokens', JSON.stringify(tokens));
-
-          checkAuthorization();
-          const modalEl = document.getElementById('portalLoginModal');
-          if (modalEl && window.bootstrap) {
-            bootstrap.Modal.getOrCreateInstance(modalEl).hide();
-          }
-          showToast(`Signed in as ${email}. Employee Portal active.`);
-        });
-      }
 
       document.querySelectorAll('[data-portal-tool]').forEach(link => {
         link.addEventListener('click', function() {
