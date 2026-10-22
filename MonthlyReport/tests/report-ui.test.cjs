@@ -47,3 +47,50 @@ test('dashboard selects Active Customers, falls back to first usable metric, and
     assert.equal(select.children.filter(n=>'selected' in n.attrs).length,expected?1:0);
   }
 });
+test('financial charts plot monthly and quarterly revenue, gross profit and EBIT from the same analysis',()=>{
+  class Element {
+    constructor(tag){this.tag=tag;this.children=[];this.attrs={};this.events={};this.className='';this.textContent='';this._value='';}
+    get isConnected(){return true;}
+    setAttribute(k,v){this.attrs[k]=String(v);if(k==='value')this.value=String(v);}
+    append(...nodes){this.children.push(...nodes);}
+    appendChild(n){this.append(n);return n;}
+    replaceChildren(...nodes){this.children=nodes;}
+    addEventListener(k,fn){this.events[k]=fn;}
+    get classList(){const self=this;return{toggle(){},add(){},remove(){},contains:()=>false};}
+    getAttribute(k){return this.attrs[k]??null;}
+    querySelector(sel){return this._all().find(n=>sel.startsWith('[')&&n.attrs[sel.slice(1,-1)]!==undefined)||null;}
+    querySelectorAll(sel){return this._all().filter(n=>sel.startsWith('[')&&n.attrs[sel.slice(1,-1)]!==undefined);}
+    _all(){return[this,...this.children.flatMap(n=>n._all?n._all():[n])];}
+    get value(){return this._value;} set value(v){this._value=String(v);}
+  }
+  const options=[];
+  const window={TPOCore:C,TPO_CONFIG:{SHEET_ID:'fixture'},TPO_CHART_SETTINGS:{},
+    echarts:{init:()=>({setOption:o=>options.push(JSON.parse(JSON.stringify(o))),on(){},resize(){},dispose(){}})}};
+  const ctx=vm.createContext({window,echarts:window.echarts,console,setTimeout,clearTimeout,
+    document:{createElement:t=>new Element(t),createTextNode:t=>Object.assign(new Element('#text'),{textContent:t})},
+    requestAnimationFrame:fn=>{fn();return 0;},ResizeObserver:class{observe(){}disconnect(){}}});
+  for(const f of ['js/compute.js','js/data.js','js/views.js'])
+    vm.runInContext(fs.readFileSync(f,'utf8'),ctx);
+  const fin=['Month','Revenue','COGS','Gross Profit','SG&A','EBIT','Net Income','Quarter'];
+  const row=(m,rev)=>{const cogs=rev*.4,gp=rev-cogs,sga=rev*.2,ebit=gp-sga;return[m,rev,cogs,gp,sga,ebit,ebit-10,''];};
+  const map={MonthlyFinancials:[fin,...[600,610,620,700,710,720,800,810].map((v,i)=>row(['Oct-26','Nov-26','Dec-26','Jan-27','Feb-27','Mar-27','Apr-27','May-27'][i],v))],
+    Assumptions:[['Customer','Margin'],['Mana',.7]],
+    CustomerRevenueMonthly:[['Customer','Month','Revenue']],CustomerCount:[['Month','Customer Count']],
+    '1. Working Capital':[['Reporting Month','Cash Balance','Accounts Receivable','Inventory Value','Accounts Payable','Net Working Capital']],
+    Commentary:[['View','Commentary','Status']],Glossary:[]};
+  const data=window.TPO_DATA.shape(map);
+  window.TPO_VIEWS.financials({data,settings:C.settings.normalize({})});
+  assert.match(options.map(o=>o.xAxis.data[0]).join('|'),/Oct-26/); // monthly chart built
+  const quarterly=options.filter(o=>/^Q\d \d{4}$/.test(o.xAxis.data[0]));
+  assert.equal(quarterly.length,1,'exactly one quarterly chart');
+  const q=quarterly[0];
+  assert.deepEqual(q.legend.data,['Revenue','Gross Profit','EBIT']);
+  assert.deepEqual(q.series.map(s=>s.name),['Revenue','Gross Profit','EBIT']);
+  assert.deepEqual(q.series.map(s=>s.type),['bar','line','line']);
+  const byQuarter=data.quarterly.quarters;
+  assert.deepEqual(q.xAxis.data,byQuarter.map(x=>x.quarter));
+  for(const [series,key] of [[0,'revenue'],[1,'gp'],[2,'ebit']])
+    assert.deepEqual(q.series[series].data,byQuarter.map(x=>x[key]));
+  assert.ok(byQuarter.every(x=>Number.isFinite(x.ebit)),'fixture covers EBIT in every quarter');
+  assert.ok(flatten(window.TPO_VIEWS.financials({data,settings:C.settings.normalize({})})).some(n=>n.textContent==='Quarterly revenue, gross profit & EBIT'));
+});

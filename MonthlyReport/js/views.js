@@ -793,16 +793,16 @@
 
     // ---- Quarterly performance (read from the Quarterly Financials tab) ----
     const quarterlyChart = chartCard({
-      title: "Quarterly revenue (validated monthly rollup)",
+      title: "Quarterly revenue, gross profit & EBIT", rangeKey: "quarterly", height: 340,
       subtitle: partialQuarter ? `Amber = ${partialQuarter} (partial, ${cordon.monthCount} of 3 months)` : "",
-      rangeKey: "quarterly", height: 340,
       data: { labels: quarters.map(q => q.quarter), series: [
         { name: "Revenue", values: quarters.map(q => q.revenue) },
         { name: "Gross Profit", values: quarters.map(q => q.gp) },
+        { name: "EBIT", values: quarters.map(q => q.ebit) },
       ] },
       buildOption: (s) => ({
         ...ECHART_THEME,
-        legend: { ...ECHART_THEME.legend, data: ["Revenue", "Gross Profit"] },
+        legend: { ...ECHART_THEME.legend, data: ["Revenue", "Gross Profit", "EBIT"] },
         xAxis: { ...ECHART_THEME.xAxis, type: "category", data: s.labels },
         yAxis: { ...ECHART_THEME.yAxis, type: "value" },
         series: [
@@ -812,6 +812,7 @@
             label: { show: true, position: "top", color: "#0B1F3A", fontSize: 11,
                      formatter: (p) => isPartialQ(s.labels[p.dataIndex]) ? `${K.fmtMoney(p.value)} *` : K.fmtMoney(p.value) } },
           { name: "Gross Profit", type: "line", smooth: true, itemStyle: { color: "#C9A24B" }, data: s.series[1].values },
+          { name: "EBIT", type: "line", smooth: true, itemStyle: { color: "#A14B2A" }, lineStyle: { color: "#A14B2A", width: 2 }, data: s.series[2].values },
         ],
       }),
     });
