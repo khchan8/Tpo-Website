@@ -17,8 +17,19 @@ const LOGIN_SHEET_NAME = 'Setups'; // Sheet for login credentials
 const TIMEZONE = 'Asia/Bangkok';
 const TOKEN_EXPIRATION_SECONDS = 14 * 24 * 60 * 60; // Session Token validity period (14 days in seconds)
 
-// Website form submissions (contact / quote / meeting / newsletter) are emailed here.
-const FORM_RECIPIENT_EMAIL = 'info@tpo-wellness.com';
+// Website form submissions (contact / quote / meeting / newsletter) are emailed to
+// every address in this list in a single MailApp call.
+const FORM_NOTIFICATION_EMAILS = [
+  'info@tpo-wellness.com',
+  'kh@tpo-wellness.com',
+  'ahmer@tpo-wellness.com'
+];
+
+// Meeting requests additionally create an event on this dedicated calendar, with
+// these guests (Google emails the invitations automatically). ICT is UTC+7
+// year-round, so the website's time slots convert deterministically.
+const MEETINGS_CALENDAR_NAME = 'Website Meetings';
+const MEETINGS_CALENDAR_GUESTS = 'kh@tpo-wellness.com,ahmer@tpo-wellness.com';
 
 // Old filename -> new filename (2026 rebrand). Applied to the 'Linked Page' value
 // before it is returned to the frontend, so existing sheet rows keep working.
@@ -259,15 +270,30 @@ function handleFormSubmit(params) {
   };
 
   const subject = subjects[action] || '[Website] Form Submission';
-  const body = 'New website form submission\n\n' +
+  let body = 'New website form submission\n\n' +
     'Form: ' + action + '\n' +
     'Received: ' + Utilities.formatDate(new Date(), TIMEZONE, 'yyyy-MM-dd HH:mm:ss') + ' ICT\n\n' +
     lines.join('\n');
 
+  // Meeting requests also get a 30-minute calendar event with the team as guests.
+  let calendarResult = null;
+  if (action === 'schedule_meeting') {
+    calendarResult = createMeetingEvent(params);
+    if (calendarResult && calendarResult.error) {
+      body += '\n\n(Calendar event could not be created: ' + calendarResult.error + ')';
+    } else if (calendarResult && calendarResult.summary) {
+      body += '\n\nCalendar event created: ' + calendarResult.summary;
+    }
+  }
+
   try {
-    MailApp.sendEmail(FORM_RECIPIENT_EMAIL, subject, body);
-    Logger.log('handleFormSubmit emailed a ' + action + ' submission to ' + FORM_RECIPIENT_EMAIL);
-    return { success: true, message: 'OK' };
+    MailApp.sendEmail(FORM_NOTIFICATION_EMAILS.join(','), subject, body);
+    Logger.log('handleFormSubmit emailed a ' + action + ' submission to ' + FORM_NOTIFICATION_EMAILS.join(', ') +
+      (calendarResult && calendarResult.summary ? ' | Calendar: ' + calendarResult.summary : ''));
+    const response = { success: true, message: 'OK' };
+    if (calendarResult && calendarResult.summary) response.calendar = calendarResult.summary;
+    if (calendarResult && calendarResult.error) response.calendarError = calendarResult.error;
+    return response;
   } catch (error) {
     Logger.log('handleFormSubmit failed for ' + action + ': ' + error + ' Stack: ' + error.stack);
     return { success: false, message: 'Could not deliver your submission. Please email info@tpo-wellness.com directly.', detail: String(error).slice(0, 250) };
@@ -275,13 +301,84 @@ function handleFormSubmit(params) {
 }
 
 /**
+ * Returns the dedicated 'Website Meetings' calendar, creating it on first use.
+ * @return {GoogleAppsScript.Calendar.Calendar}
+ */
+function getWebsiteMeetingsCalendar() {
+  const existing = CalendarApp.getCalendarsByName(MEETINGS_CALENDAR_NAME);
+  for (var i = 0; i < existing.length; i++) {
+    if (existing[i].isOwnedByMe()) return existing[i];
+  }
+  return CalendarApp.createCalendar(MEETINGS_CALENDAR_NAME, {
+    summary: 'Meeting requests submitted through the TPO Wellness website',
+    timeZone: TIMEZONE
+  });
+}
+
+/**
+ * Creates a 30-minute calendar event from a schedule_meeting submission using the
+ * form's meetingDate (yyyy-mm-dd) and selectedTimeSlot (e.g. "14:00 ICT (UTC+7)").
+ * @param {object} params The form fields.
+ * @return {object|null} { summary } on success, { error } on failure, or null when
+ *                       the submission carries no usable date/slot (email still sent).
+ */
+function createMeetingEvent(params) {
+  const dateMatch = String(params.meetingDate || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  const timeMatch = String(params.selectedTimeSlot || params.timeSlot || '').match(/(\d{1,2}):(\d{2})/);
+  if (!dateMatch || !timeMatch) {
+    return null; // Not enough data for an event — the notification email still goes out.
+  }
+  try {
+    const start = new Date(dateMatch[1] + '-' + dateMatch[2] + '-' + dateMatch[3] + 'T' +
+      ('0' + timeMatch[1]).slice(-2) + ':' + timeMatch[2] + ':00+07:00'); // ICT (UTC+7)
+    const end = new Date(start.getTime() + 30 * 60 * 1000); // 30-minute meeting
+
+    const who = String(params.name || params.fullName || params.email || 'Website visitor').slice(0, 80);
+    const org = params.company ? (' (' + String(params.company).slice(0, 60) + ')') : '';
+    const title = 'Meeting Request — ' + who + org;
+
+    const skipKeys = { action: 1, callback: 1, error: 1, redirect: 1, redirectUrl: 1, submittedAt: 1 };
+    const descriptionLines = [];
+    for (var key in params) {
+      if (skipKeys[key]) continue;
+      var value = String(params[key]).trim();
+      if (value) descriptionLines.push(key + ': ' + value.slice(0, 500));
+    }
+
+    getWebsiteMeetingsCalendar().createEvent(title, start, end, {
+      description: 'Website meeting request\n\n' + descriptionLines.join('\n'),
+      guests: MEETINGS_CALENDAR_GUESTS
+    });
+
+    return { summary: Utilities.formatDate(start, TIMEZONE, 'EEE d MMM yyyy HH:mm') + ' ICT — ' + title };
+  } catch (error) {
+    Logger.log('createMeetingEvent failed: ' + error + ' Stack: ' + error.stack);
+    return { error: String(error).slice(0, 200) };
+  }
+}
+
+/**
  * Run this ONCE from the Apps Script editor (Run button) to grant the script its
  * "send email" permission and to verify MailApp quota. On success the execution
- * log shows 'Test email sent OK' and info@tpo-wellness.com receives a test mail.
+ * log shows 'Test email sent OK' and the notification inboxes receive a test mail.
  */
 function testFormEmail() {
-  MailApp.sendEmail(FORM_RECIPIENT_EMAIL, '[Website] Test Email', 'Test email from Tpologin.gs editor run at ' + new Date().toISOString());
-  Logger.log('Test email sent OK');
+  MailApp.sendEmail(FORM_NOTIFICATION_EMAILS.join(','), '[Website] Test Email', 'Test email from Tpologin.gs editor run at ' + new Date().toISOString());
+  Logger.log('Test email sent OK to ' + FORM_NOTIFICATION_EMAILS.join(', '));
+}
+
+/**
+ * Run this ONCE from the Apps Script editor (Run button) to grant the script its
+ * "manage calendars" permission. Creates and immediately deletes a test event on
+ * the Website Meetings calendar; the log shows 'Calendar access OK'.
+ */
+function testCalendarAccess() {
+  const cal = getWebsiteMeetingsCalendar();
+  const evt = cal.createEvent('[TEST] Access check — will be deleted', new Date(), new Date(Date.now() + 60000), {
+    description: 'Created by testCalendarAccess(); deleted immediately.'
+  });
+  evt.deleteEvent();
+  Logger.log('Calendar access OK — calendar "' + cal.getName() + '" (' + cal.getId() + ')');
 }
 
 /**
