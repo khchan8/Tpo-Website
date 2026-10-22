@@ -47,7 +47,7 @@ test('dashboard selects Active Customers, falls back to first usable metric, and
     assert.equal(select.children.filter(n=>'selected' in n.attrs).length,expected?1:0);
   }
 });
-test('financial charts plot monthly and quarterly revenue, gross profit and EBIT from the same analysis',()=>{
+test('financial charts plot all P&L lines; COGS, SG&A and Net Income start deselected',()=>{
   class Element {
     constructor(tag){this.tag=tag;this.children=[];this.attrs={};this.events={};this.className='';this.textContent='';this._value='';}
     get isConnected(){return true;}
@@ -80,17 +80,21 @@ test('financial charts plot monthly and quarterly revenue, gross profit and EBIT
     Commentary:[['View','Commentary','Status']],Glossary:[]};
   const data=window.TPO_DATA.shape(map);
   window.TPO_VIEWS.financials({data,settings:C.settings.normalize({})});
-  assert.match(options.map(o=>o.xAxis.data[0]).join('|'),/Oct-26/); // monthly chart built
+  const monthly=options.filter(o=>/^Q\d \d{4}$/.test(o.xAxis.data[0])===false&&/^\w{3}-\d{2}$/.test(o.xAxis.data[0]));
+  assert.equal(monthly.length,1,'exactly one monthly performance chart');
   const quarterly=options.filter(o=>/^Q\d \d{4}$/.test(o.xAxis.data[0]));
   assert.equal(quarterly.length,1,'exactly one quarterly chart');
-  const q=quarterly[0];
-  assert.deepEqual(q.legend.data,['Revenue','Gross Profit','EBIT']);
-  assert.deepEqual(q.series.map(s=>s.name),['Revenue','Gross Profit','EBIT']);
-  assert.deepEqual(q.series.map(s=>s.type),['bar','line','line']);
-  const byQuarter=data.quarterly.quarters;
-  assert.deepEqual(q.xAxis.data,byQuarter.map(x=>x.quarter));
-  for(const [series,key] of [[0,'revenue'],[1,'gp'],[2,'ebit']])
-    assert.deepEqual(q.series[series].data,byQuarter.map(x=>x[key]));
+  const names=['Revenue','Gross Profit','EBIT','COGS','SG&A','Net Income'];
+  const deselected={COGS:false,'SG&A':false,'Net Income':false};
+  const byMonth=data.monthly, byQuarter=data.quarterly.quarters;
+  for(const [o,rows] of [[monthly[0],byMonth],[quarterly[0],byQuarter]]) {
+    assert.deepEqual(o.legend.data,names);
+    assert.deepEqual(o.legend.selected,deselected,'optional lines are legend-toggled, off by default');
+    assert.deepEqual(o.series.map(s=>s.name),names);
+    assert.deepEqual(o.series.map(s=>s.type),['bar','line','line','line','line','line']);
+    for(const [series,key] of [[0,'revenue'],[1,'gp'],[2,'ebit'],[3,'cogs'],[4,'sga'],[5,'netIncome']])
+      assert.deepEqual(o.series[series].data,rows.map(x=>x[key]));
+  }
   assert.ok(byQuarter.every(x=>Number.isFinite(x.ebit)),'fixture covers EBIT in every quarter');
   assert.ok(flatten(window.TPO_VIEWS.financials({data,settings:C.settings.normalize({})})).some(n=>n.textContent==='Quarterly revenue, gross profit & EBIT'));
 });

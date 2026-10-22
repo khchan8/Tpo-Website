@@ -770,10 +770,14 @@
         { name: "Revenue",      values: monthly.map(m => m.revenue) },
         { name: "Gross Profit", values: monthly.map(m => m.gp) },
         { name: "EBIT",         values: monthly.map(m => m.ebit) },
+        { name: "COGS",         values: monthly.map(m => m.cogs) },
+        { name: "SG&A",         values: monthly.map(m => m.sga) },
+        { name: "Net Income",   values: monthly.map(m => m.netIncome) },
       ] },
       buildOption: (s) => ({
         ...ECHART_THEME,
-        legend: { ...ECHART_THEME.legend, data: ["Revenue", "Gross Profit", "EBIT"] },
+        legend: { ...ECHART_THEME.legend, data: ["Revenue", "Gross Profit", "EBIT", "COGS", "SG&A", "Net Income"],
+                  selected: { "COGS": false, "SG&A": false, "Net Income": false } },
         xAxis: { ...ECHART_THEME.xAxis, type: "category", data: s.labels },
         yAxis: { ...ECHART_THEME.yAxis, type: "value" },
         series: [
@@ -781,6 +785,9 @@
             markArea: { silent: true, itemStyle: { color: "rgba(201,162,75,0.10)" }, label: { show: false }, data: lowSeasonMarkArea(s.labels) } },
           { name: "Gross Profit", type: "line", smooth: true, itemStyle: { color: "#C9A24B" }, lineStyle: { color: "#C9A24B", width: 2 }, data: s.series[1].values },
           { name: "EBIT", type: "line", smooth: true, itemStyle: { color: "#A14B2A" }, lineStyle: { color: "#A14B2A", width: 2 }, data: s.series[2].values },
+          { name: "COGS", type: "line", smooth: true, itemStyle: { color: "#1A8A96" }, lineStyle: { color: "#1A8A96", width: 2 }, data: s.series[3].values },
+          { name: "SG&A", type: "line", smooth: true, itemStyle: { color: "#7FB7A6" }, lineStyle: { color: "#7FB7A6", width: 2 }, data: s.series[4].values },
+          { name: "Net Income", type: "line", smooth: true, itemStyle: { color: "#0B1F3A" }, lineStyle: { color: "#0B1F3A", width: 2 }, data: s.series[5].values },
         ],
       }),
     });
@@ -799,10 +806,14 @@
         { name: "Revenue", values: quarters.map(q => q.revenue) },
         { name: "Gross Profit", values: quarters.map(q => q.gp) },
         { name: "EBIT", values: quarters.map(q => q.ebit) },
+        { name: "COGS", values: quarters.map(q => q.cogs) },
+        { name: "SG&A", values: quarters.map(q => q.sga) },
+        { name: "Net Income", values: quarters.map(q => q.netIncome) },
       ] },
       buildOption: (s) => ({
         ...ECHART_THEME,
-        legend: { ...ECHART_THEME.legend, data: ["Revenue", "Gross Profit", "EBIT"] },
+        legend: { ...ECHART_THEME.legend, data: ["Revenue", "Gross Profit", "EBIT", "COGS", "SG&A", "Net Income"],
+                  selected: { "COGS": false, "SG&A": false, "Net Income": false } },
         xAxis: { ...ECHART_THEME.xAxis, type: "category", data: s.labels },
         yAxis: { ...ECHART_THEME.yAxis, type: "value" },
         series: [
@@ -813,6 +824,9 @@
                      formatter: (p) => isPartialQ(s.labels[p.dataIndex]) ? `${K.fmtMoney(p.value)} *` : K.fmtMoney(p.value) } },
           { name: "Gross Profit", type: "line", smooth: true, itemStyle: { color: "#C9A24B" }, data: s.series[1].values },
           { name: "EBIT", type: "line", smooth: true, itemStyle: { color: "#A14B2A" }, lineStyle: { color: "#A14B2A", width: 2 }, data: s.series[2].values },
+          { name: "COGS", type: "line", smooth: true, itemStyle: { color: "#1A8A96" }, lineStyle: { color: "#1A8A96", width: 2 }, data: s.series[3].values },
+          { name: "SG&A", type: "line", smooth: true, itemStyle: { color: "#7FB7A6" }, lineStyle: { color: "#7FB7A6", width: 2 }, data: s.series[4].values },
+          { name: "Net Income", type: "line", smooth: true, itemStyle: { color: "#0B1F3A" }, lineStyle: { color: "#0B1F3A", width: 2 }, data: s.series[5].values },
         ],
       }),
     });
