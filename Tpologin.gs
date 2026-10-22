@@ -17,6 +17,9 @@ const LOGIN_SHEET_NAME = 'Setups'; // Sheet for login credentials
 const TIMEZONE = 'Asia/Bangkok';
 const TOKEN_EXPIRATION_SECONDS = 14 * 24 * 60 * 60; // Session Token validity period (14 days in seconds)
 
+// Website form submissions (contact / quote / meeting / newsletter) are emailed here.
+const FORM_RECIPIENT_EMAIL = 'info@tpo-wellness.com';
+
 // Old filename -> new filename (2026 rebrand). Applied to the 'Linked Page' value
 // before it is returned to the frontend, so existing sheet rows keep working.
 const LEGACY_PAGE_REDIRECTS = {
@@ -144,6 +147,9 @@ function doGet(e) {
       const email = e.parameter.email;
       const password = e.parameter.password;
       resultObject = handleLogin(email, password);
+    } else if (action === 'contact' || action === 'quote_request' || action === 'schedule_meeting' || action === 'newsletter') {
+      // Website form submissions (index.html quote / meeting / contact / newsletter forms).
+      resultObject = handleFormSubmit(e.parameter);
     } else if (action === 'validateSessionToken') {
       const sessionToken = e.parameter.sessionToken;
       resultObject = validateSessionToken(sessionToken);
@@ -204,6 +210,69 @@ function doGet(e) {
 }
 
 // --- Core Logic Functions ---
+
+/**
+ * V88: Handles public website form submissions and emails them to the company inbox.
+ * Called via JSONP GET from index.html (the legacy form webhook rejected POST with 405).
+ * @param {object} params The URL parameters of the request (form fields).
+ * @return {object} { success: boolean, message: string }
+ */
+function handleFormSubmit(params) {
+  const action = params.action;
+
+  // Basic rate limiting: one submission per email per action per 2 minutes, and a
+  // global hourly cap, to discourage abuse of this public endpoint.
+  try {
+    const cache = CacheService.getScriptCache();
+    const submitter = String(params.email || '').toLowerCase().trim();
+    if (submitter) {
+      const perUserKey = 'formrl_' + action + '_' + Utilities.base64Encode(submitter).slice(0, 22);
+      if (cache.get(perUserKey)) {
+        return { success: false, message: 'You just submitted this form. Please wait a minute before trying again.' };
+      }
+      cache.put(perUserKey, '1', 120);
+    }
+    const hourBucket = 'formrl_hour_' + Math.floor(Date.now() / 3600000);
+    const hourCount = Number(cache.get(hourBucket) || 0);
+    if (hourCount >= 40) {
+      return { success: false, message: 'Submission limit reached. Please email info@tpo-wellness.com directly.' };
+    }
+    cache.put(hourBucket, String(hourCount + 1), 3600);
+  } catch (rlError) {
+    Logger.log('Form rate-limit check skipped: ' + rlError);
+  }
+
+  const skipKeys = { action: 1, callback: 1, error: 1, redirect: 1, redirectUrl: 1 };
+  const lines = [];
+  for (var key in params) {
+    if (skipKeys[key]) continue;
+    var value = String(params[key]).trim();
+    if (!value) continue;
+    lines.push(key + ': ' + value.slice(0, 1500));
+  }
+
+  const subjects = {
+    contact: '[Website] Contact Message',
+    quote_request: '[Website] OEM Quote Request',
+    schedule_meeting: '[Website] Meeting Request',
+    newsletter: '[Website] Newsletter Subscribe'
+  };
+
+  const subject = subjects[action] || '[Website] Form Submission';
+  const body = 'New website form submission\n\n' +
+    'Form: ' + action + '\n' +
+    'Received: ' + Utilities.formatDate(new Date(), TIMEZONE, 'yyyy-MM-dd HH:mm:ss') + ' ICT\n\n' +
+    lines.join('\n');
+
+  try {
+    MailApp.sendEmail(FORM_RECIPIENT_EMAIL, subject, body);
+    Logger.log('handleFormSubmit emailed a ' + action + ' submission to ' + FORM_RECIPIENT_EMAIL);
+    return { success: true, message: 'OK' };
+  } catch (error) {
+    Logger.log('handleFormSubmit failed for ' + action + ': ' + error + ' Stack: ' + error.stack);
+    return { success: false, message: 'Could not deliver your submission. Please email info@tpo-wellness.com directly.' };
+  }
+}
 
 /**
  * Handles user login (Based on V85).

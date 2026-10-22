@@ -2519,8 +2519,39 @@
         });
       }
 
-      // --- 4. Unified Google Apps Script Form Submission (Preserved Endpoint) ---
-      const scriptURL = 'https://script.google.com/macros/s/AKfycbwJDAeDBi1-_iodvcl_4bFZ6HlFXouWRkZ0kiCOlj7g4lXbI6yXQsi33QjAVYMYKb09/exec';
+      // --- 4. Unified Form Submission via the Tpologin.gs web app (JSONP) ---
+      // The legacy form webhook (AKfycbwJDAeDBi1-...) rejects POSTs with 405, and the
+      // previous no-cors fetch silently swallowed that failure. We submit to the same
+      // deployed Tpologin.gs web app that handles employee login (JSONP GET — proven
+      // cross-origin), whose handleFormSubmit endpoint emails info@tpo-wellness.com.
+      const FORM_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzf-F_mvQfHM2dSJv10GEv-jAk1OX4APud3paB_ysgHCKv-Dd1uazx-pBJjTOd8f5xxDQ/exec';
+
+      function submitFormViaJsonp(formData, onDone) {
+        const callbackName = 'tpoFormCallback_' + Date.now();
+        const url = new URL(FORM_SCRIPT_URL);
+        Object.keys(formData).forEach(function(key) {
+          url.searchParams.append(key, String(formData[key]).slice(0, 1500));
+        });
+        url.searchParams.append('callback', callbackName);
+
+        const scriptEl = document.createElement('script');
+        let settled = false;
+        const finish = function(data) {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timeoutId);
+          delete window[callbackName];
+          if (scriptEl.parentNode) scriptEl.parentNode.removeChild(scriptEl);
+          onDone(data);
+        };
+        const timeoutId = setTimeout(function() {
+          finish({ success: false, message: 'Request timed out. Please try again or email info@tpo-wellness.com.' });
+        }, 20000);
+
+        window[callbackName] = function(data) { finish(data); };
+        scriptEl.src = url.toString();
+        document.head.appendChild(scriptEl);
+      }
 
       $('#contactForm, #newsletterForm, #quoteForm, #meetingForm').submit(function(e) {
         e.preventDefault();
@@ -2539,41 +2570,34 @@
         $form.find('.loading').show();
         $form.find('.error-message, .sent-message').hide();
 
-        fetch(scriptURL, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(formData)
-        })
-        .then(() => {
+        submitFormViaJsonp(formData, function(result) {
           $form.find('.loading').hide();
-          if (formId === 'newsletterForm') {
-            $form.siblings('.sent-message').text('Subscribed to TPO Wellness updates.').show();
-            $form[0].reset();
-            showToast('Subscribed to quarterly updates.');
-          } else if (formId === 'quoteForm') {
-            $form.find('.sent-message').text('RFQ received. Our Bangkok team will respond within 1 business day.').show();
-            showToast('OEM Quote Request sent.');
-          } else if (formId === 'meetingForm') {
-            latestMeetingDetails = formData;
-            const { gcalUrl } = buildCalendarUrls(formData);
-            const gcalLink = document.getElementById('gcalInviteLink');
-            if (gcalLink) gcalLink.href = gcalUrl;
-            document.getElementById('calendarInviteActions').style.display = 'block';
-            $form.find('.sent-message').text('Meeting confirmed. Use the links above to add it to your calendar.').show();
-            showToast('Meeting scheduled.');
+          if (result && result.success === true) {
+            if (formId === 'newsletterForm') {
+              $form.siblings('.sent-message').text('Subscribed to TPO Wellness updates.').show();
+              $form[0].reset();
+              showToast('Subscribed to quarterly updates.');
+            } else if (formId === 'quoteForm') {
+              $form.find('.sent-message').text('RFQ received. Our Bangkok team will respond within 1 business day.').show();
+              showToast('OEM Quote Request sent.');
+            } else if (formId === 'meetingForm') {
+              latestMeetingDetails = formData;
+              const { gcalUrl } = buildCalendarUrls(formData);
+              const gcalLink = document.getElementById('gcalInviteLink');
+              if (gcalLink) gcalLink.href = gcalUrl;
+              document.getElementById('calendarInviteActions').style.display = 'block';
+              $form.find('.sent-message').text('Meeting confirmed. Use the links above to add it to your calendar.').show();
+              showToast('Meeting scheduled.');
+            } else {
+              $form.find('.sent-message').text('Message sent. We will reply shortly.').show();
+              $form[0].reset();
+              showToast('Message sent.');
+            }
           } else {
-            $form.find('.sent-message').text('Message sent. We will reply shortly.').show();
-            $form[0].reset();
-            showToast('Message sent.');
+            const reason = (result && result.message) ? result.message : 'Submission failed.';
+            console.error('Submission error:', reason);
+            $form.find('.error-message').text(reason + ' You can also email info@tpo-wellness.com or contact us on LINE.').show();
           }
-        })
-        .catch(error => {
-          console.error('Submission error:', error);
-          $form.find('.loading').hide();
-          $form.find('.error-message').text('Could not reach server. Please email info@tpo-wellness.com or contact us on LINE.').show();
         });
       });
     });
