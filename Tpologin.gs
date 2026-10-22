@@ -270,8 +270,18 @@ function handleFormSubmit(params) {
     return { success: true, message: 'OK' };
   } catch (error) {
     Logger.log('handleFormSubmit failed for ' + action + ': ' + error + ' Stack: ' + error.stack);
-    return { success: false, message: 'Could not deliver your submission. Please email info@tpo-wellness.com directly.' };
+    return { success: false, message: 'Could not deliver your submission. Please email info@tpo-wellness.com directly.', detail: String(error).slice(0, 250) };
   }
+}
+
+/**
+ * Run this ONCE from the Apps Script editor (Run button) to grant the script its
+ * "send email" permission and to verify MailApp quota. On success the execution
+ * log shows 'Test email sent OK' and info@tpo-wellness.com receives a test mail.
+ */
+function testFormEmail() {
+  MailApp.sendEmail(FORM_RECIPIENT_EMAIL, '[Website] Test Email', 'Test email from Tpologin.gs editor run at ' + new Date().toISOString());
+  Logger.log('Test email sent OK');
 }
 
 /**
