@@ -3,269 +3,402 @@
 <head>
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
-  <title>TPO Wellness - Employee Login</title>
-  <meta content="" name="description">
-  <meta content="" name="keywords">
+
+  <title>Employee Login — TPO Wellness Ltd. | Bangkok</title>
+  <meta name="description" content="TPO Wellness Ltd. staff and partner portal sign in (mobile). Bangkok OEM supplement gummy manufacturing, TPO Herbal Shop and Thai Traditional Clinic.">
+  <meta name="keywords" content="TPO Wellness, Employee Login, Staff Portal, Mobile, OEM Gummies Bangkok">
 
   <!-- Favicons -->
   <link href="assets/img/favicon.png" rel="icon">
   <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
 
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Raleway:300,300i,400,400i,500,500i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+  <!-- Google Fonts (same as index.html) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600&display=swap" rel="stylesheet">
 
-  <!-- Vendor CSS Files -->
-  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
-  <link href="assets/vendor/boxicons/css/boxicons.min.css" rel="stylesheet"> <!-- Needed for footer icons -->
-  <!-- <link href="assets/vendor/aos/aos.css" rel="stylesheet"> --> <!-- Optional, if needed -->
+  <!-- Vendor CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 
-  <!-- Main CSS File -->
-  <link href="assets/css/style.css" rel="stylesheet">
+  <!-- Three.js & Vanta.js 3D Clouds Background (same build & palette as index.html) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vanta@0.5.24/dist/vanta.clouds.min.js"></script>
 
-  <!-- Custom Styles for Login Page -->
   <style>
-    /* Styles for the login form section */
-    .login-section {
-      padding: 60px 0; /* Padding for the section */
-      width: 100%; /* Section takes full width */
-      flex-grow: 1; /* Make the section fill the main area */
-      display: flex;
-      align-items: center; /* Center its content (the container div) vertically */
-      justify-content: center; /* Center its content horizontally */
+    :root {
+      --bg-paper: #f6f4ef;
+      --bg-warm-white: #ffffff;
+      --bg-stone: #ede9e0;
+      --ink-dark: #18221f;
+      --ink-body: #2d3834;
+      --ink-muted: #5c6661;
+      --forest: #1f4737;
+      --forest-hover: #163629;
+      --terracotta: #b55428;
+      --rule-color: #d8d3c8;
+      --font-serif: 'Newsreader', Georgia, serif;
+      --font-sans: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
     }
-    .login-container {
-      background-color: white;
-      padding: 40px; /* Increased padding */
-      border-radius: 8px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-      width: 100%;
-      max-width: 450px; /* Slightly wider */
-      margin-top: 20px; /* Add some space from header */
-      margin-bottom: 20px; /* Add some space from footer */
-    }
-    .login-container h1 {
-      text-align: center;
-      color: #333;
-      margin-bottom: 25px;
-      font-size: 24px; /* Adjusted size */
-      font-weight: 600;
-    }
-     .login-container .logo { text-align: center; margin-bottom: 20px; } /* Keep logo style if needed */
-     .login-container .logo img { max-width: 180px; } /* Adjusted size */
-    .login-container .form-group { margin-bottom: 20px; } /* Increased spacing */
-    .login-container label { display: block; margin-bottom: 8px; font-weight: bold; color: #555; font-size: 14px; }
-    .login-container input[type="email"],
-    .login-container input[type="password"] {
-      width: 100%;
-      padding: 12px 15px; /* Increased padding */
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      box-sizing: border-box;
-      font-size: 16px;
-    }
-    .login-container button {
-      width: 100%;
-      padding: 12px;
-      background-color: #1e56a0; /* Theme color */
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 16px;
-      font-weight: bold;
-      transition: background-color 0.3s;
-    }
-    .login-container button:hover {
-      background-color: #1f1cd4; /* Theme hover color */
-    }
-    .login-container button:disabled {
-      background-color: #cccccc;
-      cursor: not-allowed;
-    }
-    .login-container .error-message { color: #dc3545; margin-top: 15px; text-align: center; min-height: 1em; font-size: 14px; }
-    .login-container .info-message { margin-top: 25px; text-align: center; color: #666; font-size: 14px; }
 
-    /* Make body a flex container to push footer down */
+    * { box-sizing: border-box; }
+
     body {
-        display: flex;
-        flex-direction: column;
-        min-height: 100vh; /* Body takes full viewport height */
+      font-family: var(--font-sans);
+      color: var(--ink-body);
+      background-color: #3b6982;
+      margin: 0;
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
     }
-    main {
-        flex-grow: 1; /* Main fills space between header/footer */
-        display: flex; /* Use flexbox to allow login-section to grow */
-        flex-direction: column; /* Stack children vertically */
+
+    h1, h2, h3, h4, .serif-heading {
+      font-family: var(--font-serif);
+      color: var(--ink-dark);
+      font-weight: 500;
+      letter-spacing: -0.015em;
     }
+
+    .mono-label {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--ink-muted);
+    }
+
+    a { text-decoration: none; transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease; }
+
+    /* Fixed Vanta clouds canvas behind all content */
+    #vanta-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+    }
+
+    .page-shell {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* ======= Top Bar (matches index.html) ======= */
+    #topbar {
+      background: #141d1a;
+      color: rgba(255, 255, 255, 0.82);
+      font-size: 12px;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    #topbar .contact-info {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 6px 14px;
+    }
+
+    #topbar .contact-info i {
+      color: #a3bfb2;
+      font-style: normal;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    #topbar .contact-info a,
+    #topbar .contact-info span {
+      padding-left: 5px;
+      color: rgba(255, 255, 255, 0.82);
+    }
+
+    /* ======= Header (mobile-first brand bar) ======= */
+    #header {
+      background: rgba(20, 29, 26, 0.55);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 12px 0;
+    }
+
+    .logo-brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: #f6f4ef;
+    }
+
+    .logo-mark {
+      width: 34px;
+      height: 34px;
+      border-radius: 4px;
+      background: var(--forest);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #f6f4ef;
+      font-family: var(--font-serif);
+      font-weight: 600;
+      font-size: 0.95rem;
+      letter-spacing: 0.03em;
+      flex: 0 0 auto;
+    }
+
+    .logo-brand .brand-name {
+      display: block;
+      font-weight: 700;
+      line-height: 1.1;
+      font-size: 1.02rem;
+      color: #f6f4ef;
+    }
+
+    .logo-brand .brand-sub {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: rgba(246, 244, 239, 0.75);
+      margin-top: 3px;
+    }
+
+    /* ======= Login Section ======= */
+    .login-section {
+      flex-grow: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 16px;
+    }
+
+    .login-container {
+      background: var(--bg-warm-white);
+      border: 1px solid var(--rule-color);
+      border-radius: 6px;
+      box-shadow: 0 18px 45px rgba(9, 27, 20, 0.28);
+      padding: 28px 22px;
+      width: 100%;
+      max-width: 420px;
+    }
+
+    .login-container h1 {
+      font-size: 24px;
+      margin: 6px 0 20px;
+      text-align: left;
+    }
+
+    .form-group { margin-bottom: 16px; }
+
+    .form-label {
+      display: block;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--ink-dark);
+      margin-bottom: 6px;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid var(--rule-color);
+      border-radius: 4px;
+      background: var(--bg-paper);
+      color: var(--ink-body);
+      font-size: 16px; /* prevents iOS zoom-on-focus */
+      font-family: var(--font-sans);
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--forest);
+      background: #ffffff;
+      box-shadow: 0 0 0 3px rgba(31, 71, 55, 0.12);
+    }
+
+    .btn-primary-editorial {
+      background: var(--forest);
+      color: #ffffff;
+      font-family: var(--font-sans);
+      font-weight: 500;
+      font-size: 14.5px;
+      padding: 13px 24px;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: 1px solid var(--forest);
+      width: 100%;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    .btn-primary-editorial:hover { background: var(--forest-hover); }
+    .btn-primary-editorial:disabled { background: #9aa8a1; border-color: #9aa8a1; cursor: not-allowed; }
+
+    .error-message {
+      color: var(--terracotta);
+      margin-top: 14px;
+      min-height: 1.2em;
+      font-size: 14px;
+      text-align: center;
+      font-family: var(--font-mono);
+    }
+
+    .info-message {
+      margin-top: 22px;
+      text-align: center;
+      color: var(--ink-muted);
+      font-size: 13.5px;
+      border-top: 1px solid var(--rule-color);
+      padding-top: 16px;
+    }
+
+    /* ======= Footer (minimal, matches index.html tone) ======= */
+    #footer {
+      background: #141d1a;
+      color: rgba(255, 255, 255, 0.65);
+      font-size: 12px;
+      padding: 14px 0;
+    }
+
+    #footer .container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 16px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    #footer a { color: rgba(255, 255, 255, 0.8); }
+    #footer a:hover { color: #ffffff; }
   </style>
 
 </head>
 <body>
 
-  <!-- ======= Top Bar ======= -->
-  <section id="topbar" class="d-flex align-items-center">
-    <div class="container d-flex justify-content-center justify-content-md-between">
-      <div class="contact-info d-flex align-items-center">
-        <i class="bi bi-envelope d-flex align-items-center"><a href="mailto:info@tpo-wellness.com">info@tpo-wellness.com</a></i>
-        <i class="bi bi-phone d-flex align-items-center ms-4"><span>+66 87 789 4950</span></i>
-      </div>
-      <div class="user-info d-none d-md-flex align-items-center"> <!-- Placeholder for login status -->
-         <!-- Login status will be added dynamically if user is logged in -->
-         <!-- <span id="loginStatus">Logged in as: example@email.com</span> -->
-         <!-- <button id="logoutButton" class="logout-btn" onclick="logout()">Logout</button> -->
-      </div>
-    </div>
-  </section>
+  <!-- Fixed 3D clouds background (same Vanta config as index.html hero) -->
+  <div id="vanta-bg" aria-hidden="true"></div>
 
-  <!-- ======= Header ======= -->
-  <header id="header" class="d-flex align-items-center">
-    <div class="container d-flex align-items-center justify-content-between">
-      <h1 class="logo"><a href="index.html"><img src="./assets/img/TPOLogo.png" alt="TPO Wellness Logo" class="img-fluid"></a></h1>
-      <nav id="navbar" class="navbar">
-        <ul>
-          <!-- Simplified Nav for Login Page -->
-          <li><a class="nav-link scrollto" href="index.html#hero">Home</a></li>
-          <li><a class="nav-link scrollto" href="index.html#about">About</a></li>
-          <li><a class="nav-link scrollto" href="index.html#contact">Contact</a></li>
-          <li class="dropdown"><a href="#" class="active"><span>Login</span> <i class="bi bi-chevron-down"></i></a>
-            <ul>
-              <li><a href="tpologin.html" class="active">Employee Login</a></li> <!-- Mark as active -->
-              <li><a href="Login.html">CRM Login</a></li>
-              <li><a href="customerlogin.html">Customer Login</a></li>
-            </ul>
-          </li>
-        </ul>
-        <i class="bi bi-list mobile-nav-toggle"></i>
-      </nav><!-- .navbar -->
-    </div>
-  </header><!-- End Header -->
+  <div class="page-shell">
 
-  <main id="main">
+    <!-- ======= Top Bar ======= -->
+    <section id="topbar">
+      <div class="container">
+        <div class="contact-info">
+          <i class="bi bi-envelope"><a href="mailto:info@tpo-wellness.com">info@tpo-wellness.com</a></i>
+          <i class="bi bi-phone"><a href="tel:+66877894950">+66 87 789 4950</a></i>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======= Header ======= -->
+    <header id="header">
+      <div class="container d-flex align-items-center justify-content-between">
+        <a href="index.html" class="logo-brand" title="TPO Wellness Ltd. Bangkok">
+          <span class="logo-mark">TPO</span>
+          <span>
+            <span class="brand-name">TPO Wellness Ltd.</span>
+            <span class="brand-sub">Bangkok OEM Gummies &bull; Herbal &bull; Clinic</span>
+          </span>
+        </a>
+        <a class="mono-label" href="index.html#hero" style="color: rgba(246,244,239,0.85);">Home</a>
+      </div>
+    </header>
+
     <!-- ======= Login Section ======= -->
-    <section class="login-section">
-      <div class="container">
-        <div class="row justify-content-center">
-          <div class="col-lg-6 col-md-8">
-            <div class="login-container">
-              <!-- Logo can be added here if desired -->
-              <!-- <div class="logo">
-                <img src="assets/img/TPOLogo.png" alt="TPO Wellness">
-              </div> -->
-              <h1>Employee Login</h1>
-              <div id="login-form">
-                <div class="form-group">
-                  <label for="email">Email</label>
-                  <input type="email" id="email" name="email" class="form-control" required>
-                </div>
-                <div class="form-group">
-                  <label for="password">Password</label>
-                  <input type="password" id="password" name="password" class="form-control" required>
-                </div>
-                <button type="button" id="loginButton" onclick="login()">Login</button>
-                <div id="error-message" class="error-message"></div>
-              </div>
-              <div class="info-message">
-                <p>If you're having trouble logging in, please contact your administrator.</p> <!-- Keep admin message -->
-              </div>
+    <main class="login-section">
+      <div>
+        <div class="login-container">
+          <span class="mono-label">Staff &amp; Partner Portal &mdash; Mobile</span>
+          <h1>Employee Login</h1>
+          <div id="login-form">
+            <div class="form-group">
+              <label class="form-label" for="email">Email</label>
+              <input type="email" id="email" name="email" class="form-control" placeholder="name@tpo-wellness.com" required>
             </div>
+            <div class="form-group">
+              <label class="form-label" for="password">Password</label>
+              <input type="password" id="password" name="password" class="form-control" required>
+            </div>
+            <button type="button" id="loginButton" class="btn-primary-editorial" onclick="login()">Sign In</button>
+            <div id="error-message" class="error-message"></div>
+          </div>
+
+          <div class="info-message">
+            <p>If you're having trouble logging in, please contact your administrator.</p>
           </div>
         </div>
       </div>
-    </section><!-- End Login Section -->
-  </main><!-- End #main -->
+    </main>
 
-  <!-- ======= Footer ======= -->
-  <footer id="footer">
-    <div class="footer-top">
+    <!-- ======= Footer ======= -->
+    <footer id="footer">
       <div class="container">
-        <div class="row">
-
-          <div class="col-lg-4 col-md-6">
-            <div class="footer-info">
-              <h3>TPO Wellness</h3>
-              <p>
-                TPO Wellness Ltd. (Head Office)<br>
-                No. 122/7 Moo5, Pakkret Sub-District, Pakkret District.<br>
-                Nonthaburi Province 11120<br><br>
-                <strong>Tel:</strong> +662-687-7811,+6694-7365518<br>
-                <strong>Email:</strong> info@tpo-wellness.com<br>
-              </p>
-              <div class="social-links mt-3">
-                <a href="#" class="twitter"><i class="bx bxl-twitter"></i></a>
-                <a href="#" class="facebook"><i class="bx bxl-facebook"></i></a>
-                <a href="#" class="instagram"><i class="bx bxl-instagram"></i></a>
-                <a href="#" class="linkedin"><i class="bx bxl-linkedin"></i></a>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-lg-2 col-md-6 footer-links">
-            <h4>Useful Links</h4>
-            <ul>
-              <li><i class="bx bx-chevron-right"></i> <a href="index.html#hero">Home</a></li>
-              <li><i class="bx bx-chevron-right"></i> <a href="index.html#about">About us</a></li>
-              <li><i class="bx bx-chevron-right"></i> <a href="index.html#services">Services</a></li>
-              <li><i class="bx bx-chevron-right"></i> <a href="#">Terms of service</a></li>
-              <li><i class="bx bx-chevron-right"></i> <a href="#">Privacy policy</a></li>
-            </ul>
-          </div>
-
-          <div class="col-lg-2 col-md-6 footer-links">
-            <h4>Our Services</h4>
-             <ul>
-               <li><i class="bx bx-chevron-right"></i> <a href="#">Supplement Gummy OEM Manufacturing</a></li>
-               <li><i class="bx bx-chevron-right"></i> <a href="#">White-Label &amp; Private-Label Gummies</a></li>
-               <li><i class="bx bx-chevron-right"></i> <a href="#">Herbal Shop &amp; Traditional Clinic</a></li>
-               <li><i class="bx bx-chevron-right"></i> <a href="#">R&D Services</a></li>
-               <li><i class="bx bx-chevron-right"></i> <a href="#">Quality Control & Assurance</a></li>
-             </ul>
-          </div>
-
-          <div class="col-lg-4 col-md-6 footer-newsletter">
-            <h4>Our Newsletter</h4>
-            <p>Subscribe to our newsletter for the latest updates</p>
-            <form action="" method="post"> <!-- Add action/method if needed -->
-              <input type="email" name="email"><input type="submit" value="Subscribe">
-            </form>
-          </div>
-
-        </div>
+        <div>&copy; <span>TPO Wellness Ltd.</span> All Rights Reserved</div>
+        <div class="mono-label" style="color: #c7dfd4;">Bangkok, Thailand</div>
       </div>
-    </div>
+    </footer>
 
-    <div class="container">
-      <div class="copyright">
-        &copy; Copyright <strong><span>TPO Wellness</span></strong>. All Rights Reserved
-      </div>
-      <div class="credits">
-        Designed by <a href="#">KH</a>
-      </div>
-    </div>
-  </footer><!-- End Footer -->
+  </div><!-- /.page-shell -->
 
-  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
-  <!-- <div id="preloader"></div> --> <!-- Preloader might not be needed for login page -->
+  <!-- Bootstrap 5 Bundle JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-  <!-- Vendor JS Files -->
-  <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <!-- <script src="assets/vendor/aos/aos.js"></script> --> <!-- Optional -->
-  <!-- <script src="assets/vendor/glightbox/js/glightbox.min.js"></script> --> <!-- Optional -->
-  <!-- <script src="assets/vendor/isotope-layout/isotope.pkgd.min.js"></script> --> <!-- Optional -->
-  <!-- <script src="assets/vendor/swiper/swiper-bundle.min.js"></script> --> <!-- Optional -->
+  <!-- Vanta Clouds Background Initialization (same palette as index.html) -->
+  <script>
+    let loginVantaEffect = null;
 
-  <!-- Template Main JS File -->
-  <script src="assets/js/main.js"></script> <!-- Needed for mobile nav toggle -->
+    function initLoginClouds() {
+      const bgEl = document.getElementById('vanta-bg');
+      if (!bgEl || typeof VANTA === 'undefined' || !VANTA.CLOUDS) return;
 
-  <!-- Login Script -->
+      if (loginVantaEffect && typeof loginVantaEffect.destroy === 'function') {
+        loginVantaEffect.destroy();
+        loginVantaEffect = null;
+      }
+
+      try {
+        loginVantaEffect = VANTA.CLOUDS({
+          el: '#vanta-bg',
+          mouseControls: false,
+          touchControls: false,
+          gyroControls: false,
+          minHeight: 360.00,
+          minWidth: 200.00,
+          skyColor: 0x3b6982,
+          cloudColor: 0xc8d6e5,
+          cloudShadowColor: 0x162d3d,
+          sunColor: 0xf59e0b,
+          sunGlareColor: 0xd97706,
+          sunlightColor: 0xfde68a,
+          speed: 0.70
+        });
+      } catch (err) {
+        console.warn('Vanta Clouds initialization notice:', err);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', initLoginClouds);
+  </script>
+
+  <!-- Login Script (JSONP — same endpoint & flow as tpologin.html; logic preserved) -->
   <script>
     // Google Apps Script URL for Employee Login
-    // !!! IMPORTANT: This URL should point to your deployed NewCode.gs script !!!
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyo2QuCUiPwUlByCgmR5zp6kymmvLbQPSjDHbaJ9yZD5rqF8M8RalXwqdda8VZnEL2hkQ/exec';
+    // FIX: now points to the same deployed Tpologin.gs web app as tpologin.html.
+    // The old mobile-specific deployment was stale and used fetch(), which is
+    // blocked client-side (see Mobile_Login_Resolution_Summary.md) — JSONP is not.
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzf-F_mvQfHM2dSJv10GEv-jAk1OX4APud3paB_ysgHCKv-Dd1uazx-pBJjTOd8f5xxDQ/exec';
 
     // Get error message from URL parameters (if any)
     const urlParams = new URLSearchParams(window.location.search);
     const errorParam = urlParams.get('error');
-    
+
     const errorDiv = document.getElementById('error-message');
     const loginButton = document.getElementById('loginButton');
 
@@ -274,7 +407,7 @@
         if(loginButton) loginButton.disabled = disabled;
     }
 
-    // Employee login function (mimics Login.html flow)
+    // Employee login function (JSONP — mirrors tpologin.html)
     function login() {
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
@@ -289,124 +422,93 @@
       errorDiv.textContent = 'Logging in...';
       setButtonsDisabled(true);
 
+      // --- JSONP Implementation ---
+      const callbackName = 'handleLoginResponse';
+      const scriptId = 'jsonp-' + callbackName + '-' + Date.now();
+      let script = null;
+      let timeoutId = null;
+
+      // Define the global callback function
+      window[callbackName] = function(data) {
+        console.log('Login response data (JSONP):', data);
+
+        // Cleanup: Remove the script tag and the global callback function
+        if (script && script.parentNode) {
+          script.parentNode.removeChild(script);
+        }
+        delete window[callbackName];
+        if (timeoutId) clearTimeout(timeoutId);
+
+        setButtonsDisabled(false);
+        try {
+          // Check the new success flag and necessary fields from the JSON response
+          if (data && data.success === true && data.sessionToken && data.grantedTokens && data.linkedPage) {
+            errorDiv.textContent = '';
+            console.log('Login success. Storing tokens and redirecting to ' + data.linkedPage + '...');
+
+            // Store session token
+            localStorage.setItem('tpoSessionToken', data.sessionToken);
+
+            // Store granted tokens as a JSON string
+            localStorage.setItem('tpoGrantedTokens', JSON.stringify(data.grantedTokens));
+
+            // Store CRM API token if it exists
+            if (data.crmApiToken) {
+              localStorage.setItem('tpoCrmApiToken', data.crmApiToken);
+            } else {
+              // Ensure any old CRM token is cleared if not provided this time
+              localStorage.removeItem('tpoCrmApiToken');
+            }
+
+            // Store user email for display purposes
+            localStorage.setItem('tpoUserEmail', data.email);
+
+            // Redirect to the linked page. Browser handles relative paths correctly.
+            window.top.location.href = data.linkedPage;
+
+          } else {
+            // Display the error message from the script's JSON response
+            errorDiv.textContent = data.message || 'Login failed. Please check your credentials or configuration.';
+            console.log("Login failed:", data.message || 'Unknown error or missing data in response', data);
+            // Clear any potentially partially stored tokens on failure
+            localStorage.removeItem('tpoSessionToken');
+            localStorage.removeItem('tpoGrantedTokens');
+            localStorage.removeItem('tpoCrmApiToken');
+          }
+        } catch (error) {
+           console.error('Error processing login response:', error);
+           errorDiv.textContent = 'Error processing login response: ' + error.message;
+           localStorage.removeItem('tpoSessionToken');
+           localStorage.removeItem('tpoGrantedTokens');
+           localStorage.removeItem('tpoCrmApiToken');
+        }
+      };
+
+      // Timeout for JSONP error handling (e.g., 15 seconds)
+      timeoutId = setTimeout(() => {
+        console.error('JSONP request timed out.');
+        errorDiv.textContent = 'Error: Login request timed out. Please try again.';
+        if (script && script.parentNode) {
+          script.parentNode.removeChild(script);
+        }
+        delete window[callbackName];
+        setButtonsDisabled(false);
+      }, 15000);
+
+      // Construct the JSONP URL
       const loginUrl = new URL(APPS_SCRIPT_URL);
       loginUrl.searchParams.append('action', 'handleLogin');
       loginUrl.searchParams.append('email', email);
       loginUrl.searchParams.append('password', password);
-      // 'type' parameter is no longer needed for handleLogin
+      loginUrl.searchParams.append('callback', callbackName);
 
-      fetch(loginUrl, { method: 'GET' })
-      .then(response => {
-        // Check if response is ok (status 200-299)
-        if (!response.ok) {
-          // Try to parse error from JSON response if possible
-          return response.json().then(errData => {
-            throw new Error(errData.message || `Network response was not ok (${response.status})`);
-          }).catch(() => {
-            // Fallback if response is not JSON or parsing fails
-            throw new Error(`Network response was not ok (${response.status})`);
-          });
-        }
-        return response.json(); // Parse successful JSON response
-      })
-      .then(result => {
-        setButtonsDisabled(false);
-        // Check the new success flag and necessary fields from the JSON response
-        if (result && result.success === true && result.sessionToken && result.grantedTokens && result.linkedPage) {
-          errorDiv.textContent = ''; // Clear any previous error message
-          console.log(`Login success. Storing tokens and redirecting to ${result.linkedPage}...`);
-
-          // Store session token
-          localStorage.setItem('tpoSessionToken', result.sessionToken);
-          console.log('Stored tpoSessionToken:', result.sessionToken);
-
-          // Store granted tokens as a JSON string
-          localStorage.setItem('tpoGrantedTokens', JSON.stringify(result.grantedTokens));
-          console.log('Stored tpoGrantedTokens:', JSON.stringify(result.grantedTokens));
-
-          // Store CRM API token if it exists
-          if (result.crmApiToken) {
-            localStorage.setItem('tpoCrmApiToken', result.crmApiToken);
-            console.log('Stored tpoCrmApiToken:', result.crmApiToken);
-          } else {
-            // Ensure any old CRM token is cleared if not provided this time
-            localStorage.removeItem('tpoCrmApiToken');
-            console.log('No crmApiToken received, cleared any existing tpoCrmApiToken.');
-          }
-
-          // Store user email for display purposes
-          localStorage.setItem('tpoUserEmail', result.email);
-          console.log('Stored tpoUserEmail:', result.email);
-
-          // Clear old/potentially conflicting storage items (keep this)
-          // localStorage.removeItem('tpoEmployeeToken'); // Example if this was used before
-
-          // Redirect to the linked page. Browser handles relative paths correctly.
-          window.top.location.href = result.linkedPage; // <-- Simpler and works for file:///
-
-        } else {
-          // Display the error message from the script's JSON response
-          errorDiv.textContent = result.message || 'Login failed. Please check your credentials or configuration.';
-          console.log("Login failed:", result.message || 'Unknown error or missing data in response', result);
-          // Clear any potentially partially stored tokens on failure
-          localStorage.removeItem('tpoSessionToken');
-          localStorage.removeItem('tpoGrantedTokens');
-          localStorage.removeItem('tpoCrmApiToken');
-        }
-      })
-      .catch(error => {
-        // Handle fetch errors (network issues, CORS, parsing errors)
-        setButtonsDisabled(false);
-        console.error('Error during login fetch:', error);
-        errorDiv.textContent = 'An error occurred during login: ' + error.message;
-        // Clear any potentially partially stored tokens on fetch error
-        localStorage.removeItem('tpoSessionToken');
-        localStorage.removeItem('tpoGrantedTokens');
-        localStorage.removeItem('tpoCrmApiToken');
-      });
-
-      /*
-      // --- OLD CRM LOGIN LOGIC (Commented out for reference) ---
-      const loginUrl = new URL(APPS_SCRIPT_URL); // This URL needs to be the NEW one
-      loginUrl.searchParams.append('action', 'handleLogin'); // Action might be different for new script
-      loginUrl.searchParams.append('email', email);
-      loginUrl.searchParams.append('password', password);
-      loginUrl.searchParams.append('type', 'employee'); // Add type parameter
-
-      fetch(loginUrl, { method: 'GET' })
-      .then(response => {
-        if (!response.ok) { throw new Error(`Network response was not ok (${response.status})`); }
-        return response.json();
-      })
-      .then(result => {
-        setButtonsDisabled(false);
-        if (result && result.success && result.linkedPage) {
-          errorDiv.textContent = '';
-          console.log("Login success. Redirecting to:", result.linkedPage);
-          window.top.location.href = result.linkedPage; // Redirect to linked page
-        } else {
-          errorDiv.textContent = result.message || 'Login failed. Please check your credentials.';
-        }
-      })
-      .catch(error => {
-        setButtonsDisabled(false);
-        console.error('Error during login fetch:', error);
-        errorDiv.textContent = 'An error occurred during login: ' + error.message;
-      });
-      */
+      // Create and append the script tag
+      script = document.createElement('script');
+      script.id = scriptId;
+      script.src = loginUrl.toString();
+      console.log('Requesting JSONP URL:', script.src);
+      document.head.appendChild(script);
     }
-
-    // Logout function (Not typically needed on basic login pages, keep CRM version commented)
-    /*
-    function logout() {
-        console.log("Logging out...");
-        localStorage.removeItem('tpoCrmToken');
-        localStorage.removeItem('tpoCrmUserEmail');
-        localStorage.removeItem('tpoCrmIsManager');
-        // Redirect to login page (this page) without any token/error
-        window.top.location.href = '/Login.html'; // Or maybe index.html?
-    }
-    */
 
     // Add event listener for Enter key in password field
     document.getElementById('password').addEventListener('keypress', function(e) {
@@ -422,7 +524,6 @@
       if (errorParam) {
         errorDiv.textContent = decodeURIComponent(errorParam);
       }
-      // Removed login status check from basic login page
     });
   </script>
 
