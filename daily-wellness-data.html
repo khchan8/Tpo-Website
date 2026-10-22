@@ -12,8 +12,10 @@
   <link href="assets/img/favicon.png" rel="icon">
   <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
 
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Raleway:300,300i,400,400i,500,500i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+  <!-- Google Fonts (same as index.html / tpologin.html) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
 
   <!-- Vendor CSS Files -->
   <link href="assets/vendor/aos/aos.css" rel="stylesheet">
@@ -21,11 +23,221 @@
   <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
   <link href="assets/vendor/boxicons/css/boxicons.min.css" rel="stylesheet">
   <link href="assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
-  <link href="assets/vendor/remixicon/remixicon.css" rel="stylesheet">
   <link href="assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
 
-  <!-- Template Main CSS File -->
-  <link href="assets/css/style.css" rel="stylesheet">
+  <!-- TPO Wellness New Theme (inline theme replaces the old template skin) -->
+  <style id="tpo-new-theme">
+    :root {
+      --bg-paper: #f6f4ef;
+      --bg-warm-white: #ffffff;
+      --bg-stone: #ede9e0;
+      --ink-dark: #18221f;
+      --ink-body: #2d3834;
+      --ink-muted: #5c6661;
+      --forest: #1f4737;
+      --forest-hover: #163629;
+      --terracotta: #b55428;
+      --rule-color: #d8d3c8;
+      --font-serif: 'Newsreader', Georgia, serif;
+      --font-sans: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+    * { box-sizing: border-box; }
+    html { background: #3b6982; }
+    body {
+      font-family: var(--font-sans);
+      color: var(--ink-body);
+      background: transparent;
+      line-height: 1.6;
+      margin: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+    #vanta-bg { position: fixed; inset: 0; z-index: 0; }
+    body > *:not(#vanta-bg):not(.back-to-top) { position: relative; z-index: 1; }
+    h1, h2, h3, h4, h5, .serif-heading {
+      font-family: var(--font-serif);
+      color: var(--ink-dark);
+      font-weight: 500;
+      letter-spacing: -0.015em;
+    }
+    a { transition: color .2s ease, background-color .2s ease, border-color .2s ease; }
+    .mono-label {
+      font-family: var(--font-mono); font-size: 11.5px; text-transform: uppercase;
+      letter-spacing: .08em; color: var(--ink-muted);
+    }
+    /* Top bar */
+    #topbar {
+      background: #141d1a; color: rgba(255,255,255,.82);
+      font-size: 12.5px; border-bottom: 1px solid rgba(255,255,255,.08);
+      padding: 6px 0;
+    }
+    #topbar .contact-info i { color: #a3bfb2; font-style: normal; }
+    #topbar .contact-info a, #topbar .contact-info span { color: rgba(255,255,255,.82); }
+    #topbar .contact-info a:hover { color: #fff; }
+    #topbar #loginStatus { font-family: var(--font-mono); font-size: 12px; color: #c7dfd4; }
+    /* Header */
+    #header {
+      background: rgba(20,29,26,.55);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255,255,255,.12);
+      padding: 10px 0;
+    }
+    #header .logo h1 a, #header .logo a { color: #f6f4ef; font-family: var(--font-serif); font-size: 1.25rem; font-weight: 600; }
+    #header .logo img { max-height: 44px; }
+    #navbar ul { list-style: none; display: flex; align-items: center; gap: 22px; margin: 0; padding: 0; }
+    #navbar > ul > li > a, #navbar .nav-link {
+      color: rgba(246,244,239,.85); font-size: 14px; font-weight: 500; padding: 8px 0;
+    }
+    #navbar > ul > li > a:hover, #navbar .nav-link:hover, #navbar .nav-link.active { color: #fff; }
+    #navbar .dropdown ul {
+      display: block; position: absolute; left: 0; top: calc(100% + 8px);
+      margin: 0; padding: 8px 0; z-index: 99; opacity: 0; visibility: hidden;
+      background: #fff; border: 1px solid var(--rule-color);
+      box-shadow: 0 12px 28px rgba(18,34,31,.12); border-radius: 6px; min-width: 220px;
+      list-style: none; transition: .2s;
+    }
+    #navbar .dropdown:hover > ul { opacity: 1; top: 100%; visibility: visible; }
+    #navbar .dropdown ul li { position: relative; min-width: 220px; }
+    #navbar .dropdown ul a {
+      padding: 8px 16px; font-size: 13.5px; color: var(--ink-body);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    #navbar .dropdown ul a:hover { background: var(--bg-paper); color: var(--forest); }
+    #navbar .dropdown .dropdown ul { top: 0; left: 100%; }
+    .mobile-nav-toggle { color: #f6f4ef; font-size: 26px; cursor: pointer; background: none; border: none; }
+    /* Content sections default surface */
+    section { background: transparent; }
+    .container { background: transparent; }
+    .card, .panel, .dashboard-container, .content-card { background: var(--bg-warm-white); border: 1px solid var(--rule-color); border-radius: 6px; box-shadow: 0 10px 26px rgba(18,34,31,.10); }
+    /* Forms & buttons */
+    .form-control, .form-select {
+      border: 1px solid var(--rule-color); border-radius: 4px; background: var(--bg-paper);
+      color: var(--ink-body); font-family: var(--font-sans); font-size: 14.5px; padding: 10px 14px;
+    }
+    .form-control:focus, .form-select:focus {
+      outline: none; border-color: var(--forest); background: #fff;
+      box-shadow: 0 0 0 3px rgba(31,71,55,.12);
+    }
+    .btn-primary, .btn-primary-editorial {
+      background: var(--forest); border: 1px solid var(--forest); color: #fff;
+      font-family: var(--font-sans); font-weight: 500; border-radius: 4px; padding: 10px 20px;
+    }
+    .btn-primary:hover, .btn-primary-editorial:hover { background: var(--forest-hover); border-color: var(--forest-hover); color: #fff; }
+    .btn-outline-primary { color: var(--forest); border-color: var(--forest); border-radius: 4px; }
+    .btn-outline-primary:hover { background: var(--forest); color: #fff; }
+    .login-container {
+      background: var(--bg-warm-white); border: 1px solid var(--rule-color); border-radius: 6px;
+      box-shadow: 0 18px 45px rgba(9,27,20,.28); padding: 40px; max-width: 460px;
+    }
+    .login-container h1 { font-size: 26px; margin: 0 0 22px; }
+    .login-container button {
+      background: var(--forest); color: #fff; border: none; border-radius: 4px;
+      padding: 12px; font-weight: 500; font-size: 15px; cursor: pointer; width: 100%;
+    }
+    .login-container button:hover { background: var(--forest-hover); }
+    .login-container button:disabled { background: #9aa8a1; cursor: not-allowed; }
+    .login-container .error-message { color: var(--terracotta); font-family: var(--font-mono); font-size: 14px; }
+    /* Tables */
+    .table { color: var(--ink-body); }
+    .table thead th { background: var(--bg-stone); color: var(--ink-dark); font-family: var(--font-mono); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; border-bottom: 1px solid var(--rule-color); }
+    /* Footer */
+    #footer { background: #141d1a; color: rgba(255,255,255,.65); padding: 40px 0 20px; }
+    #footer h3, #footer h4 { color: #f6f4ef; font-size: 16px; margin-bottom: 14px; }
+    #footer a { color: rgba(255,255,255,.8); }
+    #footer a:hover { color: #fff; }
+    #footer .footer-info p, #footer .footer-newsletter p { color: rgba(255,255,255,.65); font-size: 13.5px; }
+    #footer .footer-links ul { list-style: none; padding: 0; margin: 0; }
+    #footer .footer-links li { padding: 3px 0; font-size: 13.5px; }
+    #footer .copyright { color: rgba(255,255,255,.5); font-size: 12.5px; border-top: 1px solid rgba(255,255,255,.1); margin-top: 24px; padding-top: 16px; }
+    #footer .social-links a {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 34px; height: 34px; border-radius: 4px; margin-right: 6px;
+      background: rgba(255,255,255,.08); color: #c7dfd4;
+    }
+    #footer .social-links a:hover { background: var(--forest); color: #fff; }
+    /* Back to top */
+    .back-to-top {
+      position: fixed; bottom: 20px; right: 20px; width: 40px; height: 40px;
+      border-radius: 4px; background: var(--forest); color: #fff; z-index: 996;
+      display: flex; align-items: center; justify-content: center; font-size: 22px;
+      opacity: .9;
+    }
+    .back-to-top:hover { background: var(--forest-hover); color: #fff; }
+
+    /* ===== Page-specific: old-template class equivalents (TPO Wellness re-skin) ===== */
+    /* Sticky header on scroll (class toggled by assets/js/main.js) */
+    #header.fixed-top { background: rgba(20,29,26,.92); }
+    .scrolled-offset { margin-top: 70px; }
+    /* Hero band floating over the Vanta clouds */
+    #hero { width: 100%; min-height: 68vh; position: relative; overflow: hidden; }
+    #hero .container { position: relative; z-index: 1; }
+    #hero h1 { color: #f6f4ef; font-size: clamp(32px, 5.4vw, 52px); font-weight: 600; line-height: 1.12; margin: 0 0 16px; }
+    #hero h2 { color: rgba(246,244,239,.86); font-family: var(--font-sans); font-size: clamp(16px, 2.2vw, 21px); font-weight: 400; margin: 0 0 32px; }
+    #hero .btn-get-started {
+      display: inline-block; padding: 12px 28px; font-family: var(--font-sans); font-weight: 500;
+      font-size: 14px; letter-spacing: .04em; color: #f6f4ef; background: rgba(20,29,26,.35);
+      border: 1px solid rgba(246,244,239,.65); border-radius: 4px;
+    }
+    #hero .btn-get-started:hover { background: var(--forest); border-color: var(--forest); color: #fff; }
+    .energy-stream-canvas {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      z-index: 0; pointer-events: none; display: block;
+    }
+    /* Section titles (old .section-title template block) */
+    .section-title { text-align: center; padding: 10px 0 36px; position: relative; }
+    .section-title span {
+      position: absolute; top: 30px; left: 0; right: 0; z-index: 1; line-height: 0;
+      font-family: var(--font-serif); font-weight: 600; font-size: 52px; color: rgba(31,71,55,.10);
+    }
+    .section-title h2 { font-size: 32px; margin: 0 0 14px; position: relative; z-index: 2; }
+    .section-title p { color: var(--ink-muted); margin: 0; position: relative; z-index: 2; }
+    @media (max-width: 575px) {
+      .section-title h2 { font-size: 26px; }
+      .section-title span { font-size: 36px; }
+    }
+    /* Mobile navigation (class toggled by assets/js/main.js) */
+    @media (max-width: 991px) {
+      .mobile-nav-toggle { display: inline-flex; }
+      #navbar ul { display: none; }
+      #navbar.navbar-mobile ul {
+        display: flex; flex-direction: column; align-items: stretch; position: fixed;
+        top: 110px; right: 16px; left: 16px; background: #ffffff;
+        border: 1px solid var(--rule-color); border-radius: 8px; padding: 14px; gap: 4px;
+        max-height: calc(100vh - 130px); overflow-y: auto;
+        box-shadow: 0 20px 40px rgba(18,34,31,.20);
+      }
+      #navbar.navbar-mobile .nav-link { color: var(--ink-body); }
+      #navbar.navbar-mobile .nav-link:hover, #navbar.navbar-mobile .nav-link.active { color: var(--forest); }
+    }
+    /* Back-to-top visibility (class toggled by assets/js/main.js) */
+    .back-to-top { visibility: hidden; opacity: 0; transition: opacity .3s ease, visibility .3s ease; }
+    .back-to-top.active { visibility: visible; opacity: .9; }
+    /* Preloader (removed by assets/js/main.js on load) */
+    #preloader { position: fixed; inset: 0; z-index: 9999; background: var(--bg-paper); }
+    #preloader:before {
+      content: ""; position: fixed; top: calc(50% - 30px); left: calc(50% - 30px);
+      width: 60px; height: 60px; border: 6px solid var(--forest); border-top-color: var(--bg-stone);
+      border-radius: 50%; animation: tpo-preloader-spin 1s linear infinite;
+    }
+    @keyframes tpo-preloader-spin { to { transform: rotate(360deg); } }
+    /* Disable aos animation delay on mobile (was in old template skin) */
+    @media screen and (max-width: 768px) { [data-aos-delay] { transition-delay: 0 !important; } }
+    /* Footer newsletter form (old template block) */
+    #footer .footer-newsletter form {
+      margin-top: 24px; background: var(--bg-warm-white); border: 1px solid var(--rule-color);
+      border-radius: 4px; padding: 6px; display: flex; position: relative;
+    }
+    #footer .footer-newsletter input[type="email"] {
+      border: 0; background: transparent; outline: none; flex: 1; min-width: 0;
+      padding: 10px 12px; color: var(--ink-body); font-family: var(--font-sans); font-size: 14px;
+    }
+    #footer .footer-newsletter input[type="submit"] {
+      border: 0; border-radius: 4px; background: var(--forest); color: #fff; cursor: pointer;
+      padding: 10px 20px; font-family: var(--font-sans); font-size: 14px; font-weight: 500;
+    }
+    #footer .footer-newsletter input[type="submit"]:hover { background: var(--forest-hover); }
+    #footer .credits { color: rgba(255,255,255,.5); font-size: 12.5px; padding-top: 4px; }
+  </style>
 
   <!-- Added jQuery Library -->
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
@@ -38,19 +250,20 @@
     }
 
     .dashboard-container {
-      background: #fff;
+      background: var(--bg-warm-white);
       padding: 30px;
-      border-radius: 5px;
-      box-shadow: 0px 0 30px rgba(21, 21, 21, 0.08);
+      border-radius: 6px;
+      border: 1px solid var(--rule-color);
+      box-shadow: 0px 10px 26px rgba(18, 34, 31, 0.10);
       margin-bottom: 30px;
     }
 
     .dashboard-title {
       font-size: 20px;
-      font-weight: 700;
+      font-weight: 600;
       padding: 0 0 20px 0;
       margin: 0;
-      color: #151515;
+      color: var(--ink-dark);
     }
 
     .submenu-container {
@@ -61,8 +274,9 @@
       padding: 0;
       margin: 0 0 20px 0;
       list-style: none;
-      background: #f9f9f9;
-      border-radius: 5px;
+      background: var(--bg-paper);
+      border: 1px solid var(--rule-color);
+      border-radius: 6px;
       overflow: hidden;
     }
 
@@ -74,8 +288,14 @@
       transition: all 0.3s ease;
     }
 
-    .submenu-nav li:hover, .submenu-nav li.active {
-      background: #e03a3c;
+    .submenu-nav li:hover {
+      background: var(--bg-stone);
+      color: var(--forest);
+    }
+
+    .submenu-nav li.active,
+    .submenu-nav li.active:hover {
+      background: var(--forest);
       color: #fff;
     }
 
@@ -121,6 +341,7 @@
     .loader .spinner-border {
       width: 3rem;
       height: 3rem;
+      color: var(--forest);
     }
     /* Top Bar Visibility Logic */
     #topbar .user-info { display: none; } /* Hide user info by default */
@@ -148,6 +369,9 @@
 
 <body>
 
+  <!-- Fixed 3D clouds background (same Vanta config as index.html / tpologin.html) -->
+  <div id="vanta-bg" aria-hidden="true"></div>
+
   <!-- ======= Top Bar ======= -->
   <section id="topbar" class="d-flex align-items-center">
     <div class="container d-flex justify-content-center justify-content-md-between">
@@ -170,7 +394,7 @@
       <h1 class="logo"><a href="index.html"><img src="./assets/img/TPOLogo.png" alt="TPO Wellness Logo" class="img-fluid"></a></h1>
       <nav id="navbar" class="navbar">
         <ul>
-          <li><a class="nav-link scrollto" href="index.html">Home</a></li>
+          <li><a class="nav-link scrollto" href="index.html#hero">Home</a></li>
           <li><a class="nav-link scrollto active" href="#daily-wellness-data">Daily Wellness Data</a></li>
           <li><a class="nav-link" href="https://docs.google.com/spreadsheets/d/1kbn0HL0STM9-gkZRnKTfTqvy-TYBet59AeKSuqJKVxA">Daily Wellness Dashboard</a></li> <!-- Keep CRM Link -->
           <li><a class="nav-link" href="CRMv4.html">CRM</a></li> <!-- Keep CRM Link -->
@@ -815,6 +1039,24 @@
 
     // --- Run Authentication Check on Page Load ---
     document.addEventListener('DOMContentLoaded', () => checkAuthorization(requiredToken)); // Pass the specific token
+  </script>
+
+  <!-- Three.js + Vanta.js 3D Clouds Background (same build & palette as index.html / tpologin.html) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vanta@0.5.24/dist/vanta.clouds.min.js"></script>
+  <script>
+    (function () {
+      var el = document.getElementById('vanta-bg');
+      if (!el || typeof VANTA === 'undefined' || !VANTA.CLOUDS) return;
+      try {
+        VANTA.CLOUDS({
+          el: '#vanta-bg', mouseControls: true, touchControls: true, gyroControls: false,
+          minHeight: 360.00, minWidth: 200.00,
+          skyColor: 0x3b6982, cloudColor: 0xc8d6e5, cloudShadowColor: 0x162d3d,
+          sunColor: 0xf59e0b, sunGlareColor: 0xd97706, sunlightColor: 0xfde68a, speed: 0.70
+        });
+      } catch (err) { console.warn('Vanta Clouds initialization notice:', err); }
+    })();
   </script>
 
 </body>
