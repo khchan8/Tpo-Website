@@ -272,6 +272,10 @@
       top: 0;
       left: 100%;
     }
+    /* Hide the login options menu once authenticated (link becomes Logout) */
+    #loginLogoutItem.authenticated > ul {
+      display: none !important;
+    }
 
     .mobile-nav-toggle {
       color: var(--ink-dark);
@@ -912,35 +916,40 @@
           <li><a class="nav-link" href="#locationsModal" data-bs-toggle="modal" data-bs-target="#locationsModal">Locations</a></li>
           <li><a class="nav-link scrollto" href="#contact">Contact</a></li>
 
-          <!-- Employee Portal Dropdown (Preserved Auth Structure) -->
+          <!-- Employee Portal Dropdown (links to live internal tools) -->
           <li class="dropdown" id="employeePortalDropdown" style="display: none;">
             <a href="#quote-booking" class="nav-link"><span>Employee Portal</span> <i class="bi bi-chevron-down ms-1"></i></a>
             <ul>
               <li class="dropdown menu-sales-tools">
-                <a href="#products"><span>OEM Sales Tools</span> <i class="bi bi-chevron-right"></i></a>
+                <a href="#"><span>Sales Tools</span> <i class="bi bi-chevron-right"></i></a>
                 <ul>
-                  <li><a href="#products" data-portal-tool="Creatine &amp; Protein Gummy Spec Sheet">Creatine &amp; Protein Gummies</a></li>
-                  <li><a href="#products" data-portal-tool="Sleep &amp; Relax Gummy Spec Sheet">Sleep &amp; Relax Gummies</a></li>
-                  <li><a href="#herbal-clinic" data-portal-tool="TPO Herbal Shop Wholesale Catalog">TPO Herbal Shop Catalog</a></li>
-                  <li><a href="#herbal-clinic" data-portal-tool="Thai Traditional Clinic Treatments">Thai Traditional Clinic</a></li>
+                  <li><a href="HT-Sales-Tools.html">Herbal &amp; Traditional</a></li>
+                  <li><a href="SR-Sales-Tools.html">Sleep &amp; Relax</a></li>
+                  <li><a href="DW-Sales-Tools.html">Daily Wellness</a></li>
+                  <li><a href="PP-Sales-Tools.html">Peak Performance</a></li>
                 </ul>
               </li>
-              <li class="menu-performance"><a href="#quote-booking" data-portal-tool="Manufacturing Batch Performance">Performance</a></li>
-              <li class="menu-erp"><a href="#quote-booking" data-portal-tool="GMP Production ERP">ERP</a></li>
-              <li class="menu-crm"><a href="#quote-booking" data-portal-tool="B2B OEM Client CRM">CRM</a></li>
+              <li class="menu-performance"><a href="performance.html">Performance</a></li>
+              <li class="menu-erp"><a href="erp.html">ERP</a></li>
+              <li class="menu-crm"><a href="CRMv4.html">CRM</a></li>
               <li class="dropdown menu-customer-portal">
-                <a href="#quote-booking"><span>Customer Portal</span> <i class="bi bi-chevron-right"></i></a>
+                <a href="#"><span>Customer Portal</span> <i class="bi bi-chevron-right"></i></a>
                 <ul>
-                  <li><a href="#quote-booking" data-portal-tool="OEM Gummy Batch CoA Tracker">OEM Batch &amp; CoA Tracker</a></li>
-                  <li><a href="#quote-booking" data-portal-tool="Private Label Packaging Proofs">Packaging Approvals</a></li>
+                  <li><a href="daily-wellness-data.html">Daily Wellness</a></li>
+                  <li><a href="performance-line-data.html">Peak Performance</a></li>
                 </ul>
               </li>
             </ul>
           </li>
 
-          <!-- Dynamic Login/Logout Link -->
-          <li id="loginLogoutItem">
-            <a id="loginLogoutLink" class="nav-link" href="Login.html">Login</a>
+          <!-- Login Options Dropdown (Employee / CRM / Customer) -->
+          <li id="loginLogoutItem" class="dropdown">
+            <a id="loginLogoutLink" class="nav-link" href="tpologin.html"><span>Login</span> <i class="bi bi-chevron-down ms-1"></i></a>
+            <ul id="loginOptionsMenu">
+              <li><a href="tpologin.html" id="employeeLoginLink">Employee Login</a></li>
+              <li><a href="CRMv4.html">CRM Login</a></li>
+              <li><a href="customerlogin.html">Customer Login</a></li>
+            </ul>
           </li>
 
           <li>
@@ -2172,7 +2181,7 @@
       }
 
       loginStatusSpan.textContent = userEmail ? `Signed in: ${userEmail}` : 'Signed in';
-      loginLogoutLink.textContent = 'Logout';
+      loginLogoutLink.innerHTML = 'Logout';
       loginLogoutLink.removeAttribute('data-bs-toggle');
       loginLogoutLink.removeAttribute('data-bs-target');
       loginLogoutLink.href = '#top';
@@ -2180,6 +2189,7 @@
         e.preventDefault();
         logout();
       };
+      loginLogoutLink.parentElement.classList.add('authenticated');
 
       employeePortalDropdown.style.display = 'list-item';
       return true;
@@ -2211,11 +2221,12 @@
 
       bodyElement.classList.remove('logged-in', 'sales-only-user');
       loginStatusSpan.textContent = '';
-      loginLogoutLink.textContent = 'Login';
-      loginLogoutLink.href = 'Login.html';
+      loginLogoutLink.innerHTML = 'Login <i class="bi bi-chevron-down ms-1"></i>';
+      loginLogoutLink.href = 'tpologin.html';
       loginLogoutLink.removeAttribute('data-bs-toggle');
       loginLogoutLink.removeAttribute('data-bs-target');
       loginLogoutLink.onclick = null;
+      loginLogoutLink.parentElement.classList.remove('authenticated');
       employeePortalDropdown.style.display = 'none';
     }
 
@@ -2223,6 +2234,19 @@
     document.addEventListener('DOMContentLoaded', function() {
       initHeroClouds();
       checkAuthorization();
+
+      // Route mobile devices to the mobile employee login page
+      function isMobileDevice() {
+        return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|Mobile/i.test(navigator.userAgent);
+      }
+      if (isMobileDevice()) {
+        const employeeLoginLink = document.getElementById('employeeLoginLink');
+        if (employeeLoginLink) employeeLoginLink.href = 'tpologin-m.html';
+        const loginToggle = document.getElementById('loginLogoutLink');
+        if (loginToggle && loginToggle.getAttribute('href') === 'tpologin.html') {
+          loginToggle.href = 'tpologin-m.html';
+        }
+      }
 
       let resizeTimer;
       window.addEventListener('resize', function() {
@@ -2494,14 +2518,6 @@
           URL.revokeObjectURL(url);
         });
       }
-
-
-      document.querySelectorAll('[data-portal-tool]').forEach(link => {
-        link.addEventListener('click', function() {
-          const toolName = this.getAttribute('data-portal-tool');
-          showToast(`Opened ${toolName}.`);
-        });
-      });
 
       // --- 4. Unified Google Apps Script Form Submission (Preserved Endpoint) ---
       const scriptURL = 'https://script.google.com/macros/s/AKfycbwJDAeDBi1-_iodvcl_4bFZ6HlFXouWRkZ0kiCOlj7g4lXbI6yXQsi33QjAVYMYKb09/exec';
