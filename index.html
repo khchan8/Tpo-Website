@@ -882,7 +882,7 @@
           <a href="mailto:info@tpo-wellness.com">info@tpo-wellness.com</a>
         </i>
         <i class="bi bi-phone d-flex align-items-center">
-          <a href="tel:+66877894950">+66 87 789 4950</a>
+          <a href="tel:+66947365518">+66 94 736 5518</a>
         </i>
         <span class="d-none d-lg-inline-flex align-items-center ms-2" style="color: #c7dfd4;">
           Bangkok, Thailand &mdash; Thai FDA &amp; GMP Licensed Contract Manufacturer
@@ -1072,7 +1072,7 @@
               </div>
 
               <div class="mt-4 pt-3 border-top border-secondary border-opacity-25 d-flex flex-wrap justify-content-between align-items-center gap-2">
-                <span class="mono-label" style="color: #c7dfd4;">Direct Line: +66 87 789 4950</span>
+                <span class="mono-label" style="color: #c7dfd4;">Direct Line: +66 94 736 5518</span>
                 <a href="https://lin.ee/nW4iuoH" target="_blank" rel="noopener" class="btn btn-sm btn-light rounded-1 px-3 fw-medium">
                   Message on LINE
                 </a>
@@ -1205,9 +1205,16 @@
         <div class="section-header">
           <span class="mono-label">Reference Catalog</span>
           <h2>Stock &amp; Custom Formulation Datasheets</h2>
-          <p>Select a category below to filter our reference formulas. Any base formula can be modified for dosage, sweetener, and flavor.</p>
+          <p>Open the catalogue below to browse our 12 reference formulas and filter by category. Any base formula can be modified for dosage, sweetener, and flavor.</p>
         </div>
 
+        <div class="text-center mb-4">
+          <button type="button" id="formulationCatalogToggle" class="btn-outline-editorial" aria-expanded="false" aria-controls="formulationCatalog">
+            Browse Stock &amp; Custom Formulations (12) <i class="bi bi-chevron-down ms-1" aria-hidden="true"></i>
+          </button>
+        </div>
+
+        <div id="formulationCatalog" style="display: none;">
         <ul id="portfolio-flters">
           <li class="filter-active" data-filter="all">All Formulations (12)</li>
           <li data-filter="gummy">Core Gummy Lines (4)</li>
@@ -1494,6 +1501,7 @@
           </div>
 
         </div>
+        </div><!-- /#formulationCatalog -->
       </div>
     </section>
 
@@ -1742,11 +1750,8 @@
                       <div class="col-md-6">
                         <label class="form-label small fw-medium" for="meetingPlatformSelect">Meeting Channel *</label>
                         <select class="form-select" id="meetingPlatformSelect" name="meetingPlatform">
-                          <option value="Google Meet">Google Meet (Video Link)</option>
-                          <option value="Zoom">Zoom Video Conference</option>
-                          <option value="Microsoft Teams">Microsoft Teams</option>
-                          <option value="LINE Call (@TPO-Wellness)">LINE Official Call</option>
-                          <option value="In-Person (Bangkok TPO Wellness HQ)">In-Person (Bangkok TPO Wellness HQ)</option>
+                          <option value="Google Meet" selected>Google Meet (Video Call)</option>
+                          <option value="In-Person (Bangkok TPO Wellness HQ)">In-Person at Bangkok HQ</option>
                         </select>
                       </div>
                     </div>
@@ -1792,26 +1797,28 @@
                         <span class="mono-label">Appointment Summary</span>
                         <h4 class="mt-1 mb-3">TPO Wellness Bangkok</h4>
                         <p class="small text-muted">
-                          Once confirmed, your request is logged with our Bangkok team and you can download a calendar file (`.ics`) or add it directly to Google Calendar.
+                          Once confirmed, we create the appointment on our calendar and Google emails you an invitation &mdash; including the Google Meet joining link for video meetings.
                         </p>
                         <div class="p-3 rounded-1 mb-3 small bg-white border" style="border-color: var(--rule-color) !important;">
                           <div class="mb-1"><span class="text-muted">Department:</span> <strong>OEM R&amp;D / Clinical Desk</strong></div>
                           <div class="mb-1"><span class="text-muted">Location:</span> <strong>Bangkok, Thailand / Video</strong></div>
                           <div class="mb-1"><span class="text-muted">Selected Slot:</span> <strong id="summarySlotText">14:00 ICT (Bangkok UTC+7)</strong></div>
-                          <div><span class="text-muted">Contact:</span> <strong>info@tpo-wellness.com | +66 87 789 4950</strong></div>
+                          <div><span class="text-muted">Contact:</span> <strong>info@tpo-wellness.com | +66 94 736 5518</strong></div>
                         </div>
 
-                        <!-- Dynamic Calendar Links (Revealed upon submission) -->
+                        <!-- Appointment Confirmation (revealed after the server confirms) -->
                         <div id="calendarInviteActions" class="p-3 rounded-1 mb-3 bg-white border border-success" style="display: none;">
-                          <div class="fw-bold text-success small mb-2">Booking Logged &mdash; Save to Calendar:</div>
+                          <div class="fw-bold text-success small mb-1">Appointment Confirmed</div>
+                          <div class="small text-muted mb-2" id="confirmedWhenText"></div>
                           <div class="d-flex flex-wrap gap-2">
-                            <a href="https://calendar.google.com" target="_blank" rel="noopener" id="gcalInviteLink" class="btn btn-sm btn-success rounded-1">
-                              Add to Google Calendar
+                            <a href="#" target="_blank" rel="noopener" id="meetInviteLink" class="btn btn-sm btn-success rounded-1" style="display: none;">
+                              <i class="bi bi-camera-video me-1"></i> Join Google Meet
                             </a>
-                            <button type="button" id="downloadIcsBtn" class="btn btn-sm btn-outline-dark rounded-1">
-                              Download .ics Invite
-                            </button>
+                            <a href="#" target="_blank" rel="noopener" id="gcalInviteLink" class="btn btn-sm btn-outline-success rounded-1" style="display: none;">
+                              View in Google Calendar
+                            </a>
                           </div>
+                          <div class="small text-muted mt-2">A calendar invitation has been emailed to you by Google Calendar.</div>
                         </div>
                       </div>
 
@@ -1864,7 +1871,7 @@
             <div class="info-box">
               <i class="bx bx-phone-call"></i>
               <h5 class="serif-heading mb-1">Telephone</h5>
-              <p class="small mb-0"><a href="tel:+66877894950" class="text-dark fw-medium">+66 87 789 4950</a></p>
+              <p class="small mb-0"><a href="tel:+66947365518" class="text-dark fw-medium">+66 94 736 5518</a></p>
             </div>
           </div>
 
@@ -1941,7 +1948,7 @@
               </p>
               <p class="small mb-2">
                 <strong>Location:</strong> Bangkok, Thailand<br>
-                <strong>Phone:</strong> <a href="tel:+66877894950" class="text-white">+66 87 789 4950</a><br>
+                <strong>Phone:</strong> <a href="tel:+66947365518" class="text-white">+66 94 736 5518</a><br>
                 <strong>Email:</strong> <a href="mailto:info@tpo-wellness.com" class="text-white">info@tpo-wellness.com</a>
               </p>
             </div>
@@ -2061,7 +2068,7 @@
             </div>
           </div>
           <div class="mt-3 p-3 rounded-1 d-flex flex-wrap justify-content-between align-items-center gap-2 small" style="background: var(--bg-paper);">
-            <div><strong>Telephone:</strong> +66 87 789 4950 &nbsp;|&nbsp; <strong>Email:</strong> info@tpo-wellness.com</div>
+            <div><strong>Telephone:</strong> +66 94 736 5518 &nbsp;|&nbsp; <strong>Email:</strong> info@tpo-wellness.com</div>
             <a href="https://lin.ee/nW4iuoH" target="_blank" rel="noopener" class="btn btn-sm btn-dark rounded-1 px-3">Message on LINE</a>
           </div>
         </div>
@@ -2272,6 +2279,27 @@
         });
       }
 
+      // Formulation Catalog Disclosure (collapsed by default)
+      const catalogToggle = document.getElementById('formulationCatalogToggle');
+      const catalogBody = document.getElementById('formulationCatalog');
+      function setCatalogExpanded(expanded) {
+        if (!catalogToggle || !catalogBody) return;
+        catalogBody.style.display = expanded ? 'block' : 'none';
+        catalogToggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        catalogToggle.innerHTML = expanded
+          ? 'Hide Stock &amp; Custom Formulations <i class="bi bi-chevron-up ms-1" aria-hidden="true"></i>'
+          : 'Browse Stock &amp; Custom Formulations (12) <i class="bi bi-chevron-down ms-1" aria-hidden="true"></i>';
+      }
+      if (catalogToggle && catalogBody) {
+        catalogToggle.addEventListener('click', function() {
+          setCatalogExpanded(catalogBody.style.display === 'none');
+        });
+        document.querySelectorAll('a[href="#products"]').forEach(link => {
+          link.addEventListener('click', function() { setCatalogExpanded(true); });
+        });
+      }
+
+
       // Portfolio Category Filter
       const filterItems = document.querySelectorAll('#portfolio-flters li');
       const portfolioCards = document.querySelectorAll('#portfolioGrid .portfolio-item');
@@ -2456,68 +2484,21 @@
         });
       });
 
-      // Calendar Invite Generator (.ics & Google Calendar)
-      let latestMeetingDetails = null;
-
-      function buildCalendarUrls(details) {
-        const dateStr = (details.meetingDate || '2026-10-25').replace(/-/g, '');
-        const activeBtn = document.querySelector('#timeSlotGroup .time-slot-btn.active');
-        const hourStr = activeBtn ? activeBtn.getAttribute('data-hour') : '14:00';
-        const [hh, min] = hourStr.split(':').map(Number);
-
-        const startDateUtc = new Date(Date.UTC(
-          Number(dateStr.slice(0, 4)),
-          Number(dateStr.slice(4, 6)) - 1,
-          Number(dateStr.slice(6, 8)),
-          hh - 7,
-          min,
-          0
-        ));
-        const endDateUtc = new Date(startDateUtc.getTime() + 30 * 60000);
-
-        const formatUtc = (d) => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-        const startIso = formatUtc(startDateUtc);
-        const endIso = formatUtc(endDateUtc);
-
-        const title = `TPO Wellness Bangkok — ${details.meetingType || 'OEM Consultation'}`;
-        const desc = `TPO Wellness Ltd. Consultation (${details.meetingPlatform || 'Google Meet'}). Attendee: ${details.name || ''} (${details.email || ''}). Notes: ${details.message || 'OEM Supplement Gummies / Herbal / Clinic Discussion'}`;
-        const loc = `${details.meetingPlatform || 'Video Call'} — TPO Wellness Ltd., Bangkok, Thailand`;
-
-        const gcalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${startIso}/${endIso}&details=${encodeURIComponent(desc)}&location=${encodeURIComponent(loc)}`;
-
-        const icsContent = [
-          'BEGIN:VCALENDAR',
-          'VERSION:2.0',
-          'PRODID:-//TPO Wellness Ltd.//Bangkok OEM Consultation//EN',
-          'BEGIN:VEVENT',
-          `DTSTART:${startIso}`,
-          `DTEND:${endIso}`,
-          `SUMMARY:${title}`,
-          `DESCRIPTION:${desc.replace(/\n/g, ' ')}`,
-          `LOCATION:${loc}`,
-          'END:VEVENT',
-          'END:VCALENDAR'
-        ].join('\r\n');
-
-        return { gcalUrl, icsContent };
+      // Meeting type drives the channel: factory visits are in-person, all others Meet.
+      const meetingPlatformSelect = document.getElementById('meetingPlatformSelect');
+      function syncPlatformToMeetingType() {
+        if (!meetingPlatformSelect) return;
+        const selectedType = document.querySelector('input[name="meetingType"]:checked');
+        const typeVal = selectedType ? selectedType.value : '';
+        meetingPlatformSelect.value =
+          (typeVal.indexOf('Factory Tour') !== -1 || typeVal.indexOf('Sample Tasting') !== -1)
+            ? 'In-Person (Bangkok TPO Wellness HQ)'
+            : 'Google Meet';
       }
-
-      const downloadIcsBtn = document.getElementById('downloadIcsBtn');
-      if (downloadIcsBtn) {
-        downloadIcsBtn.addEventListener('click', function() {
-          if (!latestMeetingDetails) return;
-          const { icsContent } = buildCalendarUrls(latestMeetingDetails);
-          const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = 'TPO-Wellness-Bangkok-Consultation.ics';
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
-        });
-      }
+      document.querySelectorAll('input[name="meetingType"]').forEach(radio => {
+        radio.addEventListener('change', syncPlatformToMeetingType);
+      });
+      syncPlatformToMeetingType();
 
       // --- 4. Unified Form Submission via the Tpologin.gs web app (JSONP) ---
       // The legacy form webhook (AKfycbwJDAeDBi1-...) rejects POSTs with 405, and the
@@ -2581,13 +2562,29 @@
               $form.find('.sent-message').text('RFQ received. Our Bangkok team will respond within 1 business day.').show();
               showToast('OEM Quote Request sent.');
             } else if (formId === 'meetingForm') {
-              latestMeetingDetails = formData;
-              const { gcalUrl } = buildCalendarUrls(formData);
+              const cal = (result.calendar && typeof result.calendar === 'object') ? result.calendar : null;
+              const calSummary = cal ? (cal.when + ' — ' + cal.title) : (typeof result.calendar === 'string' ? result.calendar : null);
+              const actionsBox = document.getElementById('calendarInviteActions');
+              const whenText = document.getElementById('confirmedWhenText');
+              const meetLink = document.getElementById('meetInviteLink');
               const gcalLink = document.getElementById('gcalInviteLink');
-              if (gcalLink) gcalLink.href = gcalUrl;
-              document.getElementById('calendarInviteActions').style.display = 'block';
-              $form.find('.sent-message').text('Meeting confirmed. Use the links above to add it to your calendar.').show();
-              showToast('Meeting scheduled.');
+              if (whenText) whenText.textContent = calSummary ? (calSummary + (cal && cal.platform ? ' · ' + cal.platform : '')) : '';
+              if (meetLink) {
+                if (cal && cal.meetLink) { meetLink.href = cal.meetLink; meetLink.style.display = ''; }
+                else { meetLink.style.display = 'none'; }
+              }
+              if (gcalLink) {
+                if (cal && cal.eventLink) { gcalLink.href = cal.eventLink; gcalLink.style.display = ''; }
+                else { gcalLink.style.display = 'none'; }
+              }
+              if (actionsBox) actionsBox.style.display = 'block';
+              if (result.calendarError) {
+                $form.find('.sent-message').text('Request received — our Bangkok team will confirm your appointment by email shortly.').show();
+                showToast('Meeting request received.');
+              } else {
+                $form.find('.sent-message').text('Appointment confirmed. Your calendar invitation has been emailed.').show();
+                showToast('Meeting scheduled.');
+              }
             } else {
               $form.find('.sent-message').text('Message sent. We will reply shortly.').show();
               $form[0].reset();

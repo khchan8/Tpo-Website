@@ -275,23 +275,26 @@ function handleFormSubmit(params) {
     'Received: ' + Utilities.formatDate(new Date(), TIMEZONE, 'yyyy-MM-dd HH:mm:ss') + ' ICT\n\n' +
     lines.join('\n');
 
-  // Meeting requests also get a 30-minute calendar event with the team as guests.
+  // Meeting requests also create the real appointment (Meet link + invitations).
   let calendarResult = null;
   if (action === 'schedule_meeting') {
     calendarResult = createMeetingEvent(params);
     if (calendarResult && calendarResult.error) {
       body += '\n\n(Calendar event could not be created: ' + calendarResult.error + ')';
-    } else if (calendarResult && calendarResult.summary) {
-      body += '\n\nCalendar event created: ' + calendarResult.summary;
+    } else if (calendarResult && calendarResult.when) {
+      body += '\n\nCalendar event created: ' + calendarResult.when + ' — ' + calendarResult.title +
+        ' [' + calendarResult.platform + ']';
+      if (calendarResult.meetLink) body += '\nGoogle Meet: ' + calendarResult.meetLink;
+      if (calendarResult.eventLink) body += '\nEvent: ' + calendarResult.eventLink;
     }
   }
 
   try {
     MailApp.sendEmail(FORM_NOTIFICATION_EMAILS.join(','), subject, body);
     Logger.log('handleFormSubmit emailed a ' + action + ' submission to ' + FORM_NOTIFICATION_EMAILS.join(', ') +
-      (calendarResult && calendarResult.summary ? ' | Calendar: ' + calendarResult.summary : ''));
+      (calendarResult && calendarResult.when ? ' | Calendar: ' + calendarResult.when + ' — ' + calendarResult.title : ''));
     const response = { success: true, message: 'OK' };
-    if (calendarResult && calendarResult.summary) response.calendar = calendarResult.summary;
+    if (calendarResult && calendarResult.when) response.calendar = calendarResult;
     if (calendarResult && calendarResult.error) response.calendarError = calendarResult.error;
     return response;
   } catch (error) {
@@ -316,11 +319,33 @@ function getWebsiteMeetingsCalendar() {
 }
 
 /**
- * Creates a 30-minute calendar event from a schedule_meeting submission using the
- * form's meetingDate (yyyy-mm-dd) and selectedTimeSlot (e.g. "14:00 ICT (UTC+7)").
+ * V89: Only these meeting channels are accepted. Legacy values (Zoom / Teams /
+ * LINE Call) are normalized to Google Meet; factory-tour meeting types always
+ * resolve to the in-person channel.
  * @param {object} params The form fields.
- * @return {object|null} { summary } on success, { error } on failure, or null when
- *                       the submission carries no usable date/slot (email still sent).
+ * @return {string} 'Google Meet' or 'In-Person (Bangkok TPO Wellness HQ)'.
+ */
+function normalizePlatform(params) {
+  const raw = String(params.meetingPlatform || '');
+ if (raw.indexOf('In-Person') === 0) return 'In-Person (Bangkok TPO Wellness HQ)';
+  const type = String(params.meetingType || '');
+  if (type.indexOf('Factory Tour') !== -1 || type.indexOf('Sample Tasting') !== -1) {
+    return 'In-Person (Bangkok TPO Wellness HQ)';
+  }
+  return 'Google Meet';
+}
+
+/**
+ * V89: Creates the appointment from a schedule_meeting submission and lets
+ * Google Calendar email real invitations to the team AND the client. Video
+ * meetings get a Google Meet conference attached; in-person meetings get the
+ * Bangkok HQ location instead. Requires the Advanced Calendar Service
+ * (Services > + > Calendar API) to generate Meet links; without it the event is
+ * still created via plain CalendarApp, just without a Meet link.
+ * @param {object} params The form fields.
+ * @return {object|null} { when, title, platform, meetLink, eventLink, invited }
+ *                       on success, { error } on failure, or null when the
+ *                       submission carries no usable date/slot (email still sent).
  */
 function createMeetingEvent(params) {
   const dateMatch = String(params.meetingDate || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
@@ -328,29 +353,88 @@ function createMeetingEvent(params) {
   if (!dateMatch || !timeMatch) {
     return null; // Not enough data for an event — the notification email still goes out.
   }
+
+  const platform = normalizePlatform(params);
+  const inPerson = platform.indexOf('In-Person') === 0;
+  const location = inPerson ? 'TPO Wellness Ltd. (Bangkok HQ), Bangkok, Thailand' : 'Google Meet';
+
+  const start = new Date(dateMatch[1] + '-' + dateMatch[2] + '-' + dateMatch[3] + 'T' +
+    ('0' + timeMatch[1]).slice(-2) + ':' + timeMatch[2] + ':00+07:00'); // ICT (UTC+7)
+  const end = new Date(start.getTime() + 30 * 60 * 1000); // 30-minute meeting
+
+  const who = String(params.name || params.fullName || params.email || 'Website visitor').slice(0, 80);
+  const org = params.company ? (' (' + String(params.company).slice(0, 60) + ')') : '';
+  const title = 'TPO Wellness ' + (inPerson ? 'In-Person Consultation' : 'Video Consultation') + ' — ' + who + org;
+
+  const skipKeys = { action: 1, callback: 1, error: 1, redirect: 1, redirectUrl: 1, submittedAt: 1 };
+  const descriptionLines = [];
+  for (var key in params) {
+    if (skipKeys[key]) continue;
+    var value = String(params[key]).trim();
+    if (value) descriptionLines.push(key + ': ' + value.slice(0, 500));
+  }
+  const description = 'Website meeting request\n\n' + descriptionLines.join('\n');
+
+  // Guests: the team plus the client (Google emails the invitations).
+  const attendees = MEETINGS_CALENDAR_GUESTS.split(',').map(function(addr) {
+    return { email: addr.trim() };
+  });
+  const clientEmail = String(params.email || '').trim();
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clientEmail)) attendees.push({ email: clientEmail });
+
   try {
-    const start = new Date(dateMatch[1] + '-' + dateMatch[2] + '-' + dateMatch[3] + 'T' +
-      ('0' + timeMatch[1]).slice(-2) + ':' + timeMatch[2] + ':00+07:00'); // ICT (UTC+7)
-    const end = new Date(start.getTime() + 30 * 60 * 1000); // 30-minute meeting
+    const cal = getWebsiteMeetingsCalendar();
+    let meetLink = null;
+    let eventLink = null;
 
-    const who = String(params.name || params.fullName || params.email || 'Website visitor').slice(0, 80);
-    const org = params.company ? (' (' + String(params.company).slice(0, 60) + ')') : '';
-    const title = 'Meeting Request — ' + who + org;
-
-    const skipKeys = { action: 1, callback: 1, error: 1, redirect: 1, redirectUrl: 1, submittedAt: 1 };
-    const descriptionLines = [];
-    for (var key in params) {
-      if (skipKeys[key]) continue;
-      var value = String(params[key]).trim();
-      if (value) descriptionLines.push(key + ': ' + value.slice(0, 500));
+    if (typeof Calendar !== 'undefined' && Calendar.Events) {
+      // Advanced Calendar Service — the only way to generate a Google Meet link.
+      const resource = {
+        summary: title,
+        description: description,
+        location: location,
+        start: { dateTime: Utilities.formatDate(start, 'UTC', "yyyy-MM-dd'T'HH:mm:ss'Z'"), timeZone: TIMEZONE },
+        end: { dateTime: Utilities.formatDate(end, 'UTC', "yyyy-MM-dd'T'HH:mm:ss'Z'"), timeZone: TIMEZONE },
+        attendees: attendees,
+        guestsCanInviteOthers: false,
+        reminders: { useDefault: true }
+      };
+      if (!inPerson) {
+        resource.conferenceData = {
+          createRequest: {
+            conferenceSolutionKey: { type: 'eventHangout' },
+            requestId: Utilities.getUuid()
+          }
+        };
+      }
+      const created = Calendar.Events.insert(resource, cal.getId(), {
+        conferenceDataVersion: 1,
+        sendUpdates: 'all' // Google emails invitations to every guest
+      });
+      eventLink = created.htmlLink || null;
+      const entryPoints = (created.conferenceData && created.conferenceData.entryPoints) || [];
+      for (var i = 0; i < entryPoints.length; i++) {
+        if (entryPoints[i].entryPointType === 'video' && entryPoints[i].uri) {
+          meetLink = entryPoints[i].uri; // e.g. https://meet.google.com/abc-defg-hij
+        }
+      }
+    } else {
+      // Advanced Calendar Service not enabled — event without a Meet link.
+      cal.createEvent(title, start, end, {
+        description: description,
+        location: inPerson ? location : 'Google Meet (joining link emailed separately)',
+        guests: attendees.map(function(a) { return a.email; }).join(',')
+      });
     }
 
-    getWebsiteMeetingsCalendar().createEvent(title, start, end, {
-      description: 'Website meeting request\n\n' + descriptionLines.join('\n'),
-      guests: MEETINGS_CALENDAR_GUESTS
-    });
-
-    return { summary: Utilities.formatDate(start, TIMEZONE, 'EEE d MMM yyyy HH:mm') + ' ICT — ' + title };
+    return {
+      when: Utilities.formatDate(start, TIMEZONE, 'EEE d MMM yyyy HH:mm') + ' ICT',
+      title: title,
+      platform: platform,
+      meetLink: meetLink,
+      eventLink: eventLink,
+      invited: attendees.length
+    };
   } catch (error) {
     Logger.log('createMeetingEvent failed: ' + error + ' Stack: ' + error.stack);
     return { error: String(error).slice(0, 200) };
@@ -379,6 +463,8 @@ function testCalendarAccess() {
   });
   evt.deleteEvent();
   Logger.log('Calendar access OK — calendar "' + cal.getName() + '" (' + cal.getId() + ')');
+  Logger.log('Advanced Calendar Service (needed for Google Meet links): ' +
+    ((typeof Calendar !== 'undefined' && Calendar.Events) ? 'ENABLED' : 'NOT ENABLED — add it via Services > + > Calendar API, then redeploy'));
 }
 
 /**
