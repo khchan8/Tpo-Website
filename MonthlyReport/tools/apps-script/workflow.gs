@@ -8,7 +8,7 @@ const TPO = Object.freeze({
   input: 'LLM-Input', output: 'LLM Output', commentary: 'Commentary',
   startRow: 8, chunkSize: 30000, maxPrompt: 1500000, maxSourceCells: 200000,
   stateKey: 'TPO_MANUAL_V1_', version: 'tpo-commentary-v1',
-  build: '2026-10-19-v9', timezone: 'Asia/Bangkok',
+  build: '2026-10-23-v10', timezone: 'Asia/Bangkok',
   sources: ['Assumptions', 'MonthlyFinancials', 'CustomerRevenueMonthly',
     'CustomerRevenueQuarterly', 'CustomerCount', 'Quarterly Financials',
     '1. Working Capital', '2. Customer Economics', '3. Strategic Dashboard',
@@ -21,6 +21,7 @@ function onOpen() {
   const input = ui.createMenu('1. Enter monthly data')
     .addItem('Input checklist…', 'menuMonthlyInput')
     .addItem('Import accounting actuals…', 'menuImportMonthlyActuals')
+    .addItem('Import sales data…', 'menuImportSalesActuals')
     .addItem('Prepare next month slots', 'menuPrepareNextMonthSlots')
     .addItem('Add customer…', 'menuAddCustomer');
   const tools = ui.createMenu('Tools & settings')
@@ -62,6 +63,7 @@ function menuMonthlyInput() {
       '</ul>' +
       '<p>Leave unknown cells blank; enter 0 only for a genuine zero. To start a new month, use TPO → 1. Enter monthly data → Prepare next month slots. Corrections to an existing month do not roll forward automatically.</p>' +
       '<p><b>Import accounting actuals…</b> in this submenu fills the MonthlyFinancials and 1. Working Capital inputs from a JSON accounting pack; customer, operational and assumption data remain separate manual inputs.</p>' +
+      '<p><b>Import sales data…</b> fills CustomerRevenueMonthly and Customer Count from a JSON sales pack; the customers must already exist in Assumptions, and financial, working-capital, assumption and operational inputs stay separate.</p>' +
       '<p>Next steps: TPO → 2. Check &amp; calculate, then 3. Prepare AI prompt + copy…, 4. Paste AI response &amp; update Commentary…, and 5. Review Commentary.</p>';
     dialog_('TPO · Monthly input checklist', body, '', 520);
   });

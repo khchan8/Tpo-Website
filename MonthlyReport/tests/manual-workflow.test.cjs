@@ -1664,3 +1664,127 @@ test('monthly import semantically agreeing lowercase quarter literal and formula
   const prevEmpty = rt.ctx.previewMonthlyActualsImport(text);
   assert.ok(prevEmpty.months.find(m => m.month === '2027-02').conflicts.some(c => c.cell === 'H2' && c.message.includes('empty or unverified')));
 });
+
+function sampleSalesPack(months = null) {
+  const mList = months || [
+    { month: '2027-01', revenueCents: { acme: 10000, beta: 2500 }, count: 10,
+      overallCents: 12500, reconciled: true },
+    { month: '2027-02', revenueCents: { acme: 15000, beta: 3500 }, count: 15,
+      overallCents: 18500, reconciled: true },
+    { month: '2027-03', revenueCents: { acme: 30000, beta: 5000 }, count: null,
+      overallCents: 35000, reconciled: true }
+  ];
+  return {
+    schema: 'tpo-sales-actuals-v1',
+    source: {
+      filename: 'TPO Sep 2026 Sales Data for Presentation.xlsx',
+      sha256: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
+      reportMonth: mList[mList.length - 1].month
+    },
+    customers: [
+      { key: 'acme', sheet: 'Acme', label: 'Acme Corporation', name: 'Acme Corp', sourceRef: 'Acme!A2:B30' },
+      { key: 'beta', sheet: 'Beta', label: 'Beta', name: 'Beta', sourceRef: 'Beta!A2:B30' }
+    ],
+    months: mList
+  };
+}
+
+test('sales import pack validation rejects malformed packs before any read', () => {
+  const rt = runtime();
+  const bad = (mutate, pattern) => {
+    const pack = sampleSalesPack();
+    mutate(pack);
+    assert.throws(() => rt.ctx.previewSalesActualsImport(JSON.stringify(pack)), pattern);
+  };
+  bad(p => { p.schema = 'other'; }, /Unsupported pack schema/);
+  bad(p => { p.extra = 1; }, /exactly schema, source, customers and months/);
+  bad(p => { p.months[0].revenueCents.ghost = 100; }, /unknown customer key/);
+  bad(p => { p.months[1].revenueCents.acme += 5000; }, /reconciled/);
+  bad(p => { p.months.splice(1, 1); }, /contiguous/);
+  bad(p => { p.months[2].month = '2027-05'; }, /contiguous/);
+  bad(p => { p.customers.push({ key: 'x', sheet: 'S', label: 'L', name: 'Acme Corp', sourceRef: 'S!A:B' }); }, /Duplicate pack customer name/);
+  bad(p => { p.months[0].count = 1.5; }, /count must be null or a nonnegative integer/);
+});
+
+test('sales import preview discloses differences and leaves every sheet untouched', () => {
+  const rt = runtime();
+  const text = JSON.stringify(sampleSalesPack());
+  const snap = snapshotAllNonDiag(rt);
+  const prev = rt.ctx.previewSalesActualsImport(text);
+  assert.equal(prev.source.reportMonth, '2027-03');
+  const byMonth = new Map(prev.months.map(m => [m.month, m]));
+  assert.equal(byMonth.get('2027-01').status, 'unchanged');
+  const february = byMonth.get('2027-02');
+  assert.equal(february.status, 'changed');
+  assert.deepEqual(Array.from(february.changes, c => [c.sheet, c.cell, c.field, c.previousCents, c.proposedCents]),
+    [['CustomerRevenueMonthly', 'C3', 'Acme Corp revenue', 14000, 15000]]);
+  const march = byMonth.get('2027-03');
+  assert.equal(march.status, 'changed');
+  assert.equal(march.changes.length, 2);
+  assert.ok(march.changes.every(c => c.cell === 'New row'));
+  assert.equal(march.defaultSelected, true);
+  assert.equal(february.historical, true);
+  assert.equal(march.historical, false);
+  assert.deepEqual({ ...prev.summary }, { revenueChanges: 1, countChanges: 0, newValues: 2,
+    historicalMonths: 1, unchanged: 1 });
+  assert.deepEqual(snapshotAllNonDiag(rt), snap, 'Preview must not mutate any sheet');
+});
+
+test('sales import apply writes revenue and counts with backup and chronological appends', () => {
+  const rt = runtime();
+  const text = JSON.stringify(sampleSalesPack());
+  const prev = rt.ctx.previewSalesActualsImport(text);
+  const result = rt.ctx.applySalesActualsImport(text, ['2027-02', '2027-03'], prev.previewHash);
+  assert.equal(result.already, false);
+  assert.deepEqual(Array.from(result.months), ['2027-02', '2027-03']);
+  const crm = rt.sheets.get('CustomerRevenueMonthly');
+  const rows = crm.getDataRange().getValues();
+  assert.equal(rows[2][2], 150); // Feb Acme revised
+  assert.deepEqual([rows[5][0], rows[5][1], rows[5][2]], ['Acme Corp', 'Mar-27', 300]);
+  assert.deepEqual([rows[6][0], rows[6][1], rows[6][2]], ['Beta', 'Mar-27', 50]);
+  const backup = rt.sheets.get('Repair Backup');
+  const backupText = JSON.stringify(backup.getDataRange().getValues());
+  assert.match(backupText, /Import sales actuals/);
+  assert.match(backupText, /CustomerRevenueMonthly/);
+  assert.match(backupText, /Acme Corp/);
+  // Re-preview after apply: nothing left to change
+  const after = rt.ctx.previewSalesActualsImport(text);
+  assert.ok(after.months.every(m => m.status === 'unchanged'));
+});
+
+test('sales import blocks unreconciled months and destination formulas', () => {
+  const rt = runtime();
+  const pack = sampleSalesPack();
+  pack.months[0].reconciled = false; // Jan: five-customer total no longer matches Overall
+  const text = JSON.stringify(pack);
+  const prev = rt.ctx.previewSalesActualsImport(text);
+  const january = prev.months.find(m => m.month === '2027-01');
+  assert.equal(january.status, 'blocked');
+  assert.ok(january.conflicts.some(c => c.message.includes('disagrees with the overall')));
+  assert.throws(() => rt.ctx.applySalesActualsImport(text, ['2027-01'], prev.previewHash), /is blocked/);
+
+  const rt2 = runtime();
+  rt2.sheets.get('CustomerRevenueMonthly').put(3, 3, { value: 140, formula: '=140', rich: null });
+  const prev2 = rt2.ctx.previewSalesActualsImport(JSON.stringify(sampleSalesPack()));
+  assert.equal(prev2.months.find(m => m.month === '2027-02').status, 'blocked');
+  assert.ok(prev2.months.find(m => m.month === '2027-02').conflicts.some(c => c.cell === 'C3' && c.message.includes('formula')));
+});
+
+test('sales import rejects unknown customers and stale previews', () => {
+  const rt = runtime();
+  const ghost = sampleSalesPack();
+  ghost.customers[1] = { key: 'beta', sheet: 'Ghost', label: 'Ghost label', name: 'Ghost Customer', sourceRef: 'Ghost!A2:B30' };
+  assert.throws(() => rt.ctx.previewSalesActualsImport(JSON.stringify(ghost)), /does not match any customer/);
+
+  const text = JSON.stringify(sampleSalesPack());
+  const prev = rt.ctx.previewSalesActualsImport(text);
+  rt.sheets.get('CustomerRevenueMonthly').getRange(2, 3).setValue(999);
+  assert.throws(() => rt.ctx.applySalesActualsImport(text, ['2027-02'], prev.previewHash), /changed after preview/);
+});
+
+test('sales import dialog script compiles', () => {
+  const rt = runtime();
+  rt.ctx.menuImportSalesActuals();
+  new vm.Script(rt.getHtml().match(/<script>([\s\S]*)<\/script>/)[1]);
+  assert.match(rt.getHtml(), /Import sales data/);
+});

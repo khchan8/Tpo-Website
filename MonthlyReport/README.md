@@ -18,9 +18,18 @@ The prose style remains 2–4 English sentences, 50–90 words per section. No L
 A read-only Python extractor (`tools/extract-monthly-input.py`) extracts monthly financial and working-capital actuals from the validated P&L/BS export (`TPO FS Program.xlsm`) into a narrow JSON import pack and a human-readable XLSX review copy. In Google Sheets, **📊 TPO → 1. Enter monthly data → Import accounting actuals…** opens an interactive dialog to preview every proposed change (including historical corrections, old/new amounts, signed THB differences, and percentage changes versus absolute previous values), choose approved months, and apply them using existing transactional backup and rollback (`Repair Backup`).
 
 - **Inputs imported**: `MonthlyFinancials` (Revenue, COGS, SG&A, Net Income) and `1. Working Capital` (Cash, Accounts Receivable, Inventory, Accounts Payable).
-- **Separately maintained inputs**: Customer revenue, customer counts, assumptions, and operational dashboard inputs remain separate manual entries; the importer never overwrites or alters them.
+- **Separately maintained inputs**: assumptions and operational dashboard inputs remain separate manual entries, and customer revenue/counts use their own importer (see Sales data import below). This importer never overwrites or alters them.
 - **Derived formulas**: GP, EBIT, and NWC convert blank or literal cells into blank-safe canonical formulas (`=IF(COUNT(...), ...)`) while preserving recognized legacy direct arithmetic formulas; custom formulas are flagged as blocking conflicts.
 - **Recalculation and owner installation**: Formula cache presence in the source workbook does not guarantee freshness; recalculate and save the source file in Excel before extraction. In Google Sheets, replacing the bound script with regenerated `apps-script/Code.gs` and running **2. Check & calculate** is owner-run and separate from repository commits.
+
+### Sales data import (v10)
+
+A second read-only Python extractor (`tools/extract-sales-input.py`) reads the sales presentation workbook (per-customer tabs `Mana`, `Auntie Aloha`, `Fuzzies`, `Tyson`, `Private Label`, plus `Overall Sales` and `Customer Count`) into a `tpo-sales-actuals-v1` JSON pack and a three-sheet XLSX review copy. **📊 TPO → 1. Enter monthly data → Import sales data…** previews the same per-month differences, checks them, and applies through the same `Repair Backup` transaction.
+
+- **Inputs imported**: `CustomerRevenueMonthly` (customer, month, revenue) and `CustomerCount` (month, count). Customers must already exist in **Assumptions**; `Mana Cannabis` resolves to `Mana` by unique match, and unknown or ambiguous names stop the import.
+- **Separately maintained inputs**: `MonthlyFinancials`, `1. Working Capital`, assumptions, and operational dashboard inputs are untouched by this importer.
+- **Reconciliation**: One identical contiguous month grid must appear on every tab, quarter rollups must match their months, and each month's five-customer total must equal `Overall Sales`. Months that fail the total check are packed `reconciled: false` and blocked at import until the presentation tabs are fixed and re-extracted.
+- **Separation of concerns**: The two importers never write the same tab, so financial actuals and customer/count actuals are imported independently.
 
 ## Installation
 
@@ -130,9 +139,17 @@ The **Setup & data health** (`#/setup`) view includes interactive **Report contr
 
 ## Maintenance and tests
 
-Source files are **js/report-core.js**, **tools/apps-script/workflow.gs**, and **tools/apps-script/validation.gs**. Run `node tools/build-apps-script.cjs` to regenerate apps-script/Code.gs. Do not edit generated copies separately.
+Source files are **js/report-core.js**, **tools/apps-script/workflow.gs**, **tools/apps-script/validation.gs**, **tools/apps-script/monthly-import.gs** (accounting actuals import) and **tools/apps-script/sales-import.gs** (sales import). Run `node tools/build-apps-script.cjs` to regenerate apps-script/Code.gs. Do not edit generated copies separately.
 
 Run `node --test tests/*.test.cjs`. Tests cover dates/timezones, placeholders/zeroes, header mapping, malformed/duplicate inputs, null propagation, matched-period comparisons, long Unicode prompts, JSON import routing, stale batches, rollback, diagnostics, and shared website/script behavior.
+
+The Python extractors and their tests run against a private virtualenv holding the pinned `openpyxl==3.1.5`:
+
+```text
+python3 -m venv /tmp/tpo-monthly-import-venv
+/tmp/tpo-monthly-import-venv/bin/python -m pip install -r tools/requirements-monthly-input.txt
+/tmp/tpo-monthly-import-venv/bin/python -m unittest tests.test_monthly_input_extract tests.test_sales_input_extract
+```
 
 Static CSS rebuild command:
 

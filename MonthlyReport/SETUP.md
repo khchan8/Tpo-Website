@@ -16,6 +16,22 @@ The script maintains **LLM-Input**, **LLM Output**, and **Commentary**. Commenta
 
 Copying Code.gs into GitHub does not install it in Google Sheets. The website and the bound Apps Script are updated separately.
 
+### v10: sales data import (`2026-10-23-v10`)
+
+Install build **`2026-10-23-v10`** (replace the complete contents of `apps-script/Code.gs` into the bound Google script, save, and reload Sheets). The new menu entry is **📊 TPO → 1. Enter monthly data → Import sales data…**.
+
+#### 1. Extract the sales pack
+Run **`tools/extract-sales-input.py`** (same pinned virtualenv and drag-and-drop shortcut as the accounting extractor) against the sales presentation workbook, e.g. `TPO Sep 2026 Sales Data for Presentation.xlsx`. It validates the per-customer tabs (`Mana`, `Auntie Aloha`, `Fuzzies`, `Tyson`, `Private Label`), `Overall Sales` and `Customer Count` read-only: one identical contiguous month grid on every tab, quarter rollups matching their months, and every month's five-customer total matching `Overall Sales`. It writes `<workbook>.json` (the `tpo-sales-actuals-v1` import pack) and a three-sheet review copy beside the source.
+
+Months whose five-customer total disagrees with `Overall Sales` stay in the pack flagged `reconciled: false`; the importer blocks exactly those months (in the current Sep-2026 workbook that is only `2024-07`, where Tyson's monthly column omits its July sales). Fix the presentation tabs and re-extract to unblock.
+
+#### 2. Import into Google Sheets
+Open **Import sales data…**, upload the JSON pack, and preview. The importer fills **CustomerRevenueMonthly** and **CustomerCount** — customers must already exist in **Assumptions** (`Mana Cannabis` resolves to `Mana`; unknown or ambiguous names stop the import — add them first via **Add customer…**). Selection, Select-all, blocked months (formulas, unreconciled totals), historical-correction counting, preview staleness and Repair-Backup rollback behave exactly like the accounting-actuals importer.
+
+#### Operational notes
+- The sales import never touches `MonthlyFinancials`, `1. Working Capital`, `Assumptions`, derived tabs or LLM state; run the accounting import separately for financials.
+- Automated tests cover pack validation, preview/apply, appends, rollback and both dialogs (122 Node + 52 Python tests). Live Google Sheets execution still requires owner-run installation as in v9.
+
 ### v9: accounting actuals import (`2026-10-19-v9`)
 
 Install build **`2026-10-19-v9`** (replace the complete contents of `apps-script/Code.gs` into the bound Google script, save, and reload Sheets).
