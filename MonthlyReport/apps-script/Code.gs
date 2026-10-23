@@ -342,7 +342,7 @@ const TPO = Object.freeze({
   input: 'LLM-Input', output: 'LLM Output', commentary: 'Commentary',
   startRow: 8, chunkSize: 30000, maxPrompt: 1500000, maxSourceCells: 200000,
   stateKey: 'TPO_MANUAL_V1_', version: 'tpo-commentary-v1',
-  build: '2026-10-23-v11', timezone: 'Asia/Bangkok',
+  build: '2026-10-23-v12', timezone: 'Asia/Bangkok',
   sources: ['Assumptions', 'MonthlyFinancials', 'CustomerRevenueMonthly',
     'CustomerRevenueQuarterly', 'CustomerCount', 'Quarterly Financials',
     '1. Working Capital', '2. Customer Economics', '3. Strategic Dashboard',
@@ -700,6 +700,13 @@ function readSources_() {
     return { name: name, raw: raw, display: range.getDisplayValues(), formulas: range.getFormulas() };
   }));
 }
+/** Single-tab read for dialogs that only need the Assumptions customer list. */
+function assumptionsSource_() {
+  const sh = sheet_('Assumptions');
+  if (!sh || !sh.getLastRow()) return { name: 'Assumptions', raw: [] };
+  const cols = Math.max(1, Math.min(2, sh.getLastColumn()));
+  return { name: 'Assumptions', raw: sh.getRange(1, 1, sh.getLastRow(), cols).getValues() };
+}
 function columnName_(n) {
   let label = '';
   for (; n > 0; n = Math.floor((n - 1) / 26)) label = String.fromCharCode(65 + (n - 1) % 26) + label;
@@ -723,7 +730,7 @@ function ensureReportSettings_() {
 function menuReportSettings() {
   uiAction_('Report settings',()=>{
     const current=locked_(()=>{const sh=ensureReportSettings_();return TPOReportSettings.normalize(sh.getRange(2,2).getValues()[0][0]);});
-    const a=TPOCore.analyze(readSources_()),items=TPOReportSettings.sections.map(s=>({id:s.id,label:s.label,scope:'tabs'})).concat(a.customers.map(c=>({id:TPOReportSettings.slug(c.name),label:c.name,scope:'customers'})));
+    const a=TPOCore.analyze([assumptionsSource_()]),items=TPOReportSettings.sections.map(s=>({id:s.id,label:s.label,scope:'tabs'})).concat(a.customers.map(c=>({id:TPOReportSettings.slug(c.name),label:c.name,scope:'customers'})));
     const rows=items.map((s,i)=>{const r=s.scope==='tabs'?current.tabs[s.id]:TPOReportSettings.rowSetting(current,s.id,s.label,i);return '<tr data-id="'+htmlEscape_(s.id)+'" data-scope="'+s.scope+'"><td>'+htmlEscape_(s.label)+'</td><td><select class="mode">'+['show','hide','auto'].map(v=>'<option'+(r.mode===v?' selected':'')+'>'+v+'</option>').join('')+'</select></td><td><input class="label" value="'+htmlEscape_(r.label)+'"></td><td><input class="order" type="number" value="'+r.order+'" style="width:65px"></td><td><input class="commentary" type="checkbox" '+(r.commentary?'checked':'')+'></td><td><input class="export" type="checkbox" '+(r.export?'checked':'')+'></td></tr>';}).join('');
     const body='<h2>Shared report settings</h2><p>These defaults apply to every viewer. Personal browser preferences can override them. Financial source rows are never deleted by visibility settings.</p><label>Reporting cut-off (latest or YYYY-MM)<input id="cutoff" value="'+htmlEscape_(current.cutoff)+'"></label><div style="overflow:auto;max-height:240px"><table><tr><th>Section</th><th>Display</th><th>Label</th><th>Order</th><th>AI</th><th>Export</th></tr>'+rows+'</table></div><button id="save">Save shared controls</button><p>To apply all controls from the website, paste its shared-settings JSON below.</p><textarea id="json" aria-label="Shared settings JSON" style="height:110px">'+htmlEscape_(JSON.stringify(current,null,2))+'</textarea><button id="import">Save pasted configuration</button><button class="secondary" onclick="google.script.host.close()">Close</button><div id="status" role="status"></div>';
     dialog_('TPO · Report settings',body,`
@@ -983,8 +990,7 @@ function prepare_() {
   const cleanup = cleanupWorkbook_();
   const sources = readSources_();
   const checked=TPOCore.analyze(TPOReportSettings.filterSources(sources,TPOReportSettings.fromSources(sources))), errors=checked.issues.filter(i=>i.level==='error');
-  writeValidation_(checked);
-  if(errors.length)throw new Error('Resolve '+errors.length+' data error(s) in Data Validation before preparing AI input. First: '+errors[0].sheet+'!'+errors[0].cell+' '+errors[0].message);
+  if(errors.length){writeValidation_(checked);throw new Error('Resolve '+errors.length+' data error(s) in Data Validation before preparing AI input. First: '+errors[0].sheet+'!'+errors[0].cell+' '+errors[0].message);}
   const analysis = context_('Validate and calculate report', {}, () => buildAnalysis_(sources));
   writeValidation_(analysis.validation);
   readCommentary_();
@@ -1071,7 +1077,7 @@ function readOutput_(state) {
   }).join('\n');
 }
 
-function import_() {
+function import_(sourcesVerified) {
   const state = readState_();
   const incoming = JSON.parse(JSON.stringify(state));
   const parsed = parseOutput_(readOutput_(state), state);
@@ -1080,7 +1086,7 @@ function import_() {
   const byView = new Map(current.map(r => [r.view, r]));
   if (state.importedHash === outputHash && parsed.items.every(item => byView.has(item.view) && byView.get(item.view).text === item.commentary))
     return { count: parsed.items.length, already: true, warnings: parsed.warnings };
-  if (sourceHash_(readSources_()) !== state.sourceHash) throw new Error('Source data changed after this batch was prepared. Prepare LLM Input again and request a fresh response. Nothing was imported.');
+  if (sourcesVerified !== true && sourceHash_(readSources_()) !== state.sourceHash) throw new Error('Source data changed after this batch was prepared. Prepare LLM Input again and request a fresh response. Nothing was imported.');
   const sh = ensureCommentary_();
   const status = 'Validated v3 · ' + state.period + ' · data ' + state.dataFingerprint + ' · Imported ' + stamp_() + ' · ' + state.batch.slice(0, 8);
   const append = [];
@@ -1104,7 +1110,7 @@ function import_() {
   changes.forEach(({ row, item }) => {
     after[row - 2] = [item.commentary, status].map(t => SpreadsheetApp.newRichTextValue().setText(t).build());
   });
-  // Write only matched rows, grouped into adjacent runs; never touch other rows or D:G.
+  // Write only matched rows, grouped into adjacent runs; never touch unrelated rows.
   const sorted = changes.sort((a, b) => a.row - b.row);
   const runs = [];
   sorted.forEach(change => {
@@ -1249,7 +1255,7 @@ function importPastedLLMOutput(text, batch) {
     try {
       writePayload_(output, text);
       state.outputStorage = 'chunks'; state.outputHash = digest_(text); saveState_(state);
-      var result = import_();
+      var result = import_(true);
     } catch (e) {
       let restored = ' LLM Output and the batch manifest were restored to their pre-action state.';
       try { restoreOutput_(); restoreState_(); }
@@ -1418,35 +1424,13 @@ function workbookCleanupPlan_() {
     if(!f&&String(v==null?'':v)===String(value))return; // include only value/formula differences
     planned.add(key);plan.push({sheet:name,row,col,value,reason,text:true});
   }
-  const assumptions=sheet_('Assumptions');
-  if(assumptions) {
-    const snap=snapshot(assumptions,5),rows=snap.values.length;
-    for(let i=0;i<rows;i++) {
-      if(normalize_(snap.values[i][3])!=='reconciliationcheck')continue;
-      const labels=[0,1,2,3].map(k=>snap.values[i+k]?String(snap.values[i+k][3]||'').trim():'');
-      const headingBlank=!hasValue_(snap.values[i][4])&&!String(snap.formulas[i]&&snap.formulas[i][4]||'');
-      const customer=/^customer revenue total\s*\(?\s*q([1-4])\s+(\d{4})\s*\)?$/i.exec(labels[1]);
-      const pnl=/^p&l total revenue\s*\(?\s*q([1-4])\s+(\d{4})\s*\)?$/i.exec(labels[2]);
-      const gap=normalize_(labels[3])==='gapresolvebeforeingest';
-      if(headingBlank&&customer&&pnl&&customer[1]===pnl[1]&&customer[2]===pnl[2]&&gap) {
-        [0,1,2,3].forEach(k=>[0,1].forEach(c=>
-          planWrite(assumptions,snap,i+k+1,4+c,'','Retire legacy reconciliation block; Data Validation reports the same gaps')));
-      } else {
-        notices.push('Assumptions reconciliation block at D'+(i+1)+':E'+(i+4)+' does not match the legacy template; left unchanged.');
-      }
-    }
-  }
   const readme=sheet_('README');
   if(readme) {
     const snap=snapshot(readme,2),used=snap.values.length;
     const title=String(snap.values[0]&&snap.values[0][0]||'').trim();
     const beyondB=snap.values.some((r,i)=>r.slice(2).some(v=>hasValue_(v))||(snap.formulas[i]||[]).slice(2).some(f=>String(f||'')));
     let refresh=false;
-    if(title==='TPO Wellness — Monthly Input Template') {
-      const a2=String(snap.values[1]&&snap.values[1][0]||'');
-      if(beyondB||!/pipeline\/inputs\/|validate_input\.py|build_sources\.py/.test(a2))notices.push('README contains custom content; left unchanged.');
-      else refresh=true;
-    } else if(title==='TPO — Monthly workflow') {
+    if(title==='TPO — Monthly workflow') {
       if(beyondB)notices.push('README contains custom content; left unchanged.');else refresh=true;
     } else if(!used)refresh=true;
     else notices.push('README contains custom content; left unchanged.');
@@ -1466,36 +1450,17 @@ function workbookCleanupPlan_() {
       if(/^low season\s*(\([^)]*\))?$/i.test(term)) {
         planWrite(glossary,snap,row,1,'Low season','Rename recognized glossary term');
         planWrite(glossary,snap,row,2,'The month range is configured in Assumptions → Low season; reporting uses that setting rather than a fixed seasonal window.','Refresh recognized glossary definition');
-      } else if(/^Q[1-4]\s+\d{4}\s+cordon$/i.test(term)) {
-        planWrite(glossary,snap,row,1,'Quarter coverage','Rename recognized glossary term');
-        planWrite(glossary,snap,row,2,'A partial quarter covers quarter-start through the reporting month. Compare matching months only; do not annualize or extrapolate.','Refresh recognized glossary definition');
       } else if(/^contribution margin$/i.test(term)) {
         planWrite(glossary,snap,row,2,'Customer-specific assumed margin used to estimate contribution from revenue; not audited gross profit.','Refresh recognized glossary definition');
-      } else if(/^data note \(warn\)$/i.test(term)) {
-        planWrite(glossary,snap,row,1,'Data quality notes','Rename recognized glossary term');
-        planWrite(glossary,snap,row,2,'Data Validation reports missing or conflicting inputs and customer/P&L reconciliation gaps. Review warnings; do not fill unknowns or add balancing amounts to remove them.','Refresh recognized glossary definition');
-      } else if(/^turnaround storyline$/i.test(term)) {
-        planWrite(glossary,snap,row,1,'','Remove obsolete storyline term');
-        planWrite(glossary,snap,row,2,'','Remove obsolete storyline term');
       }
     });
-  }
-  const commentary=sheet_(TPO.commentary);
-  if(commentary&&commentary.getMaxColumns()>=4&&normalize_(String(commentary.getRange('D1').getDisplayValue()||'').trim())==='oldcommentary') {
-    const last=commentary.getLastRow(),rows=Math.max(0,last-1);
-    const values=rows?commentary.getRange(2,4,rows,1).getDisplayValues():[];
-    const formulas=rows?commentary.getRange(2,4,rows,1).getFormulas():[];
-    if(values.some(r=>hasValue_(r[0]))||formulas.some(r=>String(r[0]||'')))
-      notices.push('Commentary column D contains archived content; left unchanged.');
-    else planWrite(commentary,{values:[['','','','Old Commentary']],formulas:[['','','','']]},1,4,'','Remove empty Old Commentary archive header');
   }
   return {plan:plan,notices:notices};
 }
 function cleanupWorkbook_() {
   const planned=workbookCleanupPlan_();
   backupAndWrite_(planned.plan,'Clean up obsolete workbook information');
-  return {changes:planned.plan.length,notices:planned.notices,
-    sourcesCleared:planned.plan.some(p=>TPO.sources.includes(p.sheet))};
+  return {changes:planned.plan.length,notices:planned.notices};
 }
 
 function formatPlan_(sources,a) {
@@ -1715,14 +1680,6 @@ function repairPlan_(sources,a,next) {
   qi.forEach((row,q)=>TPOCore.metrics.forEach((k,i)=>add('Quarterly Financials',row,qf[i+1]+1,modelLookup_('"quarter|"&'+TPOCore.col(qf[0])+row+'&"|'+k+'"'),null,true)));
   wi.forEach(row=>{const refs=[1,2,3,4].map(c=>TPOCore.col(wc[c])+row);add('1. Working Capital',row,wc[5]+1,'=IF(COUNT('+refs.join(',')+')=4,'+refs[0]+'+'+refs[1]+'+'+refs[2]+'-'+refs[3]+',"")','Require all working-capital components',true);});
   mi.forEach(row=>{const p=TPOCore.month(byName.MonthlyFinancials.raw[row-1][mf[0]]);add('MonthlyFinancials',row,mf[7]+1,p.quarter,'Quarter derived from month');});
-  // A legacy Total Portfolio row must retain its original quarter as later rows are added.
-  const oldCEQuarters=Array.from(new Set(byName['2. Customer Economics'].raw.slice(1).map(r=>TPOCore.quarter(r[ce[1]])?.label).filter(Boolean)));
-  byName['2. Customer Economics'].raw.slice(1).forEach((r,i)=>{
-    if(/^total/i.test(String(r[ce[0]]))&&!TPOCore.quarter(r[ce[1]])){
-      if(oldCEQuarters.length!==1)throw new Error('Customer Economics total row '+(i+2)+' needs an explicit quarter.');
-      add('2. Customer Economics',i+2,ce[1]+1,oldCEQuarters[0],'Keep portfolio total scoped to its original quarter');
-    }
-  });
   const cei=keyedRows('2. Customer Economics',r=>customerQuarter(r,ce));
   byName.CustomerRevenueQuarterly.raw.slice(1).forEach(r=>{
     const key=customerQuarter(r,crq);if(key)slot('2. Customer Economics',cei,key,[[ce[0]+1,r[crq[0]]],[ce[1]+1,TPOCore.quarter(r[crq[1]]).label]]);
@@ -1847,7 +1804,6 @@ function menuCleanupWorkbook() {
     const result=locked_(cleanupWorkbook_);
     const lines=['Cleaned up '+result.changes+' obsolete cell(s); original values and formulas are recorded in Repair Backup.'];
     if(result.notices.length)lines.push('','Skipped content:',...result.notices);
-    if(result.sourcesCleared)lines.push('','Source helper cells were cleared. Prepare a fresh AI prompt (TPO → 3. Prepare AI prompt + copy…) before importing any pending response.');
     SpreadsheetApp.getUi().alert(lines.join('\n'));
   });
 }
@@ -1860,9 +1816,463 @@ function menuPrepareNextMonthSlots() {
   }));
 }
 
+/** Shared machinery for the two actuals importers (accounting and sales): exact satang math,
+ * destination-tab reading, preview hashing, selection validation, plan finalization, RPC
+ * orchestration and the parameterized preview/apply dialog. Pack parsing, per-month planning
+ * and provenance stay in the importer modules. */
+
+var ACTUALS_MONTH_KEY_RE = /^\d{4}-(0[1-9]|1[0-2])$/;
+
+function monthlyPackPeriod_(key) {
+  var parts = /^(\d{4})-(\d{2})$/.exec(key);
+  return { year: Number(parts[1]), month: Number(parts[2]), key: Number(parts[1]) * 12 + Number(parts[2]) - 1 };
+}
+
+/** Exact safe integer addition/subtraction. Uses BigInt to prevent intermediate overflow or cancellation drift. */
+function safeCentsSum_(parts) {
+  var total = BigInt(0); // Constructor form: Apps Script's parser rejects BigInt literals.
+  for (var i = 0; i < parts.length; i++) {
+    var v = parts[i];
+    if (v === null || v === undefined) return null;
+    total += BigInt(v);
+  }
+  if (total > BigInt(Number.MAX_SAFE_INTEGER) || total < BigInt(Number.MIN_SAFE_INTEGER))
+    return null;
+  return Number(total);
+}
+
+/** Strict decimal-string HALF_UP conversion to integer satang with bounded exponent expansion. */
+function monthlyDecimalCents_(text) {
+  var match = /^([+-]?)(\d*)(?:\.(\d*))?(?:[eE]([+-]?\d+))?$/.exec(text);
+  if (!match || (!match[2] && !match[3])) return { cents: null, error: 'not a plain decimal number' };
+  var exponent = Number(match[4] || 0);
+  if (Math.abs(exponent) > 500) return { cents: null, error: 'an unsupported exponent' };
+  var whole = match[2] || '';
+  var fraction = match[3] || '';
+  if (whole.length + fraction.length > 1000) return { cents: null, error: 'outside the supported numeric range' };
+  var digits = whole + fraction;
+  var point = whole.length + exponent;
+  if (point < 1) {
+    var pad = 1 - point;
+    for (var i = 0; i < pad; i++) digits = '0' + digits;
+    point = 1;
+  } else if (point > digits.length) {
+    var padEnd = point - digits.length;
+    for (var j = 0; j < padEnd; j++) digits += '0';
+  }
+  var centPoint = point + 2;
+  while (digits.length < centPoint) digits += '0';
+  var intPartStr = digits.slice(0, centPoint).replace(/^0+/, '') || '0';
+  if (intPartStr.length > 16) return { cents: null, error: 'outside the safe-integer range' };
+  var cents = Number(intPartStr);
+  if (!Number.isSafeInteger(cents)) return { cents: null, error: 'outside the safe-integer range' };
+  if (digits.length > centPoint && Number(digits[centPoint]) >= 5) {
+    cents += 1;
+  }
+  if (!Number.isSafeInteger(cents)) return { cents: null, error: 'outside the safe-integer range' };
+  return { cents: cents === 0 ? 0 : (match[1] === '-' ? -cents : cents) };
+}
+
+/** Normalize an existing target cell to integer satang. Blank is not zero; percentages,
+ * unrecognized text, dates and non-finite or out-of-range numbers are blocking, not guesses. */
+function monthlyValueToCents_(value) {
+  if (value === '' || value === null || value === undefined) return { cents: null };
+  if (typeof value === 'number') {
+    if (!Number.isFinite(value)) return { cents: null, error: 'a non-finite number' };
+    if (Math.abs(value) >= 1e15) return { cents: null, error: 'outside the supported numeric range' };
+    return monthlyDecimalCents_(String(value));
+  }
+  if (typeof value === 'string') {
+    var text = value.trim();
+    if (!text) return { cents: null };
+    if (/%/.test(text)) return { cents: null, error: 'a percentage, not a THB amount' };
+    if (TPOCore.number(text) === null)
+      return { cents: null, error: 'not a recognized THB amount' };
+    text = text.replace(/^฿\s*/, '').replace(/^\((.*)\)$/, '-$1').replace(/,/g, '');
+    return monthlyDecimalCents_(text);
+  }
+  return { cents: null, error: 'an unsupported cell type (' + (value instanceof Date ? 'date' : typeof value) + ')' };
+}
+
+function monthlyActualsDiff_(oldCents, newCents) {
+  if (oldCents === null || oldCents === undefined)
+    return { deltaCents: null, deltaPercent: null };
+  var deltaCents = safeCentsSum_([newCents, -oldCents]);
+  if (deltaCents === null)
+    return { deltaCents: null, deltaPercent: null, overflow: true };
+  return { deltaCents: deltaCents, deltaPercent: oldCents === 0 ? null : 100 * deltaCents / Math.abs(oldCents) };
+}
+
+/** Read one destination tab: headers, alias-mapped columns and per-row slots in one pass.
+ * opts: { label, tabs, limitLabel, rowKey(values, map, sheetRow, name), describeKey(key) }.
+ * opts.cells is a shared running cell counter across the importer's tabs. */
+function readActualsTab_(ss, timezone, name, canonical, opts) {
+  var sh = ss.getSheetByName(name);
+  if (!sh) throw new Error(opts.label + ' requires both "' + opts.tabs.join('" and "') +
+    '" tabs. "' + name + '" is missing; tabs are never created or guessed.');
+  var rows = sh.getLastRow(), cols = sh.getLastColumn();
+  opts.cells += rows * cols;
+  if (opts.cells > TPO.maxSourceCells)
+    throw new Error(opts.limitLabel + ' exceed ' + TPO.maxSourceCells + ' cells; no data was truncated.');
+  var values = [], formulas = [];
+  if (rows) {
+    var range = sh.getRange(1, 1, rows, cols);
+    values = range.getValues();
+    formulas = range.getFormulas();
+  }
+  var aliases = TPOCore.defs[name];
+  var headers = rows ? values[0] : [];
+  var normalized = headers.map(normalize_);
+  var map = {};
+  canonical.forEach(function (field, index) {
+    var matches = [];
+    normalized.forEach(function (header, col) {
+      if (aliases[index].indexOf(header) >= 0) matches.push(col);
+    });
+    if (matches.length !== 1)
+      throw new Error(name + ' needs exactly one ' + aliases[index][0] + ' column' +
+        (matches.length ? ' (found ' + matches.length + ')' : ' (missing)') + '.');
+    map[field] = matches[0];
+  });
+  var rowMap = new Map();
+  for (var index = 1; index < rows; index++) {
+    var sheetRow = index + 1;
+    var nonempty = values[index].some(hasValue_) || formulas[index].some(f => String(f || ''));
+    var cellValue = values[index][map.month];
+    if (cellValue instanceof Date)
+      cellValue = formatDateChecked_(cellValue, timezone, 'yyyy-MM-dd',
+        { sheet: name, cell: columnName_(map.month + 1) + sheetRow });
+    var period = TPOCore.month(cellValue);
+    if (!period) {
+      if (nonempty) throw new Error(name + '!' + columnName_(map.month + 1) + sheetRow +
+        ': unrecognized or missing month in a nonempty row. Use labels such as Sep-26; the importer never guesses keys.');
+      continue;
+    }
+    var prefix = opts.rowKey(values[index], map, sheetRow, name);
+    var rowKey = prefix ? prefix + '|' + period.label : period.label;
+    if (rowMap.has(rowKey))
+      throw new Error(name + ' has duplicate ' + opts.describeKey(rowKey) + ' in rows ' +
+        rowMap.get(rowKey).row + ' and ' + sheetRow + '. Resolve it before importing.');
+    var slot = { row: sheetRow, label: period.display, monthKey: period.label, values: {}, formulas: {} };
+    canonical.forEach(function (field) {
+      slot.values[field] = values[index][map[field]];
+      slot.formulas[field] = String(formulas[index][map[field]] || '');
+    });
+    rowMap.set(rowKey, slot);
+  }
+  return { name: name, id: sh.getSheetId(), headers: headers, map: map, canonical: canonical,
+    rows: rowMap, lastUsedRow: rows, lastCol: cols, values: values, formulas: formulas };
+}
+
+/** Deterministic hashable state of the destination tabs, captured from the read used for planning. */
+function actualsTabState_(targets, tabs) {
+  return tabs.map(function (name) {
+    var target = targets.sheets[name];
+    return { name: name, id: target.id, headers: target.headers,
+      values: target.values, formulas: target.formulas };
+  });
+}
+
+function actualsPreviewHash_(text, targets, tabs) {
+  return digest_(JSON.stringify([digest_(text), actualsTabState_(targets, tabs)]));
+}
+
+/** Shared selection validation: shape, canonical keys, uniqueness, pack membership, blocked months. */
+function validateActualsSelection_(selectedMonths, records, monthsByKey) {
+  if (!Array.isArray(selectedMonths) || !selectedMonths.length)
+    throw new Error('Select at least one month to apply.');
+  var chosen = new Set();
+  selectedMonths.forEach(function (key) {
+    if (typeof key !== 'string' || !ACTUALS_MONTH_KEY_RE.test(key))
+      throw new Error('Invalid month key in the selection: ' + JSON.stringify(key) + '.');
+    if (chosen.has(key)) throw new Error('Duplicate month in the selection: ' + key + '.');
+    chosen.add(key);
+    if (!monthsByKey.get(key)) throw new Error('Month ' + key + ' is not in the import pack.');
+    var preview = records.find(r => r.month === key);
+    if (preview.conflicts.length)
+      throw new Error('Month ' + key + ' is blocked: ' + preview.conflicts[0].sheet + ' ' +
+        preview.conflicts[0].cell + ' ' + preview.conflicts[0].message);
+  });
+  return chosen;
+}
+
+/** Append-row counters per destination tab, starting after the last used row. */
+function actualsAppendRows_(targets, tabs) {
+  var nextRow = {};
+  tabs.forEach(tab => nextRow[tab] = targets.sheets[tab].lastUsedRow + 1);
+  return nextRow;
+}
+
+/** Deduplicate by sheet|row|col and order writes sheet → row → column for stable backups. */
+function finalizeActualsPlan_(plan) {
+  var deduped = new Map();
+  plan.forEach(entry => deduped.set(entry.sheet + '|' + entry.row + '|' + entry.col, entry));
+  return Array.from(deduped.values()).sort((a, b) => a.sheet === b.sheet
+    ? (a.row - b.row) || (a.col - b.col) : (a.sheet < b.sheet ? -1 : 1));
+}
+
+function runActualsPreview_(action, parseFn, readTargets, planFn, hashFn, text) {
+  return serverAction_(action, () => locked_(() => {
+    const pack = parseFn(text);
+    const targets = readTargets();
+    const planned = planFn(pack, targets, null);
+    return { previewHash: hashFn(text, targets),
+      source: pack.source, summary: planned.summary, months: planned.months };
+  }));
+}
+
+function runActualsApply_(action, parseFn, readTargets, planFn, hashFn, staleMessage, backupLabel,
+  text, selectedMonths, previewHash) {
+  return serverAction_(action, () => locked_(() => {
+    const pack = parseFn(text);
+    const targets = readTargets();
+    const planned = planFn(pack, targets, selectedMonths);
+    // Stale check: the hash covers pack text plus every destination tab's ID, headers, values and formulas.
+    if (typeof previewHash !== 'string' || !previewHash.length ||
+      previewHash !== hashFn(text, targets))
+      throw new Error(staleMessage);
+    // Immediate recheck of the exact tab state right before the first source mutation.
+    const recheck = readTargets();
+    if (hashFn(text, recheck) !== previewHash)
+      throw new Error(staleMessage);
+    const plan = planned.plan;
+    const applied = selectedMonths.slice().sort();
+    if (!plan.length)
+      return { months: applied, changes: 0, already: true, warnings: [] };
+    const sizes = {};
+    plan.forEach(p => { sizes[p.sheet] = Math.max(sizes[p.sheet] || 0, p.row); });
+    Object.keys(sizes).forEach(name =>
+      ensureSize_(sheet_(name), sizes[name], targets.sheets[name].lastCol));
+    backupAndWrite_(plan, backupLabel);
+    return { months: applied, changes: plan.length, already: false, warnings: [] };
+  }));
+}
+
+/** Shared preview/apply dialog. opts: { heading, intro, previewRpc, applyRpc, editWarning,
+ * summaryJs, changedTest, kindJs, newStatus }. summaryJs/kindJs are client-side expressions
+ * over s/change; changedTest is a client-side predicate over m. */
+function actualsImportDialog_(opts) {
+  const body = '<h2>' + opts.heading + '</h2>' +
+    '<p>' + opts.intro + '</p>' +
+    '<label for="file">JSON import pack</label><input id="file" type="file" accept=".json,application/json">' +
+    '<button id="preview" disabled>Preview differences</button>' +
+    '<button id="apply" disabled>Apply selected months</button>' +
+    '<button id="select-all" class="secondary" disabled>Select all months</button>' +
+    '<button id="close" class="secondary" onclick="google.script.host.close()">Close</button>' +
+    '<div id="summary" class="meta"></div>' +
+    '<div id="months" style="overflow:auto;max-height:330px;margin-top:8px;border:1px solid #ccd4d5;border-radius:6px;background:white"></div>' +
+    '<div id="status" role="status"></div>';
+  const script = `
+    (function () {
+      const file = document.getElementById('file'), previewBtn = document.getElementById('preview'),
+        applyBtn = document.getElementById('apply'), months = document.getElementById('months'),
+        selectAllBtn = document.getElementById('select-all'),
+        summary = document.getElementById('summary'), status = document.getElementById('status');
+      const state = { text: null, hash: null, records: null, busy: false };
+      const monthCell = key => document.querySelector('input[data-month="' + key + '"]');
+      const monthBoxes = () => Array.from(document.querySelectorAll('input[data-month]'));
+      function setBusy(busy, label) {
+        state.busy = busy;
+        [file, previewBtn, applyBtn, selectAllBtn].forEach(control => control.disabled = busy ||
+          (control === previewBtn && !state.text) || control === applyBtn || control === selectAllBtn);
+        if (busy) monthBoxes().forEach(box => box.disabled = true);
+        if (busy) { status.className = ''; status.textContent = label; }
+        else { file.disabled = false; previewBtn.disabled = !state.text; refreshApply(); }
+      }
+      function refreshApply() {
+        const boxes = monthBoxes();
+        const selected = new Set(boxes.filter(box => box.checked).map(box => box.dataset.month));
+        const historicalCount = document.getElementById('historical-count');
+        if (historicalCount) historicalCount.textContent = (state.records || []).filter(record =>
+          record.historical && (record.status === 'changed' || record.status === 'blocked') &&
+          !selected.has(record.month)).length;
+        selectAllBtn.disabled = state.busy || !state.hash ||
+          !boxes.some(box => !box.disabled && !box.checked);
+        if (state.busy) { applyBtn.disabled = true; return; }
+        const ok = state.hash && monthBoxes().some(box => box.checked && !box.disabled);
+        applyBtn.disabled = !ok;
+      }
+      function invalidatePreview() {
+        state.hash = null;
+        monthBoxes().forEach(box => { box.checked = false; });
+        refreshApply();
+      }
+      function thb(cents) {
+        if (cents === null || cents === undefined) return 'New value';
+        return (cents < 0 ? '−' : '') + Math.abs(cents / 100).toLocaleString('en-US',
+          { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      }
+      function pct(change) {
+        if (change.previousCents === null || change.previousCents === undefined) return 'New value';
+        if (change.previousCents === 0) return 'N/A (previous value is zero)';
+        const value = change.deltaPercent;
+        if (value === null || value === undefined || !isFinite(value)) return 'N/A';
+        const sign = value < 0 ? '−' : '+', magnitude = Math.abs(value);
+        if (magnitude > 0 && magnitude < 0.0001) return sign + '<0.0001%';
+        return sign + magnitude.toFixed(4) + '%';
+      }
+      function cellText(parent, text) { const td = document.createElement('td'); td.textContent = text; parent.appendChild(td); return td; }
+      function render(result) {
+        months.textContent = ''; summary.textContent = '';
+        const s = result.summary;
+        summary.appendChild(document.createTextNode(${opts.summaryJs} + ' · Unselected historical corrections: '));
+        const historicalCount = document.createElement('span');
+        historicalCount.id = 'historical-count';
+        summary.appendChild(historicalCount);
+        summary.appendChild(document.createTextNode(' · Unchanged months: ' + s.unchanged +
+          ' · Pack: ' + result.source.filename + ' · report ' + result.source.reportMonth +
+          ' · Difference (%) is the change versus the absolute previous value.'));
+        const hasDifferences = result.months.some(m => ${opts.changedTest});
+        if (!hasDifferences) {
+          status.className = '';
+          status.textContent = result.months.some(m => m.status === 'blocked')
+            ? 'No importable changes: every month is either unchanged or blocked (see conflicts below).'
+            : 'No changes to import.';
+          result.months.filter(m => m.status === 'blocked').forEach(renderMonthBlock);
+          refreshApply();
+          return;
+        }
+        const table = document.createElement('table');
+        table.style.fontSize = '12px'; table.style.borderCollapse = 'collapse'; table.style.width = '100%';
+        const head = document.createElement('tr');
+        ['Month', 'Sheet', 'Cell', 'Field', 'Kind', 'Previous (THB)', 'Proposed (THB)',
+          'Difference (THB)', 'Difference (%)', 'Source cells'].forEach(title => {
+            const th = document.createElement('th'); th.textContent = title; head.appendChild(th);
+          });
+        table.appendChild(head);
+        result.months.forEach(function (monthRecord) { renderMonth(table, monthRecord); });
+        months.appendChild(table);
+        refreshApply();
+      }
+      function renderMonthBlock(monthRecord) {
+        const block = document.createElement('div');
+        block.style.padding = '6px 10px'; block.style.borderBottom = '1px solid #e5e9e8';
+        const title = document.createElement('b');
+        title.textContent = monthRecord.label + ' — ' + monthRecord.status;
+        block.appendChild(title);
+        monthRecord.conflicts.forEach(function (conflict) {
+          const note = document.createElement('div');
+          note.style.color = '#a32929'; note.style.marginLeft = '12px';
+          note.textContent = 'Blocked: ' + conflict.sheet + ' ' + conflict.cell + ' — ' + conflict.message;
+          block.appendChild(note);
+        });
+        months.appendChild(block);
+      }
+      function renderMonth(table, monthRecord) {
+        const band = document.createElement('tr');
+        const bandCell = document.createElement('td');
+        bandCell.colSpan = 10; bandCell.style.background = '#eef2f1';
+        const box = document.createElement('input');
+        box.type = 'checkbox'; box.dataset.month = monthRecord.month;
+        box.style.width = 'auto'; box.style.margin = '0 8px 0 4px'; box.style.verticalAlign = 'middle';
+        box.checked = !!monthRecord.defaultSelected;
+        box.disabled = monthRecord.status === 'blocked';
+        box.addEventListener('change', refreshApply);
+        bandCell.appendChild(box);
+        const label = document.createElement('b');
+        label.textContent = monthRecord.label + ' — ' + monthRecord.status +
+          (monthRecord.changes.length ? ' · ' + monthRecord.changes.length + ' change(s)' : '');
+        bandCell.appendChild(label);
+        monthRecord.conflicts.forEach(function (conflict) {
+          const note = document.createElement('div');
+          note.style.color = '#a32929'; note.style.marginLeft = '24px';
+          note.textContent = 'Blocked: ' + conflict.sheet + ' ' + conflict.cell + ' — ' + conflict.message;
+          bandCell.appendChild(note);
+        });
+        ${opts.newStatus ? `if (monthRecord.status === 'new') {
+          const note = document.createElement('div');
+          note.className = 'meta'; note.style.marginLeft = '24px';
+          note.textContent = 'New period metadata (month label and quarter) is written with the month; it is not a monetary difference.';
+          bandCell.appendChild(note);
+        }` : ''}
+        band.appendChild(bandCell);
+        table.appendChild(band);
+        monthRecord.changes.forEach(function (change) {
+          const row = document.createElement('tr');
+          cellText(row, monthRecord.label);
+          cellText(row, change.sheet);
+          cellText(row, change.cell);
+          cellText(row, change.field);
+          cellText(row, ${opts.kindJs});
+          cellText(row, thb(change.previousCents));
+          cellText(row, thb(change.proposedCents));
+          cellText(row, change.deltaCents === null || change.deltaCents === undefined ? 'New value' :
+            (change.deltaCents < 0 ? '−' : '+') + Math.abs(change.deltaCents / 100).toLocaleString('en-US',
+              { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+          cellText(row, pct(change));
+          cellText(row, change.sourceRefs.join(', '));
+          table.appendChild(row);
+        });
+      }
+      file.addEventListener('change', function () {
+        state.text = null; state.hash = null; state.records = null;
+        months.textContent = ''; summary.textContent = '';
+        applyBtn.disabled = true; selectAllBtn.disabled = true; previewBtn.disabled = !file.files.length;
+        status.className = '';
+        status.textContent = file.files.length ? 'Ready to preview ' + file.files[0].name + '.' : '';
+      });
+      previewBtn.addEventListener('click', function () {
+        const chosen = file.files[0];
+        if (!chosen) return;
+        setBusy(true, 'Previewing differences…');
+        chosen.text().then(function (text) {
+          state.text = text;
+          google.script.run.withSuccessHandler(function (result) {
+            state.hash = result.previewHash; state.records = result.months;
+            status.className = ''; status.textContent = '';
+            render(result); setBusy(false);
+            monthBoxes().forEach(box => box.disabled =
+              (state.records.find(m => m.month === box.dataset.month) || {}).status === 'blocked');
+            refreshApply();
+          }).withFailureHandler(function (error) {
+            invalidatePreview(); setBusy(false); status.className = 'error';
+            status.textContent = error.message || String(error);
+          }).${opts.previewRpc}(text);
+        }).catch(function (error) {
+          invalidatePreview(); setBusy(false); status.className = 'error'; status.textContent = String(error);
+        });
+      });
+      selectAllBtn.addEventListener('click', function () {
+        if (state.busy || !state.hash) return;
+        monthBoxes().forEach(box => { if (!box.disabled) box.checked = true; });
+        refreshApply();
+      });
+      applyBtn.addEventListener('click', function () {
+        const selected = (state.records || []).filter(m => monthCell(m.month) && monthCell(m.month).checked)
+          .map(m => m.month);
+        if (!selected.length) {
+          status.className = 'error'; status.textContent = 'Select at least one month to apply.';
+          return;
+        }
+        setBusy(true, 'Applying ' + selected.length + ' month(s)… Do not edit ${opts.editWarning} while applying.');
+        google.script.run.withSuccessHandler(function (result) {
+          state.busy = false;
+          state.hash = null;
+          applyBtn.disabled = true; previewBtn.disabled = false; file.disabled = false;
+          selectAllBtn.disabled = true;
+          monthBoxes().forEach(box => box.disabled = true);
+          status.className = '';
+          status.textContent = (result.already ? 'No writes were needed; the selected months already match the pack. '
+            : 'Imported ' + result.changes + ' backed-up cell write(s) across ' + result.months.length +
+            ' month(s). Previous values and formulas are recorded in the Repair Backup sheet. ') +
+            'Run TPO → 2. Check & calculate, review Data Validation, then prepare a fresh AI prompt.';
+        }).withFailureHandler(function (error) {
+          invalidatePreview(); setBusy(false);
+          monthBoxes().forEach(box => box.disabled = false);
+          status.className = 'error';
+          status.textContent = (error.message || String(error)) + ' Preview again before applying.';
+        }).${opts.applyRpc}(state.text, selected, state.hash);
+      });
+    })();
+  `;
+  dialog_('TPO · ' + opts.heading, body, script, 700);
+}
+
 /** Monthly accounting-actuals import: pack parsing, read-only planning, preview/apply RPCs and dialog.
  * Writes only approved months into MonthlyFinancials and 1. Working Capital through the existing
- * backupAndWrite_ audit/rollback path. Never touches customer, operational, assumption or LLM state. */
+ * backupAndWrite_ audit/rollback path. Never touches customer, operational, assumption or LLM state.
+ * Shared math, tab reading, hashing, selection validation, RPC orchestration and the dialog
+ * live in import-common.gs. */
 
 var MONTHLY_IMPORT_TABS = ['MonthlyFinancials', '1. Working Capital'];
 var MONTHLY_IMPORT_RAW = {
@@ -1882,6 +2292,10 @@ var MONTHLY_IMPORT_DERIVED = {
     { field: 'nwc', formulaInputs: ['cash', 'ar', 'inventory', 'ap'],
       provenance: ['cash', 'ar', 'inventory', 'ap'] }
   ]
+};
+var MONTHLY_TAB_FIELDS = {
+  'MonthlyFinancials': ['month', 'revenue', 'cogs', 'gp', 'sga', 'ebit', 'netIncome', 'quarter'],
+  '1. Working Capital': ['month', 'cash', 'ar', 'inventory', 'ap', 'nwc']
 };
 var MONTHLY_PACK_SCHEMA = 'tpo-monthly-actuals-v1';
 var MONTHLY_REF_KEYS = ['revenueCents', 'cogsCents', 'sgaCents', 'netIncomeCents', 'cashCents',
@@ -1974,164 +2388,22 @@ function parseMonthlyActualsPack_(text) {
   return pack;
 }
 
-function monthlyPackPeriod_(key) {
-  var parts = /^(\d{4})-(\d{2})$/.exec(key);
-  return { year: Number(parts[1]), month: Number(parts[2]), key: Number(parts[1]) * 12 + Number(parts[2]) - 1 };
-}
-
-/** Normalize an existing target cell to integer satang. Blank is not zero; percentages,
- * unrecognized text, dates and non-finite or out-of-range numbers are blocking, not guesses. */
-function monthlyValueToCents_(value) {
-  if (value === '' || value === null || value === undefined) return { cents: null };
-  if (typeof value === 'number') {
-    if (!Number.isFinite(value)) return { cents: null, error: 'a non-finite number' };
-    if (Math.abs(value) >= 1e15) return { cents: null, error: 'outside the supported numeric range' };
-    return monthlyDecimalCents_(String(value));
-  }
-  if (typeof value === 'string') {
-    var text = value.trim();
-    if (!text) return { cents: null };
-    if (/%/.test(text)) return { cents: null, error: 'a percentage, not a THB amount' };
-    if (TPOCore.number(text) === null)
-      return { cents: null, error: 'not a recognized THB amount' };
-    text = text.replace(/^฿\s*/, '').replace(/^\((.*)\)$/, '-$1').replace(/,/g, '');
-    return monthlyDecimalCents_(text);
-  }
-  return { cents: null, error: 'an unsupported cell type (' + (value instanceof Date ? 'date' : typeof value) + ')' };
-}
-
-/** Exact safe integer addition/subtraction. Uses BigInt to prevent intermediate overflow or cancellation drift. */
-function safeCentsSum_(parts) {
-  var total = BigInt(0); // Constructor form: Apps Script's parser rejects BigInt literals.
-  for (var i = 0; i < parts.length; i++) {
-    var v = parts[i];
-    if (v === null || v === undefined) return null;
-    total += BigInt(v);
-  }
-  if (total > BigInt(Number.MAX_SAFE_INTEGER) || total < BigInt(Number.MIN_SAFE_INTEGER))
-    return null;
-  return Number(total);
-}
-
-/** Strict decimal-string HALF_UP conversion to integer satang with bounded exponent expansion. */
-function monthlyDecimalCents_(text) {
-  var match = /^([+-]?)(\d*)(?:\.(\d*))?(?:[eE]([+-]?\d+))?$/.exec(text);
-  if (!match || (!match[2] && !match[3])) return { cents: null, error: 'not a plain decimal number' };
-  var exponent = Number(match[4] || 0);
-  if (Math.abs(exponent) > 500) return { cents: null, error: 'an unsupported exponent' };
-  var whole = match[2] || '';
-  var fraction = match[3] || '';
-  if (whole.length + fraction.length > 1000) return { cents: null, error: 'outside the supported numeric range' };
-  var digits = whole + fraction;
-  var point = whole.length + exponent;
-  if (point < 1) {
-    var pad = 1 - point;
-    for (var i = 0; i < pad; i++) digits = '0' + digits;
-    point = 1;
-  } else if (point > digits.length) {
-    var padEnd = point - digits.length;
-    for (var j = 0; j < padEnd; j++) digits += '0';
-  }
-  var centPoint = point + 2;
-  while (digits.length < centPoint) digits += '0';
-  var intPartStr = digits.slice(0, centPoint).replace(/^0+/, '') || '0';
-  if (intPartStr.length > 16) return { cents: null, error: 'outside the safe-integer range' };
-  var cents = Number(intPartStr);
-  if (!Number.isSafeInteger(cents)) return { cents: null, error: 'outside the safe-integer range' };
-  if (digits.length > centPoint && Number(digits[centPoint]) >= 5) {
-    cents += 1;
-  }
-  if (!Number.isSafeInteger(cents)) return { cents: null, error: 'outside the safe-integer range' };
-  return { cents: cents === 0 ? 0 : (match[1] === '-' ? -cents : cents) };
-}
-
-function monthlyActualsDiff_(oldCents, newCents) {
-  if (oldCents === null || oldCents === undefined)
-    return { deltaCents: null, deltaPercent: null };
-  var deltaCents = safeCentsSum_([newCents, -oldCents]);
-  if (deltaCents === null)
-    return { deltaCents: null, deltaPercent: null, overflow: true };
-  return { deltaCents: deltaCents, deltaPercent: oldCents === 0 ? null : 100 * deltaCents / Math.abs(oldCents) };
-}
-
 /** Read only the two destination tabs: headers, values, formulas and IDs in one pass. */
 function readMonthlyImportTargets_() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var timezone = context_('Read import targets', { function: 'readMonthlyImportTargets_' },
     () => spreadsheetTimezone_(ss));
-  var cells = 0, sheets = {};
+  var opts = { label: 'The import', tabs: MONTHLY_IMPORT_TABS, limitLabel: 'Import target tabs',
+    cells: 0, rowKey: function () { return ''; }, describeKey: function (key) { return 'month ' + key; } };
+  var sheets = {};
   MONTHLY_IMPORT_TABS.forEach(function (name) {
-    var sh = ss.getSheetByName(name);
-    if (!sh) throw new Error('The import requires both "' + MONTHLY_IMPORT_TABS.join('" and "') +
-      '" tabs. "' + name + '" is missing; tabs are never created or guessed.');
-    var rows = sh.getLastRow(), cols = sh.getLastColumn();
-    cells += rows * cols;
-    if (cells > TPO.maxSourceCells)
-      throw new Error('Import target tabs exceed ' + TPO.maxSourceCells + ' cells; no data was truncated.');
-    var values = [], formulas = [];
-    if (rows) {
-      var range = sh.getRange(1, 1, rows, cols);
-      values = range.getValues();
-      formulas = range.getFormulas();
-    }
-    var aliases = TPOCore.defs[name];
-    var canonical = name === 'MonthlyFinancials'
-      ? ['month', 'revenue', 'cogs', 'gp', 'sga', 'ebit', 'netIncome', 'quarter']
-      : ['month', 'cash', 'ar', 'inventory', 'ap', 'nwc'];
-    var headers = rows ? values[0] : [];
-    var normalized = headers.map(normalize_);
-    var map = {};
-    canonical.forEach(function (field, index) {
-      var matches = [];
-      normalized.forEach(function (header, col) {
-        if (aliases[index].indexOf(header) >= 0) matches.push(col);
-      });
-      if (matches.length !== 1)
-        throw new Error(name + ' needs exactly one ' + aliases[index][0] + ' column' +
-          (matches.length ? ' (found ' + matches.length + ')' : ' (missing)') + '.');
-      map[field] = matches[0];
-    });
-    var monthRows = new Map();
-    for (var index = 1; index < rows; index++) {
-      var sheetRow = index + 1;
-      var nonempty = values[index].some(hasValue_) || formulas[index].some(f => String(f || ''));
-      var cellValue = values[index][map.month];
-      if (cellValue instanceof Date)
-        cellValue = formatDateChecked_(cellValue, timezone, 'yyyy-MM-dd',
-          { sheet: name, cell: columnName_(map.month + 1) + sheetRow });
-      var period = TPOCore.month(cellValue);
-      if (!period) {
-        if (nonempty) throw new Error(name + '!' + columnName_(map.month + 1) + sheetRow +
-          ': unrecognized or missing month in a nonempty row. Use labels such as Sep-26; the importer never guesses keys.');
-        continue;
-      }
-      if (monthRows.has(period.label))
-        throw new Error(name + ' has duplicate month ' + period.label + ' in rows ' +
-          monthRows.get(period.label).row + ' and ' + sheetRow + '. Resolve it before importing.');
-      var slot = { row: sheetRow, label: period.display, monthKey: period.label, quarter: period.quarter, values: {}, formulas: {} };
-      canonical.forEach(function (field) {
-        slot.values[field] = values[index][map[field]];
-        slot.formulas[field] = String(formulas[index][map[field]] || '');
-      });
-      monthRows.set(period.label, slot);
-    }
-    sheets[name] = { name: name, id: sh.getSheetId(), headers: headers, map: map, canonical: canonical,
-      rows: monthRows, lastUsedRow: rows, lastCol: cols, values: values, formulas: formulas };
+    sheets[name] = readActualsTab_(ss, timezone, name, MONTHLY_TAB_FIELDS[name], opts);
   });
   return { timezone: timezone, sheets: sheets };
 }
 
-/** Deterministic hashable state of the two tabs, captured from the read used for planning. */
-function monthlyTargetState_(targets) {
-  return MONTHLY_IMPORT_TABS.map(function (name) {
-    var target = targets.sheets[name];
-    return { name: name, id: target.id, headers: target.headers,
-      values: target.values, formulas: target.formulas };
-  });
-}
-
 function monthlyPreviewHash_(text, targets) {
-  return digest_(JSON.stringify([digest_(text), monthlyTargetState_(targets)]));
+  return actualsPreviewHash_(text, targets, MONTHLY_IMPORT_TABS);
 }
 
 function monthlyDerivedFormula_(tab, spec, row, map) {
@@ -2289,23 +2561,9 @@ function monthlyActualsPlan_(pack, targets, selectedMonths) {
     latestSource.defaultSelected = true;
   var plan = [];
   if (selectedMonths !== null && selectedMonths !== undefined) {
-    if (!Array.isArray(selectedMonths) || !selectedMonths.length)
-      throw new Error('Select at least one month to apply.');
-    var chosen = new Set();
-    selectedMonths.forEach(function (key) {
-      if (typeof key !== 'string' || !/^\d{4}-(0[1-9]|1[0-2])$/.test(key))
-        throw new Error('Invalid month key in the selection: ' + JSON.stringify(key) + '.');
-      if (chosen.has(key)) throw new Error('Duplicate month in the selection: ' + key + '.');
-      chosen.add(key);
-      if (!monthsByKey.get(key)) throw new Error('Month ' + key + ' is not in the import pack.');
-      var preview = records.find(r => r.month === key);
-      if (preview.conflicts.length)
-        throw new Error('Month ' + key + ' is blocked: ' + preview.conflicts[0].sheet + ' ' +
-          preview.conflicts[0].cell + ' ' + preview.conflicts[0].message);
-    });
+    var chosen = validateActualsSelection_(selectedMonths, records, monthsByKey);
     var byKey = new Map(records.map(r => [r.month, r]));
-    var nextRow = {};
-    MONTHLY_IMPORT_TABS.forEach(tab => nextRow[tab] = targets.sheets[tab].lastUsedRow + 1);
+    var nextRow = actualsAppendRows_(targets, MONTHLY_IMPORT_TABS);
     Array.from(chosen).sort().forEach(function (key) {
       var record = byKey.get(key), source = pack.source;
       var provenance = source.filename + ' (SHA-256 ' + source.sha256 + ')';
@@ -2343,10 +2601,7 @@ function monthlyActualsPlan_(pack, targets, selectedMonths) {
         });
       });
     });
-    var deduped = new Map();
-    plan.forEach(entry => deduped.set(entry.sheet + '|' + entry.row + '|' + entry.col, entry));
-    plan = Array.from(deduped.values()).sort((a, b) => a.sheet === b.sheet
-      ? (a.row - b.row) || (a.col - b.col) : (a.sheet < b.sheet ? -1 : 1));
+    plan = finalizeActualsPlan_(plan);
   }
   var summary = { changedExisting: 0, newValues: 0, historicalMonths: 0, unchanged: 0 };
   records.forEach(function (record) {
@@ -2362,269 +2617,40 @@ function monthlyActualsPlan_(pack, targets, selectedMonths) {
 }
 
 function previewMonthlyActualsImport(text) {
-  return serverAction_('Preview monthly actuals import', () => locked_(() => {
-    const pack = parseMonthlyActualsPack_(text);
-    const targets = readMonthlyImportTargets_();
-    const planned = monthlyActualsPlan_(pack, targets, null);
-    return { previewHash: monthlyPreviewHash_(text, targets),
-      source: pack.source, summary: planned.summary, months: planned.months };
-  }));
+  return runActualsPreview_('Preview monthly actuals import', parseMonthlyActualsPack_,
+    readMonthlyImportTargets_, monthlyActualsPlan_, monthlyPreviewHash_, text);
 }
 
 function applyMonthlyActualsImport(text, selectedMonths, previewHash) {
-  return serverAction_('Apply monthly actuals import', () => locked_(() => {
-    const pack = parseMonthlyActualsPack_(text);
-    const targets = readMonthlyImportTargets_();
-    const planned = monthlyActualsPlan_(pack, targets, selectedMonths);
-    // Stale check: the hash covers pack text plus both tabs' IDs, headers, values and formulas.
-    if (typeof previewHash !== 'string' || !previewHash.length ||
-      previewHash !== monthlyPreviewHash_(text, targets))
-      throw new Error('Monthly inputs changed after preview. Preview again; nothing was imported.');
-    // Immediate recheck of the exact tab state right before the first source mutation.
-    const recheck = readMonthlyImportTargets_();
-    if (monthlyPreviewHash_(text, recheck) !== previewHash)
-      throw new Error('Monthly inputs changed after preview. Preview again; nothing was imported.');
-    const plan = planned.plan;
-    const applied = selectedMonths.slice().sort();
-    if (!plan.length)
-      return { months: applied, changes: 0, already: true, warnings: [] };
-    const sizes = {};
-    plan.forEach(p => { sizes[p.sheet] = Math.max(sizes[p.sheet] || 0, p.row); });
-    Object.keys(sizes).forEach(name =>
-      ensureSize_(sheet_(name), sizes[name], targets.sheets[name].lastCol));
-    backupAndWrite_(plan, 'Import accounting actuals');
-    return { months: applied, changes: plan.length, already: false, warnings: [] };
-  }));
+  return runActualsApply_('Apply monthly actuals import', parseMonthlyActualsPack_,
+    readMonthlyImportTargets_, monthlyActualsPlan_, monthlyPreviewHash_,
+    'Monthly inputs changed after preview. Preview again; nothing was imported.',
+    'Import accounting actuals', text, selectedMonths, previewHash);
 }
 
 function menuImportMonthlyActuals() {
-  uiAction_('Import accounting actuals', () => {
-    const body = '<h2>Import accounting actuals</h2>' +
-      '<p>Choose the JSON pack produced by <b>tools/extract-monthly-input.py</b>. The JSON pack is the import source; the XLSX review copy is for reading only. The importer fills MonthlyFinancials and 1. Working Capital inputs — customer, operational and assumption data stay separate manual inputs.</p>' +
-      '<label for="file">JSON import pack</label><input id="file" type="file" accept=".json,application/json">' +
-      '<button id="preview" disabled>Preview differences</button>' +
-      '<button id="apply" disabled>Apply selected months</button>' +
-      '<button id="select-all" class="secondary" disabled>Select all months</button>' +
-      '<button id="close" class="secondary" onclick="google.script.host.close()">Close</button>' +
-      '<div id="summary" class="meta"></div>' +
-      '<div id="months" style="overflow:auto;max-height:330px;margin-top:8px;border:1px solid #ccd4d5;border-radius:6px;background:white"></div>' +
-      '<div id="status" role="status"></div>';
-    const script = `
-      (function () {
-        const file = document.getElementById('file'), previewBtn = document.getElementById('preview'),
-          applyBtn = document.getElementById('apply'), months = document.getElementById('months'),
-          selectAllBtn = document.getElementById('select-all'),
-          summary = document.getElementById('summary'), status = document.getElementById('status');
-        const state = { text: null, hash: null, records: null, busy: false };
-        const monthCell = key => document.querySelector('input[data-month="' + key + '"]');
-        const monthBoxes = () => Array.from(document.querySelectorAll('input[data-month]'));
-        function setBusy(busy, label) {
-          state.busy = busy;
-          [file, previewBtn, applyBtn, selectAllBtn].forEach(control => control.disabled = busy ||
-            (control === previewBtn && !state.text) || control === applyBtn || control === selectAllBtn);
-          if (busy) monthBoxes().forEach(box => box.disabled = true);
-          if (busy) { status.className = ''; status.textContent = label; }
-          else { file.disabled = false; previewBtn.disabled = !state.text; refreshApply(); }
-        }
-        function refreshApply() {
-          const boxes = monthBoxes();
-          const selected = new Set(boxes.filter(box => box.checked).map(box => box.dataset.month));
-          const historicalCount = document.getElementById('historical-count');
-          if (historicalCount) historicalCount.textContent = (state.records || []).filter(record =>
-            record.historical && (record.status === 'changed' || record.status === 'blocked') &&
-            !selected.has(record.month)).length;
-          selectAllBtn.disabled = state.busy || !state.hash ||
-            !boxes.some(box => !box.disabled && !box.checked);
-          if (state.busy) { applyBtn.disabled = true; return; }
-          const ok = state.hash && monthBoxes().some(box => box.checked && !box.disabled);
-          applyBtn.disabled = !ok;
-        }
-        function invalidatePreview() {
-          state.hash = null;
-          monthBoxes().forEach(box => { box.checked = false; });
-          refreshApply();
-        }
-        function thb(cents) {
-          if (cents === null || cents === undefined) return 'New value';
-          return (cents < 0 ? '−' : '') + Math.abs(cents / 100).toLocaleString('en-US',
-            { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        }
-        function pct(change) {
-          if (change.previousCents === null || change.previousCents === undefined) return 'New value';
-          if (change.previousCents === 0) return 'N/A (previous value is zero)';
-          const value = change.deltaPercent;
-          if (value === null || value === undefined || !isFinite(value)) return 'N/A';
-          const sign = value < 0 ? '−' : '+', magnitude = Math.abs(value);
-          if (magnitude > 0 && magnitude < 0.0001) return sign + '<0.0001%';
-          return sign + magnitude.toFixed(4) + '%';
-        }
-        function cellText(parent, text) { const td = document.createElement('td'); td.textContent = text; parent.appendChild(td); return td; }
-        function render(result) {
-          months.textContent = ''; summary.textContent = '';
-          const s = result.summary;
-          summary.appendChild(document.createTextNode('Changed existing values: ' + s.changedExisting +
-            ' · New values: ' + s.newValues + ' · Unselected historical corrections: '));
-          const historicalCount = document.createElement('span');
-          historicalCount.id = 'historical-count';
-          summary.appendChild(historicalCount);
-          summary.appendChild(document.createTextNode(' · Unchanged months: ' + s.unchanged +
-            ' · Pack: ' + result.source.filename + ' · report ' + result.source.reportMonth +
-            ' · Difference (%) is the change versus the absolute previous value.'));
-          const hasDifferences = result.months.some(m => m.status === 'changed' || m.status === 'new');
-          if (!hasDifferences) {
-            status.className = '';
-            status.textContent = result.months.some(m => m.status === 'blocked')
-              ? 'No importable changes: every month is either unchanged or blocked (see conflicts below).'
-              : 'No changes to import.';
-            result.months.filter(m => m.status === 'blocked').forEach(renderMonthBlock);
-            refreshApply();
-            return;
-          }
-          const table = document.createElement('table');
-          table.style.fontSize = '12px'; table.style.borderCollapse = 'collapse'; table.style.width = '100%';
-          const head = document.createElement('tr');
-          ['Month', 'Sheet', 'Cell', 'Field', 'Kind', 'Previous (THB)', 'Proposed (THB)',
-            'Difference (THB)', 'Difference (%)', 'Source cells'].forEach(title => {
-            const th = document.createElement('th'); th.textContent = title; head.appendChild(th);
-          });
-          table.appendChild(head);
-          result.months.forEach(function (monthRecord) { renderMonth(table, monthRecord); });
-          months.appendChild(table);
-          refreshApply();
-        }
-        function renderMonthBlock(monthRecord) {
-          const block = document.createElement('div');
-          block.style.padding = '6px 10px'; block.style.borderBottom = '1px solid #e5e9e8';
-          const title = document.createElement('b');
-          title.textContent = monthRecord.label + ' — ' + monthRecord.status;
-          block.appendChild(title);
-          monthRecord.conflicts.forEach(function (conflict) {
-            const note = document.createElement('div');
-            note.style.color = '#a32929'; note.style.marginLeft = '12px';
-            note.textContent = 'Blocked: ' + conflict.sheet + ' ' + conflict.cell + ' — ' + conflict.message;
-            block.appendChild(note);
-          });
-          months.appendChild(block);
-        }
-        function renderMonth(table, monthRecord) {
-          const band = document.createElement('tr');
-          const bandCell = document.createElement('td');
-          bandCell.colSpan = 10; bandCell.style.background = '#eef2f1';
-          const box = document.createElement('input');
-          box.type = 'checkbox'; box.dataset.month = monthRecord.month;
-          box.style.width = 'auto'; box.style.margin = '0 8px 0 4px'; box.style.verticalAlign = 'middle';
-          box.checked = !!monthRecord.defaultSelected;
-          box.disabled = monthRecord.status === 'blocked';
-          box.addEventListener('change', refreshApply);
-          bandCell.appendChild(box);
-          const label = document.createElement('b');
-          label.textContent = monthRecord.label + ' — ' + monthRecord.status +
-            (monthRecord.changes.length ? ' · ' + monthRecord.changes.length + ' change(s)' : '');
-          bandCell.appendChild(label);
-          monthRecord.conflicts.forEach(function (conflict) {
-            const note = document.createElement('div');
-            note.style.color = '#a32929'; note.style.marginLeft = '24px';
-            note.textContent = 'Blocked: ' + conflict.sheet + ' ' + conflict.cell + ' — ' + conflict.message;
-            bandCell.appendChild(note);
-          });
-          if (monthRecord.status === 'new') {
-            const note = document.createElement('div');
-            note.className = 'meta'; note.style.marginLeft = '24px';
-            note.textContent = 'New period metadata (month label and quarter) is written with the month; it is not a monetary difference.';
-            bandCell.appendChild(note);
-          }
-          band.appendChild(bandCell);
-          table.appendChild(band);
-          monthRecord.changes.forEach(function (change) {
-            const row = document.createElement('tr');
-            cellText(row, monthRecord.label);
-            cellText(row, change.sheet);
-            cellText(row, change.cell);
-            cellText(row, change.field);
-            cellText(row, change.kind === 'calculated' ? (change.formulaRefresh ? 'calculated · formula refresh' : 'calculated') : 'input');
-            cellText(row, thb(change.previousCents));
-            cellText(row, thb(change.proposedCents));
-            cellText(row, change.deltaCents === null || change.deltaCents === undefined ? 'New value' :
-              (change.deltaCents < 0 ? '−' : '+') + Math.abs(change.deltaCents / 100).toLocaleString('en-US',
-                { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-            cellText(row, pct(change));
-            cellText(row, change.sourceRefs.join(', '));
-            table.appendChild(row);
-          });
-        }
-        selectAllBtn.addEventListener('click', function () {
-          if (state.busy || !state.hash) return;
-          monthBoxes().forEach(box => { if (!box.disabled) box.checked = true; });
-          refreshApply();
-        });
-        file.addEventListener('change', function () {
-          state.text = null; state.hash = null; state.records = null;
-          months.textContent = ''; summary.textContent = '';
-          applyBtn.disabled = true; selectAllBtn.disabled = true; previewBtn.disabled = !file.files.length;
-          status.className = '';
-          status.textContent = file.files.length ? 'Ready to preview ' + file.files[0].name + '.' : '';
-        });
-        previewBtn.addEventListener('click', function () {
-          const chosen = file.files[0];
-          if (!chosen) return;
-          setBusy(true, 'Previewing differences…');
-          chosen.text().then(function (text) {
-            state.text = text;
-            google.script.run.withSuccessHandler(function (result) {
-              state.hash = result.previewHash; state.records = result.months;
-              status.className = ''; status.textContent = '';
-              render(result); setBusy(false);
-              monthBoxes().forEach(box => box.disabled =
-                (state.records.find(m => m.month === box.dataset.month) || {}).status === 'blocked');
-              refreshApply();
-            }).withFailureHandler(function (error) {
-              invalidatePreview(); setBusy(false); status.className = 'error';
-              status.textContent = error.message || String(error);
-            }).previewMonthlyActualsImport(text);
-          }).catch(function (error) {
-            invalidatePreview(); setBusy(false); status.className = 'error'; status.textContent = String(error);
-          });
-        });
-        applyBtn.addEventListener('click', function () {
-          const selected = (state.records || []).filter(m => monthCell(m.month) && monthCell(m.month).checked)
-            .map(m => m.month);
-          if (!selected.length) {
-            status.className = 'error'; status.textContent = 'Select at least one month to apply.';
-            return;
-          }
-          setBusy(true, 'Applying ' + selected.length + ' month(s)… Do not edit MonthlyFinancials or 1. Working Capital while applying.');
-          google.script.run.withSuccessHandler(function (result) {
-            state.busy = false;
-            state.hash = null;
-            applyBtn.disabled = true; previewBtn.disabled = false; file.disabled = false;
-            selectAllBtn.disabled = true;
-            monthBoxes().forEach(box => box.disabled = true);
-            status.className = '';
-            status.textContent = (result.already ? 'No writes were needed; the selected months already match the pack. '
-              : 'Imported ' + result.changes + ' backed-up cell write(s) across ' + result.months.length +
-              ' month(s). Previous values and formulas are recorded in the Repair Backup sheet. ') +
-              'Run TPO → 2. Check & calculate, review Data Validation, then prepare a fresh AI prompt.';
-          }).withFailureHandler(function (error) {
-            invalidatePreview(); setBusy(false);
-            monthBoxes().forEach(box => box.disabled = false);
-            status.className = 'error';
-            status.textContent = (error.message || String(error)) + ' Preview again before applying.';
-          }).applyMonthlyActualsImport(state.text, selected, state.hash);
-        });
-      })();
-    `;
-    dialog_('TPO · Import accounting actuals', body, script, 700);
-  });
+  uiAction_('Import accounting actuals', () => actualsImportDialog_({
+    heading: 'Import accounting actuals',
+    intro: 'Choose the JSON pack produced by <b>tools/extract-monthly-input.py</b>. The JSON pack is the import source; the XLSX review copy is for reading only. The importer fills MonthlyFinancials and 1. Working Capital inputs — customer, operational and assumption data stay separate manual inputs.',
+    previewRpc: 'previewMonthlyActualsImport',
+    applyRpc: 'applyMonthlyActualsImport',
+    editWarning: 'MonthlyFinancials or 1. Working Capital',
+    summaryJs: "'Changed existing values: ' + s.changedExisting + ' · New values: ' + s.newValues",
+    changedTest: "m.status === 'changed' || m.status === 'new'",
+    kindJs: "change.kind === 'calculated' ? (change.formulaRefresh ? 'calculated · formula refresh' : 'calculated') : 'input'",
+    newStatus: true
+  }));
 }
 
 /** Sales presentation import: pack parsing, read-only planning, preview/apply RPCs and dialog.
  * Writes only approved months into CustomerRevenueMonthly and Customer Count through the existing
  * backupAndWrite_ audit/rollback path. Never touches financial, working-capital, assumption or LLM state.
- * Source customers must already exist in Assumptions; the importer never creates customers. */
+ * Source customers must already exist in Assumptions; the importer never creates customers.
+ * Shared math, tab reading, hashing, selection validation, RPC orchestration and the dialog
+ * live in import-common.gs. */
 
 var SALES_PACK_SCHEMA = 'tpo-sales-actuals-v1';
 var SALES_IMPORT_TABS = ['CustomerRevenueMonthly', 'CustomerCount'];
-var SALES_MONTH_KEY_RE = /^\d{4}-(0[1-9]|1[0-2])$/;
 var SALES_MAX_MONTHS = 36;
 
 /** Canonical field order per destination tab, aligned with TPOCore.defs aliases. */
@@ -2656,7 +2682,7 @@ function parseSalesActualsPack_(text) {
     throw new Error('The pack source filename must be a nonempty string.');
   if (typeof source.sha256 !== 'string' || !/^[0-9a-f]{64}$/.test(source.sha256))
     throw new Error('The pack source sha256 must be 64 lowercase hexadecimal characters.');
-  if (typeof source.reportMonth !== 'string' || !SALES_MONTH_KEY_RE.test(source.reportMonth))
+  if (typeof source.reportMonth !== 'string' || !ACTUALS_MONTH_KEY_RE.test(source.reportMonth))
     throw new Error('The pack source reportMonth must be a valid YYYY-MM.');
   if (!Array.isArray(pack.customers) || !pack.customers.length || pack.customers.length > 8)
     throw new Error('The pack must contain 1–8 customers.');
@@ -2690,7 +2716,7 @@ function parseSalesActualsPack_(text) {
     if (monthFields.length !== 5 ||
       ['month', 'revenueCents', 'count', 'overallCents', 'reconciled'].some(k => monthFields.indexOf(k) < 0))
       throw new Error('Pack month ' + (index + 1) + ' must contain exactly month, revenueCents, count, overallCents and reconciled.');
-    if (typeof record.month !== 'string' || !SALES_MONTH_KEY_RE.test(record.month))
+    if (typeof record.month !== 'string' || !ACTUALS_MONTH_KEY_RE.test(record.month))
       throw new Error('Pack month ' + (index + 1) + ' has an invalid month key ' + JSON.stringify(record.month) + '.');
     if (seen[record.month]) throw new Error('Duplicate pack month ' + record.month + '.');
     seen[record.month] = true;
@@ -2728,70 +2754,20 @@ function readSalesImportTargets_() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var timezone = context_('Read sales import targets', { function: 'readSalesImportTargets_' },
     () => spreadsheetTimezone_(ss));
-  var cells = 0, sheets = {};
+  var opts = { label: 'The sales import', tabs: SALES_IMPORT_TABS, limitLabel: 'Sales import target tabs',
+    cells: 0,
+    rowKey: function (rowValues, map, sheetRow, name) {
+      if (name !== 'CustomerRevenueMonthly') return '';
+      var customer = rowValues[map.customer];
+      if (!hasValue_(customer) || typeof customer !== 'string' || !customer.trim())
+        throw new Error(name + '!' + columnName_(map.customer + 1) + sheetRow +
+          ': missing customer name in a nonempty row.');
+      return customerKey_(customer.trim());
+    },
+    describeKey: function (key) { return 'entry for ' + key.replace('|', ' '); } };
+  var sheets = {};
   SALES_IMPORT_TABS.forEach(function (name) {
-    var sh = ss.getSheetByName(name);
-    if (!sh) throw new Error('The sales import requires both "' + SALES_IMPORT_TABS.join('" and "') +
-      '" tabs. "' + name + '" is missing; tabs are never created or guessed.');
-    var rows = sh.getLastRow(), cols = sh.getLastColumn();
-    cells += rows * cols;
-    if (cells > TPO.maxSourceCells)
-      throw new Error('Sales import target tabs exceed ' + TPO.maxSourceCells + ' cells; no data was truncated.');
-    var values = [], formulas = [];
-    if (rows) {
-      var range = sh.getRange(1, 1, rows, cols);
-      values = range.getValues();
-      formulas = range.getFormulas();
-    }
-    var aliases = TPOCore.defs[name];
-    var canonical = SALES_TAB_FIELDS[name];
-    var headers = rows ? values[0] : [];
-    var normalized = headers.map(normalize_);
-    var map = {};
-    canonical.forEach(function (field, index) {
-      var matches = [];
-      normalized.forEach(function (header, col) {
-        if (aliases[index].indexOf(header) >= 0) matches.push(col);
-      });
-      if (matches.length !== 1)
-        throw new Error(name + ' needs exactly one ' + aliases[index][0] + ' column' +
-          (matches.length ? ' (found ' + matches.length + ')' : ' (missing)') + '.');
-      map[field] = matches[0];
-    });
-    var rowMap = new Map();
-    for (var index = 1; index < rows; index++) {
-      var sheetRow = index + 1;
-      var nonempty = values[index].some(hasValue_) || formulas[index].some(f => String(f || ''));
-      var monthCell = values[index][map.month];
-      if (monthCell instanceof Date)
-        monthCell = formatDateChecked_(monthCell, timezone, 'yyyy-MM-dd',
-          { sheet: name, cell: columnName_(map.month + 1) + sheetRow });
-      var period = TPOCore.month(monthCell);
-      if (!period) {
-        if (nonempty) throw new Error(name + '!' + columnName_(map.month + 1) + sheetRow +
-          ': unrecognized or missing month in a nonempty row. Use labels such as Sep-26; the importer never guesses keys.');
-        continue;
-      }
-      var rowKey = name === 'CustomerRevenueMonthly'
-        ? (function () {
-            var customer = values[index][map.customer];
-            if (!hasValue_(customer) || typeof customer !== 'string' || !customer.trim())
-              throw new Error(name + '!A' + sheetRow + ': missing customer name in a nonempty row.');
-            return customerKey_(customer.trim()) + '|' + period.label;
-          })()
-        : period.label;
-      if (rowMap.has(rowKey))
-        throw new Error(name + ' has duplicate entry for ' + rowKey.replace('|', ' ') +
-          ' in rows ' + rowMap.get(rowKey).row + ' and ' + sheetRow + '. Resolve it before importing.');
-      var slot = { row: sheetRow, label: period.display, monthKey: period.label, values: {}, formulas: {} };
-      canonical.forEach(function (field) {
-        slot.values[field] = values[index][map[field]];
-        slot.formulas[field] = String(formulas[index][map[field]] || '');
-      });
-      rowMap.set(rowKey, slot);
-    }
-    sheets[name] = { name: name, id: sh.getSheetId(), headers: headers, map: map, canonical: canonical,
-      rows: rowMap, lastUsedRow: rows, lastCol: cols, values: values, formulas: formulas };
+    sheets[name] = readActualsTab_(ss, timezone, name, SALES_TAB_FIELDS[name], opts);
   });
   var assumptions = ss.getSheetByName('Assumptions');
   if (!assumptions) throw new Error('The sales import requires the "Assumptions" tab with the customer list.');
@@ -2807,17 +2783,8 @@ function readSalesImportTargets_() {
   return { timezone: timezone, sheets: sheets, customers: customers };
 }
 
-/** Deterministic hashable state of both tabs, captured from the read used for planning. */
-function salesTargetState_(targets) {
-  return SALES_IMPORT_TABS.map(function (name) {
-    var target = targets.sheets[name];
-    return { name: name, id: target.id, headers: target.headers,
-      values: target.values, formulas: target.formulas };
-  });
-}
-
 function salesPreviewHash_(text, targets) {
-  return digest_(JSON.stringify([digest_(text), salesTargetState_(targets)]));
+  return actualsPreviewHash_(text, targets, SALES_IMPORT_TABS);
 }
 
 /** Map each pack customer to an existing Assumptions customer: exact name, or a unique
@@ -2911,11 +2878,10 @@ function salesActualsPlan_(pack, targets, selectedMonths) {
           else if (parsed.cents !== null && parsed.cents % 100 !== 0)
             conflicts.push({ sheet: 'CustomerCount', cell: cell, message: 'existing value is not a whole customer count.' });
           else if (parsed.cents !== record.count * 100) {
-            var diff = { deltaCents: parsed.cents === null ? null : record.count * 100 - parsed.cents,
-              deltaPercent: null };
             changes.push({ sheet: 'CustomerCount', cell: cell, field: 'CustomerCount', kind: 'input',
               previousCents: parsed.cents, proposedCents: record.count * 100,
-              deltaCents: diff.deltaCents, deltaPercent: null,
+              deltaCents: parsed.cents === null ? null : record.count * 100 - parsed.cents,
+              deltaPercent: null,
               sourceRefs: ['Customer Count sheet · ' + record.month] });
           }
         }
@@ -2932,22 +2898,8 @@ function salesActualsPlan_(pack, targets, selectedMonths) {
     latestSource.defaultSelected = true;
   var plan = [];
   if (selectedMonths !== null && selectedMonths !== undefined) {
-    if (!Array.isArray(selectedMonths) || !selectedMonths.length)
-      throw new Error('Select at least one month to apply.');
-    var chosen = new Set();
-    selectedMonths.forEach(function (key) {
-      if (typeof key !== 'string' || !SALES_MONTH_KEY_RE.test(key))
-        throw new Error('Invalid month key in the selection: ' + JSON.stringify(key) + '.');
-      if (chosen.has(key)) throw new Error('Duplicate month in the selection: ' + key + '.');
-      chosen.add(key);
-      if (!byMonth.get(key)) throw new Error('Month ' + key + ' is not in the import pack.');
-      var preview = records.find(r => r.month === key);
-      if (preview.conflicts.length)
-        throw new Error('Month ' + key + ' is blocked: ' + preview.conflicts[0].sheet + ' ' +
-          preview.conflicts[0].cell + ' ' + preview.conflicts[0].message);
-    });
-    var nextRow = {};
-    SALES_IMPORT_TABS.forEach(tab => nextRow[tab] = targets.sheets[tab].lastUsedRow + 1);
+    var chosen = validateActualsSelection_(selectedMonths, records, byMonth);
+    var nextRow = actualsAppendRows_(targets, SALES_IMPORT_TABS);
     var provenance = pack.source.filename + ' (SHA-256 ' + pack.source.sha256 + ')';
     Array.from(chosen).sort().forEach(function (key) {
       var record = byMonth.get(key);
@@ -2984,10 +2936,7 @@ function salesActualsPlan_(pack, targets, selectedMonths) {
             reason: 'Import customer count from ' + provenance });
       }
     });
-    var deduped = new Map();
-    plan.forEach(entry => deduped.set(entry.sheet + '|' + entry.row + '|' + entry.col, entry));
-    plan = Array.from(deduped.values()).sort((a, b) => a.sheet === b.sheet
-      ? (a.row - b.row) || (a.col - b.col) : (a.sheet < b.sheet ? -1 : 1));
+    plan = finalizeActualsPlan_(plan);
   }
   var summary = { revenueChanges: 0, countChanges: 0, newValues: 0, historicalMonths: 0, unchanged: 0 };
   records.forEach(function (record) {
@@ -3003,252 +2952,27 @@ function salesActualsPlan_(pack, targets, selectedMonths) {
 }
 
 function previewSalesActualsImport(text) {
-  return serverAction_('Preview sales import', () => locked_(() => {
-    const pack = parseSalesActualsPack_(text);
-    const targets = readSalesImportTargets_();
-    const planned = salesActualsPlan_(pack, targets, null);
-    return { previewHash: salesPreviewHash_(text, targets),
-      source: pack.source, summary: planned.summary, months: planned.months };
-  }));
+  return runActualsPreview_('Preview sales import', parseSalesActualsPack_,
+    readSalesImportTargets_, salesActualsPlan_, salesPreviewHash_, text);
 }
 
 function applySalesActualsImport(text, selectedMonths, previewHash) {
-  return serverAction_('Apply sales import', () => locked_(() => {
-    const pack = parseSalesActualsPack_(text);
-    const targets = readSalesImportTargets_();
-    const planned = salesActualsPlan_(pack, targets, selectedMonths);
-    // Stale check: the hash covers pack text plus both tabs' IDs, headers, values and formulas.
-    if (typeof previewHash !== 'string' || !previewHash.length ||
-      previewHash !== salesPreviewHash_(text, targets))
-      throw new Error('Sales inputs changed after preview. Preview again; nothing was imported.');
-    const recheck = readSalesImportTargets_();
-    if (salesPreviewHash_(text, recheck) !== previewHash)
-      throw new Error('Sales inputs changed after preview. Preview again; nothing was imported.');
-    const plan = planned.plan;
-    const applied = selectedMonths.slice().sort();
-    if (!plan.length)
-      return { months: applied, changes: 0, already: true, warnings: [] };
-    const sizes = {};
-    plan.forEach(p => { sizes[p.sheet] = Math.max(sizes[p.sheet] || 0, p.row); });
-    Object.keys(sizes).forEach(name =>
-      ensureSize_(sheet_(name), sizes[name], targets.sheets[name].lastCol));
-    backupAndWrite_(plan, 'Import sales actuals');
-    return { months: applied, changes: plan.length, already: false, warnings: [] };
-  }));
+  return runActualsApply_('Apply sales import', parseSalesActualsPack_,
+    readSalesImportTargets_, salesActualsPlan_, salesPreviewHash_,
+    'Sales inputs changed after preview. Preview again; nothing was imported.',
+    'Import sales actuals', text, selectedMonths, previewHash);
 }
 
 function menuImportSalesActuals() {
-  uiAction_('Import sales data', () => {
-    const body = '<h2>Import sales data</h2>' +
-      '<p>Choose the JSON pack produced by <b>tools/extract-sales-input.py</b> from the sales presentation workbook. The importer fills CustomerRevenueMonthly and Customer Count inputs — customers must already exist in Assumptions; financial, working-capital and assumption data stay separate inputs.</p>' +
-      '<label for="file">JSON import pack</label><input id="file" type="file" accept=".json,application/json">' +
-      '<button id="preview" disabled>Preview differences</button>' +
-      '<button id="apply" disabled>Apply selected months</button>' +
-      '<button id="select-all" class="secondary" disabled>Select all months</button>' +
-      '<button id="close" class="secondary" onclick="google.script.host.close()">Close</button>' +
-      '<div id="summary" class="meta"></div>' +
-      '<div id="months" style="overflow:auto;max-height:330px;margin-top:8px;border:1px solid #ccd4d5;border-radius:6px;background:white"></div>' +
-      '<div id="status" role="status"></div>';
-    const script = `
-      (function () {
-        const file = document.getElementById('file'), previewBtn = document.getElementById('preview'),
-          applyBtn = document.getElementById('apply'), months = document.getElementById('months'),
-          selectAllBtn = document.getElementById('select-all'),
-          summary = document.getElementById('summary'), status = document.getElementById('status');
-        const state = { text: null, hash: null, records: null, busy: false };
-        const monthCell = key => document.querySelector('input[data-month="' + key + '"]');
-        const monthBoxes = () => Array.from(document.querySelectorAll('input[data-month]'));
-        function setBusy(busy, label) {
-          state.busy = busy;
-          [file, previewBtn, applyBtn, selectAllBtn].forEach(control => control.disabled = busy ||
-            (control === previewBtn && !state.text) || control === applyBtn || control === selectAllBtn);
-          if (busy) monthBoxes().forEach(box => box.disabled = true);
-          if (busy) { status.className = ''; status.textContent = label; }
-          else { file.disabled = false; previewBtn.disabled = !state.text; refreshApply(); }
-        }
-        function refreshApply() {
-          const boxes = monthBoxes();
-          const selected = new Set(boxes.filter(box => box.checked).map(box => box.dataset.month));
-          const historicalCount = document.getElementById('historical-count');
-          if (historicalCount) historicalCount.textContent = (state.records || []).filter(record =>
-            record.historical && (record.status === 'changed' || record.status === 'blocked') &&
-            !selected.has(record.month)).length;
-          selectAllBtn.disabled = state.busy || !state.hash ||
-            !boxes.some(box => !box.disabled && !box.checked);
-          if (state.busy) { applyBtn.disabled = true; return; }
-          const ok = state.hash && monthBoxes().some(box => box.checked && !box.disabled);
-          applyBtn.disabled = !ok;
-        }
-        function invalidatePreview() {
-          state.hash = null;
-          monthBoxes().forEach(box => { box.checked = false; });
-          refreshApply();
-          applyBtn.disabled = true;
-        }
-        function thb(cents) {
-          if (cents === null || cents === undefined) return 'New value';
-          return (cents < 0 ? '−' : '') + Math.abs(cents / 100).toLocaleString('en-US',
-            { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        }
-        function pct(change) {
-          if (change.previousCents === null || change.previousCents === undefined) return 'New value';
-          if (change.previousCents === 0) return 'N/A (previous value is zero)';
-          const value = change.deltaPercent;
-          if (value === null || value === undefined || !isFinite(value)) return 'N/A';
-          const sign = value < 0 ? '−' : '+', magnitude = Math.abs(value);
-          if (magnitude > 0 && magnitude < 0.0001) return sign + '<0.0001%';
-          return sign + magnitude.toFixed(4) + '%';
-        }
-        function cellText(parent, text) { const td = document.createElement('td'); td.textContent = text; parent.appendChild(td); return td; }
-        function render(result) {
-          months.textContent = ''; summary.textContent = '';
-          const s = result.summary;
-          summary.appendChild(document.createTextNode('Revenue changes: ' + s.revenueChanges +
-            ' · Count updates: ' + s.countChanges + ' · New values: ' + s.newValues +
-            ' · Unselected historical corrections: '));
-          const historicalCount = document.createElement('span');
-          historicalCount.id = 'historical-count';
-          summary.appendChild(historicalCount);
-          summary.appendChild(document.createTextNode(' · Unchanged months: ' + s.unchanged +
-            ' · Pack: ' + result.source.filename + ' · report ' + result.source.reportMonth +
-            ' · Difference (%) is the change versus the absolute previous value.'));
-          const hasDifferences = result.months.some(m => m.status === 'changed');
-          if (!hasDifferences) {
-            status.className = '';
-            status.textContent = result.months.some(m => m.status === 'blocked')
-              ? 'No importable changes: every month is either unchanged or blocked (see conflicts below).'
-              : 'No changes to import.';
-            result.months.filter(m => m.status === 'blocked').forEach(renderMonthBlock);
-            refreshApply();
-            return;
-          }
-          const table = document.createElement('table');
-          table.style.fontSize = '12px'; table.style.borderCollapse = 'collapse'; table.style.width = '100%';
-          const head = document.createElement('tr');
-          ['Month', 'Sheet', 'Cell', 'Field', 'Kind', 'Previous (THB)', 'Proposed (THB)',
-            'Difference (THB)', 'Difference (%)', 'Source cells'].forEach(title => {
-            const th = document.createElement('th'); th.textContent = title; head.appendChild(th);
-          });
-          table.appendChild(head);
-          result.months.forEach(function (monthRecord) { renderMonth(table, monthRecord); });
-          months.appendChild(table);
-          refreshApply();
-        }
-        function renderMonthBlock(monthRecord) {
-          const block = document.createElement('div');
-          block.style.padding = '6px 10px'; block.style.borderBottom = '1px solid #e5e9e8';
-          const title = document.createElement('b');
-          title.textContent = monthRecord.label + ' — ' + monthRecord.status;
-          block.appendChild(title);
-          monthRecord.conflicts.forEach(function (conflict) {
-            const note = document.createElement('div');
-            note.style.color = '#a32929'; note.style.marginLeft = '12px';
-            note.textContent = 'Blocked: ' + conflict.sheet + ' ' + conflict.cell + ' — ' + conflict.message;
-            block.appendChild(note);
-          });
-          months.appendChild(block);
-        }
-        function renderMonth(table, monthRecord) {
-          const band = document.createElement('tr');
-          const bandCell = document.createElement('td');
-          bandCell.colSpan = 10; bandCell.style.background = '#eef2f1';
-          const box = document.createElement('input');
-          box.type = 'checkbox'; box.dataset.month = monthRecord.month;
-          box.style.width = 'auto'; box.style.margin = '0 8px 0 4px'; box.style.verticalAlign = 'middle';
-          box.checked = !!monthRecord.defaultSelected;
-          box.disabled = monthRecord.status === 'blocked';
-          box.addEventListener('change', refreshApply);
-          bandCell.appendChild(box);
-          const label = document.createElement('b');
-          label.textContent = monthRecord.label + ' — ' + monthRecord.status +
-            (monthRecord.changes.length ? ' · ' + monthRecord.changes.length + ' change(s)' : '');
-          bandCell.appendChild(label);
-          monthRecord.conflicts.forEach(function (conflict) {
-            const note = document.createElement('div');
-            note.style.color = '#a32929'; note.style.marginLeft = '24px';
-            note.textContent = 'Blocked: ' + conflict.sheet + ' ' + conflict.cell + ' — ' + conflict.message;
-            bandCell.appendChild(note);
-          });
-          band.appendChild(bandCell);
-          table.appendChild(band);
-          monthRecord.changes.forEach(function (change) {
-            const row = document.createElement('tr');
-            cellText(row, monthRecord.label);
-            cellText(row, change.sheet);
-            cellText(row, change.cell);
-            cellText(row, change.field);
-            cellText(row, change.kind);
-            cellText(row, thb(change.previousCents));
-            cellText(row, thb(change.proposedCents));
-            cellText(row, change.deltaCents === null || change.deltaCents === undefined ? 'New value' :
-              (change.deltaCents < 0 ? '−' : '+') + Math.abs(change.deltaCents / 100).toLocaleString('en-US',
-                { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-            cellText(row, pct(change));
-            cellText(row, change.sourceRefs.join(', '));
-            table.appendChild(row);
-          });
-        }
-        file.addEventListener('change', function () {
-          state.text = null; state.hash = null; state.records = null;
-          months.textContent = ''; summary.textContent = '';
-          applyBtn.disabled = true; selectAllBtn.disabled = true; previewBtn.disabled = !file.files.length;
-          status.className = '';
-          status.textContent = file.files.length ? 'Ready to preview ' + file.files[0].name + '.' : '';
-        });
-        previewBtn.addEventListener('click', function () {
-          const chosen = file.files[0];
-          if (!chosen) return;
-          setBusy(true, 'Previewing differences…');
-          chosen.text().then(function (text) {
-            state.text = text;
-            google.script.run.withSuccessHandler(function (result) {
-              state.hash = result.previewHash; state.records = result.months;
-              status.className = ''; status.textContent = '';
-              render(result); setBusy(false);
-              monthBoxes().forEach(box => box.disabled =
-                (state.records.find(m => m.month === box.dataset.month) || {}).status === 'blocked');
-              refreshApply();
-            }).withFailureHandler(function (error) {
-              invalidatePreview(); setBusy(false); status.className = 'error';
-              status.textContent = error.message || String(error);
-            }).previewSalesActualsImport(text);
-          }).catch(function (error) {
-            invalidatePreview(); setBusy(false); status.className = 'error'; status.textContent = String(error);
-          });
-        });
-        selectAllBtn.addEventListener('click', function () {
-          if (state.busy || !state.hash) return;
-          monthBoxes().forEach(box => { if (!box.disabled) box.checked = true; });
-          refreshApply();
-        });
-        applyBtn.addEventListener('click', function () {
-          const selected = (state.records || []).filter(m => monthCell(m.month) && monthCell(m.month).checked)
-            .map(m => m.month);
-          if (!selected.length) {
-            status.className = 'error'; status.textContent = 'Select at least one month to apply.';
-            return;
-          }
-          setBusy(true, 'Applying ' + selected.length + ' month(s)… Do not edit CustomerRevenueMonthly or Customer Count while applying.');
-          google.script.run.withSuccessHandler(function (result) {
-            state.busy = false;
-            state.hash = null;
-            applyBtn.disabled = true; previewBtn.disabled = false; file.disabled = false;
-            selectAllBtn.disabled = true;
-            monthBoxes().forEach(box => box.disabled = true);
-            status.className = '';
-            status.textContent = (result.already ? 'No writes were needed; the selected months already match the pack. '
-              : 'Imported ' + result.changes + ' backed-up cell write(s) across ' + result.months.length +
-              ' month(s). Previous values and formulas are recorded in the Repair Backup sheet. ') +
-              'Run TPO → 2. Check & calculate, review Data Validation, then prepare a fresh AI prompt.';
-          }).withFailureHandler(function (error) {
-            invalidatePreview(); setBusy(false);
-            monthBoxes().forEach(box => box.disabled = false);
-            status.className = 'error';
-            status.textContent = (error.message || String(error)) + ' Preview again before applying.';
-          }).applySalesActualsImport(state.text, selected, state.hash);
-        });
-      })();
-    `;
-    dialog_('TPO · Import sales data', body, script, 700);
-  });
+  uiAction_('Import sales data', () => actualsImportDialog_({
+    heading: 'Import sales data',
+    intro: 'Choose the JSON pack produced by <b>tools/extract-sales-input.py</b> from the sales presentation workbook. The importer fills CustomerRevenueMonthly and Customer Count inputs — customers must already exist in Assumptions; financial, working-capital and assumption data stay separate inputs.',
+    previewRpc: 'previewSalesActualsImport',
+    applyRpc: 'applySalesActualsImport',
+    editWarning: 'CustomerRevenueMonthly or Customer Count',
+    summaryJs: "'Revenue changes: ' + s.revenueChanges + ' · Count updates: ' + s.countChanges + ' · New values: ' + s.newValues",
+    changedTest: "m.status === 'changed'",
+    kindJs: 'change.kind',
+    newStatus: false
+  }));
 }

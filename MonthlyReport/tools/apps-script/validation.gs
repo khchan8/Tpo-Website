@@ -90,35 +90,13 @@ function workbookCleanupPlan_() {
     if(!f&&String(v==null?'':v)===String(value))return; // include only value/formula differences
     planned.add(key);plan.push({sheet:name,row,col,value,reason,text:true});
   }
-  const assumptions=sheet_('Assumptions');
-  if(assumptions) {
-    const snap=snapshot(assumptions,5),rows=snap.values.length;
-    for(let i=0;i<rows;i++) {
-      if(normalize_(snap.values[i][3])!=='reconciliationcheck')continue;
-      const labels=[0,1,2,3].map(k=>snap.values[i+k]?String(snap.values[i+k][3]||'').trim():'');
-      const headingBlank=!hasValue_(snap.values[i][4])&&!String(snap.formulas[i]&&snap.formulas[i][4]||'');
-      const customer=/^customer revenue total\s*\(?\s*q([1-4])\s+(\d{4})\s*\)?$/i.exec(labels[1]);
-      const pnl=/^p&l total revenue\s*\(?\s*q([1-4])\s+(\d{4})\s*\)?$/i.exec(labels[2]);
-      const gap=normalize_(labels[3])==='gapresolvebeforeingest';
-      if(headingBlank&&customer&&pnl&&customer[1]===pnl[1]&&customer[2]===pnl[2]&&gap) {
-        [0,1,2,3].forEach(k=>[0,1].forEach(c=>
-          planWrite(assumptions,snap,i+k+1,4+c,'','Retire legacy reconciliation block; Data Validation reports the same gaps')));
-      } else {
-        notices.push('Assumptions reconciliation block at D'+(i+1)+':E'+(i+4)+' does not match the legacy template; left unchanged.');
-      }
-    }
-  }
   const readme=sheet_('README');
   if(readme) {
     const snap=snapshot(readme,2),used=snap.values.length;
     const title=String(snap.values[0]&&snap.values[0][0]||'').trim();
     const beyondB=snap.values.some((r,i)=>r.slice(2).some(v=>hasValue_(v))||(snap.formulas[i]||[]).slice(2).some(f=>String(f||'')));
     let refresh=false;
-    if(title==='TPO Wellness — Monthly Input Template') {
-      const a2=String(snap.values[1]&&snap.values[1][0]||'');
-      if(beyondB||!/pipeline\/inputs\/|validate_input\.py|build_sources\.py/.test(a2))notices.push('README contains custom content; left unchanged.');
-      else refresh=true;
-    } else if(title==='TPO — Monthly workflow') {
+    if(title==='TPO — Monthly workflow') {
       if(beyondB)notices.push('README contains custom content; left unchanged.');else refresh=true;
     } else if(!used)refresh=true;
     else notices.push('README contains custom content; left unchanged.');
@@ -138,36 +116,17 @@ function workbookCleanupPlan_() {
       if(/^low season\s*(\([^)]*\))?$/i.test(term)) {
         planWrite(glossary,snap,row,1,'Low season','Rename recognized glossary term');
         planWrite(glossary,snap,row,2,'The month range is configured in Assumptions → Low season; reporting uses that setting rather than a fixed seasonal window.','Refresh recognized glossary definition');
-      } else if(/^Q[1-4]\s+\d{4}\s+cordon$/i.test(term)) {
-        planWrite(glossary,snap,row,1,'Quarter coverage','Rename recognized glossary term');
-        planWrite(glossary,snap,row,2,'A partial quarter covers quarter-start through the reporting month. Compare matching months only; do not annualize or extrapolate.','Refresh recognized glossary definition');
       } else if(/^contribution margin$/i.test(term)) {
         planWrite(glossary,snap,row,2,'Customer-specific assumed margin used to estimate contribution from revenue; not audited gross profit.','Refresh recognized glossary definition');
-      } else if(/^data note \(warn\)$/i.test(term)) {
-        planWrite(glossary,snap,row,1,'Data quality notes','Rename recognized glossary term');
-        planWrite(glossary,snap,row,2,'Data Validation reports missing or conflicting inputs and customer/P&L reconciliation gaps. Review warnings; do not fill unknowns or add balancing amounts to remove them.','Refresh recognized glossary definition');
-      } else if(/^turnaround storyline$/i.test(term)) {
-        planWrite(glossary,snap,row,1,'','Remove obsolete storyline term');
-        planWrite(glossary,snap,row,2,'','Remove obsolete storyline term');
       }
     });
-  }
-  const commentary=sheet_(TPO.commentary);
-  if(commentary&&commentary.getMaxColumns()>=4&&normalize_(String(commentary.getRange('D1').getDisplayValue()||'').trim())==='oldcommentary') {
-    const last=commentary.getLastRow(),rows=Math.max(0,last-1);
-    const values=rows?commentary.getRange(2,4,rows,1).getDisplayValues():[];
-    const formulas=rows?commentary.getRange(2,4,rows,1).getFormulas():[];
-    if(values.some(r=>hasValue_(r[0]))||formulas.some(r=>String(r[0]||'')))
-      notices.push('Commentary column D contains archived content; left unchanged.');
-    else planWrite(commentary,{values:[['','','','Old Commentary']],formulas:[['','','','']]},1,4,'','Remove empty Old Commentary archive header');
   }
   return {plan:plan,notices:notices};
 }
 function cleanupWorkbook_() {
   const planned=workbookCleanupPlan_();
   backupAndWrite_(planned.plan,'Clean up obsolete workbook information');
-  return {changes:planned.plan.length,notices:planned.notices,
-    sourcesCleared:planned.plan.some(p=>TPO.sources.includes(p.sheet))};
+  return {changes:planned.plan.length,notices:planned.notices};
 }
 
 function formatPlan_(sources,a) {
@@ -387,14 +346,6 @@ function repairPlan_(sources,a,next) {
   qi.forEach((row,q)=>TPOCore.metrics.forEach((k,i)=>add('Quarterly Financials',row,qf[i+1]+1,modelLookup_('"quarter|"&'+TPOCore.col(qf[0])+row+'&"|'+k+'"'),null,true)));
   wi.forEach(row=>{const refs=[1,2,3,4].map(c=>TPOCore.col(wc[c])+row);add('1. Working Capital',row,wc[5]+1,'=IF(COUNT('+refs.join(',')+')=4,'+refs[0]+'+'+refs[1]+'+'+refs[2]+'-'+refs[3]+',"")','Require all working-capital components',true);});
   mi.forEach(row=>{const p=TPOCore.month(byName.MonthlyFinancials.raw[row-1][mf[0]]);add('MonthlyFinancials',row,mf[7]+1,p.quarter,'Quarter derived from month');});
-  // A legacy Total Portfolio row must retain its original quarter as later rows are added.
-  const oldCEQuarters=Array.from(new Set(byName['2. Customer Economics'].raw.slice(1).map(r=>TPOCore.quarter(r[ce[1]])?.label).filter(Boolean)));
-  byName['2. Customer Economics'].raw.slice(1).forEach((r,i)=>{
-    if(/^total/i.test(String(r[ce[0]]))&&!TPOCore.quarter(r[ce[1]])){
-      if(oldCEQuarters.length!==1)throw new Error('Customer Economics total row '+(i+2)+' needs an explicit quarter.');
-      add('2. Customer Economics',i+2,ce[1]+1,oldCEQuarters[0],'Keep portfolio total scoped to its original quarter');
-    }
-  });
   const cei=keyedRows('2. Customer Economics',r=>customerQuarter(r,ce));
   byName.CustomerRevenueQuarterly.raw.slice(1).forEach(r=>{
     const key=customerQuarter(r,crq);if(key)slot('2. Customer Economics',cei,key,[[ce[0]+1,r[crq[0]]],[ce[1]+1,TPOCore.quarter(r[crq[1]]).label]]);
@@ -519,7 +470,6 @@ function menuCleanupWorkbook() {
     const result=locked_(cleanupWorkbook_);
     const lines=['Cleaned up '+result.changes+' obsolete cell(s); original values and formulas are recorded in Repair Backup.'];
     if(result.notices.length)lines.push('','Skipped content:',...result.notices);
-    if(result.sourcesCleared)lines.push('','Source helper cells were cleared. Prepare a fresh AI prompt (TPO → 3. Prepare AI prompt + copy…) before importing any pending response.');
     SpreadsheetApp.getUi().alert(lines.join('\n'));
   });
 }

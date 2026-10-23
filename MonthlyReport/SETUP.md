@@ -16,6 +16,15 @@ The script maintains **LLM-Input**, **LLM Output**, and **Commentary**. Commenta
 
 Copying Code.gs into GitHub does not install it in Google Sheets. The website and the bound Apps Script are updated separately.
 
+### v12: code audit cleanup (`2026-10-23-v12`)
+
+Install build **`2026-10-23-v12`** (replace the complete contents of `apps-script/Code.gs` into the bound Google script, save, and reload Sheets). No workflow changes; this build is an internal cleanup:
+
+- **Importer consolidation**: the accounting and sales importers now share one module (`tools/apps-script/import-common.gs`) for satang math, destination-tab reading, preview hashing, selection validation, plan finalization, the preview/apply RPC envelope (including the immediate pre-mutation recheck) and the parameterized preview/apply dialog. The two original modules totaled 1,391 lines; together with the new shared module they now total 1,158 lines, a net reduction of 233 lines. Pack contracts, formula protection, preview checks and backup/rollback behavior are retained.
+- **Removed dead legacy cleanup branches** that could no longer trigger after the v8 migration: the Assumptions `D10:E13` reconciliation-block clearer, the pre-Sheets Python-pipeline README replacement, `cordon`/`data note (warn)`/`turnaround storyline` glossary renames, the empty `Old Commentary` column-D header clearer, the legacy Customer Economics total-row quarter shim, and the always-false `sourcesCleared` reporting. The live managed README/Glossary refresh and custom-content protection are unchanged and still tested.
+- **I/O fixes**: *3. Prepare AI prompt + copy…* no longer writes Data Validation twice; the paste-import path no longer re-reads all source sheets a second time for the same staleness check (the pre-mutation recheck remains); the Report settings dialog reads only `Assumptions!A:B` for its customer list instead of every source sheet.
+- **Repository cleanup**: removed `apps-script/Code.gs.old` (pre-v4 Gemini-API backup), the executed `MONTHLY_ACTUALS_IMPORT_PLAN.md`, superseded `PRDv1.4/1.5.md` and the stale `VERIFICATION.md`.
+
 ### v11: numbered input submenu and month-aware slot preparation (`2026-10-23-v11`)
 
 Install build **`2026-10-23-v11`** (replace the complete contents of `apps-script/Code.gs` into the bound Google script, save, and reload Sheets).

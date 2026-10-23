@@ -139,7 +139,7 @@ The **Setup & data health** (`#/setup`) view includes interactive **Report contr
 
 ## Maintenance and tests
 
-Source files are **js/report-core.js**, **tools/apps-script/workflow.gs**, **tools/apps-script/validation.gs**, **tools/apps-script/monthly-import.gs** (accounting actuals import) and **tools/apps-script/sales-import.gs** (sales import). Run `node tools/build-apps-script.cjs` to regenerate apps-script/Code.gs. Do not edit generated copies separately.
+Source files are **js/report-core.js**, **tools/apps-script/workflow.gs**, **tools/apps-script/validation.gs**, **tools/apps-script/import-common.gs** (shared importer machinery: satang math, tab reading, preview hashing, RPC orchestration, dialog), **tools/apps-script/monthly-import.gs** (accounting actuals import) and **tools/apps-script/sales-import.gs** (sales import). Run `node tools/build-apps-script.cjs` to regenerate apps-script/Code.gs. Do not edit generated copies separately.
 
 Run `node --test tests/*.test.cjs`. Tests cover dates/timezones, placeholders/zeroes, header mapping, malformed/duplicate inputs, null propagation, matched-period comparisons, long Unicode prompts, JSON import routing, stale batches, rollback, diagnostics, and shared website/script behavior.
 

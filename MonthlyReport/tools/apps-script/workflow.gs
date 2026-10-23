@@ -8,7 +8,7 @@ const TPO = Object.freeze({
   input: 'LLM-Input', output: 'LLM Output', commentary: 'Commentary',
   startRow: 8, chunkSize: 30000, maxPrompt: 1500000, maxSourceCells: 200000,
   stateKey: 'TPO_MANUAL_V1_', version: 'tpo-commentary-v1',
-  build: '2026-10-23-v11', timezone: 'Asia/Bangkok',
+  build: '2026-10-23-v12', timezone: 'Asia/Bangkok',
   sources: ['Assumptions', 'MonthlyFinancials', 'CustomerRevenueMonthly',
     'CustomerRevenueQuarterly', 'CustomerCount', 'Quarterly Financials',
     '1. Working Capital', '2. Customer Economics', '3. Strategic Dashboard',
@@ -366,6 +366,13 @@ function readSources_() {
     return { name: name, raw: raw, display: range.getDisplayValues(), formulas: range.getFormulas() };
   }));
 }
+/** Single-tab read for dialogs that only need the Assumptions customer list. */
+function assumptionsSource_() {
+  const sh = sheet_('Assumptions');
+  if (!sh || !sh.getLastRow()) return { name: 'Assumptions', raw: [] };
+  const cols = Math.max(1, Math.min(2, sh.getLastColumn()));
+  return { name: 'Assumptions', raw: sh.getRange(1, 1, sh.getLastRow(), cols).getValues() };
+}
 function columnName_(n) {
   let label = '';
   for (; n > 0; n = Math.floor((n - 1) / 26)) label = String.fromCharCode(65 + (n - 1) % 26) + label;
@@ -389,7 +396,7 @@ function ensureReportSettings_() {
 function menuReportSettings() {
   uiAction_('Report settings',()=>{
     const current=locked_(()=>{const sh=ensureReportSettings_();return TPOReportSettings.normalize(sh.getRange(2,2).getValues()[0][0]);});
-    const a=TPOCore.analyze(readSources_()),items=TPOReportSettings.sections.map(s=>({id:s.id,label:s.label,scope:'tabs'})).concat(a.customers.map(c=>({id:TPOReportSettings.slug(c.name),label:c.name,scope:'customers'})));
+    const a=TPOCore.analyze([assumptionsSource_()]),items=TPOReportSettings.sections.map(s=>({id:s.id,label:s.label,scope:'tabs'})).concat(a.customers.map(c=>({id:TPOReportSettings.slug(c.name),label:c.name,scope:'customers'})));
     const rows=items.map((s,i)=>{const r=s.scope==='tabs'?current.tabs[s.id]:TPOReportSettings.rowSetting(current,s.id,s.label,i);return '<tr data-id="'+htmlEscape_(s.id)+'" data-scope="'+s.scope+'"><td>'+htmlEscape_(s.label)+'</td><td><select class="mode">'+['show','hide','auto'].map(v=>'<option'+(r.mode===v?' selected':'')+'>'+v+'</option>').join('')+'</select></td><td><input class="label" value="'+htmlEscape_(r.label)+'"></td><td><input class="order" type="number" value="'+r.order+'" style="width:65px"></td><td><input class="commentary" type="checkbox" '+(r.commentary?'checked':'')+'></td><td><input class="export" type="checkbox" '+(r.export?'checked':'')+'></td></tr>';}).join('');
     const body='<h2>Shared report settings</h2><p>These defaults apply to every viewer. Personal browser preferences can override them. Financial source rows are never deleted by visibility settings.</p><label>Reporting cut-off (latest or YYYY-MM)<input id="cutoff" value="'+htmlEscape_(current.cutoff)+'"></label><div style="overflow:auto;max-height:240px"><table><tr><th>Section</th><th>Display</th><th>Label</th><th>Order</th><th>AI</th><th>Export</th></tr>'+rows+'</table></div><button id="save">Save shared controls</button><p>To apply all controls from the website, paste its shared-settings JSON below.</p><textarea id="json" aria-label="Shared settings JSON" style="height:110px">'+htmlEscape_(JSON.stringify(current,null,2))+'</textarea><button id="import">Save pasted configuration</button><button class="secondary" onclick="google.script.host.close()">Close</button><div id="status" role="status"></div>';
     dialog_('TPO · Report settings',body,`
@@ -649,8 +656,7 @@ function prepare_() {
   const cleanup = cleanupWorkbook_();
   const sources = readSources_();
   const checked=TPOCore.analyze(TPOReportSettings.filterSources(sources,TPOReportSettings.fromSources(sources))), errors=checked.issues.filter(i=>i.level==='error');
-  writeValidation_(checked);
-  if(errors.length)throw new Error('Resolve '+errors.length+' data error(s) in Data Validation before preparing AI input. First: '+errors[0].sheet+'!'+errors[0].cell+' '+errors[0].message);
+  if(errors.length){writeValidation_(checked);throw new Error('Resolve '+errors.length+' data error(s) in Data Validation before preparing AI input. First: '+errors[0].sheet+'!'+errors[0].cell+' '+errors[0].message);}
   const analysis = context_('Validate and calculate report', {}, () => buildAnalysis_(sources));
   writeValidation_(analysis.validation);
   readCommentary_();
@@ -737,7 +743,7 @@ function readOutput_(state) {
   }).join('\n');
 }
 
-function import_() {
+function import_(sourcesVerified) {
   const state = readState_();
   const incoming = JSON.parse(JSON.stringify(state));
   const parsed = parseOutput_(readOutput_(state), state);
@@ -746,7 +752,7 @@ function import_() {
   const byView = new Map(current.map(r => [r.view, r]));
   if (state.importedHash === outputHash && parsed.items.every(item => byView.has(item.view) && byView.get(item.view).text === item.commentary))
     return { count: parsed.items.length, already: true, warnings: parsed.warnings };
-  if (sourceHash_(readSources_()) !== state.sourceHash) throw new Error('Source data changed after this batch was prepared. Prepare LLM Input again and request a fresh response. Nothing was imported.');
+  if (sourcesVerified !== true && sourceHash_(readSources_()) !== state.sourceHash) throw new Error('Source data changed after this batch was prepared. Prepare LLM Input again and request a fresh response. Nothing was imported.');
   const sh = ensureCommentary_();
   const status = 'Validated v3 · ' + state.period + ' · data ' + state.dataFingerprint + ' · Imported ' + stamp_() + ' · ' + state.batch.slice(0, 8);
   const append = [];
@@ -770,7 +776,7 @@ function import_() {
   changes.forEach(({ row, item }) => {
     after[row - 2] = [item.commentary, status].map(t => SpreadsheetApp.newRichTextValue().setText(t).build());
   });
-  // Write only matched rows, grouped into adjacent runs; never touch other rows or D:G.
+  // Write only matched rows, grouped into adjacent runs; never touch unrelated rows.
   const sorted = changes.sort((a, b) => a.row - b.row);
   const runs = [];
   sorted.forEach(change => {
@@ -915,7 +921,7 @@ function importPastedLLMOutput(text, batch) {
     try {
       writePayload_(output, text);
       state.outputStorage = 'chunks'; state.outputHash = digest_(text); saveState_(state);
-      var result = import_();
+      var result = import_(true);
     } catch (e) {
       let restored = ' LLM Output and the batch manifest were restored to their pre-action state.';
       try { restoreOutput_(); restoreState_(); }
