@@ -607,6 +607,54 @@
       border-color: var(--forest);
     }
 
+    /* Formulation Catalog Disclosure Panel (always-visible affordance) */
+    .catalog-disclosure {
+      border: 1px solid var(--ink-dark);
+      border-radius: 6px;
+      background: #ffffff;
+      box-shadow: 0 10px 26px rgba(18, 34, 31, 0.10);
+      margin-bottom: 36px;
+      overflow: hidden;
+    }
+    .catalog-disclosure-header {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 22px 26px;
+      background: var(--bg-paper);
+      border: 0;
+      text-align: left;
+      cursor: pointer;
+      font-family: var(--font-sans);
+      transition: background-color 0.2s ease;
+    }
+    .catalog-disclosure-header:hover { background: var(--bg-stone); }
+    .catalog-disclosure-title {
+      font-family: var(--font-serif);
+      font-size: 1.3rem;
+      color: var(--ink-dark);
+      display: block;
+      margin: 2px 0 4px;
+    }
+    .catalog-disclosure-chevron {
+      flex: 0 0 auto;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--forest);
+      color: #ffffff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      transition: transform 0.25s ease;
+    }
+    .catalog-disclosure-header[aria-expanded="true"] .catalog-disclosure-chevron {
+      transform: rotate(180deg);
+    }
+
     /* Authentic Apothecary / Contract Manufacturer Datasheet Cards */
     .datasheet-card {
       background: #ffffff;
@@ -1137,12 +1185,12 @@
           <div class="col-lg-4 col-md-6">
             <div class="capability-card">
               <div>
-                <span class="cap-code">04 / CALM &amp; ADAPTOGENS</span>
-                <h4>Relax &amp; De-Stress Gummies</h4>
-                <p>Daily calm formulations featuring Ashwagandha, GABA, Lemon Balm, Rhodiola, and standardized Thai botanical extracts.</p>
+                <span class="cap-code">04 / MUSHROOM GUMMIES</span>
+                <h4>Functional Mushroom Gummies</h4>
+                <p>Dual-extracted Lion&rsquo;s Mane, Reishi, and Cordyceps gummies for focus, immunity, and natural energy &mdash; standardized fruiting-body extracts.</p>
               </div>
-              <button type="button" class="btn btn-sm btn-outline-dark rounded-1 align-self-start select-quote-category" data-category="Relax / Stress Gummies">
-                Quote Relax Gummies
+              <button type="button" class="btn btn-sm btn-outline-dark rounded-1 align-self-start select-quote-category" data-category="Custom Gummy Formulation">
+                Quote Mushroom Gummies
               </button>
             </div>
           </div>
@@ -1208,9 +1256,14 @@
           <p>Open the catalogue below to browse our 12 reference formulas and filter by category. Any base formula can be modified for dosage, sweetener, and flavor.</p>
         </div>
 
-        <div class="text-center mb-4">
-          <button type="button" id="formulationCatalogToggle" class="btn-outline-editorial" aria-expanded="false" aria-controls="formulationCatalog">
-            Browse Stock &amp; Custom Formulations (12) <i class="bi bi-chevron-down ms-1" aria-hidden="true"></i>
+        <div class="catalog-disclosure">
+          <button type="button" id="formulationCatalogToggle" class="catalog-disclosure-header" aria-expanded="false" aria-controls="formulationCatalog">
+            <span>
+              <span class="mono-label">12 Reference Formulations</span>
+              <strong class="catalog-disclosure-title">Browse the Formulation Catalogue</strong>
+              <span class="small text-muted" id="catalogHintText">Gummy Lines &bull; Performance &amp; Vitality &bull; Sleep, Relax &amp; Immune &mdash; click to browse all 12</span>
+            </span>
+            <span class="catalog-disclosure-chevron" aria-hidden="true"><i class="bi bi-chevron-down"></i></span>
           </button>
         </div>
 
@@ -2286,9 +2339,12 @@
         if (!catalogToggle || !catalogBody) return;
         catalogBody.style.display = expanded ? 'block' : 'none';
         catalogToggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
-        catalogToggle.innerHTML = expanded
-          ? 'Hide Stock &amp; Custom Formulations <i class="bi bi-chevron-up ms-1" aria-hidden="true"></i>'
-          : 'Browse Stock &amp; Custom Formulations (12) <i class="bi bi-chevron-down ms-1" aria-hidden="true"></i>';
+        const hint = document.getElementById('catalogHintText');
+        if (hint) {
+          hint.textContent = expanded
+            ? 'Showing all 12 formulations \u2014 click to collapse'
+            : 'Gummy Lines \u00b7 Performance & Vitality \u00b7 Sleep, Relax & Immune \u2014 click to browse all 12';
+        }
       }
       if (catalogToggle && catalogBody) {
         catalogToggle.addEventListener('click', function() {
