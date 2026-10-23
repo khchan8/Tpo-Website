@@ -342,7 +342,7 @@ const TPO = Object.freeze({
   input: 'LLM-Input', output: 'LLM Output', commentary: 'Commentary',
   startRow: 8, chunkSize: 30000, maxPrompt: 1500000, maxSourceCells: 200000,
   stateKey: 'TPO_MANUAL_V1_', version: 'tpo-commentary-v1',
-  build: '2026-10-23-v10', timezone: 'Asia/Bangkok',
+  build: '2026-10-23-v11', timezone: 'Asia/Bangkok',
   sources: ['Assumptions', 'MonthlyFinancials', 'CustomerRevenueMonthly',
     'CustomerRevenueQuarterly', 'CustomerCount', 'Quarterly Financials',
     '1. Working Capital', '2. Customer Economics', '3. Strategic Dashboard',
@@ -353,11 +353,11 @@ const TPO = Object.freeze({
 function onOpen() {
   const ui = SpreadsheetApp.getUi();
   const input = ui.createMenu('1. Enter monthly data')
-    .addItem('Input checklist…', 'menuMonthlyInput')
-    .addItem('Import accounting actuals…', 'menuImportMonthlyActuals')
-    .addItem('Import sales data…', 'menuImportSalesActuals')
-    .addItem('Prepare next month slots', 'menuPrepareNextMonthSlots')
-    .addItem('Add customer…', 'menuAddCustomer');
+    .addItem('1. Input checklist…', 'menuMonthlyInput')
+    .addItem('2. Prepare next month slots', 'menuPrepareNextMonthSlots')
+    .addItem('3. Import accounting actuals…', 'menuImportMonthlyActuals')
+    .addItem('4. Import sales data…', 'menuImportSalesActuals')
+    .addItem('5. Add customer…', 'menuAddCustomer');
   const tools = ui.createMenu('Tools & settings')
     .addItem('Report settings…', 'menuReportSettings')
     .addItem('Copy prepared AI prompt…', 'menuCopyLLMInput')
@@ -395,9 +395,9 @@ function menuMonthlyInput() {
       link('1. Working Capital', 'Cash, accounts receivable, inventory, accounts payable') +
       link('Dashboard Inputs', 'Column C actual values; column D examples are ignored') +
       '</ul>' +
-      '<p>Leave unknown cells blank; enter 0 only for a genuine zero. To start a new month, use TPO → 1. Enter monthly data → Prepare next month slots. Corrections to an existing month do not roll forward automatically.</p>' +
-      '<p><b>Import accounting actuals…</b> in this submenu fills the MonthlyFinancials and 1. Working Capital inputs from a JSON accounting pack; customer, operational and assumption data remain separate manual inputs.</p>' +
-      '<p><b>Import sales data…</b> fills CustomerRevenueMonthly and Customer Count from a JSON sales pack; the customers must already exist in Assumptions, and financial, working-capital, assumption and operational inputs stay separate.</p>' +
+      '<p>Leave unknown cells blank; enter 0 only for a genuine zero. To start a new month, use 2. Prepare next month slots. It first aligns any lagging input tab (for example customer tabs behind imported financials) to the furthest actual month; when every input tab is already level it opens the following month. Corrections to an existing month do not roll forward automatically.</p>' +
+      '<p><b>3. Import accounting actuals…</b> in this submenu fills the MonthlyFinancials and 1. Working Capital inputs from a JSON accounting pack; customer, operational and assumption data remain separate manual inputs.</p>' +
+      '<p><b>4. Import sales data…</b> fills CustomerRevenueMonthly and Customer Count from a JSON sales pack; the customers must already exist in Assumptions, and financial, working-capital, assumption and operational inputs stay separate.</p>' +
       '<p>Next steps: TPO → 2. Check &amp; calculate, then 3. Prepare AI prompt + copy…, 4. Paste AI response &amp; update Commentary…, and 5. Review Commentary.</p>';
     dialog_('TPO · Monthly input checklist', body, '', 520);
   });
@@ -1675,7 +1675,8 @@ function repairPlan_(sources,a,next) {
   const mi=keyedRows('MonthlyFinancials',r=>periodKey(r,mf)),wi=keyedRows('1. Working Capital',r=>periodKey(r,wc)),ci=keyedRows('CustomerCount',r=>periodKey(r,cc));
   const cmi=keyedRows('CustomerRevenueMonthly',r=>periodKey(r,crm,1)&&r[crm[0]]?periodKey(r,crm,1)+'|'+String(r[crm[0]]).trim().toLowerCase():null);
   const cqi=keyedRows('CustomerRevenueQuarterly',r=>customerQuarter(r,crq));
-  if(next) {
+  const nexts=next==null?[]:(Array.isArray(next)?next:[next]);
+  nexts.forEach(next=>{
     const row=slot('MonthlyFinancials',mi,next.label,[[mf[0]+1,next.display,true],[mf[7]+1,next.quarter]]);
     [[3,[1,2],'-'],[5,[3,4],'-']].forEach(([target,cols,op])=>{
       const old=byName.MonthlyFinancials.raw[row-1][mf[target]],existing=byName.MonthlyFinancials.formulas[row-1]?.[mf[target]];
@@ -1683,12 +1684,12 @@ function repairPlan_(sources,a,next) {
     });
     slot('1. Working Capital',wi,next.label,[[wc[0]+1,next.display,true]]);slot('CustomerCount',ci,next.label,[[cc[0]+1,next.display,true]]);
     a.customers.forEach(c=>slot('CustomerRevenueMonthly',cmi,next.label+'|'+c.name.toLowerCase(),[[crm[0]+1,c.name],[crm[1]+1,next.display,true]]));
-  }
+  });
   // Repair current quarter too, even when the workbook was never rolled over.
-  const quarters=new Set(a.quarterly.map(q=>q.quarter));if(next)quarters.add(next.quarter);
+  const quarters=new Set(a.quarterly.map(q=>q.quarter));nexts.forEach(m=>quarters.add(m.quarter));
   const qi=keyedRows('Quarterly Financials',r=>TPOCore.quarter(r[qf[0]])?.label);
   quarters.forEach(q=>slot('Quarterly Financials',qi,q,[[qf[0]+1,q]]));
-  const seedQuarters=new Set([a.latest&&a.latest.quarter,next&&next.quarter].filter(Boolean));
+  const seedQuarters=new Set([a.latest&&a.latest.quarter].concat(nexts.map(m=>m.quarter)).filter(Boolean));
   a.cq.forEach(r=>slot('CustomerRevenueQuarterly',cqi,r.period.label+'|'+r.customer.toLowerCase(),[[crq[0]+1,r.customer],[crq[1]+1,r.period.label]]));
   seedQuarters.forEach(q=>a.customers.forEach(c=>slot('CustomerRevenueQuarterly',cqi,q+'|'+c.name.toLowerCase(),[[crq[0]+1,c.name],[crq[1]+1,q]])));
   // Separate manual dashboard inputs before converting display cells to formulas.
@@ -1771,6 +1772,34 @@ function repairPlan_(sources,a,next) {
   add('Report Model',1,1,'=TPO_REPORT_MODEL('+args.join(',')+')','One range-fed shared calculation engine',true);
   return Array.from(new Map(plan.map(p=>[p.sheet+'|'+p.row+'|'+p.col,p])).values());
 }
+
+/** Months a Prepare-next-month run should slot. Each input tab advances only on rows
+ * that actually contain data, so a stray blank future row never drags a tab forward.
+ * When every tab is level the schedule rolls all tabs to the following month; when tabs
+ * disagree, lagging tabs catch up to the furthest actual month and leaders are untouched. */
+function nextScaffoldMonths_(sources,a) {
+  const raw=Object.fromEntries(sources.map(s=>[s.name,s.raw||[]]));
+  const latestWithData=(name,monthIndex,dataIndexes)=>{
+    const map=a.maps[name];if(!map||map.some(c=>c<0))return null;
+    let latest=null;
+    raw[name].slice(1).forEach(r=>{
+      const p=TPOCore.month(r[map[monthIndex]]);
+      if(!p||!dataIndexes.some(i=>{const v=r[map[i]];return v!==''&&v!=null;}))return;
+      if(!latest||p.key>latest.key)latest=p;
+    });
+    return latest;
+  };
+  const latest=[latestWithData('MonthlyFinancials',0,[1,2,4,6]),latestWithData('1. Working Capital',0,[1,2,3,4]),
+    latestWithData('CustomerCount',0,[1]),latestWithData('CustomerRevenueMonthly',1,[2])].filter(Boolean);
+  if(!latest.length)return [];
+  const max=latest.reduce((x,y)=>y.key>x.key?y:x);
+  if(latest.every(p=>p.key===max.key))
+    return [TPOCore.month(new Date(Date.UTC(max.year,max.month,1)))];
+  const minLag=latest.filter(p=>p.key<max.key).reduce((x,y)=>y.key<x.key?y:x);
+  const months=[];
+  for(let k=minLag.key+1;k<=max.key;k++)months.push(TPOCore.month(new Date(Date.UTC(Math.floor(k/12),k%12,1))));
+  return months;
+}
 function repairAndScaffold_(nextMonth) {
   // Cleanup runs first so repairs and fresh source arrays see cleared labels.
   cleanupWorkbook_();
@@ -1779,7 +1808,7 @@ function repairAndScaffold_(nextMonth) {
   const blocking=a.issues.filter(i=>i.level==='error'&&!derived.includes(i.sheet)&&!(i.sheet==='Assumptions'&&/^E\d+$/.test(i.cell)));
   if(blocking.length){writeValidation_(a);throw new Error('Resolve Data Validation first: '+blocking[0].sheet+'!'+blocking[0].cell+' '+blocking[0].message);}
   if(!a.latest)throw new Error('Enter at least one valid actual month before preparing slots or calculations.');
-  const next=nextMonth?TPOCore.month(new Date(Date.UTC(a.latest.period.year,a.latest.period.month,1))):null;
+  const next=nextMonth?nextScaffoldMonths_(sources,a):null;
   const helper=sheet_('Report Model');
   if(helper&&helper.getLastRow()&& !/^=TPO_REPORT_MODEL\(/.test(helper.getRange(1,1).getFormulas()[0][0]))throw new Error('Report Model contains unrelated content. Rename that sheet before setup.');
   const plan=repairPlan_(sources,a,next),ss=SpreadsheetApp.getActiveSpreadsheet();
@@ -1789,11 +1818,16 @@ function repairAndScaffold_(nextMonth) {
   ensureSize_(sheet_('Report Model'),Math.max(2000,a.cq.length*4+a.quarterly.length*20+1000),2);
   // The range builder includes 100 spare rows, including unchanged source tables.
   ['MonthlyFinancials','Assumptions','CustomerRevenueMonthly','CustomerRevenueQuarterly','CustomerCount','1. Working Capital','Dashboard Inputs'].forEach(name=>{const sh=sheet_(name);ensureSize_(sh,Math.max(1000,sh.getLastRow()+100),Math.max(2,sh.getLastColumn()));});
-  backupAndWrite_(plan,next?'Prepare '+next.display+' slots':'Install dynamic calculations');
+  backupAndWrite_(plan,next&&next.length?'Prepare '+next.map(m=>m.display).join(', ')+' slots':'Install dynamic calculations');
   SpreadsheetApp.flush();repairTimezone_(ss);
   const updated=readSources_(),checked=analyzeReportSources_(updated);applyFormats_(updated,checked);
   ss.setActiveSheet(writeValidation_(checked));
-  return next?next.display:null;
+  if(!nextMonth)return null;
+  const added=new Map();
+  plan.forEach(p=>{if(p.text&&p.reason==='New input slot; raw amounts left blank'){
+    const months=added.get(p.sheet)||[];if(!months.includes(p.value))months.push(p.value);added.set(p.sheet,months);}});
+  if(!added.size)return 'No new slots were needed; every input tab already reaches '+next[next.length-1].display+'.';
+  return 'Prepared new input slots: '+Array.from(added,([sheet,months])=>sheet+' '+months.join(', ')).join('; ')+'.';
 }
 /** One locked action: normalize numeric text, ensure sheets, then repair and validate. */
 function checkAndCalculate_() {
@@ -1820,7 +1854,7 @@ function menuCleanupWorkbook() {
 function menuRepairCalculated() {uiAction_('Repair calculated sheets',()=>locked_(()=>repairAndScaffold_(false)));}
 function menuPrepareNextMonthSlots() {
   uiAction_('Prepare Next Month Slots',()=>locked_(()=>{
-    const next=repairAndScaffold_(true),message='Prepared '+next+' input slots. Fill raw amounts; leave unknown values blank. Repeating this action preserves existing inputs. When done, use TPO → 2. Check & calculate.';
+    const summary=repairAndScaffold_(true),message=summary+' Fill raw amounts; leave unknown values blank. Repeating this action preserves existing inputs. When done, use TPO → 2. Check & calculate.';
     // Editor runs may lack a bound UI even though spreadsheet writes succeed.
     console.info(message);try{SpreadsheetApp.getActiveSpreadsheet().toast(message,'TPO',10);}catch(notificationError){console.info('Setup completed; notification unavailable: '+notificationError.message);}
   }));

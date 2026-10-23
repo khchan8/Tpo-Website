@@ -16,6 +16,21 @@ The script maintains **LLM-Input**, **LLM Output**, and **Commentary**. Commenta
 
 Copying Code.gs into GitHub does not install it in Google Sheets. The website and the bound Apps Script are updated separately.
 
+### v11: numbered input submenu and month-aware slot preparation (`2026-10-23-v11`)
+
+Install build **`2026-10-23-v11`** (replace the complete contents of `apps-script/Code.gs` into the bound Google script, save, and reload Sheets).
+
+**1. Enter monthly data** items are now numbered in workflow order: **1. Input checklist…, 2. Prepare next month slots, 3. Import accounting actuals…, 4. Import sales data…, 5. Add customer…**. Slot preparation now runs before the imports.
+
+**2. Prepare next month slots** is now per-tab month-aware instead of following `MonthlyFinancials` alone:
+
+- Each input tab (`MonthlyFinancials`, `1. Working Capital`, `CustomerRevenueMonthly`, `CustomerCount`) advances only on rows that actually contain data; a stray blank future row never drags a tab forward.
+- When tabs disagree — for example accounting actuals imported through Sep-26 while the customer tabs still end Aug-26 — the run aligns the lagging tabs through the furthest actual month and writes nothing else. It no longer opens a month beyond the leader.
+- When every tab is level, the run opens the following month for all tabs, as before.
+- The completion toast names exactly what was created, e.g. `Prepared new input slots: CustomerRevenueMonthly Sep-26; CustomerCount Sep-26.` — or says nothing was needed.
+
+*Recovering from the earlier v10 run:* delete the premature Oct-26 rows in the input tabs (label-only rows in `MonthlyFinancials` / `1. Working Capital` are harmless but can be deleted too), then run **2. Prepare next month slots**; it creates the missing Sep-26 rows in the customer tabs. Blank-safe formulas and quarter sections are repaired in the same pass.
+
 ### v10: sales data import (`2026-10-23-v10`)
 
 Install build **`2026-10-23-v10`** (replace the complete contents of `apps-script/Code.gs` into the bound Google script, save, and reload Sheets). The new menu entry is **📊 TPO → 1. Enter monthly data → Import sales data…**.

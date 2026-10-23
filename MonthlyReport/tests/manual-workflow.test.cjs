@@ -442,6 +442,47 @@ test('repair planning is idempotent and blocks duplicate empty slots',()=>{
   const sh=rt.sheets.get('MonthlyFinancials');sh.getRange(sh.getLastRow()+1,1).setValue('Mar-27');
   assert.throws(()=>rt.ctx.repairPlan_(rt.ctx.readSources_(),a,next),/duplicate slot/);
 });
+
+test('aligned input tabs roll together and blank future rows never advance a tab',()=>{
+  const rt=runtime(); // fixture: all four input tabs carry Feb-27 data; MonthlyFinancials also holds an empty Mar-27 row
+  const sources=rt.ctx.readSources_(),a=rt.ctx.TPOCore.analyze(sources);
+  assert.deepEqual(Array.from(rt.ctx.nextScaffoldMonths_(sources,a),m=>m.display),['Mar-27']);
+});
+
+test('prepare next month slots aligns lagging customer tabs instead of rolling forward',()=>{
+  // Sales tabs lag one month behind imported financials: exactly the misalignment the user hit.
+  const data=fixture();
+  data.CustomerRevenueMonthly=data.CustomerRevenueMonthly.filter(r=>r[1]!=='Feb-27');
+  data.CustomerCount=data.CustomerCount.filter(r=>r[0]!=='Feb-27');
+  const rt=runtime(data),sources=rt.ctx.readSources_(),a=rt.ctx.TPOCore.analyze(sources);
+  const months=rt.ctx.nextScaffoldMonths_(sources,a);
+  assert.deepEqual(Array.from(months,m=>m.display),['Feb-27']);
+  const plan=rt.ctx.repairPlan_(sources,a,months);
+  const newSlot=p=>p.reason==='New input slot; raw amounts left blank';
+  assert.ok(!plan.some(p=>newSlot(p)&&['MonthlyFinancials','1. Working Capital'].includes(p.sheet)),'leaders must not receive rows');
+  assert.equal(plan.filter(p=>newSlot(p)&&p.sheet==='CustomerCount'&&p.value==='Feb-27').length,1);
+  assert.equal(plan.filter(p=>newSlot(p)&&p.sheet==='CustomerRevenueMonthly'&&p.value==='Feb-27').length,2);
+  assert.ok(!plan.some(p=>newSlot(p)&&p.value==='Mar-27'),'no month beyond the furthest actual may be created');
+});
+
+test('prepare next month slots run creates only catch-up rows and reports them',()=>{
+  const data=fixture();
+  data.CustomerRevenueMonthly=data.CustomerRevenueMonthly.filter(r=>r[1]!=='Feb-27');
+  data.CustomerCount=data.CustomerCount.filter(r=>r[0]!=='Feb-27');
+  const rt=runtime(data);
+  const summary=rt.ctx.repairAndScaffold_(true);
+  assert.match(summary,/Prepared new input slots: /);
+  assert.match(summary,/CustomerRevenueMonthly Feb-27/);
+  assert.match(summary,/CustomerCount Feb-27/);
+  const crm=rt.sheets.get('CustomerRevenueMonthly').getDataRange().getValues();
+  assert.equal(crm.filter(r=>r[1]==='Feb-27').length,2);
+  assert.ok(!crm.some(r=>r[1]==='Mar-27'));
+  const cc=rt.sheets.get('CustomerCount').getDataRange().getValues();
+  assert.equal(cc.filter(r=>r[0]==='Feb-27').length,1);
+  assert.ok(!cc.some(r=>r[0]==='Mar-27'));
+  const backup=rt.sheets.get('Repair Backup').getDataRange().getValues();
+  assert.ok(backup.some(r=>r.some(c=>String(c).includes('Prepare Feb-27 slots'))));
+});
 test('inventory input removal preserves manual formulas rather than freezing their cached values',()=>{
   const data=fixture(),cached=data.MonthlyFinancials[1][1],formula='=MonthlyFinancials!B2';
   data['Dashboard Inputs']=[['Quarter','Metric','Value'],['Q1 2027','Inventory Turns',4.2],['Q1 2027','Manual target',cached]];

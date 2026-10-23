@@ -8,7 +8,7 @@ const TPO = Object.freeze({
   input: 'LLM-Input', output: 'LLM Output', commentary: 'Commentary',
   startRow: 8, chunkSize: 30000, maxPrompt: 1500000, maxSourceCells: 200000,
   stateKey: 'TPO_MANUAL_V1_', version: 'tpo-commentary-v1',
-  build: '2026-10-23-v10', timezone: 'Asia/Bangkok',
+  build: '2026-10-23-v11', timezone: 'Asia/Bangkok',
   sources: ['Assumptions', 'MonthlyFinancials', 'CustomerRevenueMonthly',
     'CustomerRevenueQuarterly', 'CustomerCount', 'Quarterly Financials',
     '1. Working Capital', '2. Customer Economics', '3. Strategic Dashboard',
@@ -19,11 +19,11 @@ const TPO = Object.freeze({
 function onOpen() {
   const ui = SpreadsheetApp.getUi();
   const input = ui.createMenu('1. Enter monthly data')
-    .addItem('Input checklist…', 'menuMonthlyInput')
-    .addItem('Import accounting actuals…', 'menuImportMonthlyActuals')
-    .addItem('Import sales data…', 'menuImportSalesActuals')
-    .addItem('Prepare next month slots', 'menuPrepareNextMonthSlots')
-    .addItem('Add customer…', 'menuAddCustomer');
+    .addItem('1. Input checklist…', 'menuMonthlyInput')
+    .addItem('2. Prepare next month slots', 'menuPrepareNextMonthSlots')
+    .addItem('3. Import accounting actuals…', 'menuImportMonthlyActuals')
+    .addItem('4. Import sales data…', 'menuImportSalesActuals')
+    .addItem('5. Add customer…', 'menuAddCustomer');
   const tools = ui.createMenu('Tools & settings')
     .addItem('Report settings…', 'menuReportSettings')
     .addItem('Copy prepared AI prompt…', 'menuCopyLLMInput')
@@ -61,9 +61,9 @@ function menuMonthlyInput() {
       link('1. Working Capital', 'Cash, accounts receivable, inventory, accounts payable') +
       link('Dashboard Inputs', 'Column C actual values; column D examples are ignored') +
       '</ul>' +
-      '<p>Leave unknown cells blank; enter 0 only for a genuine zero. To start a new month, use TPO → 1. Enter monthly data → Prepare next month slots. Corrections to an existing month do not roll forward automatically.</p>' +
-      '<p><b>Import accounting actuals…</b> in this submenu fills the MonthlyFinancials and 1. Working Capital inputs from a JSON accounting pack; customer, operational and assumption data remain separate manual inputs.</p>' +
-      '<p><b>Import sales data…</b> fills CustomerRevenueMonthly and Customer Count from a JSON sales pack; the customers must already exist in Assumptions, and financial, working-capital, assumption and operational inputs stay separate.</p>' +
+      '<p>Leave unknown cells blank; enter 0 only for a genuine zero. To start a new month, use 2. Prepare next month slots. It first aligns any lagging input tab (for example customer tabs behind imported financials) to the furthest actual month; when every input tab is already level it opens the following month. Corrections to an existing month do not roll forward automatically.</p>' +
+      '<p><b>3. Import accounting actuals…</b> in this submenu fills the MonthlyFinancials and 1. Working Capital inputs from a JSON accounting pack; customer, operational and assumption data remain separate manual inputs.</p>' +
+      '<p><b>4. Import sales data…</b> fills CustomerRevenueMonthly and Customer Count from a JSON sales pack; the customers must already exist in Assumptions, and financial, working-capital, assumption and operational inputs stay separate.</p>' +
       '<p>Next steps: TPO → 2. Check &amp; calculate, then 3. Prepare AI prompt + copy…, 4. Paste AI response &amp; update Commentary…, and 5. Review Commentary.</p>';
     dialog_('TPO · Monthly input checklist', body, '', 520);
   });
