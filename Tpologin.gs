@@ -402,7 +402,7 @@ function createMeetingEvent(params) {
       if (!inPerson) {
         resource.conferenceData = {
           createRequest: {
-            conferenceSolutionKey: { type: 'eventHangout' },
+            conferenceSolutionKey: { type: 'hangoutsMeet' }, // 'eventHangout' is the legacy type and is rejected
             requestId: Utilities.getUuid()
           }
         };
@@ -427,6 +427,8 @@ function createMeetingEvent(params) {
       });
     }
 
+    logToSheet('Calendar event created: ' + Utilities.formatDate(start, TIMEZONE, 'EEE d MMM yyyy HH:mm') +
+      ' ICT — ' + title + ' [' + platform + ']' + (meetLink ? ' | Meet: ' + meetLink : ''));
     return {
       when: Utilities.formatDate(start, TIMEZONE, 'EEE d MMM yyyy HH:mm') + ' ICT',
       title: title,
@@ -437,6 +439,7 @@ function createMeetingEvent(params) {
     };
   } catch (error) {
     Logger.log('createMeetingEvent failed: ' + error + ' Stack: ' + error.stack);
+    logToSheet('createMeetingEvent FAILED: ' + error);
     return { error: String(error).slice(0, 200) };
   }
 }
