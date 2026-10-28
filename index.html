@@ -274,8 +274,7 @@
       top: 0;
       left: 100%;
     }
-    /* Top-bar Sign In / Logout dropdown */
-    #topbar .user-info .dropdown { position: relative; }
+    /* Top-bar Sign In / Logout link */
     #topbar #loginLogoutLink {
       color: #c7dfd4;
       font-size: 12.5px;
@@ -284,43 +283,6 @@
       align-items: center;
     }
     #topbar #loginLogoutLink:hover { color: #ffffff; }
-    #topbar #loginLogoutItem ul {
-      display: block;
-      position: absolute;
-      right: 0;
-      top: calc(100% + 10px);
-      margin: 0;
-      padding: 8px 0;
-      z-index: 9999;
-      opacity: 0;
-      visibility: hidden;
-      background: #ffffff;
-      border: 1px solid var(--rule-color);
-      box-shadow: 0 12px 28px rgba(18, 34, 31, 0.16);
-      border-radius: 6px;
-      min-width: 200px;
-      list-style: none;
-      transition: 0.2s;
-    }
-    #topbar #loginLogoutItem:hover > ul,
-    #topbar #loginLogoutItem:focus-within > ul {
-      opacity: 1;
-      top: 100%;
-      visibility: visible;
-    }
-    #topbar #loginLogoutItem ul li a {
-      padding: 8px 16px;
-      font-size: 13px;
-      color: var(--ink-body);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    #topbar #loginLogoutItem ul li a:hover { background: var(--bg-paper); color: var(--forest); }
-    /* Hide the options menu once authenticated (the link becomes Logout) */
-    #loginLogoutItem.authenticated > ul {
-      display: none !important;
-    }
 
     .mobile-nav-toggle {
       color: var(--ink-dark);
@@ -982,15 +944,8 @@
         </span>
       </div>
       <div class="user-info d-flex align-items-center">
-        <span id="loginStatus"></span>
-        <span class="dropdown" id="loginLogoutItem">
-          <a id="loginLogoutLink" href="tpologin.html">Sign In <i class="bi bi-chevron-down ms-1" style="font-size: 10px;"></i></a>
-          <ul id="loginOptionsMenu">
-            <li><a href="tpologin.html" id="employeeLoginLink">Employee Login</a></li>
-            <li><a href="CRMv4.html">CRM Login</a></li>
-            <li><a href="customerlogin.html">Customer Login</a></li>
-          </ul>
-        </span>
+        <span id="loginStatus" class="me-2"></span>
+        <a id="loginLogoutLink" href="tpologin.html">Sign In</a>
       </div>
     </div>
   </section>
@@ -1036,7 +991,7 @@
               <li class="dropdown menu-customer-portal">
                 <a href="#"><span>Customer Portal</span> <i class="bi bi-chevron-right"></i></a>
                 <ul>
-                  <li><a href="daily-wellness-data.html">Daily Wellness</a></li>
+                  <li><a href="daily-wellness-data.html">Fuzzies Data Dashboard</a></li>
                   <li><a href="performance-line-data.html">Tyson Dashboard</a></li>
                 </ul>
               </li>
@@ -2339,7 +2294,7 @@
 
       bodyElement.classList.remove('logged-in', 'sales-only-user');
       loginStatusSpan.textContent = '';
-      loginLogoutLink.innerHTML = 'Sign In <i class="bi bi-chevron-down ms-1" style="font-size: 10px;"></i>';
+      loginLogoutLink.innerHTML = 'Sign In';
       loginLogoutLink.href = 'tpologin.html';
       loginLogoutLink.removeAttribute('data-bs-toggle');
       loginLogoutLink.removeAttribute('data-bs-target');
@@ -2352,19 +2307,6 @@
     document.addEventListener('DOMContentLoaded', function() {
       initHeroClouds();
       checkAuthorization();
-
-      // Route mobile devices to the mobile employee login page
-      function isMobileDevice() {
-        return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|Mobile/i.test(navigator.userAgent);
-      }
-      if (isMobileDevice()) {
-        const employeeLoginLink = document.getElementById('employeeLoginLink');
-        if (employeeLoginLink) employeeLoginLink.href = 'tpologin-m.html';
-        const loginToggle = document.getElementById('loginLogoutLink');
-        if (loginToggle && loginToggle.getAttribute('href') === 'tpologin.html') {
-          loginToggle.href = 'tpologin-m.html';
-        }
-      }
 
       let resizeTimer;
       window.addEventListener('resize', function() {

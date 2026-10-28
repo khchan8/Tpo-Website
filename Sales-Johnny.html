@@ -335,7 +335,7 @@
       return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
     }
     // Set login page based on device
-    const loginPage = isMobileDevice() ? 'tpologin-m.html' : 'tpologin.html';
+    const loginPage = 'tpologin.html'; // Single consolidated login (responsive)
     const requiredToken = 'tpoEmployeeToken'; // Specific token needed for this page
 
     // --- Helper: Redirect to Login ---

@@ -388,7 +388,7 @@
               <li class="menu-crm"><a href="CRMv4.html">CRM</a></li>
               <li class="dropdown menu-customer-portal"><a href="#"><span>Customer Portal</span> <i class="bi bi-chevron-right"></i></a>
                  <ul>
-                   <li><a href="daily-wellness-data.html">Daily Wellness</a></li>
+                   <li><a href="daily-wellness-data.html">Fuzzies Data Dashboard</a></li>
                    <li><a href="performance-line-data.html">Tyson Dashboard</a></li>
                  </ul>
               </li>
@@ -850,18 +850,18 @@
       </div>
     </section><!-- End Herbal & Traditional Line Data Section -->
 
-    <!-- ======= Daily Wellness Line Data Section ======= -->
+    <!-- ======= Fuzzies Data Section ======= -->
     <section id="white-label-data-2" class="dashboard-section">
       <div class="container" data-aos="fade-up">
         <div class="section-title">
-          <span>Daily Wellness Line Data</span>
-          <h2>Daily Wellness Line Data</h2>
-          <p>Analyze Daily Wellness line performance and trends</p>
+          <span>Fuzzies Data</span>
+          <h2>Fuzzies Data</h2>
+          <p>Analyze Fuzzies product performance and trends</p>
         </div>
 
         <div class="submenu-container">
           <ul class="submenu-nav" id="fuzzies-submenu">
-            <li class="active" data-target="fuzzies-client-performance">Daily Wellness Performance</li>
+            <li class="active" data-target="fuzzies-client-performance">Fuzzies Performance</li>
             <li data-target="fuzzies-product-popularity">Product Popularity</li>
             <li data-target="fuzzies-client-growth">Client Growth</li>
             <li data-target="fuzzies-samples-unit">Samples Unit</li>
@@ -870,7 +870,7 @@
           <!-- Client Performance -->
           <div class="submenu-content active" id="fuzzies-client-performance">
             <div class="dashboard-container">
-              <h3 class="dashboard-title">Daily Wellness Performance</h3>
+              <h3 class="dashboard-title">Fuzzies Performance</h3>
               <div class="iframe-container">
                 <div id="fuzzies-client-performance-loader" class="loader">
                   <div class="spinner-border text-danger" role="status">
@@ -928,7 +928,7 @@
           </div>
         </div>
       </div>
-    </section><!-- End Daily Wellness Line Data Section -->
+    </section><!-- End Fuzzies Data Section -->
 
     <!-- ======= Tyson Data Section ======= -->
     <section id="white-label-data-3" class="dashboard-section">
@@ -1127,7 +1127,7 @@
       return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
     }
     // Set login page based on device
-    const loginPage = isMobileDevice() ? 'tpologin-m.html' : 'tpologin.html';
+    const loginPage = 'tpologin.html'; // Single consolidated login (responsive)
     // const requiredToken = 'tpoEmployeeToken'; // No specific token needed for performance.html
 
     // --- Helper: Redirect to Login ---

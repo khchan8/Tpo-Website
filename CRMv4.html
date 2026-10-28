@@ -396,7 +396,7 @@
                   <li><a href="CRMv4.html">CRM</a></li>
                   <li class="dropdown menu-customer-portal"><a href="#"><span>Customer Portal</span> <i class="bi bi-chevron-right"></i></a>
                      <ul>
-                       <li><a href="daily-wellness-data.html">Daily Wellness</a></li>
+                       <li><a href="daily-wellness-data.html">Fuzzies Data Dashboard</a></li>
                        <li><a href="performance-line-data.html">Tyson Dashboard</a></li>
                      </ul>
                   </li>
@@ -766,7 +766,7 @@
           return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
         }
         // Set login page based on device
-        const loginPage = isMobileDevice() ? 'tpologin-m.html' : 'tpologin.html';
+        const loginPage = 'tpologin.html'; // Single consolidated login (responsive)
         const requiredToken = 'tpoCRMToken'; // Specific token needed for this page
 
         // --- Messaging Functions (Keep original CRM functions) ---
