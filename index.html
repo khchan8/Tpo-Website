@@ -108,7 +108,9 @@
     }
 
     #topbar .user-info {
-      display: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
 
     #topbar .contact-info {
@@ -272,7 +274,50 @@
       top: 0;
       left: 100%;
     }
-    /* Hide the login options menu once authenticated (link becomes Logout) */
+    /* Top-bar Sign In / Logout dropdown */
+    #topbar .user-info .dropdown { position: relative; }
+    #topbar #loginLogoutLink {
+      color: #c7dfd4;
+      font-size: 12.5px;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+    }
+    #topbar #loginLogoutLink:hover { color: #ffffff; }
+    #topbar #loginLogoutItem ul {
+      display: block;
+      position: absolute;
+      right: 0;
+      top: calc(100% + 10px);
+      margin: 0;
+      padding: 8px 0;
+      z-index: 9999;
+      opacity: 0;
+      visibility: hidden;
+      background: #ffffff;
+      border: 1px solid var(--rule-color);
+      box-shadow: 0 12px 28px rgba(18, 34, 31, 0.16);
+      border-radius: 6px;
+      min-width: 200px;
+      list-style: none;
+      transition: 0.2s;
+    }
+    #topbar #loginLogoutItem:hover > ul,
+    #topbar #loginLogoutItem:focus-within > ul {
+      opacity: 1;
+      top: 100%;
+      visibility: visible;
+    }
+    #topbar #loginLogoutItem ul li a {
+      padding: 8px 16px;
+      font-size: 13px;
+      color: var(--ink-body);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    #topbar #loginLogoutItem ul li a:hover { background: var(--bg-paper); color: var(--forest); }
+    /* Hide the options menu once authenticated (the link becomes Logout) */
     #loginLogoutItem.authenticated > ul {
       display: none !important;
     }
@@ -938,6 +983,14 @@
       </div>
       <div class="user-info d-flex align-items-center">
         <span id="loginStatus"></span>
+        <span class="dropdown" id="loginLogoutItem">
+          <a id="loginLogoutLink" href="tpologin.html">Sign In <i class="bi bi-chevron-down ms-1" style="font-size: 10px;"></i></a>
+          <ul id="loginOptionsMenu">
+            <li><a href="tpologin.html" id="employeeLoginLink">Employee Login</a></li>
+            <li><a href="CRMv4.html">CRM Login</a></li>
+            <li><a href="customerlogin.html">Customer Login</a></li>
+          </ul>
+        </span>
       </div>
     </div>
   </section>
@@ -990,15 +1043,7 @@
             </ul>
           </li>
 
-          <!-- Login Options Dropdown (Employee / CRM / Customer) -->
-          <li id="loginLogoutItem" class="dropdown">
-            <a id="loginLogoutLink" class="nav-link" href="tpologin.html"><span>Login</span> <i class="bi bi-chevron-down ms-1"></i></a>
-            <ul id="loginOptionsMenu">
-              <li><a href="tpologin.html" id="employeeLoginLink">Employee Login</a></li>
-              <li><a href="CRMv4.html">CRM Login</a></li>
-              <li><a href="customerlogin.html">Customer Login</a></li>
-            </ul>
-          </li>
+          <!-- (Login/Sign-In now lives in the top bar) -->
 
           <li>
             <a class="nav-link btn-nav-cta scrollto" href="#quote-booking">Request Quote / Book Call</a>
@@ -1139,7 +1184,7 @@
             <span class="mono-label">Manufacturing Capabilities</span>
             <h2>OEM Supplement Gummy &amp; Nutraceutical Lines</h2>
           </div>
-          <p>Available as white-label stock formulations (3,000-unit MOQ) or custom R&amp;D builds tailored to your brand's target active profile.</p>
+          <p>Thai FDA-approved gummy formulations &mdash; OEM customers launch faster by leveraging our existing product approvals. White-label stock formulas (3,000-unit MOQ) or custom R&amp;D builds.</p>
         </div>
 
         <div class="row g-4">
@@ -1159,12 +1204,12 @@
           <div class="col-lg-4 col-md-6">
             <div class="capability-card">
               <div>
-                <span class="cap-code">02 / MUSCLE &amp; RECOVERY</span>
-                <h4>Protein &amp; Amino Gummies</h4>
-                <p>Hydrolyzed collagen peptides, BCAA 2:1:1, and essential amino acid gummies engineered with clean citrus and tropical fruit profiles.</p>
+                <span class="cap-code">02 / GUT HEALTH</span>
+                <h4>Apple Cider Vinegar Gummies</h4>
+                <p>Gut-health gummies built on Apple Cider Vinegar (&ldquo;the mother&rdquo;) with ginger and digestive botanicals &mdash; Thai FDA-approved base your brand can white-label today.</p>
               </div>
-              <button type="button" class="btn btn-sm btn-outline-dark rounded-1 align-self-start select-quote-category" data-category="Protein Gummies">
-                Quote Protein Gummies
+              <button type="button" class="btn btn-sm btn-outline-dark rounded-1 align-self-start select-quote-category" data-category="Custom Gummy Formulation">
+                Quote Gut Health Gummies
               </button>
             </div>
           </div>
@@ -1172,7 +1217,20 @@
           <div class="col-lg-4 col-md-6">
             <div class="capability-card">
               <div>
-                <span class="cap-code">03 / NIGHTTIME REST</span>
+                <span class="cap-code">03 / RECOVERY</span>
+                <h4>Recovery Gummies</h4>
+                <p>Post-training recovery gummies combining electrolytes, Tart Cherry, and Magnesium Glycinate to rehydrate, ease soreness, and support overnight muscle repair.</p>
+              </div>
+              <button type="button" class="btn btn-sm btn-outline-dark rounded-1 align-self-start select-quote-category" data-category="Custom Gummy Formulation">
+                Quote Recovery Gummies
+              </button>
+            </div>
+          </div>
+
+          <div class="col-lg-4 col-md-6">
+            <div class="capability-card">
+              <div>
+                <span class="cap-code">04 / NIGHTTIME REST</span>
                 <h4>Sleep Support Gummies</h4>
                 <p>Melatonin-free or precision melatonin formulas pairing L-Theanine, Magnesium Glycinate, Chamomile, Tart Cherry, and Reishi.</p>
               </div>
@@ -1185,9 +1243,9 @@
           <div class="col-lg-4 col-md-6">
             <div class="capability-card">
               <div>
-                <span class="cap-code">04 / MUSHROOM GUMMIES</span>
+                <span class="cap-code">05 / MUSHROOM LINE</span>
                 <h4>Functional Mushroom Gummies</h4>
-                <p>Dual-extracted Lion&rsquo;s Mane, Reishi, and Cordyceps gummies for focus, immunity, and natural energy &mdash; standardized fruiting-body extracts.</p>
+                <p>Standardized fruiting-body extracts in three targeted formulas &mdash; <strong>Focus</strong> (Lion&rsquo;s Mane), <strong>Immunity &amp; Balance</strong> (Reishi), <strong>Energy</strong> (Cordyceps++) &mdash; plus the <strong>Master Blend</strong> all-in-one 3-in-1 formula combining all three mushrooms in a single gummy.</p>
               </div>
               <button type="button" class="btn btn-sm btn-outline-dark rounded-1 align-self-start select-quote-category" data-category="Custom Gummy Formulation">
                 Quote Mushroom Gummies
@@ -1198,7 +1256,7 @@
           <div class="col-lg-4 col-md-6">
             <div class="capability-card">
               <div>
-                <span class="cap-code">05 / BESPOKE R&amp;D</span>
+                <span class="cap-code">06 / BESPOKE R&amp;D</span>
                 <h4>Custom Supplement Formulations</h4>
                 <p>Custom active development for Nootropics (Lion's Mane), Electrolytes, Immunity, Women's/Men's Vitality, capsules, powders, and liquid shots.</p>
               </div>
@@ -1211,9 +1269,9 @@
           <div class="col-lg-4 col-md-6">
             <div class="capability-card">
               <div>
-                <span class="cap-code">06 / CO-PACKING &amp; REGULATORY</span>
+                <span class="cap-code">07 / CO-PACKING &amp; REGULATORY</span>
                 <h4>Packaging &amp; Thai FDA Registration</h4>
-                <p>Printed mylar pouches, PET/HDPE bottles, amber glass jars, induction sealing, label design review, and Thai FDA filing.</p>
+                <p>Launch on our existing Thai FDA gummy approvals, or file your own: printed pouches, bottles and jars, label compliance, and full registration support for OEM customers.</p>
               </div>
               <button type="button" class="btn btn-sm btn-outline-dark rounded-1 align-self-start select-quote-category" data-category="Full Turnkey Packaging &amp; FDA">
                 Request Packaging Specs
@@ -2281,7 +2339,7 @@
 
       bodyElement.classList.remove('logged-in', 'sales-only-user');
       loginStatusSpan.textContent = '';
-      loginLogoutLink.innerHTML = 'Login <i class="bi bi-chevron-down ms-1"></i>';
+      loginLogoutLink.innerHTML = 'Sign In <i class="bi bi-chevron-down ms-1" style="font-size: 10px;"></i>';
       loginLogoutLink.href = 'tpologin.html';
       loginLogoutLink.removeAttribute('data-bs-toggle');
       loginLogoutLink.removeAttribute('data-bs-target');
