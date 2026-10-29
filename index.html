@@ -547,6 +547,7 @@
       border: 1px solid var(--rule-color);
       border-radius: 6px;
       padding: 28px;
+      overflow: hidden;
       height: 100%;
       display: flex;
       flex-direction: column;
@@ -556,6 +557,86 @@
 
     .capability-card:hover {
       border-color: var(--forest);
+    }
+
+    .capability-media {
+      position: relative;
+      margin: -28px -28px 24px;
+      background: #e8e8df;
+      border-bottom: 1px solid var(--rule-color);
+    }
+
+    .capability-media img {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 8 / 5;
+      object-fit: cover;
+    }
+
+    .capability-media--ingredient img {
+      object-fit: contain;
+      background: #fff;
+    }
+
+    .capability-media--recovery img {
+      object-position: 75% center;
+    }
+
+    .capability-media figcaption {
+      position: absolute;
+      left: 16px;
+      bottom: 14px;
+      padding: 6px 10px;
+      border-radius: 3px;
+      background: var(--bg-paper);
+      color: var(--forest);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.04em;
+    }
+
+    .capability-image-credits {
+      margin-top: 24px;
+      color: var(--ink-muted);
+      font-size: 0.78rem;
+    }
+
+    .capability-image-credits summary {
+      width: fit-content;
+      cursor: pointer;
+      color: var(--forest);
+    }
+
+    .capability-image-credits a {
+      color: inherit;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .capability-card--wide {
+      padding: 0;
+    }
+
+    .capability-card--wide .capability-media {
+      margin: 0;
+    }
+
+    .capability-wide-body {
+      padding: 28px;
+    }
+
+    @media (min-width: 768px) {
+      .capability-card--wide {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        align-items: center;
+      }
+
+      .capability-card--wide .capability-media {
+        border-bottom: 0;
+        border-right: 1px solid var(--rule-color);
+      }
     }
 
     .capability-card .cap-code {
@@ -1146,6 +1227,10 @@
           <div class="col-lg-4 col-md-6">
             <div class="capability-card">
               <div>
+                <figure class="capability-media">
+                  <img src="assets/img/services/oem-gummies-hero.jpg" alt="Sugar-coated cube gummies on a cooling rack" width="960" height="600" loading="lazy" decoding="async">
+                  <figcaption>Gummy texture reference</figcaption>
+                </figure>
                 <span class="cap-code">01 / SPORTS NUTRITION</span>
                 <h4>Creatine Gummies</h4>
                 <p>Micronized Creatine Monohydrate gummies formulated at 3g to 5g per serving with smooth pectin bite and zero chalky sediment.</p>
@@ -1159,6 +1244,10 @@
           <div class="col-lg-4 col-md-6">
             <div class="capability-card">
               <div>
+                <figure class="capability-media capability-media--ingredient">
+                  <img src="assets/img/services/acv-apples.webp" alt="Fresh red apple, the base ingredient for apple cider vinegar" width="960" height="600" loading="lazy" decoding="async">
+                  <figcaption>Ingredient / Apple</figcaption>
+                </figure>
                 <span class="cap-code">02 / GUT HEALTH</span>
                 <h4>Apple Cider Vinegar Gummies</h4>
                 <p>Gut-health gummies built on Apple Cider Vinegar (&ldquo;the mother&rdquo;) with ginger and digestive botanicals &mdash; Thai FDA-approved base your brand can white-label today.</p>
@@ -1172,6 +1261,10 @@
           <div class="col-lg-4 col-md-6">
             <div class="capability-card">
               <div>
+                <figure class="capability-media capability-media--recovery">
+                  <img src="assets/img/services/oem-gummies-hero.jpg" alt="Close-up of the sugar-coated gummy format available for recovery formulations" width="960" height="600" loading="lazy" decoding="async">
+                  <figcaption>Pectin gummy reference</figcaption>
+                </figure>
                 <span class="cap-code">03 / RECOVERY</span>
                 <h4>Recovery Gummies</h4>
                 <p>Post-training recovery gummies combining electrolytes, Tart Cherry, and Magnesium Glycinate to rehydrate, ease soreness, and support overnight muscle repair.</p>
@@ -1185,6 +1278,10 @@
           <div class="col-lg-4 col-md-6">
             <div class="capability-card">
               <div>
+                <figure class="capability-media">
+                  <img src="assets/img/services/sleep-chamomile.webp" alt="White chamomile flowers with yellow centers in green foliage" width="960" height="600" loading="lazy" decoding="async">
+                  <figcaption>Botanical / Chamomile</figcaption>
+                </figure>
                 <span class="cap-code">04 / NIGHTTIME REST</span>
                 <h4>Sleep Support Gummies</h4>
                 <p>Melatonin-free or precision melatonin formulas pairing L-Theanine, Magnesium Glycinate, Chamomile, Tart Cherry, and Reishi.</p>
@@ -1198,6 +1295,10 @@
           <div class="col-lg-4 col-md-6">
             <div class="capability-card">
               <div>
+                <figure class="capability-media">
+                  <img src="assets/img/services/reishi-mushrooms.webp" alt="Reishi mushroom growing among leaves on the forest floor" width="960" height="600" loading="lazy" decoding="async">
+                  <figcaption>Functional fungi / Reishi</figcaption>
+                </figure>
                 <span class="cap-code">05 / MUSHROOM LINE</span>
                 <h4>Functional Mushroom Gummies</h4>
                 <p>Standardized fruiting-body extracts in three targeted formulas &mdash; <strong>Focus</strong> (Lion&rsquo;s Mane), <strong>Immunity &amp; Balance</strong> (Reishi), <strong>Energy</strong> (Cordyceps++) &mdash; plus the <strong>Master Blend</strong> all-in-one 3-in-1 formula combining all three mushrooms in a single gummy.</p>
@@ -1211,6 +1312,10 @@
           <div class="col-lg-4 col-md-6">
             <div class="capability-card">
               <div>
+                <figure class="capability-media">
+                  <img src="assets/img/services/gummy-flavors-varieties.jpg" alt="Assorted gummy colors and shapes arranged in a formulation sample tray" width="960" height="600" loading="lazy" decoding="async">
+                  <figcaption>Format &amp; flavor development</figcaption>
+                </figure>
                 <span class="cap-code">06 / BESPOKE R&amp;D</span>
                 <h4>Custom Supplement Formulations</h4>
                 <p>Custom active development for Nootropics (Lion's Mane), Electrolytes, Immunity, Women's/Men's Vitality, capsules, powders, and liquid shots.</p>
@@ -1221,19 +1326,35 @@
             </div>
           </div>
 
-          <div class="col-lg-4 col-md-6">
-            <div class="capability-card">
-              <div>
+          <div class="col-12">
+            <div class="capability-card capability-card--wide">
+              <figure class="capability-media">
+                <img src="assets/img/services/packaging-formats.svg" alt="Illustration of an amber supplement bottle, stand-up pouch, and single-serve sachet" width="960" height="600" loading="lazy" decoding="async">
+                <figcaption>Packaging format illustration</figcaption>
+              </figure>
+              <div class="capability-wide-body">
                 <span class="cap-code">07 / CO-PACKING &amp; REGULATORY</span>
                 <h4>Packaging &amp; Thai FDA Registration</h4>
                 <p>Launch on our existing Thai FDA gummy approvals, or file your own: printed pouches, bottles and jars, label compliance, and full registration support for OEM customers.</p>
+                <button type="button" class="btn btn-sm btn-outline-dark rounded-1 select-quote-category" data-category="Full Turnkey Packaging &amp; FDA">
+                  Request Packaging Specs
+                </button>
               </div>
-              <button type="button" class="btn btn-sm btn-outline-dark rounded-1 align-self-start select-quote-category" data-category="Full Turnkey Packaging &amp; FDA">
-                Request Packaging Specs
-              </button>
             </div>
           </div>
         </div>
+        <!-- Keep reference imagery separate from product/approval claims. New ingredient photos
+             are local WebP derivatives; original authors and licenses are linked below. -->
+        <details class="capability-image-credits">
+          <summary>Reference imagery &amp; photo credits</summary>
+          <p class="mt-2 mb-2">Ingredient and format references only; final gummy appearance and packaging are developed to your specification.</p>
+          <ul class="mb-0">
+            <li>Apple: <a href="https://commons.wikimedia.org/wiki/File:Red_Apple.jpg">Abhijit Tembhekar</a> &mdash; <a href="https://creativecommons.org/licenses/by/2.0/">CC BY 2.0</a>; resized and converted to WebP.</li>
+            <li>Chamomile: <a href="https://commons.wikimedia.org/wiki/File:Chamomile_(14561518539).jpg">YuJeen</a> &mdash; <a href="https://creativecommons.org/licenses/by/2.0/">CC BY 2.0</a>; cropped, resized, and converted to WebP.</li>
+            <li>Reishi: <a href="https://commons.wikimedia.org/wiki/File:Ganoderma_lucidum_87631147.jpg">Floris Vanderhaeghe</a> &mdash; <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>; cropped, resized, and converted to WebP.</li>
+            <li>Gummy imagery: existing TPO website assets. Packaging illustration: created for this website.</li>
+          </ul>
+        </details>
       </div>
     </section>
 

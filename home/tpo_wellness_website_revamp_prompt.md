@@ -179,3 +179,12 @@ Build a high-conversion, tabbed dual-action interactive module compatible with *
    * Use relative asset paths (`./assets/...` or `assets/...`) so the repository works whether deployed at a root custom domain (`tpo-wellness.com`) or a GitHub Pages project subpath (`username.github.io/tpo-wellness/`).
    * Include all custom CSS inside a well-organized `<style>` block (or modular CSS section) so the revamped design works immediately even before modifying external `assets/css/style.css`.
    * Output the complete, valid, un-truncated HTML file with zero placeholders (`// TODO` or `...`).
+
+## 6. Implementation Changelog
+
+### 2026-10-29 — Manufacturing capability card imagery
+
+* `index.html` now includes lazy-loaded, 8:5 image panels on all seven `#services` capability cards, with descriptive alt text and reference-image captions.
+* Existing gummy photos are reused for texture/format references. Apple, chamomile, and reishi photos are locally hosted WebP derivatives; source, author, license, and modification credits are available under “Reference imagery & photo credits” in the section.
+* `assets/img/services/packaging-formats.svg` is an original bottle/pouch/sachet illustration, not an approved-label or certification image. The packaging card spans the full row with a split layout from 768px upward and stacks below that width.
+* Existing quote-button categories and handlers are unchanged. The packaging category has no matching quote pill and retains the existing “Custom Gummy Formulation” fallback.

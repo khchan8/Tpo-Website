@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 600" width="960" height="600">
+  <defs>
+    <linearGradient id="paper" x2="1" y2="1"><stop stop-color="#efede6"/><stop offset="1" stop-color="#dddccf"/></linearGradient>
+    <linearGradient id="pouch" x2="1"><stop stop-color="#234a3b"/><stop offset=".5" stop-color="#3e6652"/><stop offset="1" stop-color="#183e30"/></linearGradient>
+    <linearGradient id="glass" x2="1"><stop stop-color="#753d20"/><stop offset=".3" stop-color="#b77b3d"/><stop offset="1" stop-color="#683619"/></linearGradient>
+    <linearGradient id="lid" x2="0" y2="1"><stop stop-color="#f8f6f0"/><stop offset="1" stop-color="#d5d2c8"/></linearGradient>
+  </defs>
+  <path fill="url(#paper)" d="M0 0h960v600H0z"/>
+  <circle cx="765" cy="105" r="220" fill="#e8e8dc"/>
+  <path d="M0 459h960" stroke="#cccdbf"/>
+  <ellipse cx="498" cy="484" rx="306" ry="23" fill="#263c2c" opacity=".12"/>
+  <path d="M440 111h241l-9 303 23 59q-134 33-278 0l24-59z" fill="url(#pouch)"/>
+  <path d="M450 130h220m-220 13h220M441 414l-13 54m244-54 13 54" fill="none" stroke="#93ae96" opacity=".45" stroke-width="3"/>
+  <rect x="463" y="206" width="191" height="176" rx="2" fill="#f6f4ef"/>
+  <path d="M489 235h44m-44 92h135m-135 14h111m-111 14h123" stroke="#b4b8a9" stroke-width="4"/>
+  <path d="M535 291c-28-3-38-23-34-42 24-1 38 15 34 42zm0 0c0-27 18-43 41-41 2 24-16 43-41 41z" fill="#54775e"/>
+  <rect x="247" y="245" width="167" height="229" rx="28" fill="url(#glass)"/>
+  <path d="M266 263v177" stroke="#efbd79" stroke-width="7" stroke-linecap="round" opacity=".25"/>
+  <rect x="251" y="217" width="159" height="47" rx="8" fill="url(#lid)"/>
+  <path d="M264 225v29m13-29v29m13-29v29m13-29v29m13-29v29m13-29v29m13-29v29m13-29v29m13-29v29m13-29v29m13-29v29" stroke="#c1beb3" stroke-width="2"/>
+  <rect x="247" y="309" width="167" height="117" fill="#f6f4ef"/>
+  <path d="M270 332h42m-42 67h118m-118-13h91" stroke="#b4b8a9" stroke-width="4"/>
+  <circle cx="331" cy="361" r="13" fill="#54775e"/>
+  <g transform="rotate(13 704 423)">
+    <rect x="685" y="333" width="55" height="166" rx="3" fill="#f6f4ef" stroke="#c4c5b7"/>
+    <path d="M691 343h43m-43 145h43" stroke="#b4b8a9" stroke-width="3"/>
+    <path d="M705 368v89" stroke="#54775e" stroke-width="5"/>
+  </g>
+</svg>
