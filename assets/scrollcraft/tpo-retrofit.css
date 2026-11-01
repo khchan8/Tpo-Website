@@ -1,0 +1,96 @@
+/* Page-local retrofit theme. The shared scrollcraft engine stays unmodified. */
+:root {
+  --sc-canvas: var(--bg-paper);
+  --sc-surface: #fff;
+  --sc-ink: var(--ink-dark);
+  --sc-ink-soft: var(--ink-muted);
+  --sc-accent: var(--forest);
+  --sc-accent-ink: #fff;
+  --sc-font-display: var(--font-serif);
+  --sc-font-text: var(--font-sans);
+  --sc-font-mono: var(--font-mono);
+}
+
+body { font-size: 1rem; letter-spacing: normal; overflow-x: clip; }
+html { scroll-padding-top: 104px; }
+section[id] { scroll-margin-top: 96px; }
+fieldset[data-tpo-script-form] { min-width: 0; padding: 0; margin: 0; border: 0; width: 100%; }
+
+/* Progressive enhancement: a missing script never deletes readable content. */
+html:not(.tpo-scroll-ready) [data-sc-in],
+html:not(.tpo-scroll-ready) [data-sc-stagger] > *,
+html:not(.tpo-scroll-ready) [data-sc-cue] {
+  opacity: 1;
+  transform: none;
+}
+html:not(.tpo-scroll-ready) [data-sc-reveal] { clip-path: none; }
+
+.tpo-trust-signals {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.4fr;
+  gap: 20px;
+  margin: 28px 0 32px;
+  padding-block: 24px;
+  border-block: 1px solid var(--rule-color);
+}
+.tpo-trust-signals > div { display: grid; align-content: start; gap: 5px; }
+.tpo-trust-signals i { color: var(--forest); font-size: 1.45rem; }
+.tpo-trust-signals strong { color: var(--forest); font-size: 0.95rem; }
+.tpo-trust-signals span { color: var(--ink-muted); font-size: 0.78rem; }
+
+#cta { position: relative; isolation: isolate; overflow: clip; }
+#cta > .container { position: relative; z-index: 1; }
+.tpo-cta-pattern {
+  position: absolute;
+  inset: -80px;
+  opacity: 0.18;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(115deg, transparent 0 42px, #9ab8aa 43px 44px, transparent 45px 88px);
+}
+.tpo-scroll-ready .tpo-cta-pattern { transform: translate3d(calc((var(--sc-p, 0) - 0.5) * -100px), 0, 0); }
+
+.tpo-wave-heading { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--rule-color); }
+.tpo-wave-heading h3 { margin-bottom: 8px; font-size: clamp(1.6rem, 3vw, 2.1rem); }
+.tpo-wave-heading p { margin-bottom: 0; color: var(--ink-muted); max-width: 62ch; }
+.tpo-wave-heading:first-child { margin-top: 0; }
+#portfolioGrid .portfolio-item { transition-delay: var(--tpo-wave-delay, 0ms); }
+#portfolioGrid .datasheet-card { transition: clip-path 620ms var(--sc-ease-out); }
+@media (min-width: 992px) and (prefers-reduced-motion: no-preference) {
+  .tpo-scroll-ready #portfolioGrid .portfolio-item:not(.sc-in) .datasheet-card { clip-path: inset(0 0 100% 0); }
+  #portfolioGrid .portfolio-item[data-tpo-wave="core"],
+  #portfolioGrid .portfolio-item[data-tpo-wave="botanical"] { width: 50%; }
+  #portfolioGrid .portfolio-item:last-child { width: 100%; }
+}
+
+.tpo-division-media { position: relative; overflow: clip; margin: -32px -32px 28px; background: var(--bg-stone); }
+.tpo-division-media img { width: 100%; height: 260px; object-fit: cover; scale: 1.18; }
+.tpo-division-media figcaption { position: relative; padding: 10px 20px; font-size: 0.75rem; background: var(--bg-paper); color: var(--ink-muted); }
+
+/* The conversion surface never participates in moving effects. */
+#quote-booking, #quote-booking .hub-container, #quote-booking form { transform: none; }
+#quote-booking { background: var(--bg-paper); }
+
+@media (max-width: 860px) {
+  html { scroll-padding-top: 84px; }
+  section[id] { scroll-margin-top: 80px; }
+  .tpo-trust-signals { gap: 16px; }
+  .tpo-trust-signals strong { font-size: 0.85rem; }
+  .tpo-division-media { margin-inline: -24px; }
+  .tpo-division-media img { height: 220px; }
+  #portfolioGrid .datasheet-card { clip-path: none; }
+}
+@media (max-width: 400px) {
+  .tpo-trust-signals { grid-template-columns: 1fr 1fr; }
+  .tpo-trust-signals > :last-child { grid-column: 1 / -1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto !important; }
+  [data-sc-in], [data-sc-stagger] > *, [data-sc-cue], .sc-split__i {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+    animation: none !important;
+  }
+  [data-sc-reveal], #portfolioGrid .datasheet-card { clip-path: none !important; }
+  .tpo-cta-pattern, .tpo-division-media img { transform: none !important; }
+}

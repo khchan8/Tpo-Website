@@ -4,6 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <link rel="icon" href="assets/img/TPOLogo-Only.png" type="image/png">
 
   <title>TPO Wellness Ltd. — Supplement Gummy OEM, Herbal Shop &amp; Traditional Clinic | Bangkok</title>
   <meta name="description" content="TPO Wellness Ltd. is a Thai FDA and GMP certified contract manufacturer in Bangkok specializing in pectin and gelatin supplement gummies (Creatine, Protein, Sleep, Relax, and custom formulas), alongside TPO Herbal Shop and our Thai Traditional Medicine Clinic.">
@@ -18,6 +19,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  <link href="assets/scrollcraft/scrollcraft.css" rel="stylesheet">
 
   <!-- jQuery Library -->
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
@@ -1006,9 +1008,19 @@
       color: #ffffff;
     }
   </style>
+  <link href="assets/scrollcraft/tpo-hero.css" rel="stylesheet">
+  <link href="assets/scrollcraft/tpo-batch.css" rel="stylesheet">
+  <link href="assets/scrollcraft/tpo-retrofit.css" rel="stylesheet">
 </head>
 
 <body id="top">
+  <noscript>
+    <style>
+      #formulationCatalog { display: block !important; }
+      #formulationCatalogToggle, #portfolio-flters { display: none !important; }
+    </style>
+    <div class="container py-3" role="note">Online forms require JavaScript. Email <a href="mailto:info@tpo-wellness.com">info@tpo-wellness.com</a> or call <a href="tel:+66947365518">+66 94 736 5518</a> to discuss your project.</div>
+  </noscript>
 
   <!-- ======= Top Bar (Preserved Structure & Auth Status) ======= -->
   <section id="topbar" class="d-flex align-items-center py-0">
@@ -1094,19 +1106,20 @@
   </header>
 
   <!-- ======= Hero Section with Vanta.js 3D Clouds Background ======= -->
-  <section id="hero">
+  <section id="hero" data-sc-act="parallax" data-sc-span="2.6">
+    <div id="heroClouds" data-sc-parallax="0.5" aria-hidden="true"></div>
+    <div class="tpo-hero-atmos" data-sc-parallax="0.22" aria-hidden="true"></div>
     <div class="container hero-content">
-      <div class="row">
+      <div class="row align-items-center">
         <div class="col-lg-8">
           <span class="hero-kicker">Bangkok Contract Manufacturing &bull; Thai FDA &amp; GMP Certified</span>
-          <h1>
-            White-Label Supplement Gummy Manufacturing in Thailand.
-          </h1>
+          <h1><span class="tpo-hl">White-Label Supplement Gummy</span>
+            <span class="tpo-hl">Manufacturing in Thailand.</span></h1>
           <h2>
             TPO Wellness formulates and manufactures commercial-scale <strong>Creatine, Protein, Sleep, and Relax Gummies</strong> in Bangkok. We also operate our retail <strong>TPO Herbal Shop</strong> and licensed <strong>Thai Traditional Clinic</strong>.
           </h2>
 
-          <div class="d-flex flex-wrap gap-3">
+          <div class="d-flex flex-wrap gap-3 hero-cta-row">
             <a href="#quote-booking" class="btn-primary-editorial" id="heroQuoteBtn">
               Request an OEM Quote <i class="bi bi-arrow-right"></i>
             </a>
@@ -1134,14 +1147,22 @@
             </div>
           </div>
         </div>
+        <div class="col-lg-4 tpo-hero-photo-col">
+          <figure class="tpo-hero-photo" data-sc-parallax="-0.3">
+            <div class="tpo-hero-photo-frame">
+              <img src="assets/img/services/oem-gummies-hero.jpg" width="720" height="480" alt="Sugar-coated gummy cubes on a cooling rack, a gummy texture reference" loading="eager" fetchpriority="high" decoding="async">
+            </div>
+          </figure>
+        </div>
       </div>
     </div>
+    <div class="tpo-hero-scrim" data-sc-parallax="-0.75" aria-hidden="true"></div>
   </section>
 
   <main id="main">
 
     <!-- ======= About / Facility Section ======= -->
-    <section id="about" class="about">
+    <section id="about" class="about" data-sc-act="flow">
       <div class="container">
         <div class="row g-4 align-items-stretch">
           <div class="col-lg-7">
@@ -1152,6 +1173,11 @@
                 <p class="text-muted">
                   Based in Bangkok, <strong>TPO Wellness Ltd.</strong> works with supplement brands, gym chains, and regional distributors to develop shelf-stable functional gummies and herbal formulations. Every batch is produced in-house under Thai FDA and Good Manufacturing Practice (GMP) standards.
                 </p>
+                <div class="tpo-trust-signals" data-sc-in data-sc-stagger="60" aria-label="Manufacturing and documentation standards">
+                  <div><i class="bi bi-patch-check" aria-hidden="true"></i><strong>Thai FDA</strong><span>Registration support</span></div>
+                  <div><i class="bi bi-shield-check" aria-hidden="true"></i><strong>GMP</strong><span>In-house production</span></div>
+                  <div><i class="bi bi-file-earmark-check" aria-hidden="true"></i><strong>Lab documentation</strong><span>CoA &amp; testing</span></div>
+                </div>
                 <ul class="about-list">
                   <li>
                     <i class="bi bi-check2"></i>
@@ -1214,6 +1240,110 @@
 
     <!-- ======= Services / OEM Supplement Gummy Capabilities ======= -->
     <section id="services" class="services">
+      <!-- Process illustration, not a live batch record or certification document.
+           Only this inner exhibit pins; the original capability cards stay in flow. -->
+      <div id="batchJourney" class="tpo-batch" data-sc-act="pin" data-sc-span="3.6">
+        <div class="tpo-batch-stage" data-sc-stage>
+          <div class="tpo-batch-frame">
+            <header class="tpo-batch-head">
+              <p class="tpo-batch-kicker">Illustrated process &middot; Bangkok</p>
+              <h2 class="tpo-batch-title">Follow a batch from ingredients to packaging.</h2>
+            </header>
+            <ol class="tpo-batch-ledger">
+              <li class="tpo-batch-step" data-batch-step="0">
+                <div class="tpo-batch-step-copy">
+                  <span class="tpo-batch-step-num" aria-hidden="true">01</span>
+                  <div class="tpo-batch-step-text">
+                    <h3 class="tpo-batch-step-name">Ingredients <i class="bi bi-check2 tpo-batch-step-done" aria-hidden="true"></i></h3>
+                    <p class="tpo-batch-step-desc">Actives, botanicals and the pectin base are checked against the agreed formula specification before compounding.</p>
+                  </div>
+                </div>
+                <figure class="tpo-batch-panel" data-batch-panel="0">
+                  <div class="tpo-batch-well">
+                    <div class="tpo-batch-tri">
+                      <span><img src="assets/img/services/acv-apples.webp" alt="Apple ingredient reference" width="960" height="600" loading="lazy" decoding="async"></span>
+                      <span><img src="assets/img/services/sleep-chamomile.webp" alt="Chamomile ingredient reference" width="960" height="600" loading="lazy" decoding="async"></span>
+                      <span><img src="assets/img/services/reishi-mushrooms.webp" alt="Reishi ingredient reference" width="960" height="600" loading="lazy" decoding="async"></span>
+                    </div>
+                  </div>
+                  <figcaption class="tpo-batch-panel-cap">Ingredient references: apple, chamomile, reishi</figcaption>
+                </figure>
+              </li>
+              <li class="tpo-batch-step" data-batch-step="1">
+                <div class="tpo-batch-step-copy">
+                  <span class="tpo-batch-step-num" aria-hidden="true">02</span>
+                  <div class="tpo-batch-step-text">
+                    <h3 class="tpo-batch-step-name">Formulation <i class="bi bi-check2 tpo-batch-step-done" aria-hidden="true"></i></h3>
+                    <p class="tpo-batch-step-desc">Lab-bench work compounds the dosage, tunes sweetness and masks bitterness. Physical samples ship from Bangkok for tasting.</p>
+                  </div>
+                </div>
+                <figure class="tpo-batch-panel" data-batch-panel="1">
+                  <div class="tpo-batch-well"><img src="assets/img/services/gummy-flavors-varieties.jpg" alt="Gummy colors and shapes in a formulation sample tray" width="960" height="600" loading="lazy" decoding="async"></div>
+                  <figcaption class="tpo-batch-panel-cap">Format reference: flavor and color development tray</figcaption>
+                </figure>
+              </li>
+              <li class="tpo-batch-step" data-batch-step="2">
+                <div class="tpo-batch-step-copy">
+                  <span class="tpo-batch-step-num" aria-hidden="true">03</span>
+                  <div class="tpo-batch-step-text">
+                    <h3 class="tpo-batch-step-name">Molding <i class="bi bi-check2 tpo-batch-step-done" aria-hidden="true"></i></h3>
+                    <p class="tpo-batch-step-desc">The approved batch deposits into molds and cures under controlled humidity for a firm, heat-stable tropical bite.</p>
+                  </div>
+                </div>
+                <figure class="tpo-batch-panel" data-batch-panel="2">
+                  <div class="tpo-batch-well"><img src="assets/img/services/oem-gummies-hero.jpg" alt="Sugar-coated gummy cubes on a cooling rack" width="960" height="600" loading="lazy" decoding="async"></div>
+                  <figcaption class="tpo-batch-panel-cap">Format reference: cube gummies on a cooling rack</figcaption>
+                </figure>
+              </li>
+              <li class="tpo-batch-step" data-batch-step="3">
+                <div class="tpo-batch-step-copy">
+                  <span class="tpo-batch-step-num" aria-hidden="true">04</span>
+                  <div class="tpo-batch-step-text">
+                    <h3 class="tpo-batch-step-name">Quality checks <i class="bi bi-check2 tpo-batch-step-done" aria-hidden="true"></i></h3>
+                    <p class="tpo-batch-step-desc">Certificate of Analysis, microbial and heavy-metal testing, with third-party lab verification before release.</p>
+                  </div>
+                </div>
+                <figure class="tpo-batch-panel" data-batch-panel="3">
+                  <div class="tpo-batch-well">
+                    <div class="tpo-batch-checklist">
+                      <p class="tpo-batch-checklist-head">Release checks (illustration)</p>
+                      <div class="tpo-batch-check" style="--tick-at:0.63;"><i class="bi bi-check2" aria-hidden="true"></i><span>Certificate of Analysis (CoA)</span></div>
+                      <div class="tpo-batch-check" style="--tick-at:0.675;"><i class="bi bi-check2" aria-hidden="true"></i><span>Microbial testing</span></div>
+                      <div class="tpo-batch-check" style="--tick-at:0.72;"><i class="bi bi-check2" aria-hidden="true"></i><span>Heavy-metal testing</span></div>
+                      <div class="tpo-batch-check" style="--tick-at:0.765;"><i class="bi bi-check2" aria-hidden="true"></i><span>Third-party lab verification</span></div>
+                    </div>
+                  </div>
+                  <figcaption class="tpo-batch-panel-cap">Process reference, not an individual batch record</figcaption>
+                </figure>
+              </li>
+              <li class="tpo-batch-step" data-batch-step="4">
+                <div class="tpo-batch-step-copy">
+                  <span class="tpo-batch-step-num" aria-hidden="true">05</span>
+                  <div class="tpo-batch-step-text">
+                    <h3 class="tpo-batch-step-name">Packaging <i class="bi bi-check2 tpo-batch-step-done" aria-hidden="true"></i></h3>
+                    <p class="tpo-batch-step-desc">Released batches fill your chosen format: printed pouches, bottles and jars, with label compliance support.</p>
+                  </div>
+                </div>
+                <figure class="tpo-batch-panel" data-batch-panel="4">
+                  <div class="tpo-batch-well"><img src="assets/img/services/packaging-formats.svg" alt="Illustration of a supplement bottle, stand-up pouch and sachet" width="960" height="600" loading="lazy" decoding="async"></div>
+                  <figcaption class="tpo-batch-panel-cap">Packaging format illustration: pouch, bottle, sachet</figcaption>
+                </figure>
+              </li>
+            </ol>
+            <div class="tpo-batch-trace" aria-hidden="true">
+              <div class="tpo-batch-trace-spine"><span class="tpo-batch-trace-fill"></span></div>
+              <ol class="tpo-batch-trace-cells">
+                <li class="tpo-batch-ck" style="--ck-a:0.04;--ck-b:0.16;"><span class="tpo-batch-ck-dot"><span class="tpo-batch-ck-fill"></span></span><span class="tpo-batch-ck-code">CK-01</span><span class="tpo-batch-ck-name">Ingredients</span></li>
+                <li class="tpo-batch-ck" style="--ck-a:0.24;--ck-b:0.36;"><span class="tpo-batch-ck-dot"><span class="tpo-batch-ck-fill"></span></span><span class="tpo-batch-ck-code">CK-02</span><span class="tpo-batch-ck-name">Formulation</span></li>
+                <li class="tpo-batch-ck" style="--ck-a:0.44;--ck-b:0.56;"><span class="tpo-batch-ck-dot"><span class="tpo-batch-ck-fill"></span></span><span class="tpo-batch-ck-code">CK-03</span><span class="tpo-batch-ck-name">Molding</span></li>
+                <li class="tpo-batch-ck" style="--ck-a:0.64;--ck-b:0.76;"><span class="tpo-batch-ck-dot"><span class="tpo-batch-ck-fill"></span></span><span class="tpo-batch-ck-code">CK-04</span><span class="tpo-batch-ck-name">Quality</span></li>
+                <li class="tpo-batch-ck" style="--ck-a:0.84;--ck-b:0.96;"><span class="tpo-batch-ck-dot"><span class="tpo-batch-ck-fill"></span></span><span class="tpo-batch-ck-code">CK-05</span><span class="tpo-batch-ck-name">Packaging</span></li>
+              </ol>
+              <span class="tpo-batch-seal"><i class="bi bi-patch-check-fill" aria-hidden="true"></i>Ready for dispatch</span>
+            </div>
+          </div>
+        </div>
+      </div>
       <div class="container">
         <div class="section-header d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3">
           <div>
@@ -1359,7 +1489,8 @@
     </section>
 
     <!-- ======= Mid-Page Call-To-Action ======= -->
-    <section id="cta" class="cta">
+    <section id="cta" class="cta" data-sc-act="drift">
+      <div class="tpo-cta-pattern" aria-hidden="true"></div>
       <div class="container">
         <div class="row align-items-center justify-content-between g-4">
           <div class="col-lg-7">
@@ -1382,7 +1513,7 @@
     </section>
 
     <!-- ======= Products & Formulations Catalog Section ======= -->
-    <section class="portfolio" id="products">
+    <section class="portfolio" id="products" data-sc-act="reveal">
       <div class="container">
         <div class="section-header">
           <span class="mono-label">Reference Catalog</span>
@@ -1410,6 +1541,10 @@
         </ul>
 
         <div class="row g-4" id="portfolioGrid">
+          <div class="col-12 tpo-wave-heading" data-tpo-wave-heading="core" data-sc-in>
+            <h3>Core gummy formulations</h3>
+            <p>Strength, protein, sleep and calm in a familiar format.</p>
+          </div>
 
           <!-- 1. Creatine Gummies -->
           <div class="col-lg-4 col-md-6 portfolio-item" data-category="gummy performance">
@@ -1503,6 +1638,10 @@
             </div>
           </div>
 
+          <div class="col-12 tpo-wave-heading" data-tpo-wave-heading="performance" data-sc-in>
+            <h3>Performance &amp; recovery</h3>
+            <p>Training, recovery and hydration, each with a different brief.</p>
+          </div>
           <!-- 5. Lion's Peak Pre-Workout Formula -->
           <div class="col-lg-4 col-md-6 portfolio-item" data-category="performance">
             <div class="datasheet-card">
@@ -1572,6 +1711,10 @@
             </div>
           </div>
 
+          <div class="col-12 tpo-wave-heading" data-tpo-wave-heading="botanical" data-sc-in>
+            <h3>Mind, immunity &amp; vitality</h3>
+            <p>Botanical and mushroom formulas for targeted daily routines.</p>
+          </div>
           <!-- 8. Lion's Mane Mind Fuel Nootropic -->
           <div class="col-lg-4 col-md-6 portfolio-item" data-category="mind">
             <div class="datasheet-card">
@@ -1693,7 +1836,7 @@
     </section>
 
     <!-- ======= TPO Herbal Shop & Thai Traditional Clinic Section ======= -->
-    <section id="herbal-clinic" class="bg-white border-top">
+    <section id="herbal-clinic" class="bg-white border-top" data-sc-act="parallax">
       <div class="container">
         <div class="section-header">
           <span class="mono-label">Retail &amp; Clinical Practice &mdash; Bangkok</span>
@@ -1705,6 +1848,10 @@
           <!-- TPO Herbal Shop -->
           <div class="col-lg-6">
             <div class="division-box">
+              <figure class="tpo-division-media">
+                <img src="assets/img/services/reishi-mushrooms.webp" alt="Reishi mushroom ingredient reference for the herbal range" width="960" height="600" loading="lazy" decoding="async" data-sc-parallax="-0.55">
+                <figcaption>Botanical ingredient reference: reishi</figcaption>
+              </figure>
               <div>
                 <span class="mono-label" style="color: var(--forest);">01 / Retail Shop &amp; Bulk Extracts</span>
                 <h3 class="mt-2 mb-3">TPO Herbal Shop</h3>
@@ -1732,6 +1879,10 @@
           <!-- Thai Traditional Clinic -->
           <div class="col-lg-6">
             <div class="division-box clinic-box">
+              <figure class="tpo-division-media">
+                <img src="assets/img/services/sleep-chamomile.webp" alt="Chamomile botanical ingredient reference" width="960" height="600" loading="lazy" decoding="async" data-sc-parallax="0.8">
+                <figcaption>Botanical ingredient reference: chamomile</figcaption>
+              </figure>
               <div>
                 <span class="mono-label" style="color: var(--terracotta);">02 / Ministry of Public Health Licensed Clinic</span>
                 <h3 class="mt-2 mb-3">TPO Thai Traditional Clinic</h3>
@@ -1760,7 +1911,7 @@
     </section>
 
     <!-- ======= Interactive Request a Quote & Schedule a Meeting Hub ======= -->
-    <section id="quote-booking">
+    <section id="quote-booking" data-sc-act="flow">
       <div class="container">
         <div class="section-header">
           <span class="mono-label">Direct Factory &amp; Clinic Desk</span>
@@ -1785,7 +1936,8 @@
 
             <!-- TAB PANE 1: REQUEST A QUOTE -->
             <div id="quotePane">
-              <form id="quoteForm">
+              <form id="quoteForm" method="post">
+                <fieldset disabled data-tpo-script-form>
                 <input type="hidden" name="action" value="quote_request">
                 <input type="hidden" name="selectedCategories" id="selectedCategoriesInput" value="Creatine Gummies">
 
@@ -1892,12 +2044,14 @@
                     </div>
                   </div>
                 </div>
+                </fieldset>
               </form>
             </div>
 
             <!-- TAB PANE 2: SCHEDULE A MEETING -->
             <div id="meetingPane" style="display: none;">
-              <form id="meetingForm">
+              <form id="meetingForm" method="post">
+                <fieldset disabled data-tpo-script-form>
                 <input type="hidden" name="action" value="schedule_meeting">
                 <input type="hidden" name="selectedTimeSlot" id="selectedTimeSlotInput" value="14:00 ICT (Bangkok UTC+7)">
 
@@ -2020,6 +2174,7 @@
                     </div>
                   </div>
                 </div>
+                </fieldset>
               </form>
             </div>
 
@@ -2029,7 +2184,7 @@
     </section>
 
     <!-- ======= Contact Section (Preserved Contact Info, Map & Form) ======= -->
-    <section id="contact" class="contact">
+    <section id="contact" class="contact" data-sc-act="reveal">
       <div class="container">
         <div class="section-header">
           <span class="mono-label">Bangkok Headquarters</span>
@@ -2075,7 +2230,7 @@
 
         <div class="row g-4">
           <div class="col-lg-6">
-            <div class="rounded-1 overflow-hidden border h-100" style="min-height: 384px; border-color: var(--rule-color) !important;">
+            <div class="rounded-1 overflow-hidden border h-100" style="min-height: 384px; border-color: var(--rule-color) !important;" data-sc-reveal="left" data-sc-reveal-at="0 0.32">
               <iframe
                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d496115.3313133451!2d100.35290282935726!3d13.724699806600398!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x311d6032280d61f3%3A0x10100b25de24820!2sBangkok%2C%20Thailand!5e0!3m2!1sen!2sus!4v1691035652862!5m2!1sen!2sus"
                 width="600"
@@ -2090,7 +2245,8 @@
           </div>
 
           <div class="col-lg-6">
-            <form id="contactForm" class="bg-white p-4 p-lg-5 rounded-1 border h-100" style="border-color: var(--rule-color) !important;">
+            <form id="contactForm" method="post" class="bg-white p-4 p-lg-5 rounded-1 border h-100" style="border-color: var(--rule-color) !important;">
+              <fieldset disabled data-tpo-script-form>
               <h3 class="mb-3">Send a Message</h3>
               <div class="row g-3">
                 <div class="col-md-6 form-group">
@@ -2112,6 +2268,7 @@
                 <div class="sent-message small text-success fw-medium" style="display: none;"></div>
               </div>
               <button type="submit" class="btn-primary-editorial w-100 justify-content-center">Send Message</button>
+              </fieldset>
             </form>
           </div>
         </div>
@@ -2166,9 +2323,11 @@
           <div class="col-lg-3 col-md-6 footer-newsletter">
             <h4>Manufacturing Updates</h4>
             <p class="text-white-50 small">Receive quarterly updates on new gummy bases, Thai FDA regulations, and botanical harvests.</p>
-            <form id="newsletterForm" class="d-flex gap-2">
+            <form id="newsletterForm" method="post" class="d-flex gap-2">
+              <fieldset disabled data-tpo-script-form class="d-flex gap-2 w-100">
               <input type="email" name="email" class="form-control form-control-sm" placeholder="Email address" required>
               <button type="submit" class="btn btn-sm btn-light fw-medium px-3">Subscribe</button>
+              </fieldset>
             </form>
             <div class="loading small text-white-50 mt-2" style="display: none;">Subscribing...</div>
             <div class="error-message small text-danger mt-2" style="display: none;"></div>
@@ -2303,19 +2462,42 @@
 
     // --- 1. Vanta.js 3D Clouds Background (Single Clean Effect on Hero) ---
     let heroVantaEffect = null;
+    const heroReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const heroSmallScreen = window.matchMedia('(max-width: 860px)');
+    let heroIsVisible = true;
+    // Software WebGL can make the cloud shader unusably slow. Keep the same
+    // static sky composition when the browser reports a major performance caveat.
+    const heroWebGLUsable = (() => {
+      try {
+        const canvas = document.createElement('canvas');
+        const gl = canvas.getContext('webgl', { failIfMajorPerformanceCaveat: true });
+        if (!gl) return false;
+        const debug = gl.getExtension('WEBGL_debug_renderer_info');
+        const renderer = debug ? gl.getParameter(debug.UNMASKED_RENDERER_WEBGL) : '';
+        const software = /swiftshader|llvmpipe|softpipe/i.test(renderer);
+        const lose = gl.getExtension('WEBGL_lose_context');
+        if (lose) lose.loseContext();
+        return !software;
+      } catch (_) {
+        return false;
+      }
+    })();
 
     function initHeroClouds() {
-      const heroEl = document.getElementById('hero');
-      if (!heroEl || typeof VANTA === 'undefined' || !VANTA.CLOUDS) return;
-
-      if (heroVantaEffect && typeof heroVantaEffect.destroy === 'function') {
-        heroVantaEffect.destroy();
+      const heroEl = document.getElementById('heroClouds');
+      const shouldRun = heroEl && heroWebGLUsable && heroIsVisible && !document.hidden &&
+        !heroReducedMotion.matches && !heroSmallScreen.matches &&
+        typeof VANTA !== 'undefined' && VANTA.CLOUDS;
+      if (!shouldRun) {
+        if (heroVantaEffect && typeof heroVantaEffect.destroy === 'function') heroVantaEffect.destroy();
         heroVantaEffect = null;
+        return;
       }
+      if (heroVantaEffect) return;
 
       try {
         heroVantaEffect = VANTA.CLOUDS({
-          el: '#hero',
+          el: '#heroClouds',
           mouseControls: true,
           touchControls: true,
           gyroControls: false,
@@ -2428,6 +2610,16 @@
     document.addEventListener('DOMContentLoaded', function() {
       initHeroClouds();
       checkAuthorization();
+      heroReducedMotion.addEventListener('change', initHeroClouds);
+      heroSmallScreen.addEventListener('change', initHeroClouds);
+      document.addEventListener('visibilitychange', initHeroClouds);
+      if ('IntersectionObserver' in window) {
+        const cloudVisibility = new IntersectionObserver(function(entries) {
+          heroIsVisible = entries[0].isIntersecting;
+          initHeroClouds();
+        });
+        cloudVisibility.observe(document.getElementById('hero'));
+      }
 
       let resizeTimer;
       window.addEventListener('resize', function() {
@@ -2774,8 +2966,15 @@
           }
         });
       });
+      // Enable scripted forms only after their submission handlers are attached.
+      document.querySelectorAll('[data-tpo-script-form]').forEach(function(fieldset) {
+        fieldset.disabled = false;
+      });
     });
   </script>
+  <script src="assets/scrollcraft/scrollcraft.js" defer></script>
+  <script src="assets/scrollcraft/tpo-batch.js" defer></script>
+  <script src="assets/scrollcraft/tpo-retrofit.js" defer></script>
 
 </body>
 </html>

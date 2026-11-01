@@ -1,0 +1,615 @@
+/* ============================================================================
+   TPO Batch Journey: the services signature scene.
+
+   One pinned exhibit (#batchJourney, data-sc-act="pin") that walks a batch
+   through five stages: Ingredients, Formulation, Molding, Quality checks,
+   Packaging. The engine only supplies the pin, the 3.6vh span and --sc-p.
+   Everything inside is this file's own composition:
+
+     - a paper reference panel that wipes forward per stage (clip-path driven
+       by --tpo-w2..5, published from --sc-p by tpo-batch.js)
+     - a left ledger (a real <ol>) whose steps carry past / active / future
+       state, never hidden from assistive tech
+     - a batch trace that accumulates five checkpoints and seals on a finished
+       packaging format
+
+   Mode contract (read before editing):
+
+     DEFAULT styles are the natural-flow exhibit: every stage stacked with its
+     image and copy. That is the whole scene for no-JS, for <=860px, and for
+     prefers-reduced-motion. Nothing is ever hidden by scripting there.
+
+     The pinned composition applies ONLY under
+     `.tpo-batch.tpo-batch--live[data-mode="pin"]` (class and attribute are set
+     by tpo-batch.js after the engine has mounted) plus the media guards in
+     the fallback block below. !important is used only to neutralize engine
+     inline sizing (act height, sticky stage) in those fallback modes.
+   ========================================================================== */
+
+/* ------------------------------------------------------------------ tokens */
+.tpo-batch {
+  --tpb-forest: var(--forest, #1f4737);
+  --tpb-forest-deep: var(--forest-hover, #163629);
+  --tpb-paper: var(--bg-paper, #f6f4ef);
+  --tpb-ink: var(--ink-dark, #18221f);
+  --tpb-ink-body: var(--ink-body, #2d3834);
+  --tpb-ink-muted: var(--ink-muted, #5c6661);
+  --tpb-rule: var(--rule-color, #d8d3c8);
+  --tpb-terra: var(--terracotta, #b55428);
+  --tpb-terra-bright: color-mix(in srgb, var(--terracotta, #b55428) 78%, #ffffff);
+  --tpb-sage: #9ab8aa;                              /* matches about ledger */
+  --tpb-sage-soft: color-mix(in srgb, var(--bg-paper, #f6f4ef) 62%, #1f4737);
+  --tpb-serif: var(--font-serif, Georgia, serif);
+  --tpb-sans: var(--font-sans, system-ui, sans-serif);
+  --tpb-mono: var(--font-mono, ui-monospace, monospace);
+  --tpb-cap-h: 2.35rem;                             /* panel caption bar   */
+  --tpb-head-h: 74px;                               /* matches sticky #header */
+}
+
+/* ------------------------------------------------------------ shared type */
+.tpo-batch-kicker {
+  font-family: var(--tpb-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  margin: 0 0 0.55rem;
+  color: var(--tpb-ink-muted);
+}
+
+.tpo-batch-title {
+  font-family: var(--tpb-serif);
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  line-height: 1.12;
+  margin: 0;
+  color: var(--tpb-ink);
+}
+
+.tpo-batch-ledger {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tpo-batch-step-copy { position: relative; }
+
+.tpo-batch-step-num {
+  font-family: var(--tpb-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  flex: none;
+}
+
+.tpo-batch-step-name {
+  font-family: var(--tpb-sans);
+  font-weight: 600;
+  font-size: 1rem;
+  line-height: 1.25;
+  margin: 0;
+  letter-spacing: -0.005em;
+}
+
+.tpo-batch-step-desc {
+  margin: 0.3rem 0 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+/* Step state marks are shared by both modes; colors are set per mode below. */
+.tpo-batch-step-done {
+  display: none;
+  font-size: 0.78rem;
+  line-height: 1;
+}
+.tpo-batch-step[data-state="past"] .tpo-batch-step-done { display: inline; }
+
+/* ------------------------------------------------------------ panel cards */
+.tpo-batch-panel {
+  margin: 0;
+  background: var(--tpb-paper);
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+
+.tpo-batch-well {
+  position: relative;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.tpo-batch-well > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Ingredient triptych: three reference crops read as one specimen row. */
+.tpo-batch-tri {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px;
+  padding: 5px;
+  background: var(--tpb-paper);
+}
+.tpo-batch-tri > span { position: relative; overflow: hidden; display: block; }
+.tpo-batch-tri img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.tpo-batch-panel-cap {
+  flex: none;
+  height: var(--tpb-cap-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0 0.9rem;
+  border-top: 1px solid var(--tpb-rule);
+  font-family: var(--tpb-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--tpb-ink-muted);
+}
+.tpo-batch-panel-ref { flex: none; opacity: 0.75; }
+
+/* Quality-check stage: a paper release checklist instead of a photo. The
+   items name documentation the page already claims; no invented values. */
+.tpo-batch-checklist {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(0.55rem, 1.6vh, 0.95rem);
+  padding: clamp(1.1rem, 3vh, 2rem) clamp(1.2rem, 2.5vw, 2.4rem);
+}
+.tpo-batch-checklist-head {
+  font-family: var(--tpb-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.09em;
+  color: var(--tpb-ink-muted);
+  text-transform: uppercase;
+  margin: 0 0 0.2rem;
+}
+.tpo-batch-check {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  font-family: var(--tpb-sans);
+  font-weight: 500;
+  font-size: clamp(0.95rem, 1.5vw, 1.2rem);
+  color: var(--tpb-ink);
+  border-bottom: 1px solid var(--tpb-rule);
+  padding-bottom: clamp(0.5rem, 1.4vh, 0.85rem);
+}
+.tpo-batch-check:last-child { border-bottom: 0; padding-bottom: 0; }
+.tpo-batch-check i {
+  flex: none;
+  width: 1.5em;
+  height: 1.5em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  background: var(--tpb-forest);
+  color: var(--tpb-paper);
+  font-size: 0.85em;
+}
+
+/* --------------------------------------------------------------- the trace */
+/* A visual instrument only: the ledger carries the semantics, so the trace is
+   aria-hidden. Displayed only while pinned; natural flow does not need it. */
+.tpo-batch-trace { display: none; }
+
+/* =================================================================== FLOW =
+   Default exhibit: every stage in document order, copy beside or above its
+   reference panel. Serves no-JS, <=860px and reduced motion unchanged.   */
+
+.tpo-batch-stage { padding: clamp(2.5rem, 6vw, 4.5rem) 0 clamp(2.5rem, 6vw, 4rem); }
+
+.tpo-batch-frame { max-width: 1180px; margin: 0 auto; padding: 0 clamp(1.25rem, 4vw, 3rem); }
+
+.tpo-batch-title { font-size: clamp(1.45rem, 3.4vw, 2rem); max-width: 24ch; }
+
+.tpo-batch-ledger { margin-top: clamp(1.5rem, 4vw, 2.5rem); display: grid; gap: clamp(1.25rem, 3vw, 2rem); }
+
+.tpo-batch-step-copy {
+  display: flex;
+  gap: 0.8rem;
+  padding-bottom: 0.4rem;
+}
+.tpo-batch-step-num { color: var(--tpb-terra); padding-top: 0.2rem; }
+.tpo-batch-step-desc { color: var(--tpb-ink-body); max-width: 58ch; }
+
+.tpo-batch-panel { margin-top: 0.85rem; }
+.tpo-batch-well { aspect-ratio: 16 / 9; }
+.tpo-batch-step { scroll-margin-top: 90px; }
+
+@media (min-width: 900px) {
+  .tpo-batch-step { display: grid; grid-template-columns: minmax(300px, 2fr) 3fr; gap: clamp(1.25rem, 3vw, 2.5rem); align-items: start; }
+  .tpo-batch-panel { margin-top: 0; }
+}
+
+/* ==================================================================== PIN =
+   The exhibit. Active only when tpo-batch.js has booted after the engine and
+   the viewport is a desktop that has not asked for reduced motion.         */
+
+.tpo-batch.tpo-batch--live[data-mode="pin"] { background: transparent; }
+
+.tpo-batch.tpo-batch--live[data-mode="pin"] > .tpo-batch-stage {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100svh;
+  overflow: clip;
+  display: flex;
+  padding: calc(var(--tpb-head-h) + clamp(0.6rem, 2.2vh, 1.5rem)) clamp(1.25rem, 4vw, 4rem) clamp(0.9rem, 2.4vh, 1.6rem);
+  background:
+    radial-gradient(130% 100% at 72% 12%, color-mix(in srgb, var(--tpb-forest) 84%, #ffffff) 0%, var(--tpb-forest) 46%, var(--tpb-forest-deep) 100%);
+  color: var(--tpb-paper);
+}
+
+/* Soft top and bottom shading so the pinned room reads as lit space; the
+   copy never sits on it, so it is atmosphere, not a contrast crutch. */
+.tpo-batch.tpo-batch--live[data-mode="pin"] > .tpo-batch-stage::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg,
+    rgba(9, 18, 13, 0.30) 0%, transparent 14%,
+    transparent 86%, rgba(9, 18, 13, 0.36) 100%);
+}
+
+.tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-frame {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.7rem, 1.9vh, 1.3rem);
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0;
+  height: 100%;
+  min-height: 0;
+}
+
+/* Type on the forest ground. */
+.tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-kicker { color: var(--tpb-sage); }
+.tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-title {
+  color: var(--tpb-paper);
+  font-size: clamp(1.4rem, 2.5vw, 2.05rem);
+  max-width: 30ch;
+}
+
+/* The exhibit grid: ledger steps in the left column, all five reference
+   panels layered in the single right-hand cell. Steps are lifted out of
+   their <li> with display: contents; attributes and reading order are
+   untouched. */
+.tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-ledger {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-areas:
+    "s1 panel"
+    "s2 panel"
+    "s3 panel"
+    "s4 panel"
+    "s5 panel";
+  grid-template-columns: minmax(265px, 2fr) 3fr;
+  grid-template-rows: repeat(5, 1fr);
+  column-gap: clamp(1.5rem, 3.2vw, 3.4rem);
+}
+.tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-step { display: contents; }
+.tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-step[data-batch-step="0"] > .tpo-batch-step-copy { grid-area: s1; }
+.tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-step[data-batch-step="1"] > .tpo-batch-step-copy { grid-area: s2; }
+.tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-step[data-batch-step="2"] > .tpo-batch-step-copy { grid-area: s3; }
+.tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-step[data-batch-step="3"] > .tpo-batch-step-copy { grid-area: s4; }
+.tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-step[data-batch-step="4"] > .tpo-batch-step-copy { grid-area: s5; }
+
+/* Keep every process description readable. The active rule and checkpoint
+   marks carry state; fading future copy would undermine the process story. */
+.tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-step-copy {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding-left: 1rem;
+  transition: opacity 260ms ease;
+}
+.tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-step-copy::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 12%;
+  bottom: 12%;
+  width: 2px;
+  background: var(--tpb-terra-bright);
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform 260ms ease;
+}
+.tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-step-name { color: var(--tpb-paper); }
+.tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-step-desc { color: var(--tpb-sage-soft); }
+.tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-step[data-state="past"] .tpo-batch-step-num { color: var(--tpb-sage); }
+.tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-step[data-state="past"] .tpo-batch-step-done { color: var(--tpb-sage); }
+.tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-step[data-state="active"] > .tpo-batch-step-copy { opacity: 1; }
+.tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-step[data-state="active"] > .tpo-batch-step-copy::before { transform: scaleY(1); }
+.tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-step[data-state="active"] .tpo-batch-step-num { color: var(--tpb-terra-bright); }
+
+/* Panels: all five occupy the same cell and paint in source order, so the
+   incoming stage wipes over the outgoing one. Wipe values come from
+   --tpo-w2..5 (tpo-batch.js, derived from the engine's --sc-p); the maps
+   default to 1, so a stalled script still shows a complete final panel. */
+.tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-panel {
+  grid-area: panel;
+  will-change: clip-path;
+}
+.tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-well { flex: 1; aspect-ratio: auto; }
+
+.tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-panel[data-batch-panel="1"] {
+  clip-path: inset(0 calc((1 - var(--tpo-w2, 1)) * 100%) 0 0);
+}
+.tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-panel[data-batch-panel="2"] {
+  clip-path: inset(0 calc((1 - var(--tpo-w3, 1)) * 100%) 0 0);
+}
+.tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-panel[data-batch-panel="3"] {
+  clip-path: inset(0 calc((1 - var(--tpo-w4, 1)) * 100%) 0 0);
+}
+.tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-panel[data-batch-panel="4"] {
+  clip-path: inset(0 calc((1 - var(--tpo-w5, 1)) * 100%) 0 0);
+}
+
+/* Outgoing panels ease back a touch while they are covered: the wipe reads
+   as the line advancing rather than a slideshow cut. */
+.tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-panel[data-batch-panel="0"] {
+  transform: translateX(calc(var(--tpo-w2, 1) * -2.5%));
+}
+.tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-panel[data-batch-panel="1"] {
+  transform: translateX(calc(var(--tpo-w3, 1) * -2.5%));
+}
+.tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-panel[data-batch-panel="2"] {
+  transform: translateX(calc(var(--tpo-w4, 1) * -2.5%));
+}
+.tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-panel[data-batch-panel="3"] {
+  transform: translateX(calc(var(--tpo-w5, 1) * -2.5%));
+}
+
+/* The leading edge of an incoming wipe: a terracotta rule riding the clip
+   boundary, fading once the panel is fully in. */
+.tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-panel[data-batch-panel="1"]::after,
+.tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-panel[data-batch-panel="2"]::after,
+.tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-panel[data-batch-panel="3"]::after,
+.tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-panel[data-batch-panel="4"]::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  z-index: 5;
+  background: linear-gradient(180deg, var(--tpb-terra-bright), var(--tpb-terra));
+}
+.tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-panel[data-batch-panel="1"]::after {
+  left: calc(var(--tpo-w2, 1) * 100% - 3px);
+  opacity: calc((1 - var(--tpo-w2, 1)) * 1.6);
+}
+.tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-panel[data-batch-panel="2"]::after {
+  left: calc(var(--tpo-w3, 1) * 100% - 3px);
+  opacity: calc((1 - var(--tpo-w3, 1)) * 1.6);
+}
+.tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-panel[data-batch-panel="3"]::after {
+  left: calc(var(--tpo-w4, 1) * 100% - 3px);
+  opacity: calc((1 - var(--tpo-w4, 1)) * 1.6);
+}
+.tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-panel[data-batch-panel="4"]::after {
+  left: calc(var(--tpo-w5, 1) * 100% - 3px);
+  opacity: calc((1 - var(--tpo-w5, 1)) * 1.6);
+}
+
+/* Quality stage: each release check ticks in as the stage advances. The
+   thresholds are per-item custom properties on the markup; in flow mode the
+   clamp rules do not apply and every check is simply shown ticked. */
+.tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-check {
+  opacity: clamp(0, (var(--sc-p, 0) - var(--tick-at, 0)) / 0.03, 1);
+  transform: translateX(calc((1 - clamp(0, (var(--sc-p, 0) - var(--tick-at, 0)) / 0.03, 1)) * 14px));
+}
+
+/* Packaging stage settles: the illustration arrives on its wipe and then
+   resolves to a full-bleed standstill as the trace seals. */
+.tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-panel[data-batch-panel="4"] .tpo-batch-well > img {
+  transform: scale(calc(1.06 - 0.06 * clamp(0, (var(--sc-p, 0) - 0.88) / 0.105, 1)));
+}
+
+/* The trace strip: five checkpoint cells on a filling spine, sealed by the
+   dispatch chip. Continuously driven by --sc-p, so it answers the hand for
+   the whole length of the pin, not only at stage edges. */
+.tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-trace {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.9rem, 2.2vw, 1.9rem);
+  font-family: var(--tpb-mono);
+  color: var(--tpb-sage);
+}
+
+.tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-trace-cells {
+  list-style: none;
+  display: flex;
+  flex: 1;
+  justify-content: space-between;
+  gap: clamp(0.6rem, 1.6vw, 1.4rem);
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.tpo-batch-ck {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 10.5px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.tpo-batch-ck-dot {
+  position: relative;
+  flex: none;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: 1.5px solid color-mix(in srgb, var(--tpb-sage) 80%, transparent);
+}
+.tpo-batch-ck-fill {
+  position: absolute;
+  inset: 1px;
+  border-radius: 50%;
+  background: var(--tpb-terra-bright);
+  transform: scaleX(clamp(0, (var(--sc-p, 0) - var(--ck-a, 0)) / (var(--ck-b, 1) - var(--ck-a, 1)), 1));
+  transform-origin: left center;
+}
+.tpo-batch-ck-code { opacity: 0.85; }
+.tpo-batch-ck-name {
+  display: none;
+  color: var(--tpb-paper);
+}
+
+.tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-ck[data-state="active"] .tpo-batch-ck-dot {
+  border-color: var(--tpb-terra-bright);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--tpb-terra-bright) 22%, transparent);
+}
+.tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-ck[data-state="past"] .tpo-batch-ck-code { color: var(--tpb-paper); }
+
+/* Spine behind the cells; the fill is raw act progress. */
+.tpo-batch-trace-spine {
+  position: absolute;
+  left: 5px;
+  right: 5px;
+  top: 50%;
+  height: 2px;
+  margin-top: -1px;
+  background: color-mix(in srgb, var(--tpb-sage) 30%, transparent);
+  overflow: hidden;
+}
+.tpo-batch-trace-fill {
+  position: absolute;
+  inset: 0;
+  background: var(--tpb-terra-bright);
+  transform: scaleX(var(--sc-p, 0));
+  transform-origin: left center;
+}
+.tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-trace { position: relative; }
+
+/* Dispatch seal: lands once the fifth checkpoint completes, so the exhibit
+   ends on a resolved batch instead of trailing off. */
+.tpo-batch-seal {
+  flex: none;
+  font-family: var(--tpb-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--tpb-paper);
+  background: var(--tpb-terra);
+  border-radius: 999px;
+  padding: 0.42rem 0.85rem;
+  opacity: clamp(0, (var(--sc-p, 0) - 0.965) / 0.03, 1);
+  transform: translateX(calc((1 - clamp(0, (var(--sc-p, 0) - 0.965) / 0.03, 1)) * 10px));
+}
+.tpo-batch-seal i { font-size: 0.85em; margin-right: 0.35rem; vertical-align: -0.05em; }
+
+/* Show the checkpoint names when there is room for them. */
+@media (min-width: 1120px) {
+  .tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-ck-name { display: inline; }
+}
+
+/* Short viewports: tighten the exhibit rather than cropping it. */
+@media (max-height: 760px) {
+  .tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-title { font-size: clamp(1.25rem, 2vw, 1.55rem); }
+  .tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-step-name { font-size: 0.92rem; }
+  .tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-step-desc { font-size: 0.8rem; }
+  .tpo-batch { --tpb-cap-h: 2rem; }
+  .tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-check { font-size: 0.9rem; }
+}
+
+/* Very short viewports: compress type and chrome rather than cropping any
+   stage copy. The exhibit stays complete; only its scale changes. */
+@media (max-height: 660px) {
+  .tpo-batch { --tpb-cap-h: 1.8rem; }
+  .tpo-batch.tpo-batch--live[data-mode="pin"] > .tpo-batch-stage {
+    padding-top: calc(var(--tpb-head-h) + 0.5rem);
+    padding-bottom: 0.6rem;
+  }
+  .tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-frame { gap: 0.55rem; }
+  .tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-title { font-size: 1.18rem; }
+  .tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-kicker { margin-bottom: 0.3rem; }
+  .tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-step-name { font-size: 0.85rem; }
+  .tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-step-desc { font-size: 0.73rem; line-height: 1.42; }
+  .tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-ck,
+  .tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-seal { font-size: 9.5px; }
+  .tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-check { font-size: 0.85rem; }
+  .tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-checklist { gap: 0.45rem; padding: 0.9rem 1.2rem; }
+}
+
+/* ============================================================== FALLBACK =
+   Neutralize engine sizing when the pinned exhibit must not run. These are
+   the only !important rules in the file, and they exist solely to beat the
+   engine's inline span height and sticky stage in fallback modes. */
+
+/* The engine has mounted but this scene's script did not boot (any width):
+   collapse to the natural-flow exhibit. */
+html.sc-ready #batchJourney.tpo-batch:not(.tpo-batch--live) {
+  height: auto !important;
+}
+html.sc-ready #batchJourney.tpo-batch:not(.tpo-batch--live) > .tpo-batch-stage {
+  position: static !important;
+  height: auto !important;
+  overflow: visible !important;
+}
+
+/* Phones and reduced motion: natural flow, everything stacked and legible.
+   The engine still sizes the act from data-sc-span, so override it here. */
+@media (max-width: 860px), (prefers-reduced-motion: reduce) {
+  #batchJourney.tpo-batch {
+    height: auto !important;
+  }
+  #batchJourney.tpo-batch > .tpo-batch-stage {
+    position: static !important;
+    height: auto !important;
+    overflow: visible !important;
+    background: transparent !important;
+  }
+  .tpo-batch *,
+  .tpo-batch *::before,
+  .tpo-batch *::after {
+    transition-duration: 0s !important;
+    animation: none !important;
+  }
+  /* Flow keeps every panel: clip, push and settle are pin-only effects. */
+  .tpo-batch .tpo-batch-panel {
+    clip-path: none !important;
+    transform: none !important;
+    visibility: visible !important;
+  }
+  .tpo-batch .tpo-batch-trace { display: none !important; }
+}
+
+/* Reduced motion also quiets the emphasis crossfades while keeping them. */
+@media (prefers-reduced-motion: reduce) {
+  .tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-step-copy,
+  .tpo-batch.tpo-batch--live[data-mode="pin"] .tpo-batch-step-copy::before {
+    transition: none;
+  }
+}
