@@ -186,11 +186,11 @@ function salesActualsPlan_(pack, targets, selectedMonths) {
   var records = pack.months.slice().sort((a, b) => a.month < b.month ? -1 : 1)
     .map(function (record) {
       var conflicts = [], changes = [];
-      var five = Object.keys(record.revenueCents)
+      var customerTotal = Object.keys(record.revenueCents)
         .reduce((total, key) => total + record.revenueCents[key], 0);
       if (!record.reconciled)
         conflicts.push({ sheet: 'Source workbook', cell: 'Overall Sales ' + record.month,
-          message: 'five-customer total ' + (five / 100).toLocaleString('en-US') +
+          message: 'Customer revenue total ' + (customerTotal / 100).toLocaleString('en-US') +
             ' THB disagrees with the overall ' + (record.overallCents / 100).toLocaleString('en-US') +
             ' THB. Fix the presentation tabs and re-extract.' });
       pack.customers.forEach(function (customer) {

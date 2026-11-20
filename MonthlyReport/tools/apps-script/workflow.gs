@@ -8,7 +8,7 @@ const TPO = Object.freeze({
   input: 'LLM-Input', output: 'LLM Output', commentary: 'Commentary',
   startRow: 8, chunkSize: 30000, maxPrompt: 1500000, maxSourceCells: 200000,
   stateKey: 'TPO_MANUAL_V1_', version: 'tpo-commentary-v1',
-  build: '2026-10-23-v12', timezone: 'Asia/Bangkok',
+  build: '2026-11-19-v13', timezone: 'Asia/Bangkok',
   sources: ['Assumptions', 'MonthlyFinancials', 'CustomerRevenueMonthly',
     'CustomerRevenueQuarterly', 'CustomerCount', 'Quarterly Financials',
     '1. Working Capital', '2. Customer Economics', '3. Strategic Dashboard',
@@ -936,15 +936,19 @@ function importPastedLLMOutput(text, batch) {
 function menuAddCustomer() {
   uiAction_('menuAddCustomer', () => dialog_('TPO · Add Customer',
     '<h2>Add customer</h2><label for="name">Customer name</label><input id="name" type="text">' +
-    '<label for="margin">Contribution margin (0.45 or 45%)</label><input id="margin" type="text" placeholder="45%">' +
+    '<label for="margin">Contribution margin (optional: 0.45 or 45%)</label><input id="margin" type="text" placeholder="Leave blank if unknown">' +
+    '<p>An unknown margin stays blank; revenue can be imported without inventing a contribution estimate.</p>' +
     '<label><input id="seed" type="checkbox" checked style="width:auto"> Add blank monthly input rows for existing months; CustomerRevenueQuarterly totals are derived automatically</label>' +
     '<button id="save">Add customer</button><button class="secondary" onclick="google.script.host.close()">Close</button><div id="status" role="status"></div>', `
     document.getElementById('save').onclick = function () {
       const button = this, status = document.getElementById('status'); button.disabled = true;
       google.script.run.withSuccessHandler(function (r) {
-        status.className = ''; status.textContent = 'Added ' + r.name + '. Prepare a new LLM input to include this customer.';
+        status.className = ''; status.textContent = 'Added ' + r.name + '. Import sales data, then run TPO → 2. Check & calculate and reload the website. Prepare a new AI prompt afterwards.';
       }).withFailureHandler(function (e) {
-        button.disabled = false; status.className = 'error'; status.textContent = e.message || String(e);
+        button.disabled = false; status.className = 'error';
+        const message = e.message || String(e);
+        const detail = message.split('\\n').find(line => line.startsWith('Error: ') && !line.includes('TPO error report'));
+        status.textContent = (detail ? detail + '\\n\\n' : '') + message;
       }).processAddCustomer({name: document.getElementById('name').value, margin: document.getElementById('margin').value, seed: document.getElementById('seed').checked});
     };
   `, 430));
@@ -952,9 +956,11 @@ function menuAddCustomer() {
 function processAddCustomer(payload) {
   return serverAction_('processAddCustomer', () => locked_(() => {
     const name = String(payload && payload.name || '').trim();
-    const margin = number_(payload && payload.margin);
+    const marginInput = payload && payload.margin;
+    const margin = number_(marginInput);
+    const marginGiven = marginInput !== null && marginInput !== undefined && String(marginInput).trim() !== '';
     if (!name || name.length > 200 || /^[=+@]/.test(name)) throw new Error('Enter a customer name of 1–200 characters that does not start with =, +, or @.');
-    if (margin === null || margin < 0 || margin > 1) throw new Error('Use a margin between 0 and 1, or 0% and 100%.');
+    if (marginGiven && (margin === null || margin < 0 || margin > 1)) throw new Error('Use a margin between 0 and 1, or 0% and 100%; leave it blank if unknown.');
     const asmp = sheet_('Assumptions'), revenue = sheet_('CustomerRevenueQuarterly'), monthly = sheet_('CustomerRevenueMonthly');
     if (!asmp || asmp.getLastRow() < 1) throw new Error('Assumptions needs headers in row 1, names in A and margins in B.');
     if (payload.seed && (!revenue || !monthly)) throw new Error('CustomerRevenueMonthly and CustomerRevenueQuarterly are both required to seed a new customer.');
@@ -976,7 +982,7 @@ function processAddCustomer(payload) {
     if (months.length) ensureSize_(monthly, monthlyRow + months.length - 1, 3);
     try {
       plainText_(asmp.getRange(asmpRow, 1), [[name]]);
-      asmp.getRange(asmpRow, 2).setValue(margin).setNumberFormat('0.0%');
+      asmp.getRange(asmpRow, 2).setValue(margin === null ? '' : margin).setNumberFormat('0.0%');
       if (months.length) plainText_(monthly.getRange(monthlyRow, 1, months.length, 3), months.map(m => [name, m, '']));
       if (quarters.length) {
         plainText_(revenue.getRange(revRow, 1, quarters.length, 3), quarters.map(q => [name, q, '']));

@@ -16,6 +16,21 @@ The script maintains **LLM-Input**, **LLM Output**, and **Commentary**. Commenta
 
 Copying Code.gs into GitHub does not install it in Google Sheets. The website and the bound Apps Script are updated separately.
 
+### v13: Herban and October sales (`2026-11-19-v13`)
+
+The sales extractor includes the optional `Herban` tab when present and reconciles the total across all included customers. Older five-customer workbooks still work. Customer pages are discovered from workbook data; there is no fixed five-customer navigation list.
+
+**Add customer…** now accepts a blank contribution margin (unknown, not zero). Supplied margins must still be valid fractions or percentages, e.g. `0.65` or `65%`, not `65`. Unknown margins leave estimated contribution unavailable. If adding a customer fails, the dialog displays the underlying `Error:` detail before the full diagnostic report. The previously pasted report contained only the report header and action, so it does not establish which validation or Sheets operation failed.
+
+To import the supplied October workbook:
+
+1. Replace the complete bound script with the new `apps-script/Code.gs`, save, and reload Sheets.
+2. In Excel, correct **`Herban!F1` from `Tyson` to `Herban`**, then save the workbook. The numeric quarterly rollup matches Herban, but the copied header is wrong; strict extraction deliberately rejects it rather than guessing. The repository's source XLSX has not been modified.
+3. Run the updated `tools/extract-sales-input.py` on `TPO Oct 2026 Sales Data for Presentation.xlsx` (drag-and-drop or `python tools/extract-sales-input.py "<workbook path>"` using Python with the pinned openpyxl dependency). Move aside any older same-named JSON/review outputs first; overwrite protection remains enabled. Outputs are `<workbook>.json` and `<workbook>.review.xlsx`.
+4. Check **Assumptions** for `Herban`. If absent, use **TPO → 1. Enter monthly data → 5. Add customer…** with name `Herban`; enter its agreed contribution margin or leave it blank. Do not add it twice.
+5. Use **4. Import sales data…**, upload the new JSON, review and select **Oct-26** (and Sep-26 only if still missing), then apply. Preparing blank slots first is optional. In the corrected-copy verification, October contains six customers, Herban revenue **261,000 THB**, overall sales **2,399,592.91 THB**, and customer count **56**. The historical `2024-07` mismatch remains blocked.
+6. Import October accounting actuals too, then run top-level **2. Check & calculate** and reload website data. The financial reporting month and shared/personal **Reporting cut-off** must include October before October sales appear on customer charts. The supplied `TPO_Monthly_Input.xlsx` snapshot is still financially as of August; importing sales alone does not advance it. Prepare a fresh AI prompt after all source changes.
+
 ### v12: code audit cleanup (`2026-10-23-v12`)
 
 Install build **`2026-10-23-v12`** (replace the complete contents of `apps-script/Code.gs` into the bound Google script, save, and reload Sheets). No workflow changes; this build is an internal cleanup:

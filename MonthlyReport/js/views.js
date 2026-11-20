@@ -388,7 +388,7 @@
 
 
     // Customer mix: prefer latest-month concentration; fall back to Customer
-    // Economics (all 5 customers) when the monthly series is sparse.
+    // Economics (listed customers) when the monthly series is sparse.
     let mixItems = concentration.items;
     let mixSource = `Latest month · ${concentration.latest || ""}`;
     if (!mixItems.length && data.customerEcon && data.customerEcon.customers.length) {
@@ -1021,7 +1021,7 @@
     } else {
       monthBlock = el("div", { class: "bg-white border border-dashed border-rule rounded-md p-5" },
         el("h2", { class: "font-serif text-xl text-ink mb-2" }, "Month-to-month"),
-        el("p", { class: "text-sm text-mute" }, "Monthly revenue has not been entered for this customer. Quarterly figures remain unavailable until the required monthly amounts are supplied."),
+        el("p", { class: "text-sm text-mute" }, "No monthly revenue is available for this customer within the current reporting period. If sales were imported for a later month, import that month’s accounting actuals and check Report settings → Reporting cut-off, then refresh data. Missing monthly inputs keep quarterly figures unavailable."),
       );
     }
 

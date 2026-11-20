@@ -24,11 +24,11 @@ A read-only Python extractor (`tools/extract-monthly-input.py`) extracts monthly
 
 ### Sales data import (v10)
 
-A second read-only Python extractor (`tools/extract-sales-input.py`) reads the sales presentation workbook (per-customer tabs `Mana`, `Auntie Aloha`, `Fuzzies`, `Tyson`, `Private Label`, plus `Overall Sales` and `Customer Count`) into a `tpo-sales-actuals-v1` JSON pack and a three-sheet XLSX review copy. **📊 TPO → 1. Enter monthly data → 4. Import sales data…** previews the same per-month differences, checks them, and applies through the same `Repair Backup` transaction.
+A second read-only Python extractor (`tools/extract-sales-input.py`) reads the sales presentation workbook (required customer tabs `Mana`, `Auntie Aloha`, `Fuzzies`, `Tyson`, `Private Label`, optional `Herban`, plus `Overall Sales` and `Customer Count`) into a `tpo-sales-actuals-v1` JSON pack and a three-sheet XLSX review copy. **📊 TPO → 1. Enter monthly data → 4. Import sales data…** previews the same per-month differences, checks them, and applies through the same `Repair Backup` transaction.
 
-- **Inputs imported**: `CustomerRevenueMonthly` (customer, month, revenue) and `CustomerCount` (month, count). Customers must already exist in **Assumptions**; `Mana Cannabis` resolves to `Mana` by unique match, and unknown or ambiguous names stop the import.
+- **Inputs imported**: `CustomerRevenueMonthly` (customer, month, revenue) and `CustomerCount` (month, count). Customers must already exist in **Assumptions**; `Mana Cannabis` resolves to `Mana` by unique match, and unknown or ambiguous names stop the import. Use **5. Add customer…** first; contribution margin may stay blank if unknown (not zero). The website customer pages are discovered from the workbook, not a fixed five-customer list.
 - **Separately maintained inputs**: `MonthlyFinancials`, `1. Working Capital`, assumptions, and operational dashboard inputs are untouched by this importer.
-- **Reconciliation**: One identical contiguous month grid must appear on every tab, quarter rollups must match their months, and each month's five-customer total must equal `Overall Sales`. Months that fail the total check are packed `reconciled: false` and blocked at import until the presentation tabs are fixed and re-extracted.
+- **Reconciliation**: One identical contiguous month grid must appear on every included customer tab, quarter rollups must match their months, and each month's total across all included customers must equal `Overall Sales`. Months that fail the total check are packed `reconciled: false` and blocked at import until the presentation tabs are fixed and re-extracted.
 - **Separation of concerns**: The two importers never write the same tab, so financial actuals and customer/count actuals are imported independently.
 
 ## Installation

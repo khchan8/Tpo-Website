@@ -98,3 +98,58 @@ test('financial charts plot all P&L lines; COGS, SG&A and Net Income start desel
   assert.ok(byQuarter.every(x=>Number.isFinite(x.ebit)),'fixture covers EBIT in every quarter');
   assert.ok(flatten(window.TPO_VIEWS.financials({data,settings:C.settings.normalize({})})).some(n=>n.textContent==='Quarterly revenue, gross profit & EBIT'));
 });
+test('sixth customer with blank margin still routes, renders October revenue, and shows contribution as unavailable',()=>{
+  class Element {
+    constructor(tag){this.tag=tag;this.children=[];this.attrs={};this.events={};this.className='';this.textContent='';this._value='';}
+    get isConnected(){return true;}
+    setAttribute(k,v){this.attrs[k]=String(v);if(k==='value')this.value=String(v);}
+    append(...nodes){this.children.push(...nodes);}
+    appendChild(n){this.append(n);return n;}
+    replaceChildren(...nodes){this.children=nodes;}
+    addEventListener(k,fn){this.events[k]=fn;}
+    get classList(){const self=this;return{toggle(){},add(){},remove(){},contains:()=>false};}
+    getAttribute(k){return this.attrs[k]??null;}
+    querySelector(sel){return this._all().find(n=>sel.startsWith('[')&&n.attrs[sel.slice(1,-1)]!==undefined)||null;}
+    querySelectorAll(sel){return this._all().filter(n=>sel.startsWith('[')&&n.attrs[sel.slice(1,-1)]!==undefined);}
+    _all(){return[this,...this.children.flatMap(n=>n._all?n._all():[n])];}
+    get value(){return this._value;} set value(v){this._value=String(v);}
+  }
+  const options=[];
+  const window={TPOCore:C,TPO_CONFIG:{SHEET_ID:'fixture'},TPO_CHART_SETTINGS:{},
+    echarts:{init:()=>({setOption:o=>options.push(JSON.parse(JSON.stringify(o))),on(){},resize(){},dispose(){}})}};
+  const ctx=vm.createContext({window,echarts:window.echarts,console,setTimeout,clearTimeout,
+    document:{createElement:t=>new Element(t),createTextNode:t=>Object.assign(new Element('#text'),{textContent:t})},
+    requestAnimationFrame:fn=>{fn();return 0;},ResizeObserver:class{observe(){}disconnect(){}}});
+  for(const f of ['js/compute.js','js/data.js','js/views.js'])
+    vm.runInContext(fs.readFileSync(f,'utf8'),ctx);
+  const fin=['Month','Revenue','COGS','Gross Profit','SG&A','EBIT','Net Income','Quarter'];
+  const row=(m,rev)=>{const cogs=rev*.4,gp=rev-cogs,sga=rev*.2,ebit=gp-sga;return[m,rev,cogs,gp,sga,ebit,ebit-10,''];};
+  const others=[['Mana',110000,120000],['Auntie Aloha',75000,80000],['Fuzzies',55000,60000],['Tyson',35000,40000],['Private Label',25000,30000]];
+  const crm=[['Customer','Month','Revenue'],
+    ...others.map(([n,sep])=>[n,'Sep-26',sep]),...others.map(([n,,oct])=>[n,'Oct-26',oct]),['Herban','Oct-26',261000]];
+  const map={MonthlyFinancials:[fin,row('Sep-26',300000),row('Oct-26',591000)],
+    Assumptions:[['Customer','Margin'],...others.map(([n])=>[n,.6]),['Herban','']],
+    CustomerRevenueMonthly:crm,CustomerCount:[['Month','Customer Count']],
+    '1. Working Capital':[['Reporting Month','Cash Balance','Accounts Receivable','Inventory Value','Accounts Payable','Net Working Capital']],
+    Commentary:[['View','Commentary','Status']],Glossary:[]};
+  const data=window.TPO_DATA.shape(map),settings=C.settings.normalize({tabs:{customers:{mode:'auto'}}});
+  assert.equal(data.assumptions.customers.length,6);
+  assert.ok(C.settings.customerList(settings,data._analysis).some(c=>c.slug==='herban'),'auto-mode tab list includes the sixth customer');
+  assert.deepEqual(Array.from(data.customerRevenueQuarterly.herban.quarterly, r=>({quarter:r.quarter,revenue:r.revenue})),[{quarter:'Q3 2026',revenue:null},{quarter:'Q4 2026',revenue:261000}]);
+  const root=window.TPO_VIEWS.customer({data,settings},'herban'),nodes=flatten(root);
+  assert.ok(nodes.some(n=>n.textContent==='Herban'),'slug route resolves to the Assumptions name');
+  const kpi=label=>{
+    const tile=nodes.find(n=>n.children.some(c=>c.className==='kpi-label'&&flatten(c).some(t=>t.textContent===label)));
+    return flatten(tile.children.find(c=>c.className==='kpi-value')).map(n=>n.textContent||'').join('');
+  };
+  assert.match(kpi('Quarter revenue'),/261,000/);
+  assert.equal(kpi('Contribution (est.)'),'—','blank margin renders unavailable, not zero');
+  assert.equal(kpi('Contribution margin'),'—');
+  const quarter=options.find(o=>/^Q\d \d{4}$/.test(o.xAxis.data[0]));
+  assert.deepEqual(quarter.series[0].data,[null,261000]);
+  assert.deepEqual(quarter.series[1].data,[null,null],'no fabricated contribution');
+  const month=options.find(o=>/^\w{3}-\d{2}$/.test(o.xAxis.data[0]));
+  assert.deepEqual(month.xAxis.data,['Oct-26']);
+  assert.deepEqual(month.series[0].data,[261000]);
+  assert.deepEqual(month.series[1].data,[null]);
+});

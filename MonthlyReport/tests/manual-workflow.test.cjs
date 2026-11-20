@@ -302,6 +302,38 @@ test('adding a customer preserves the three-column schema and seeds existing mon
   assert.throws(() => rt.ctx.processAddCustomer({ name: 'New Customer', margin: '.2', seed: true }), /already exists/);
   assert.throws(() => rt.ctx.processAddCustomer({ name: 'Bad', margin: '45', seed: false }), /margin/);
 });
+
+test('Herban can be added with an unknown margin and then imported without inventing history', () => {
+  const rt = runtime();
+  rt.ctx.processAddCustomer({ name: 'Herban', margin: '', seed: true });
+  const assumptions = rt.sheets.get('Assumptions').getDataRange().getValues();
+  assert.equal(assumptions.find(r => r[0] === 'Herban')[1], '');
+  assert.ok(rt.ctx.readCommentary_().some(r => r.view === 'herban'));
+  const pack = sampleSalesPack();
+  pack.customers.push({ key: 'herban', sheet: 'Herban', label: 'Herban', name: 'Herban', sourceRef: 'Herban!A2:B4' });
+  pack.months[2].revenueCents.herban = 26100000;
+  pack.months[2].overallCents += 26100000;
+  pack.months[2].count = 56;
+  const text = JSON.stringify(pack), preview = rt.ctx.previewSalesActualsImport(text);
+  rt.ctx.applySalesActualsImport(text, ['2027-03'], preview.previewHash);
+  const rows = rt.sheets.get('CustomerRevenueMonthly').getDataRange().getValues().filter(r => r[0] === 'Herban');
+  assert.equal(rows.find(r => r[1] === 'Mar-27')[2], 261000);
+  assert.equal(rows.find(r => r[1] === 'Jan-27')[2], '');
+  assert.equal(rows.find(r => r[1] === 'Feb-27')[2], '');
+  assert.equal(rt.sheets.get('CustomerCount').getDataRange().getValues().find(r => r[0] === 'Mar-27')[1], 56);
+});
+
+test('invalid supplied margins and failed customer writes leave customer tables unchanged', () => {
+  const rt = runtime();
+  const names = ['Assumptions', 'Commentary', 'CustomerRevenueMonthly', 'CustomerRevenueQuarterly'];
+  const before = names.map(n => values(rt.sheets.get(n)));
+  for (const margin of ['unknown', '65', '-1%', '101%'])
+    assert.throws(() => rt.ctx.processAddCustomer({ name: 'Herban', margin, seed: true }), /margin/);
+  assert.deepEqual(names.map(n => values(rt.sheets.get(n))), before);
+  rt.sheets.get('CustomerRevenueQuarterly').failOnce = (r, c) => c === 3;
+  assert.throws(() => rt.ctx.processAddCustomer({ name: 'Herban', margin: '', seed: true }), /simulated Sheets write failure/);
+  assert.deepEqual(names.map(n => values(rt.sheets.get(n))), before);
+});
 test('setup protects pre-existing exchange sheets with unrelated content', () => {
   const data = fixture(); data['LLM-Input'] = [['Existing user content']];
   const rt = runtime(data); assert.throws(() => rt.ctx.prepare_(), /contains other content/);

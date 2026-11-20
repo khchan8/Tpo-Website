@@ -2,8 +2,9 @@
 """Read-only sales-data extractor for the TPO presentation workbook.
 
 Reads the per-customer monthly sheets (``Mana``, ``Auntie Aloha``, ``Fuzzies``,
-``Tyson``, ``Private Label``), ``Overall Sales`` and ``Customer Count`` tabs of
-the sales presentation export without modifying it and produces:
+``Tyson``, ``Private Label`` and, when the tab is present, ``Herban``),
+``Overall Sales`` and ``Customer Count`` tabs of the sales presentation
+export without modifying it and produces:
 
 * ``<prefix>.json`` — a narrow ``tpo-sales-actuals-v1`` import pack with
   integer-satang revenue per customer, monthly customer counts and provenance;
@@ -82,6 +83,11 @@ SALES_SHEETS = [
     ('Fuzzies', 'Fuzzies', 'fuzzies', 'Fuzzies'),
     ('Tyson', 'Tyson', 'tyson', 'Tyson'),
     ('Private Label', 'Private Label', 'private-label', 'Private Label'),
+]
+# Optional per-customer tabs (workbooks from Oct 2026 on): extracted when the
+# tab is present, skipped without error when absent.
+OPTIONAL_SALES_SHEETS = [
+    ('Herban', 'Herban', 'herban', 'Herban'),
 ]
 OVERALL_SHEET = 'Overall Sales'
 COUNT_SHEET = 'Customer Count'
@@ -221,14 +227,15 @@ def _check_quarters(rows, name: str, label: str, monthly: dict):
 
 
 def _overall_mismatches(overall: dict, per_customer: dict) -> dict:
-    """Months whose five-customer total disagrees with Overall Sales (kept per-month
+    """Months whose per-customer total disagrees with Overall Sales (kept per-month
     so the importer can block exactly those months instead of failing the pack)."""
     bad = {}
     for key in overall:
-        five = sum((per_customer[sheet].get(key) or Decimal('0')) for sheet, *_ in SALES_SHEETS)
+        total = sum((monthly.get(key) or Decimal('0'))
+                    for monthly in per_customer.values())
         overall_cents = _to_cents(overall[key] or Decimal('0'), f'Overall Sales!B[{key}]')
-        if abs(_to_cents(five, key) - overall_cents) > TOLERANCE_CENTS:
-            bad[key] = (five, overall[key])
+        if abs(_to_cents(total, key) - overall_cents) > TOLERANCE_CENTS:
+            bad[key] = (total, overall[key])
     return bad
 
 def extract_sales_inputs(source: Path) -> dict:
@@ -240,7 +247,9 @@ def extract_sales_inputs(source: Path) -> dict:
     wb = openpyxl.load_workbook(source, data_only=True, read_only=True)
     try:
         per_customer, packs = {}, {}
-        for sheet, label, key, name in SALES_SHEETS:
+        enabled = SALES_SHEETS + [entry for entry in OPTIONAL_SALES_SHEETS
+                                  if entry[0] in wb.sheetnames]
+        for sheet, label, key, name in enabled:
             rows = _sheet_rows(wb, sheet)
             monthly = _read_monthly_column(rows, sheet, label)
             _check_quarters(rows, sheet, label, monthly)
@@ -272,7 +281,7 @@ def extract_sales_inputs(source: Path) -> dict:
         months = []
         for key in base:
             revenue = {}
-            for sheet, label, ckey, name in SALES_SHEETS:
+            for sheet, label, ckey, name in enabled:
                 amount = per_customer[sheet].get(key)
                 if amount is not None:
                     revenue[ckey] = _to_cents(amount, f'{sheet}!B[{key}]')
@@ -293,7 +302,7 @@ def extract_sales_inputs(source: Path) -> dict:
         return {
             'schema': SCHEMA,
             'source': {'filename': source.name, 'sha256': digest, 'reportMonth': base[-1]},
-            'customers': [packs[key] for _, _, key, _ in SALES_SHEETS],
+            'customers': [packs[key] for _, _, key, _ in enabled],
             'months': months,
         }
     finally:

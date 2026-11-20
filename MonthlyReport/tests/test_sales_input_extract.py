@@ -27,7 +27,7 @@ DATES = [datetime(2024, month, 1) for month in range(5, 11)]
 
 def build_presentation(path, *, mana=None, overall_delta=None, count_override=None,
                        drop_quarter=False, text_amount=False, count_fraction=False,
-                       skip_month_for=None):
+                       skip_month_for=None, herban=None):
     """Create a synthetic sales presentation export matching the validated layout."""
     mana = [100.005, None, 250.5, 0, 300, 125.25] if mana is None else mana
     customers = {
@@ -37,6 +37,8 @@ def build_presentation(path, *, mana=None, overall_delta=None, count_override=No
         'Tyson': ('Tyson', [5, 6, 7, 8, 9, 10]),
         'Private Label': ('Private Label', [1, 2, 3, 4, 5, 6]),
     }
+    if herban is not None:
+        customers['Herban'] = ('Herban', list(herban))
     wb = openpyxl.Workbook()
     wb.remove(wb.active)
     for sheet, (label, values) in customers.items():
@@ -162,6 +164,62 @@ class TestExtraction(SalesExtractorTestCase):
     def test_fractional_customer_count_is_blocking(self):
         self.assert_error(r'Customer Count!B\[2024-06\].*not a whole number',
                           count_fraction=True)
+
+class TestOptionalHerban(SalesExtractorTestCase):
+    """Herban (workbooks from Oct 2026 on) joins every reconciliation when present."""
+
+    HERBAN = [None, None, None, None, None, 75.5]
+
+    def test_present_herban_joins_monthly_and_quarter_reconciliations(self):
+        pack = self.extract(herban=self.HERBAN)
+        self.assertEqual([c['key'] for c in pack['customers']],
+                         ['mana', 'auntie-aloha', 'fuzzies', 'tyson',
+                          'private-label', 'herban'])
+        october = pack['months'][5]
+        self.assertEqual(october['revenueCents']['herban'], 7550)
+        self.assertNotIn('herban', pack['months'][0]['revenueCents'])
+        self.assertTrue(all(month['reconciled'] for month in pack['months']))
+        self.assertEqual(october['overallCents'], sum(october['revenueCents'].values()))
+
+    def test_missing_herban_tab_keeps_the_september_five_customer_pack(self):
+        pack = self.extract()
+        self.assertEqual([c['key'] for c in pack['customers']],
+                         ['mana', 'auntie-aloha', 'fuzzies', 'tyson', 'private-label'])
+        self.assertTrue(all('herban' not in month['revenueCents']
+                            for month in pack['months']))
+
+    def test_wrong_herban_f1_header_is_blocking(self):
+        path = self.source(herban=self.HERBAN)
+        wb = openpyxl.load_workbook(path)
+        wb['Herban']['F1'] = 'Tyson'  # the real export's header typo
+        wb.save(path)
+        with self.assertRaises(extractor.SalesInputError) as caught:
+            extractor.extract_sales_inputs(path)
+        self.assertIn("Herban!F1: anchor is 'Tyson'; expected 'Herban'",
+                      str(caught.exception))
+
+    def test_herban_quarter_rollup_mismatch_is_blocking(self):
+        path = self.source(herban=self.HERBAN)
+        wb = openpyxl.load_workbook(path)
+        wb['Herban']['F4'] = 0  # Q4 2024 rollup must equal its October month
+        wb.save(path)
+        with self.assertRaises(extractor.SalesInputError) as caught:
+            extractor.extract_sales_inputs(path)
+        self.assertIn('Herban: quarter Q4 2024 rollup', str(caught.exception))
+
+    def test_present_herban_appears_in_review_workbook(self):
+        source = self.source(herban=self.HERBAN)
+        pack = extractor.extract_sales_inputs(source)
+        output = self.tmp / 'review.xlsx'
+        extractor.write_review_workbook(pack, output)
+        review = openpyxl.load_workbook(output)
+        rows = list(review['CustomerRevenueMonthly'].iter_rows(values_only=True))
+        self.assertIn(('Herban', 'Oct-24', 75.5), rows)
+        source_map = review['Source Map']
+        self.assertEqual([source_map[f'A{row}'].value for row in range(8, 14)],
+                         ['Mana', 'Auntie Aloha', 'Fuzzies', 'Tyson',
+                          'Private Label', 'Herban'])
+        self.assertEqual(source_map['C13'].value, 'Herban!A2:B7')
 
 
 class TestReviewWorkbook(SalesExtractorTestCase):
