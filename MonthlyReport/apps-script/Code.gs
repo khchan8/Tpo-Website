@@ -342,7 +342,7 @@ const TPO = Object.freeze({
   input: 'LLM-Input', output: 'LLM Output', commentary: 'Commentary',
   startRow: 8, chunkSize: 30000, maxPrompt: 1500000, maxSourceCells: 200000,
   stateKey: 'TPO_MANUAL_V1_', version: 'tpo-commentary-v1',
-  build: '2026-11-19-v13', timezone: 'Asia/Bangkok',
+  build: '2026-11-20-v14', timezone: 'Asia/Bangkok',
   sources: ['Assumptions', 'MonthlyFinancials', 'CustomerRevenueMonthly',
     'CustomerRevenueQuarterly', 'CustomerCount', 'Quarterly Financials',
     '1. Working Capital', '2. Customer Economics', '3. Strategic Dashboard',
@@ -1269,15 +1269,15 @@ function importPastedLLMOutput(text, batch) {
 
 function menuAddCustomer() {
   uiAction_('menuAddCustomer', () => dialog_('TPO · Add Customer',
-    '<h2>Add customer</h2><label for="name">Customer name</label><input id="name" type="text">' +
+    '<h2>Add or complete customer</h2><label for="name">Customer name</label><input id="name" type="text">' +
     '<label for="margin">Contribution margin (optional: 0.45 or 45%)</label><input id="margin" type="text" placeholder="Leave blank if unknown">' +
-    '<p>An unknown margin stays blank; revenue can be imported without inventing a contribution estimate.</p>' +
-    '<label><input id="seed" type="checkbox" checked style="width:auto"> Add blank monthly input rows for existing months; CustomerRevenueQuarterly totals are derived automatically</label>' +
-    '<button id="save">Add customer</button><button class="secondary" onclick="google.script.host.close()">Close</button><div id="status" role="status"></div>', `
+    '<p>An unknown margin stays blank. For an existing customer, its saved margin and data are preserved; only missing setup rows are added.</p>' +
+    '<label><input id="seed" type="checkbox" checked style="width:auto"> Complete missing monthly rows and derived quarterly / Customer Economics rows for existing periods</label>' +
+    '<button id="save">Add / complete customer</button><button class="secondary" onclick="google.script.host.close()">Close</button><div id="status" role="status"></div>', `
     document.getElementById('save').onclick = function () {
       const button = this, status = document.getElementById('status'); button.disabled = true;
       google.script.run.withSuccessHandler(function (r) {
-        status.className = ''; status.textContent = 'Added ' + r.name + '. Import sales data, then run TPO → 2. Check & calculate and reload the website. Prepare a new AI prompt afterwards.';
+        status.className = ''; status.textContent = (r.existing ? 'Completed setup for ' : 'Added ') + r.name + '. Saved data and margins were preserved. Import sales data, then run TPO → 2. Check & calculate and reload the website. Prepare a new AI prompt afterwards.';
       }).withFailureHandler(function (e) {
         button.disabled = false; status.className = 'error';
         const message = e.message || String(e);
@@ -1289,52 +1289,85 @@ function menuAddCustomer() {
 }
 function processAddCustomer(payload) {
   return serverAction_('processAddCustomer', () => locked_(() => {
-    const name = String(payload && payload.name || '').trim();
+    let name = String(payload && payload.name || '').trim();
     const marginInput = payload && payload.margin;
     const margin = number_(marginInput);
     const marginGiven = marginInput !== null && marginInput !== undefined && String(marginInput).trim() !== '';
     if (!name || name.length > 200 || /^[=+@]/.test(name)) throw new Error('Enter a customer name of 1–200 characters that does not start with =, +, or @.');
     if (marginGiven && (margin === null || margin < 0 || margin > 1)) throw new Error('Use a margin between 0 and 1, or 0% and 100%; leave it blank if unknown.');
-    const asmp = sheet_('Assumptions'), revenue = sheet_('CustomerRevenueQuarterly'), monthly = sheet_('CustomerRevenueMonthly');
+    const asmp = sheet_('Assumptions');
     if (!asmp || asmp.getLastRow() < 1) throw new Error('Assumptions needs headers in row 1, names in A and margins in B.');
-    if (payload.seed && (!revenue || !monthly)) throw new Error('CustomerRevenueMonthly and CustomerRevenueQuarterly are both required to seed a new customer.');
-    const table = { raw: asmp.getDataRange().getValues() };
-    const existing = customers_(table), id = slugify_(name);
-    if (!id || TPO.views.some(v => v[0] === id) || existing.some(c => c.id === id || customerKey_(c.name) === customerKey_(name))) throw new Error('Customer name or View identifier already exists: ' + name);
-    if (readCommentary_().some(r => r.view === id)) throw new Error('Commentary already contains View ' + id + '.');
-    // Seed only existing periods so totals stay scoped to known history.
-    const months = payload.seed ? Array.from(new Set(monthly.getDataRange().getValues().slice(1)
-      .map(r => month_(r[1])).filter(Boolean).map(p => p.display))) : [];
-    const quarters = payload.seed ? Array.from(new Set(revenue.getDataRange().getValues().slice(1)
-      .map(r => quarter_(r[1])).filter(Boolean).map(q => q.label))).sort((a, b) => quarter_(a).key - quarter_(b).key) : [];
-    const comm = ensureCommentary_();
-    const asmpRow = asmp.getLastRow() + 1, commRow = Math.max(2, comm.getLastRow() + 1);
-    const revRow = revenue ? Math.max(2, revenue.getLastRow() + 1) : 0;
-    const monthlyRow = monthly ? Math.max(2, monthly.getLastRow() + 1) : 0;
-    ensureSize_(asmp, asmpRow, 2); ensureSize_(comm, commRow, 3);
-    if (quarters.length) ensureSize_(revenue, revRow + quarters.length - 1, 3);
-    if (months.length) ensureSize_(monthly, monthlyRow + months.length - 1, 3);
-    try {
-      plainText_(asmp.getRange(asmpRow, 1), [[name]]);
-      asmp.getRange(asmpRow, 2).setValue(margin === null ? '' : margin).setNumberFormat('0.0%');
-      if (months.length) plainText_(monthly.getRange(monthlyRow, 1, months.length, 3), months.map(m => [name, m, '']));
-      if (quarters.length) {
-        plainText_(revenue.getRange(revRow, 1, quarters.length, 3), quarters.map(q => [name, q, '']));
-        quarters.forEach((q,i)=>{
-          const row=revRow+i;
-          revenue.getRange(row,3).setFormula(modelLookup_('"customer|"&B'+row+'&"|"&LOWER(TRIM(A'+row+'))&"|revenue"'));
+    const existing = customers_({ raw: asmp.getDataRange().getValues() }), id = slugify_(name);
+    const registered = existing.find(c => customerKey_(c.name) === customerKey_(name));
+    if (!id || TPO.views.some(v => v[0] === id) || existing.some(c => c.id === id && c !== registered)) throw new Error('Customer name or View identifier already exists: ' + name);
+    const commentary = readCommentary_();
+    if (!registered && commentary.some(r => r.view === id)) throw new Error('Commentary already contains View ' + id + '.');
+    if (registered) name = registered.name;
+    const plan = [];
+    const add = (sheet, row, col, value, formula = false, text = false) =>
+      plan.push({ sheet, row, col, value, formula, text, reason: 'Complete customer setup: ' + name });
+    if (payload.seed) {
+      const timezone = spreadsheetTimezone_(SpreadsheetApp.getActiveSpreadsheet());
+      function table(sheetName, parse) {
+        const sh = sheet_(sheetName);
+        if (!sh || !sh.getLastRow()) throw new Error(sheetName + ' needs headers before adding customer rows. Run Check & calculate first.');
+        const raw = sh.getDataRange().getValues(), headers = raw[0].map(normalize_);
+        const map = TPOCore.defs[sheetName].map(aliases => {
+          const matches = headers.map((h, i) => aliases.includes(h) ? i : -1).filter(i => i >= 0);
+          if (matches.length !== 1) throw new Error(sheetName + ': expected exactly one ' + aliases[0] + ' column.');
+          return matches[0];
         });
+        const rows = new Map(), periods = new Map();
+        raw.slice(1).forEach((r, i) => {
+          if (!r.some(hasValue_)) return;
+          const value = r[map[1]] instanceof Date ? formatDateChecked_(r[map[1]], timezone, 'yyyy-MM-dd', { sheet: sheetName, row: i + 2 }) : r[map[1]];
+          const period = parse(value), customer = String(r[map[0]] || '').trim();
+          if (!period || !customer) throw new Error(sheetName + ' row ' + (i + 2) + ': a recognized period and customer are required. No rows were changed.');
+          const key = customerKey_(customer) + '|' + period.label;
+          if (rows.has(key)) throw new Error(sheetName + ' has duplicate entry for ' + key + ' in rows ' + rows.get(key) + ' and ' + (i + 2) + '. Resolve it before adding customer rows.');
+          rows.set(key, i + 2); periods.set(period.label, period);
+        });
+        return { name: sheetName, map, rows, periods, nextRow: raw.length + 1 };
       }
-      plainText_(comm.getRange(commRow, 1, 1, 3), [[id, '', '']]);
-      SpreadsheetApp.flush();
-    } catch (e) {
-      asmp.getRange(asmpRow, 1, 1, 2).clearContent();
-      comm.getRange(commRow, 1, 1, 3).clearContent();
-      if (months.length) monthly.getRange(monthlyRow, 1, months.length, 3).clearContent();
-      if (quarters.length) revenue.getRange(revRow, 1, quarters.length, 3).clearContent();
-      throw e;
+      const monthly = table('CustomerRevenueMonthly', month_);
+      const revenue = table('CustomerRevenueQuarterly', quarter_);
+      const economics = table('2. Customer Economics', quarter_);
+      function slot(target, period) {
+        const key = customerKey_(name) + '|' + period.label;
+        if (target.rows.has(key)) return null;
+        const row = target.nextRow++;
+        target.rows.set(key, row);
+        add(target.name, row, target.map[0] + 1, name, false, true);
+        // Set plain-text format before writing: Sheets can reinterpret May-24 as a date.
+        add(target.name, row, target.map[1] + 1, period.display || period.label, false, true);
+        return row;
+      }
+      Array.from(monthly.periods.values()).sort((a, b) => a.key - b.key).forEach(p => slot(monthly, p));
+      const quarters = new Map([...revenue.periods, ...economics.periods]);
+      monthly.periods.forEach(p => quarters.set(p.quarter, quarter_(p.quarter)));
+      Array.from(quarters.values()).sort((a, b) => a.key - b.key).forEach(p => {
+        const row = slot(revenue, p);
+        if (row) add(revenue.name, row, revenue.map[2] + 1, modelLookup_('"customer|"&' + TPOCore.col(revenue.map[1]) + row + '&"|"&LOWER(TRIM(' + TPOCore.col(revenue.map[0]) + row + '))&"|revenue"'), true);
+        const econRow = slot(economics, p);
+        if (econRow) {
+          const prefix = '"customer|"&' + TPOCore.col(economics.map[1]) + econRow + '&"|"&LOWER(TRIM(' + TPOCore.col(economics.map[0]) + econRow + '))';
+          ['revenue', 'concentration', 'gp', 'margin'].forEach((key, i) =>
+            add(economics.name, econRow, economics.map[i + 2] + 1, modelLookup_(prefix + '&"|' + key + '"'), true));
+        }
+      });
     }
-    return { ok: true, name: name };
+    const comm = ensureCommentary_();
+    if (!registered) {
+      const row = asmp.getLastRow() + 1;
+      add('Assumptions', row, 1, name, false, true);
+      add('Assumptions', row, 2, margin === null ? '' : margin);
+      ensureSize_(asmp, row, 2);
+      asmp.getRange(row, 2).setNumberFormat('0.0%');
+    }
+    if (!commentary.some(r => r.view === id)) add(TPO.commentary, Math.max(2, comm.getLastRow() + 1), 1, id, false, true);
+    plan.forEach(p => ensureSize_(sheet_(p.sheet), p.row, p.col));
+    backupAndWrite_(plan, registered ? 'Complete existing customer' : 'Add customer');
+    return { ok: true, name: name, existing: !!registered };
   }));
 }
 

@@ -16,6 +16,23 @@ The script maintains **LLM-Input**, **LLM Output**, and **Commentary**. Commenta
 
 Copying Code.gs into GitHub does not install it in Google Sheets. The website and the bound Apps Script are updated separately.
 
+### v14: customer month labels and setup recovery (`2026-11-20-v14`)
+
+Install this build by replacing the complete bound `Code.gs`, saving, and reloading Sheets.
+
+- **5. Add customer…** now sets period cells to plain text before writing. Labels such as `May-24` retain their year instead of being interpreted as dates like `5/24/2026`.
+- The same action immediately adds missing **CustomerRevenueQuarterly** and **2. Customer Economics** rows and their keyed formulas for known quarters. Revenue history stays blank until imported.
+- Entering an existing customer's name completes only missing setup rows. Its Assumptions margin, existing revenue, formulas and Commentary are preserved; rerunning does not duplicate rows. New writes use **Repair Backup** and rollback on a write failure.
+
+**Recover Herban after deleting its malformed monthly/quarterly rows:**
+
+1. Keep Herban's existing **Assumptions** and **Commentary** entries. Do not delete or re-create the whole workbook.
+2. Open **TPO → 1. Enter monthly data → 5. Add customer…**, enter `Herban`, leave the missing-row checkbox selected, and submit. Leave margin blank to preserve its saved value (or unknown status). Missing monthly, quarterly and Customer Economics rows are restored.
+3. Check that Herban month labels run through the existing history as `May-24`, `Jun-24`, etc., with no repeated customer/month pairs. Customer Economics now includes Herban.
+4. Preview and apply the corrected sales JSON for the required months, then run **2. Check & calculate** and refresh the website. October Herban revenue is **261,000 THB** in the supplied source. Accounting actuals and the reporting cut-off must include October to show October on the website.
+
+The script deliberately does **not** delete duplicate rows or guess their intended years: they may contain real revenue. The reported malformed Herban rows were already deleted manually; any remaining duplicate must be inspected before import.
+
 ### v13: Herban and October sales (`2026-11-19-v13`)
 
 The sales extractor includes the optional `Herban` tab when present and reconciles the total across all included customers. Older five-customer workbooks still work. Customer pages are discovered from workbook data; there is no fixed five-customer navigation list.

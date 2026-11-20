@@ -61,7 +61,11 @@ class Range {
     values.forEach((row, r) => {
       assert.equal(row.length, this.nc);
       row.forEach((v, c) => {
-        const value = rich ? v.text : v;
+        let value = rich ? v.text : v;
+        if (rich && this.sh.coerceMonthLabels && this.sh.format(this.r + r, this.c + c) !== '@') {
+          const month = /^([A-Z][a-z]{2})-(\d{2})$/.exec(value);
+          if (month) value = new Date(Date.UTC(2026, ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].indexOf(month[1]), +month[2]));
+        }
         if (typeof value === 'string' && value.length > 50000) throw new Error('cell exceeds 50000 characters');
         this.sh.put(this.r + r, this.c + c, { value, formula: !rich && typeof v === 'string' && v.startsWith('=') ? v : '', rich: rich ? v : null });
       });
@@ -299,7 +303,11 @@ test('adding a customer preserves the three-column schema and seeds existing mon
   assert.ok(monthlyRows.every(r => r[2] === ''));
   const cqRows = rt.sheets.get('CustomerRevenueQuarterly').getDataRange().getValues().filter(r => r[0] === 'New Customer');
   assert.deepEqual(cqRows.map(r => r[1]).sort(), ['Q1 2027', 'Q2 2027']);
-  assert.throws(() => rt.ctx.processAddCustomer({ name: 'New Customer', margin: '.2', seed: true }), /already exists/);
+  const before = values(sh);
+  rt.ctx.processAddCustomer({ name: 'New Customer', margin: '.2', seed: true });
+  assert.equal(values(sh), before);
+  const economics = rt.sheets.get('2. Customer Economics').getDataRange().getValues().filter(r => r[0] === 'New Customer');
+  assert.deepEqual(economics.map(r => r[1]).sort(), ['Q1 2027', 'Q2 2027']);
   assert.throws(() => rt.ctx.processAddCustomer({ name: 'Bad', margin: '45', seed: false }), /margin/);
 });
 
@@ -325,14 +333,74 @@ test('Herban can be added with an unknown margin and then imported without inven
 
 test('invalid supplied margins and failed customer writes leave customer tables unchanged', () => {
   const rt = runtime();
-  const names = ['Assumptions', 'Commentary', 'CustomerRevenueMonthly', 'CustomerRevenueQuarterly'];
+  const names = ['Assumptions', 'Commentary', 'CustomerRevenueMonthly', 'CustomerRevenueQuarterly', '2. Customer Economics'];
   const before = names.map(n => values(rt.sheets.get(n)));
   for (const margin of ['unknown', '65', '-1%', '101%'])
     assert.throws(() => rt.ctx.processAddCustomer({ name: 'Herban', margin, seed: true }), /margin/);
   assert.deepEqual(names.map(n => values(rt.sheets.get(n))), before);
-  rt.sheets.get('CustomerRevenueQuarterly').failOnce = (r, c) => c === 3;
+  rt.sheets.get('2. Customer Economics').failOnce = (r, c) => c === 6;
   assert.throws(() => rt.ctx.processAddCustomer({ name: 'Herban', margin: '', seed: true }), /simulated Sheets write failure/);
   assert.deepEqual(names.map(n => values(rt.sheets.get(n))), before);
+});
+
+test('customer month seeding resists date coercion across years and permits the subsequent sales import', () => {
+  const data = fixture(), core = require('../js/report-core');
+  const periods = Array.from({ length: 30 }, (_, i) => core.month(new Date(Date.UTC(2024, 4 + i, 1))));
+  data.CustomerRevenueMonthly = [data.CustomerRevenueMonthly[0], ...periods.map(p => ['Acme Corp', p.display, 100])];
+  // Midnight in the workbook timezone is still April in UTC; it must seed May-24.
+  data.CustomerRevenueMonthly[1][1] = new Date('2024-04-30T17:00:00.000Z');
+  const rt = runtime(data), monthly = rt.sheets.get('CustomerRevenueMonthly');
+  monthly.coerceMonthLabels = true;
+  monthly.getRange(2, 2, monthly.getMaxRows() - 1, 1).setNumberFormat('m/d/yyyy');
+  rt.ctx.processAddCustomer({ name: 'Herban', margin: '', seed: true });
+  const rows = monthly.getDataRange().getValues().filter(r => r[0] === 'Herban');
+  assert.deepEqual(rows.map(r => r[1]), periods.map(p => p.display));
+  assert.ok(rows.every(r => r[2] === ''));
+  const pack = sampleSalesPack([{ month: '2026-10', revenueCents: { acme: 10000, beta: 0, herban: 26100000 },
+    count: 56, overallCents: 26110000, reconciled: true }]);
+  pack.customers.push({ key: 'herban', sheet: 'Herban', label: 'Herban', name: 'Herban', sourceRef: 'Herban!A2:B31' });
+  const text = JSON.stringify(pack), preview = rt.ctx.previewSalesActualsImport(text);
+  rt.ctx.applySalesActualsImport(text, ['2026-10'], preview.previewHash);
+  assert.equal(monthly.getDataRange().getValues().find(r => r[0] === 'Herban' && r[1] === 'Oct-26')[2], 261000);
+  const quarters = rt.sheets.get('CustomerRevenueQuarterly').getDataRange().getValues().filter(r => r[0] === 'Herban');
+  const economics = rt.sheets.get('2. Customer Economics').getDataRange().getValues().filter(r => r[0] === 'Herban');
+  const expected = [...new Set(periods.map(p => p.quarter).concat(['Q1 2027', 'Q2 2027']))];
+  assert.deepEqual(quarters.map(r => r[1]).sort(), expected.slice().sort());
+  assert.deepEqual(economics.map(r => r[1]).sort(), expected.slice().sort());
+});
+
+test('completing an existing customer restores deleted rows without changing saved data or duplicating setup', () => {
+  const data = fixture();
+  data.Assumptions.push(['Herban', .65]);
+  data.Commentary.push(['herban', 'Approved commentary', 'Keep']);
+  data.CustomerRevenueMonthly.push(['Herban', 'Jan-27', 900]);
+  data['2. Customer Economics'].push(['Herban', 'Q1 2027', 900, .2, 585, .65]);
+  const rt = runtime(data), names = ['Assumptions', 'Commentary', 'CustomerRevenueMonthly', 'CustomerRevenueQuarterly', '2. Customer Economics'];
+  const before = names.map(n => rt.sheets.get(n).getDataRange().getValues());
+  const result = rt.ctx.processAddCustomer({ name: ' herban ', margin: '.2', seed: true });
+  assert.equal(result.existing, true);
+  assert.equal(result.name, 'Herban');
+  names.forEach((n, i) => assert.deepEqual(rt.sheets.get(n).getDataRange().getValues().slice(0, before[i].length), before[i]));
+  assert.deepEqual(rt.sheets.get('CustomerRevenueMonthly').getDataRange().getValues().filter(r => r[0] === 'Herban'),
+    [['Herban', 'Jan-27', 900], ['Herban', 'Feb-27', '']]);
+  assert.deepEqual(rt.sheets.get('2. Customer Economics').getDataRange().getValues().filter(r => r[0] === 'Herban').map(r => r[1]),
+    ['Q1 2027', 'Q2 2027']);
+  const completed = names.concat('Repair Backup').map(n => values(rt.sheets.get(n)));
+  rt.ctx.processAddCustomer({ name: 'Herban', margin: '', seed: true });
+  assert.deepEqual(names.concat('Repair Backup').map(n => values(rt.sheets.get(n))), completed);
+  assert.throws(() => rt.ctx.processAddCustomer({ name: 'Herban!', margin: '', seed: true }), /already exists/);
+});
+
+test('customer recovery blocks duplicate periods and ambiguous headers before changing existing data', () => {
+  for (const corrupt of [
+    data => { data.Assumptions.push(['Herban', '']); data.CustomerRevenueMonthly.push(['Herban', 'May-26', ''], ['Herban', '2026-05', '']); },
+    data => { data['2. Customer Economics'][0].push('Revenue'); }
+  ]) {
+    const data = fixture(); corrupt(data);
+    const rt = runtime(data), names = Object.keys(data), before = names.map(n => values(rt.sheets.get(n)));
+    assert.throws(() => rt.ctx.processAddCustomer({ name: 'Herban', margin: '', seed: true }), /duplicate entry|exactly one/);
+    assert.deepEqual(names.map(n => values(rt.sheets.get(n))), before);
+  }
 });
 test('setup protects pre-existing exchange sheets with unrelated content', () => {
   const data = fixture(); data['LLM-Input'] = [['Existing user content']];
